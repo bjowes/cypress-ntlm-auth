@@ -19,5 +19,10 @@
   "bugs": {
     "url": "https://github.com/bjowes/cypress-ntlm-auth/issues"
   },
-  "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme"
+  "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme",
+  "dependencies": {
+    "httpntlm": "^1.7.6",
+    "express": "^4.16.4",
+    "body-parser": "^1.18.3"
+  }
 }
