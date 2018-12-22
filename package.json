@@ -1,10 +1,16 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "NTLM authentication plugin for Cypress",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "proxy": "node src/proxy/index.js &",
+    "launch": "node src/launcher/cypressNtlm.js",
+    "pnl": "npm run proxy && npm run launch",
+    "test": "mocha --recursive"
+  },
+  "engines": {
+    "node": ">=8.2.1"
   },
   "repository": {
     "type": "git",
@@ -12,8 +18,13 @@
   },
   "keywords": [
     "cypress",
-    "ntlm"
+    "ntlm",
+    "windows authentication"
   ],
+  "bin": {
+    "cypress-ntlm": "./src/launcher/cypressNtlm.js",
+    "ntlm-proxy": "./src/proxy/index.js"
+  },
   "author": "Björn Weström",
   "license": "MIT",
   "bugs": {
@@ -21,8 +32,15 @@
   },
   "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme",
   "dependencies": {
-    "httpntlm": "^1.7.6",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
-    "body-parser": "^1.18.3"
+    "get-port": "^4.0.0",
+    "http-mitm-proxy": "^0.6.1",
+    "httpntlm": "^1.7.6",
+    "platform-folders": "^0.2.7"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0",
+    "mock-fs": "^4.7.0"
   }
 }

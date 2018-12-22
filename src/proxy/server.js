@@ -1,0 +1,344 @@
+'use strict';
+
+const getPort = require('get-port');
+const MitmProxy = require('http-mitm-proxy');
+const net = require('net');
+const ntlm = require('httpntlm').ntlm;
+const http = require('http');
+const express = require('express');
+const bodyParser = require('body-parser');
+const url = require('url');
+
+const debug = require('debug')('cypress:ntlm-auth-plugin');
+
+const portsFile = require('../util/portsFile');
+
+let _ntlmHosts = {};
+var _ntlmProxy = MitmProxy();
+const _configApp = express();
+let _configAppListener;
+let _ports;
+
+let _upstreamHttpProxy;
+let _upstreamHttpsProxy;
+
+function updateConfig(config) {
+    let hostConfig = {
+        host: config.ntlmHost,
+        username: config.username,
+        password: config.password,
+        domain: config.domain || '',
+        workstation: config.workstation || '',
+        proxy: getUpstreamProxyConfig(config.ntlmHost)
+    }
+    _ntlmHosts[config.ntlmHost] = hostConfig;
+    if (config.ntlmHost in _ntlmHosts) {
+        _ntlmHosts[config.ntlmHost] = hostConfig;
+    }
+}
+
+function validateConfig(config) {
+  if (!config.ntlmHost || 
+    !config.username || 
+    !config.password || 
+    !(config.domain || config.workstation)) {
+    return {ok: false, message: 'Incomplete configuration. ntlmHost, username, password and either domain or workstation are required fields.'};
+  }
+
+  let urltest = url.parse(config.ntlmHost);
+  if (!urltest.protocol || !urltest.hostname) {
+    return {ok: false, message: 'Invalid ntlmHost, must be complete URL (like https://www.google.com)'};
+  }
+
+  return {ok: true};
+}
+
+process.on('SIGTERM', shutDownProxy);
+process.on('SIGINT', shutDownProxy);
+
+function shutDownProxy() {
+  debug('Shutting down');
+  portsFile.deletePortsFile((err) => {
+    if (err) {
+      debug(err);
+      // Don't throw, continue with shutdown
+    }
+
+    debug('Shutting down NTLM proxy');
+    _ntlmProxy.close();
+    _ntlmProxy = null;
+    debug('Shutting down config API');
+    _configAppListener.close(() => {
+      _configAppListener = null;
+        process.exit(0);
+    });
+  
+    validateShutDown(50);
+  });
+}
+
+function validateShutDown(shutDownRetry) {
+  if (!_ntlmProxy && !_configAppListener) {
+    process.exit(0);
+  }
+  if (shutDownRetry === 0) {
+    debug('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  } 
+  setTimeout(() => { validateShutDown(shutDownRetry - 1) }, 100);  
+}
+
+// TODO - can we really change the port on reset?
+function resetProxy() {
+    // Clear config
+    _ntlmHosts = {};
+    // Clear authentication cache
+    _authenticatedSockets = {};
+    // Close and open proxy to reset connections
+    _ntlmProxy.close();
+    _ntlmProxy = MitmProxy();
+    let ntlmProxyPort = startNtlmProxy(_upstreamHttpProxy, _upstreamHttpsProxy);
+    _ports.ntlmProxyUrl = 'http://localhost:' + ntlmProxyPort;
+    portsFile.savePortsFile(_ports, (err) => {
+      if (err) {
+        throw err;
+      }
+    });
+}
+
+async function startConfigApi() {
+  _configApp.use(bodyParser.json());
+
+  _configApp.post('/ntlm-config', (req, res, next) => {
+    let validateResult = validateConfig(req.body);
+    if (!validateResult.ok) {
+      res.status(400).send('Config parse error. ' + validateResult.message);
+    } else {
+      debug('received valid config update');
+      updateConfig(req.body);
+      res.sendStatus(200);
+    }
+  });
+
+  _configApp.post('/reset', (req, res, next) => {
+    debug('received reset');
+    resetProxy();
+    res.sendStatus(200);
+  });
+
+  _configApp.post('/quit', (req, res, next) => {
+    debug('received quit');
+    res.status(200).send('Over and out!');
+    shutDownProxy();
+  });
+
+  let port = await getPort(7900);
+  _configAppListener = _configApp.listen(port);
+  if (port !== _configAppListener.address().port) {
+    throw new Error('Cannot start NTLM auth config API');
+  }
+  debug('NTLM auth config API listening on port: ' + port);
+
+  return port;
+}
+
+function getUpstreamProxyConfig(ntlmHost) {
+  let hostUrl = url.parse(ntlmHost);
+  let proxy = null;
+  let proxyUrl = null;
+
+  if (hostUrl.protocol === 'https:' && _upstreamHttpsProxy) {
+    proxyUrl = url.parse(_upstreamHttpsProxy);
+  } else if (hostUrl.protocol === 'http:' && _upstreamHttpProxy) {
+    proxyUrl = url.parse(_upstreamHttpProxy);
+  }
+  if (proxyUrl) {
+    proxy = {
+      host: proxyUrl.hostname,
+      port: proxyUrl.port,
+      protocol: proxyUrl.protocol.slice(0, -1) // remove trailing ':'
+    };
+  }
+  return proxy;
+}
+
+function getTargetHost(ctx) {
+  let protocol = ctx.isSSL ? 'https://' : 'http://'; // TODO ?
+  let host = ctx.clientToProxyRequest.headers.host;
+  let targetHost = protocol + host;
+  return targetHost;
+}
+
+function getClientAddress(clientSocket) {
+  return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
+}
+
+let _agents = {};
+let agentCount = 0;
+function getAgent(clientSocket, isSSL) {
+  let clientAddress = getClientAddress(clientSocket);
+  if (clientAddress in _agents) return _agents[clientAddress].agent;
+
+  let agentOptions = {
+    keepAlive: true,
+    maxSockets: 1 // Only one connection per peer -> 1:1 match between inbound and outbound socket
+  }
+  let agent = isSSL ? new https.Agent(agentOptions) : new http.Agent(agentOptions);
+  agent._cyAgentId = agentCount;
+  agentCount++;
+  _agents[clientAddress] = { agent: agent, ntlm: {} };
+// TODO catch socket close event to clean up stale agents and auth states
+  return agent;   
+}
+
+function isAuthenticated(clientSocket, targetHost) {
+  let clientAddress = getClientAddress(clientSocket);
+  let ntlm = _agents[clientAddress].ntlm;
+  let auth = (targetHost in ntlm && ntlm[targetHost]);
+  return auth;
+}
+
+function setAuthenticated(clientSocket, targetHost, auth) {
+  let clientAddress = getClientAddress(clientSocket);
+  _agents[clientAddress].ntlm[targetHost] = auth;
+}
+
+async function startNtlmProxy(httpProxy, httpsProxy) {
+  // TODO implement and verify with upstread proxy
+  _upstreamHttpProxy = httpProxy;
+  _upstreamHttpsProxy = httpsProxy;
+
+  _ntlmProxy.onError(function(ctx, err, errorKind) {
+    var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : "";
+    debug(errorKind + ' on ' + url + ':', err);
+  });
+  
+  _ntlmProxy.onRequest(function(ctx, callback) {
+    let targetHost = getTargetHost(ctx);
+    if (targetHost in _ntlmHosts) {
+      debug('request to ' + targetHost + ' in registered NTLM Hosts');
+      ctx.proxyToServerRequestOptions.agent = getAgent(ctx.clientToProxyRequest.socket, ctx.isSSL);
+
+      if (isAuthenticated(ctx.clientToProxyRequest.socket, targetHost)) {
+        return callback();
+      }
+      setAuthenticated(ctx.clientToProxyRequest.socket, targetHost, false);
+
+      let fullUrl = targetHost + ctx.clientToProxyRequest.url;
+
+      let ntlmOptions = {
+        username: _ntlmHosts[targetHost].username,
+        password: _ntlmHosts[targetHost].password,
+        domain: _ntlmHosts[targetHost].domain,
+        workstation: _ntlmHosts[targetHost].workstation,
+        url: fullUrl
+      };
+      let type1msg = ntlm.createType1Message(ntlmOptions);
+      let requestOptions = ctx.proxyToServerRequestOptions;
+      requestOptions.headers['authorization'] = type1msg;
+      requestOptions.headers['connection'] = 'keep-alive';
+      let type1req = http.request(requestOptions, (res) => {
+        res.resume(); // Finalize the response so we can reuse the socket
+        if (!res.headers['www-authenticate']) {
+          debug('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl);
+          return callback(new Error('www-authenticate not found on response of second request during NTLM handshake'));
+        }
+        debug('received NTLM message type 2');
+        var type2msg = ntlm.parseType2Message(res.headers['www-authenticate']);
+        var type3msg = ntlm.createType3Message(type2msg, ntlmOptions);
+        ctx.proxyToServerRequestOptions.headers['authorization'] = type3msg;
+        ctx.proxyToServerRequestOptions.headers['connection'] = ctx.clientToProxyRequest.headers['connection'];
+        setAuthenticated(ctx.clientToProxyRequest.socket, targetHost, true);
+        debug('sending  NTLM message type 3 with initial client request - handshake complete');
+        return callback();
+      });
+      debug('sending  NTLM message type 1');
+      type1req.end();
+      
+    } else {
+      return callback();
+    }
+  });
+
+  _ntlmProxy.onConnect(function(req, socket, head, callback) {
+    if (req.url in _ntlmHosts) { return callback(); }
+
+    // Let non-proxied hosts tunnel through
+    var host = req.url.split(":")[0];
+    var port = req.url.split(":")[1];
+  
+    debug('Tunnel to', req.url);
+    var conn = net.connect(port, host, function(){
+      socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function(){
+        conn.pipe(socket);
+        socket.pipe(conn);
+      })
+    });
+  
+    conn.on("error",function(e){
+      debug('Tunnel error', e);
+    })
+  });
+
+  let port = await getPort(7800);
+  _ntlmProxy.listen({host: 'localhost', port: port, keepAlive: false, silent: false, forceSNI: false});
+  debug('NTLM auth proxy listening on port: ' + port);
+  return port;
+}
+
+function stopOldProxy() {
+  if (portsFile.portsFileExists()) {
+    portsFile.parsePortsFile((ports, err) => {
+      if (err) {
+        throw err;
+      }
+
+      let configApiUrl = url.parse(ports.configApiUrl);
+      debug('existing proxy instance found, sending shutdown');
+      let quitBody = 'quit';
+      let quitreq = http.request({
+        method: 'POST',
+        path: '/quit', 
+        host: configApiUrl.hostname, 
+        port:configApiUrl.port,
+        timeout: 15000,
+        headers: { 
+          'content-type': 'text/plain', 
+          'content-length': Buffer.byteLength(quitBody) }
+        }, function (res) {
+          if (res.statusCode !== 200) {
+            debug('Unexpected response from old proxy instance: ' + res.statusCode);
+          }
+          res.resume();
+        });
+      quitreq.on('error', (err) => {
+        debug('quit request failed, try deleting the ports file');
+        portsFile.deletePortsFile((err) => {
+          if (err) {
+            throw err;
+          }
+        });
+      });
+      quitreq.write(quitBody);
+      quitreq.end();
+    });  
+  }
+}
+
+module.exports = {
+  startProxy: async function(httpProxy, httpsProxy) {
+    stopOldProxy();
+    let ntlmProxyPort = await startNtlmProxy(httpProxy, httpsProxy);
+    let configApiPort = await startConfigApi();
+    _ports = { 
+      ntlmProxyUrl: 'http://127.0.0.1:' + ntlmProxyPort, 
+      configApiUrl: 'http://127.0.0.1:' + configApiPort 
+    };
+    portsFile.savePortsFile(_ports, (err) => {
+      if (err) {
+        throw err;
+      }
+    });
+    return _ports;
+  }
+};
