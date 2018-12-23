@@ -14,4 +14,6 @@ if (portsFile.portsFileExists()) {
         process.env.HTTP_PROXY = ports.ntlmProxyUrl;
         cypress.init();
     });
+} else {
+    throw new Error('ntlm-proxy must be started before this command');
 }
