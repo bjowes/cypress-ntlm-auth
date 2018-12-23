@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const portsFile = require('../util/portsFile');
 const cypress = require('cypress/lib/cli');
 
