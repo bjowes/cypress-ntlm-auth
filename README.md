@@ -37,12 +37,12 @@ Add this to the scripts section:
 ```
 
 # Startup
-##ntlm-proxy
-##cypress-ntlm
+## ntlm-proxy
+## cypress-ntlm
 
 # Usage
-##cy.ntlm()
-##cy.ntlmReset()
+## cy.ntlm()
+## cy.ntlmReset()
 
 # Notes
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. I recommend adding this folder to your .gitignore so they don't end up in your repo.
