@@ -12,6 +12,7 @@ if (portsFile.portsFileExists()) {
         }
 
         process.env.HTTP_PROXY = ports.ntlmProxyUrl;
+        process.env.HTTPS_PROXY = ports.ntlmProxyUrl;
         cypress.init();
     });
 } else {

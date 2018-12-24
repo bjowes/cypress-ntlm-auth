@@ -143,9 +143,6 @@ The initial idea was to terminate the ntlm-proxy when cypress exits, but I haven
 ## .http-mitm-proxy
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
 
-# Known issues
-Usage with https sites is still under development.
-
 # Planned work
 * More real-world testing against Windows servers
 * Upstream proxy support
