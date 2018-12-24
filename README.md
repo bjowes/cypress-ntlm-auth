@@ -143,10 +143,15 @@ The initial idea was to terminate the ntlm-proxy when cypress exits, but I haven
 ## .http-mitm-proxy
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
 
+## https on localhost
+The NTLM proxy will accept self-signed certificates for sites that are served from localhost. This is convenient for testing local development builds withouth requiring a full CA chain for the certificates, while still requiring proper certificates from external servers. 
+
 # Planned work
 * More real-world testing against Windows servers
 * Upstream proxy support
 * Handle graceful termination of proxy after tests finish
+* Support custom http.Agent / https.Agent configuration
+* Configuration option to disable self-signed certificates even for localhost
 
 # Credits
 * [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
