@@ -8,7 +8,7 @@ NTLM authentication plugin for [Cypress](https://www.cypress.io/)
 [Changelog](https://github.com/bjowes/cypress-ntlm-auth/blob/master/CHANGELOG.md)
 
 # Who needs this?
-If you want to perfom end-to-end testing against deployed sites that require Windows Authentication, and you want to use [Cypress](https://www.cypress.io/), you will find that Cypress does not support NTLM (or Kerberos) authentication. Windows Authentication is quite widely used in corporate intranets. This plugin bridges the gap by providing NTLM authentication for Cypress in a streamlined manner.
+If you want to perform end-to-end testing against deployed sites that require Windows Authentication, and you want to use [Cypress](https://www.cypress.io/), you will find that Cypress does not support NTLM (or Kerberos) authentication. Windows Authentication is quite widely used in corporate intranets. This plugin bridges the gap by providing NTLM authentication for Cypress in a streamlined manner.
 
 ## Never heard of Cypress? 
 Read the intro at [their site](https://www.cypress.io/) and find out if it is the thing for you. (*spoiler - it is!*)
@@ -95,7 +95,7 @@ cy.ntlm(ntlmHost, username, password, domain, [workstation]);
 `http://localhost:4200`, `https://service.windowsserver.intranet.company.com`
 
 * username: the username for the account to authenticate with
-* password: the password for the account to authenticate with (see [Seurity advice](#Security-advice) regarding entering passwords)
+* password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
 * domain: the domain for the account to authenticate with (for AD account authentication) 
 * workstation: the workstation for the account to authenticate with (for local machine account authentication)
 
@@ -103,7 +103,7 @@ The arguments domain and workstation are mutually exclusive. For AD account auth
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost.
 
-Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current specfile is finished*.
+Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current spec file is finished*.
 
 ### Example
 You want to test a IIS website on your intranet `https://zappa.intranet.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
@@ -120,11 +120,11 @@ cy.visit('https://zappa.intranet.acme.com');
 ```
 
 #### <a name="Security-advice"></a> Security advice
-Hard coding password into your test specs isn't a great idea, even though it may seem harmless. Test code will end up in a repository, which makes the full credentials for the accounts used in your tests searchable in the repo. Even if the repo is on an internal company hosted server, this is not good practice. The recommended way to handle credentials is to use config files / environment variables, and to have these populated by your release pipeline. Cypress has several options to [provide custom configuration for different environments](https://docs.cypress.io/guides/guides/environment-variables.html#Setting) - pick one that makes sense in your pipeline. 
+Hard coding password into your test specs isn't a great idea, even though it may seem harmless. Test code will end up in a repository, which makes the full credentials for the accounts used in your tests searchable in the repository. Even if the repository is on an internal company hosted server, this is not good practice. The recommended way to handle credentials is to use config files / environment variables, and to have these populated by your release pipeline. Cypress has several options to [provide custom configuration for different environments](https://docs.cypress.io/guides/guides/environment-variables.html#Setting) - pick one that makes sense in your pipeline. 
 
 You can then combine this with setting up multiple accounts to test your application using different levels of access (if needed by your application). Using this technique, you should end up with something like this:
 ```javascript
-// Readonly user access
+// Read-only user access
 cy.ntlm('https://zappa.intranet.acme.com', 
     Cypress.env.ZAPPA_READONLY_USERNAME,
     Cypress.env.ZAPPA_READONLY_PASSWORD,
@@ -144,7 +144,7 @@ If you are testing a single site, it is convenient to set the [baseUrl](https://
 ```javascript
 Cypress.env.baseUrl = ntlmHost;
 ```
-This will persist until the current specfile is finished.
+This will persist until the current spec file is finished.
 
 ## cy.ntlmReset()
 The ntlmReset command is used to remove all configured ntlmHosts from previous ntlm command calls. Since the proxy configuration persists when a test case or spec file is finished, a good practice is to call ntlmReset in the beforeEach method. This ensures that you have a clean setup at the start of each test.
@@ -173,7 +173,7 @@ CYPRESS_NTLM_AUTH_SHUTDOWN_WITH_CYPRESS=false
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
 
 ## https on localhost
-The NTLM proxy will accept self-signed certificates for sites that are served from localhost. This is convenient for testing local development builds withouth requiring a full CA chain for the certificates, while still requiring proper certificates from external servers. 
+The NTLM proxy will accept self-signed certificates for sites that are served from localhost. This is convenient for testing local development builds without requiring a full CA chain for the certificates, while still requiring proper certificates from external servers. 
 
 # Planned work
 * More real-world testing against Windows servers

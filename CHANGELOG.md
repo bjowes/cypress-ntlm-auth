@@ -1,6 +1,6 @@
 ## 0.3.1 - released 2018-12-27
 * Removed unused files
-* Minor documentation improvements
+* Minor documentation improvements (layout, spelling)
 
 ## 0.3.0 - released 2018-12-27
 * Added graceful termination of the ntlm-proxy process when Cypress exits
@@ -16,7 +16,7 @@
 * Documentation improvements
 
 ## 0.1.1 - released 2018-12-23
-* Fixed startup isse
+* Fixed startup issue
 * Added unit tests for portsFile
 
 ## 0.1.0 - released 2018-12-23
