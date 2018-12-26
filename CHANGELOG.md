@@ -1,3 +1,7 @@
+## 0.3.1 - released 2018-12-27
+* Removed unused files
+* Minor documentation improvements
+
 ## 0.3.0 - released 2018-12-27
 * Added graceful termination of the ntlm-proxy process when Cypress exits
 * Documentation improvements

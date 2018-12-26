@@ -18,12 +18,15 @@ Parts of this library should be readily reusable, the ntlm-proxy is application 
 
 # Install
 
-`npm install cypress-ntlm-auth`
+```shell
+npm install --save-dev cypress-ntlm-auth
+```
+The `--save-dev` flag stores cypress-ntlm-auth as a development dependency, which is suitable for a testing utility.
 
 # Configure
 
 Follow these steps to configure Cypress to utilize this plugin:
-1. Plugin
+## 1. Plugin
 Modify the file `cypress/plugins/index.js` so it contains: 
 
 ```javascript
@@ -35,14 +38,14 @@ module.exports = (on, config) => {
 ```
 (if you are using other plugins I trust you can merge this with your current file)
 
-2. Commands
+## 2. Commands
 In the file `cypress/support/index.js` add this line
 
 ```javascript
 import 'cypress-ntlm-auth/src/commands';
 ```
 
-3.  package.json
+## 3. package.json
 Add this to the scripts section:
 
 ```json
