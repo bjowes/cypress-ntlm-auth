@@ -24,8 +24,8 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     message: {ntlmHost, username}
   }
 
-  const ntlmProxy = Cypress.env('CYPRESS_NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('CYPRESS_NTLM_AUTH_API');
+  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
+  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
   if (!ntlmProxy || !ntlmConfigApi) {
     throw new Error("The cypress-ntlm-auth plugin must be loaded before using this method");
   }
@@ -66,8 +66,8 @@ const ntlmReset = () => {
     message: {}
   }
 
-  const ntlmProxy = Cypress.env('CYPRESS_NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('CYPRESS_NTLM_AUTH_API');
+  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
+  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
   if (!ntlmProxy || !ntlmConfigApi) {
     throw new Error("The cypress-ntlm-auth plugin must be loaded before using this method");
   }

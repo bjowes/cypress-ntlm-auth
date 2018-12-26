@@ -160,10 +160,10 @@ cy.visit('https://zappa.intranet.acme.com'); // This fails (401)
 
 # Notes
 ## ntlm-proxy process
-At present, there is no automated means to terminate the ntlm-proxy after running all tests. Hence, the ntlm-proxy process keeps running in the background until it is manually terminated. When a new test run is started, the old ntlm-proxy will be terminated and replaced by a new one, so this is not an issue. It is an issue if you are concerned about a stale process just hanging there. 
-
-The initial idea was to terminate the ntlm-proxy when cypress exits, but I haven't found any event for this to trigger on. Therefore this is still planned work.
-
+Since the ntlm-proxy process is intended to be used only by Cypress, it is terminated when Cypress exits. If for some reason you want to keep the ntlm-proxy process running independently of Cypress, please set the environment variable:
+```shell
+CYPRESS_NTLM_AUTH_SHUTDOWN_WITH_CYPRESS=false
+```
 ## .http-mitm-proxy
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
 
@@ -173,7 +173,6 @@ The NTLM proxy will accept self-signed certificates for sites that are served fr
 # Planned work
 * More real-world testing against Windows servers
 * Upstream proxy support
-* Handle graceful termination of proxy after tests finish
 * Support custom http.Agent / https.Agent configuration
 * Configuration option to disable self-signed certificates even for localhost
 

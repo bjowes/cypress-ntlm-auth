@@ -56,8 +56,14 @@ function validateConfig(config) {
   return { ok: true };
 }
 
-process.on('SIGTERM', shutDownProxy);
-process.on('SIGINT', shutDownProxy);
+process.on('SIGTERM', terminationSignal);
+process.on('SIGINT', terminationSignal);
+process.on('SIGQUIT', terminationSignal);
+
+function terminationSignal() {
+  debug('Detected termination signal');
+  shutDownProxy(false);
+}
 
 function shutDownProxy(keepPortsFile) {
   debug('Shutting down');
@@ -119,6 +125,11 @@ async function startConfigApi() {
   _configApp.post('/reset', (req, res, next) => {
     debug('received reset');
     resetProxy();
+    res.sendStatus(200);
+  });
+
+  _configApp.get('/alive', (req, res, next) => {
+    debug('received alive');
     res.sendStatus(200);
   });
 
