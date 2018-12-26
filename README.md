@@ -90,7 +90,7 @@ cy.ntlm(ntlmHost, username, password, domain, [workstation]);
 `http://localhost:4200`, `https://service.windowsserver.intranet.company.com`
 
 * username: the username for the account to authenticate with
-* password: the password for the account to authenticate with
+* password: the password for the account to authenticate with (see [Seurity advice](#Security-advice) regarding entering passwords)
 * domain: the domain for the account to authenticate with (for AD account authentication) 
 * workstation: the workstation for the account to authenticate with (for local machine account authentication)
 
@@ -100,15 +100,8 @@ The ntlm command may be called multiple times to setup multiple ntlmHosts, also 
 
 Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current specfile is finished*.
 
-#### Pro-tip: baseUrl
-If you are testing a single site, it is convenient to set the [baseUrl](https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl) parameter in Cypress to the hostname, so you don't have to provide it on every call to `cy.visit()` or `cy.request()`. Set it in `cypress.json` or simply use:
-```javascript
-Cypress.env.baseUrl = ntlmHost;
-```
-This will persist until the current specfile is finished.
-
 ### Example
-You want to test a IIS website on your intranet `https://zappa.intranet.acme.com` that requires Windows Authentication and allows NTLM. The test user is acme\\bobby (meaning domain acme and username bobby), and the password is brown.
+You want to test a IIS website on your intranet `https://zappa.intranet.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
 ```javascript
 cy.ntlm('https://zappa.intranet.acme.com', 'bobby', 'brown', 'acme');
 // Access the zappa site with user bobby
@@ -120,6 +113,33 @@ cy.ntlm('https://zappa.intranet.acme.com', 'admin', 'secret', 'acme');
 cy.visit('https://zappa.intranet.acme.com');
 // Test actions and asserts here
 ```
+
+#### <a name="Security-advice"></a> Security advice
+Hard coding password into your test specs isn't a great idea, even though it may seem harmless. Test code will end up in a repository, which makes the full credentials for the accounts used in your tests searchable in the repo. Even if the repo is on an internal company hosted server, this is not good practice. The recommended way to handle credentials is to use config files / environment variables, and to have these populated by your release pipeline. Cypress has several options to [provide custom configuration for different environments](https://docs.cypress.io/guides/guides/environment-variables.html#Setting) - pick one that makes sense in your pipeline. 
+
+You can then combine this with setting up multiple accounts to test your application using different levels of access (if needed by your application). Using this technique, you should end up with something like this:
+```javascript
+// Readonly user access
+cy.ntlm('https://zappa.intranet.acme.com', 
+    Cypress.env.ZAPPA_READONLY_USERNAME,
+    Cypress.env.ZAPPA_READONLY_PASSWORD,
+    Cypress.env.ZAPPA_READONLY_DOMAIN);
+// tests ...
+
+// Admin user access
+cy.ntlm('https://zappa.intranet.acme.com', 
+    Cypress.env.ZAPPA_ADMIN_USERNAME,
+    Cypress.env.ZAPPA_ADMIN_PASSWORD,
+    Cypress.env.ZAPPA_ADMIN_DOMAIN);
+// tests ...
+```
+
+#### Pro-tip: baseUrl
+If you are testing a single site, it is convenient to set the [baseUrl](https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl) parameter in Cypress to the hostname, so you don't have to provide it on every call to `cy.visit()` or `cy.request()`. Set it in `cypress.json` or simply use:
+```javascript
+Cypress.env.baseUrl = ntlmHost;
+```
+This will persist until the current specfile is finished.
 
 ## cy.ntlmReset()
 The ntlmReset command is used to remove all configured ntlmHosts from previous ntlm command calls. Since the proxy configuration persists when a test case or spec file is finished, a good practice is to call ntlmReset in the beforeEach method. This ensures that you have a clean setup at the start of each test.
