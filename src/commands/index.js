@@ -36,7 +36,7 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     method: 'POST', 
     url: ntlmConfigApi + '/ntlm-config', 
     body: {ntlmHost: ntlmHost, username: username, password: password, domain: domain, workstation: workstation},
-    log: true // This isn't communication with the test object, so don't show it in the test log
+    log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
       result = 'Enabled NTLM authentication for host ' + ntlmHost;
@@ -78,7 +78,7 @@ const ntlmReset = () => {
     method: 'POST', 
     url: ntlmConfigApi + '/reset', 
     body: {},
-    log: true // This isn't communication with the test object, so don't show it in the test log
+    log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
       result = 'NTLM authentication reset OK, no hosts configured';
