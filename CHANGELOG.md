@@ -1,3 +1,7 @@
+## 0.3.2 - released 2018-12-27
+* Don't show internal communication in Cypress test log
+* Documentation layout
+
 ## 0.3.1 - released 2018-12-27
 * Removed unused files
 * Minor documentation improvements (layout, spelling)

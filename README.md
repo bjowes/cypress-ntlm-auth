@@ -7,7 +7,7 @@ NTLM authentication plugin for [Cypress](https://www.cypress.io/)
 
 [Changelog](https://github.com/bjowes/cypress-ntlm-auth/blob/master/CHANGELOG.md)
 
-# Who needs this?
+## Who needs this?
 If you want to perform end-to-end testing against deployed sites that require Windows Authentication, and you want to use [Cypress](https://www.cypress.io/), you will find that Cypress does not support NTLM (or Kerberos) authentication. Windows Authentication is quite widely used in corporate intranets. This plugin bridges the gap by providing NTLM authentication for Cypress in a streamlined manner.
 
 ## Never heard of Cypress? 
