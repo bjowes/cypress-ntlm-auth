@@ -39,7 +39,7 @@ module.exports = {
 
   parsePortsFile: function (callback) {
     if (fs.existsSync(portsFile)) {
-      let data = fs.readFileSync(portsFile)
+      let data = fs.readFileSync(portsFile);
       let ports;
       try {
         ports = JSON.parse(data);

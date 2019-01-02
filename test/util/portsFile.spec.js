@@ -239,7 +239,8 @@ describe('portsFile parsing operations', () => {
 
   it('Returns error if no file exists', (done) => {
     // Arrange
-
+    mockPortsFilePath();
+    
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert

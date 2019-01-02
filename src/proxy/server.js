@@ -15,10 +15,11 @@ const debug = require('debug')('cypress:ntlm-auth-plugin');
 const portsFile = require('../util/portsFile');
 
 let _ntlmHosts = {};
-var _ntlmProxy = MitmProxy();
+let _ntlmProxy; 
 const _configApp = express();
 let _configAppListener;
 let _ports;
+let _ntlmProxyOwnsProcess;
 
 let _upstreamHttpProxy;
 let _upstreamHttpsProxy;
@@ -72,7 +73,6 @@ function shutDownProxy(keepPortsFile) {
     portsFile.deletePortsFile((err) => {
       if (err) {
         debug(err);
-        // Don't throw, continue with shutdown
       }
     });
   }
@@ -83,10 +83,14 @@ function shutDownProxy(keepPortsFile) {
   debug('Shutting down config API');
   _configAppListener.close(() => {
     _configAppListener = null;
-    process.exit(0);
+    if (_ntlmProxyOwnsProcess) {
+      process.exit(0);
+    }
   });
 
-  validateShutDown(50);
+  if (_ntlmProxyOwnsProcess) {
+    validateShutDown(50);
+  }
 }
 
 function validateShutDown(shutDownRetry) {
@@ -108,7 +112,7 @@ function resetProxy() {
   removeAllAgents('reset');
 }
 
-async function startConfigApi() {
+function startConfigApi(callback) {
   _configApp.use(bodyParser.json());
 
   _configApp.post('/ntlm-config', (req, res, next) => {
@@ -139,14 +143,16 @@ async function startConfigApi() {
     shutDownProxy(req.body.keepPortsFile);
   });
 
-  let port = await getPort(7900);
-  _configAppListener = _configApp.listen(port);
-  if (port !== _configAppListener.address().port) {
-    throw new Error('Cannot start NTLM auth config API');
-  }
-  debug('NTLM auth config API listening on port: ' + port);
-
-  return port;
+  getPort(7900).then((port) => {
+    _configAppListener = _configApp.listen(port, (err) => {
+      if (err) {
+        debug('Cannot start NTLM auth config API');
+        return callback(null, err);
+      }
+      debug('NTLM auth config API listening on port: ' + port);
+      return callback(port, null);
+    });
+  });
 }
 
 function getUpstreamProxyConfig(ntlmHost) {
@@ -248,8 +254,9 @@ function clearAuthenticated(targetHost) {
   }
 }
 
-async function startNtlmProxy(httpProxy, httpsProxy) {
-  // TODO implement and verify with upstread proxy
+function startNtlmProxy(httpProxy, httpsProxy, callback) {
+  _ntlmProxy = MitmProxy();
+  // TODO implement and verify with upstream proxy
   _upstreamHttpProxy = httpProxy;
   _upstreamHttpsProxy = httpsProxy;
 
@@ -333,10 +340,16 @@ async function startNtlmProxy(httpProxy, httpsProxy) {
     })
   });
 
-  let port = await getPort(7800);
-  _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false });
-  debug('NTLM auth proxy listening on port: ' + port);
-  return port;
+  getPort(7800).then((port) => {
+    _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false }, (err) => {
+      if (err) {
+        debug('cannot start proxy listener');
+        return callback(null, err);
+      }  
+      debug('NTLM auth proxy listening on port: ' + port);
+      return callback(port, null)
+    });
+  });
 }
 
 function stopOldProxy() {
@@ -357,7 +370,7 @@ function stopOldProxy() {
           port: configApiUrl.port,
           timeout: 15000,
           headers: {
-            'content-type': 'application/json',
+            'content-type': 'application/json; charset=UTF-8',            
             'content-length': Buffer.byteLength(quitBody)
           }
         }, function (res) {
@@ -392,24 +405,34 @@ function stopOldProxy() {
 }
 
 module.exports = {
-  startProxy: async function (httpProxy, httpsProxy) {
+  startProxy: function (httpProxy, httpsProxy, ntlmProxyOwnsProcess, callback) {
+    _ntlmProxyOwnsProcess = ntlmProxyOwnsProcess ? true : false;
     stopOldProxy()
-      .then(async () => {
-        let ntlmProxyPort = await startNtlmProxy(httpProxy, httpsProxy);
-        let configApiPort = await startConfigApi();
-        _ports = {
-          ntlmProxyUrl: 'http://127.0.0.1:' + ntlmProxyPort,
-          configApiUrl: 'http://127.0.0.1:' + configApiPort
-        };
-        portsFile.savePortsFile(_ports, (err) => {
+      .then(() => {
+        startNtlmProxy(httpProxy, httpsProxy, (ntlmProxyPort, err) => {
           if (err) {
-            throw err;
+            return callback(null, err);
           }
+          startConfigApi((configApiPort, err) =>  {
+            if (err) {
+              return callback(null, err);
+            }
+            _ports = {
+              ntlmProxyUrl: 'http://127.0.0.1:' + ntlmProxyPort,
+              configApiUrl: 'http://127.0.0.1:' + configApiPort
+            };
+            portsFile.savePortsFile(_ports, (err) => {
+              if (err) {
+                shutDownProxy(true);
+                return callback(null, err);
+              }
+              return callback(_ports, null);
+            });                    
+          });
         });
-        return _ports;  
       })
       .catch((err) => {
-        throw err;
+        return callback(null, err);
       });
-  }
+    }
 };
