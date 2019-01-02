@@ -95,12 +95,12 @@ function isProxyReachable(ports, callback) {
 
 describe('Proxy startup and shutdown', () => {
   
-  beforeEach(() => {
+  beforeEach(function() {
     mockFs.restore(); // Clear fs mock
     _configApiUrl = null;
   });
 
-  afterEach((done) => {
+  afterEach(function(done) {
     if (_configApiUrl) {
       sendQuitCommand(_configApiUrl, false, (err) => { // Shutdown the proxy listeners to allow a clean exit
         if (err) {
@@ -114,7 +114,7 @@ describe('Proxy startup and shutdown', () => {
     }
   });
 
-  it('starting proxy should fail if portsFile path does not exist', (done) => {
+  it('starting proxy should fail if portsFile path does not exist', function(done) {
     // Arrange
     mockBadPath();
 
@@ -130,7 +130,7 @@ describe('Proxy startup and shutdown', () => {
   }).timeout(5000);
 
 
-  it('starting proxy should generate portsFile', (done) => {
+  it('starting proxy should generate portsFile', function(done) {
     // Arrange
     mockPortsFilePath();
 
@@ -163,7 +163,7 @@ describe('Proxy startup and shutdown', () => {
     });
   }).timeout(5000);
 
-  it('restarting proxy should terminate old proxy', (done) => {
+  it('restarting proxy should terminate old proxy', function(done) {
     // Arrange
     mockPortsFilePath();
     let firstProxyPorts;
@@ -226,7 +226,7 @@ describe('Proxy startup and shutdown', () => {
   }).timeout(10000);
 
 
-  it('quit command shuts down the proxy, keep portsFile', (done) => {
+  it('quit command shuts down the proxy, keep portsFile', function(done) {
     // Arrange
     mockPortsFilePath();
 
@@ -266,7 +266,7 @@ describe('Proxy startup and shutdown', () => {
     });
   }).timeout(5000);
 
-  it('quit command shuts down the proxy, delete portsFile', (done) => {
+  it('quit command shuts down the proxy, delete portsFile', function(done) {
     // Arrange
     mockPortsFilePath();
 

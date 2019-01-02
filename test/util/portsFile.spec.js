@@ -39,16 +39,16 @@ function mockBadPath() {
   mockFs(mockOptions);
 }
 
-describe('mock-fs validation', () => {
-  beforeEach(() => {
+describe('mock-fs validation', function() {
+  beforeEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  afterEach(() => {
+  afterEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  it('Mocked ports file exists', () => {
+  it('Mocked ports file exists', function() {
     // Arrange
     mockPortsFile();
 
@@ -59,7 +59,7 @@ describe('mock-fs validation', () => {
     assert.equal(exists, true);
   });
 
-  it('Not mocked ports file does not exist', () => {
+  it('Not mocked ports file does not exist', function() {
     // Arrange
     mockDummyFile();
 
@@ -70,7 +70,7 @@ describe('mock-fs validation', () => {
     assert.equal(exists, false);
   });
 
-  it('Can delete mocked ports file', () => {
+  it('Can delete mocked ports file', function() {
     // Arrange
     mockPortsFile();
 
@@ -82,7 +82,7 @@ describe('mock-fs validation', () => {
     assert.equal(exists, false);
   });
 
-  it('Can write and read mocked ports file', () => {
+  it('Can write and read mocked ports file', function() {
     // Arrange
     mockPortsFilePath();
 
@@ -98,16 +98,16 @@ describe('mock-fs validation', () => {
 
 });
 
-describe('portsFile delete operations', () => {
-  beforeEach(() => {
+describe('portsFile delete operations', function() {
+  beforeEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  afterEach(() => {
+  afterEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  it('Does return error if the path to ports file does not exist', (done) => {
+  it('Does return error if the path to ports file does not exist', function(done) {
     // Arrange
     mockBadPath();
 
@@ -120,7 +120,7 @@ describe('portsFile delete operations', () => {
     });
   });
 
-  it('Does return error if the ports file does not exist', (done) => {
+  it('Does return error if the ports file does not exist', function(done) {
     // Arrange
     mockDummyFile();
 
@@ -133,7 +133,7 @@ describe('portsFile delete operations', () => {
     });
   });
 
-  it('Does delete ports file', (done) => {
+  it('Does delete ports file', function(done) {
     // Arrange
     mockPortsFile();
 
@@ -147,16 +147,16 @@ describe('portsFile delete operations', () => {
   });
 });
 
-describe('portsFile save operations', () => {
-  beforeEach(() => {
+describe('portsFile save operations', function() {
+  beforeEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  afterEach(() => {
+  afterEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  it('Does return error if the path to ports file does not exist', (done) => {
+  it('Does return error if the path to ports file does not exist', function(done) {
     // Arrange
     mockBadPath();
 
@@ -169,7 +169,7 @@ describe('portsFile save operations', () => {
     });
   });
 
-  it('Can save the ports file', (done) => {
+  it('Can save the ports file', function(done) {
     // Arrange
     mockPortsFilePath();
 
@@ -183,16 +183,16 @@ describe('portsFile save operations', () => {
   });
 });
 
-describe('portsFile exists operations', () => {
-  beforeEach(() => {
+describe('portsFile exists operations', function() {
+  beforeEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  afterEach(() => {
+  afterEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  it('Returns false if ports file does not exist', () => {
+  it('Returns false if ports file does not exist', function() {
     // Arrange
     mockBadPath();
 
@@ -203,7 +203,7 @@ describe('portsFile exists operations', () => {
     assert.equal(exists, false);
   });
 
-  it('Returns true if ports file exists', () => {
+  it('Returns true if ports file exists', function() {
     // Arrange
     mockPortsFile();
 
@@ -215,16 +215,16 @@ describe('portsFile exists operations', () => {
   });
 });
 
-describe('portsFile parsing operations', () => {
-  beforeEach(() => {
+describe('portsFile parsing operations', function() {
+  beforeEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  afterEach(() => {
+  afterEach(function() {
     mockFs.restore(); // Removed fs mock
   });
 
-  it('Returns error if port file content is not JSON', (done) => {
+  it('Returns error if port file content is not JSON', function(done) {
     // Arrange
     mockPortsFile();
 
@@ -237,10 +237,10 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if no file exists', (done) => {
+  it('Returns error if no file exists', function(done) {
     // Arrange
     mockPortsFilePath();
-    
+
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
@@ -250,7 +250,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if port file content is invalid', (done) => {
+  it('Returns error if port file content is invalid', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ dummy: 'dummy' }));
 
@@ -263,7 +263,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if port file content is missing configApiUrl', (done) => {
+  it('Returns error if port file content is missing configApiUrl', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ ntlmProxyUrl: 'dummy' }));
 
@@ -276,7 +276,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if port file content is missing ntlmProxyUrl', (done) => {
+  it('Returns error if port file content is missing ntlmProxyUrl', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ configApiUrl: 'dummy' }));
 
@@ -289,7 +289,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if ntlmProxyUrl cannot be parsed as an url', (done) => {
+  it('Returns error if ntlmProxyUrl cannot be parsed as an url', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ configApiUrl: 'http://localhost:1234', ntlmProxyUrl: 'dummy' }));
 
@@ -302,7 +302,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns error if configApiUrl cannot be parsed as an url', (done) => {
+  it('Returns error if configApiUrl cannot be parsed as an url', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ configApiUrl: 'dummy', ntlmProxyUrl: 'http://localhost:1234' }));
 
@@ -315,7 +315,7 @@ describe('portsFile parsing operations', () => {
     });
   });
 
-  it('Returns object if file content is ok', (done) => {
+  it('Returns object if file content is ok', function(done) {
     // Arrange
     mockPortsFile(JSON.stringify({ configApiUrl: 'http://127.0.0.1:1235', ntlmProxyUrl: 'http://localhost:1234' }));
 
