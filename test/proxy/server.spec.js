@@ -1,47 +1,18 @@
 const assert = require('assert');
 const getPath = require('platform-folders');
 const path = require('path');
-const mockFs = require('mock-fs');
-const fs = require('fs');
+const sinon = require('sinon');
+
 const url = require('url');
 const http = require('http');
 const isPortReachable = require('is-port-reachable');
 
 const portsFile = require('../../src/util/portsFile');
 const portsFileName = 'cypress-ntlm-auth.port';
-const portsFilePath = getPath.getDataHome();
 const portsFileWithPath = path.join(getPath.getDataHome(), portsFileName);
 
 const proxy = require('../../src/proxy/server');
 let _configApiUrl;
-
-function mockIconvLiteEncodings(mockOptions) {
-  let encodingsFolderPath = path.join(__dirname, '../../node_modules/iconv-lite/encodings');
-  let encodingsFolderContent = {};
-  encodingsFolderContent['index.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'index.js'));
-  encodingsFolderContent['internal.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'internal.js'));
-  encodingsFolderContent['utf16.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'utf16.js'));
-  encodingsFolderContent['utf7.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'utf7.js'));
-  encodingsFolderContent['sbcs-codec.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'sbcs-codec.js'));
-  encodingsFolderContent['sbcs-data.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'sbcs-data.js'));
-  encodingsFolderContent['sbcs-data-generated.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'sbcs-data-generated.js'));
-  encodingsFolderContent['dbcs-codec.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'dbcs-codec.js'));
-  encodingsFolderContent['dbcs-data.js'] = fs.readFileSync(path.join(encodingsFolderPath, 'dbcs-data.js'));
-  mockOptions[encodingsFolderPath] = encodingsFolderContent;
-}
-
-function mockPortsFilePath() {
-  let mockOptions = {};
-  mockOptions[portsFilePath] = {};
-  mockIconvLiteEncodings(mockOptions); // required due to lazy loading of this node module
-  mockFs(mockOptions);
-}
-
-function mockBadPath() {
-  let mockOptions = {};
-  mockOptions['anotherPath'] = {};
-  mockFs(mockOptions);
-}
 
 function sendQuitCommand(configApiUrl, keepPortsFile, callback) {
   let configApi = url.parse(configApiUrl);
@@ -95,12 +66,27 @@ function isProxyReachable(ports, callback) {
 
 describe('Proxy startup and shutdown', () => {
   
+  let savePortsFileStub;
+  let portsFileExistsStub;
+  let parsePortsFileStub;
+  let deletePortsFileStub;
+  let httpRequestStub;
+
   beforeEach(function() {
-    mockFs.restore(); // Clear fs mock
+    if (savePortsFileStub) { savePortsFileStub.restore(); }
+    savePortsFileStub = sinon.stub(portsFile, 'savePortsFile');
+    if (portsFileExistsStub) { portsFileExistsStub.restore(); }
+    portsFileExistsStub = sinon.stub(portsFile, 'portsFileExists');
+    if (parsePortsFileStub) { parsePortsFileStub.restore(); }
+    parsePortsFileStub = sinon.stub(portsFile, 'parsePortsFile');
+    if (deletePortsFileStub) { deletePortsFileStub.restore(); }
+    deletePortsFileStub = sinon.stub(portsFile, 'deletePortsFile');
+
     _configApiUrl = null;
   });
 
   afterEach(function(done) {
+    if (httpRequestStub) { httpRequestStub.restore(); }
     if (_configApiUrl) {
       sendQuitCommand(_configApiUrl, false, (err) => { // Shutdown the proxy listeners to allow a clean exit
         if (err) {
@@ -114,25 +100,34 @@ describe('Proxy startup and shutdown', () => {
     }
   });
 
-  it('starting proxy should fail if portsFile path does not exist', function(done) {
+  after(function() {
+    if (savePortsFileStub) { savePortsFileStub.restore(); }
+    if (portsFileExistsStub) { portsFileExistsStub.restore(); }
+    if (parsePortsFileStub) { parsePortsFileStub.restore(); }
+    if (deletePortsFileStub) { deletePortsFileStub.restore(); }
+  });
+
+  it('starting proxy should fail if portsFile cannot be saved', function(done) {
     // Arrange
-    mockBadPath();
+    portsFileExistsStub.callsFake(function() { return false; });
+    savePortsFileStub.callsFake(function(ports, callback) { return callback(new Error('Cannot create ' + portsFileWithPath)); });
 
     // Act
     proxy.startProxy(null, null, false, (result, err) => {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot create ' + portsFileWithPath);
-      let exists = portsFile.portsFileExists();
-      assert.equal(exists, false);
+      assert(portsFileExistsStub.calledOnce);
+      assert(savePortsFileStub.calledOnce);
       return done();
     });
-  }).timeout(5000);
+  });
 
-
-  it('starting proxy should generate portsFile', function(done) {
+  it('starting proxy should write portsFile', function(done) {
     // Arrange
-    mockPortsFilePath();
+    portsFileExistsStub.callsFake(function() { return false; });
+    let savedData;
+    savePortsFileStub.callsFake(function(ports, callback) { savedData = ports; return callback(); });
 
     // Act
     proxy.startProxy(null, null, false, (result, err) => {
@@ -140,95 +135,75 @@ describe('Proxy startup and shutdown', () => {
       if (err) {
         return done(err);
       }
+      _configApiUrl = result.configApiUrl;
       
-      let exists = portsFile.portsFileExists();
-      assert.equal(exists, true);
-      portsFile.parsePortsFile((ports, err) => {
+      assert.equal('ntlmProxyUrl' in savedData, true);
+      assert.equal('configApiUrl' in savedData, true);
+      assert.equal(savedData.ntlmProxyUrl, result.ntlmProxyUrl);
+      assert.equal(savedData.configApiUrl, result.configApiUrl);
+      assert(portsFileExistsStub.calledOnce);
+      assert(savePortsFileStub.calledOnce);
+      isProxyReachable(savedData, (reachable, err) => {
         if (err) {
           return done(err);
         }
-        assert.equal('ntlmProxyUrl' in ports, true);
-        assert.equal('configApiUrl' in ports, true);
-        assert.equal(ports.ntlmProxyUrl, result.ntlmProxyUrl);
-        assert.equal(ports.configApiUrl, result.configApiUrl);
-        isProxyReachable(ports, (reachable, err) => {
-          if (err) {
-            return done(err);
-          }
-          assert.equal(reachable, true, "Proxy should be reachable");
-          _configApiUrl = ports.configApiUrl;
-          return done();
-        });
+        assert.equal(reachable, true, "Proxy should be reachable");
+        return done();
       });
     });
-  }).timeout(5000);
+  });
 
   it('restarting proxy should terminate old proxy', function(done) {
     // Arrange
-    mockPortsFilePath();
-    let firstProxyPorts;
-    let secondProxyPorts;
+    portsFileExistsStub.callsFake(function() { return true; });
+    let oldProxy = { ntlmProxyUrl: 'http://localhost:6666', configApiUrl: 'http://localhost:7777' };
+    parsePortsFileStub.callsFake(function(callback) { return callback(oldProxy); });
+    let savedData;
+    savePortsFileStub.callsFake(function(ports, callback) { savedData = ports; return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
+    httpRequestStub = sinon.stub(http, 'request');
+    let clientRequestStub = {
+      'on': function() {},
+      'end': function() {},
+      'write': function() {}
+    };
+    let incomingResponseStub = {
+      'resume': function() {},
+      'statusCode': 200
+    };
+    let quitBody = JSON.stringify({ keepPortsFile: true });
+    httpRequestStub.returns(clientRequestStub).callsFake(function(options, callback) { return callback(incomingResponseStub); });
 
-    // Act
     proxy.startProxy(null, null, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
       }
-      
-      portsFile.parsePortsFile((ports, err) => {
-        if (err) {
-          return done(err);
-        }
-        firstProxyPorts = ports;
-        isProxyReachable(ports, (reachable, err) => {
-          if (err) {
-            return done(err);
-          }
-          assert.equal(reachable, true, "First proxy should be reachable");
-
-          proxy.startProxy(null, null, false, (result, err) => {
-            // Assert
-            if (err) {
-              return done(err);
-            }
-            
-            portsFile.parsePortsFile((ports, err) => {
-              if (err) {
-                return done(err);
-              }
-      
-              secondProxyPorts = ports;
-              assert.notEqual(firstProxyPorts.ntlmProxyUrl, secondProxyPorts.ntlmProxyUrl);
-              assert.notEqual(firstProxyPorts.configApiUrl, secondProxyPorts.configApiUrl);
-
-              isProxyReachable(firstProxyPorts, (reachable, err) => {
-                if (err) {
-                  return done(err);
-                }
-                assert.equal(reachable, false, "First proxy should not be reachable");
-                isProxyReachable(secondProxyPorts, (reachable, err) => {
-                  if (err) {
-                    return done(err);
-                  }
-                  assert.equal(reachable, true, "Second proxy should be reachable");
-        
-                  _configApiUrl = ports.configApiUrl;
-                  return done();
-                });
-              });
-            });
-          });
-        });
-
-      });
+      _configApiUrl = result.configApiUrl;
+      assert(httpRequestStub.calledWith({
+        method: 'POST',
+        path: '/quit',
+        host: 'localhost',
+        port: '7777',
+        timeout: 15000,
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          'content-length': Buffer.byteLength(quitBody)
+        }}));
+      assert(portsFileExistsStub.calledOnce);
+      assert(parsePortsFileStub.calledOnce);
+      assert(deletePortsFileStub.calledOnce);
+      assert(savePortsFileStub.calledOnce);
+      done();
     });
-  }).timeout(10000);
-
+  });
 
   it('quit command shuts down the proxy, keep portsFile', function(done) {
     // Arrange
-    mockPortsFilePath();
+    portsFileExistsStub.callsFake(function() { return false; });
+    let savedData;
+    savePortsFileStub.callsFake(function(ports, callback) { savedData = ports; return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
 
     // Act
     proxy.startProxy(null, null, false, (result, err) => {
@@ -236,39 +211,35 @@ describe('Proxy startup and shutdown', () => {
       if (err) {
         return done(err);
       }
-      
-      portsFile.parsePortsFile((ports, err) => {
+      _configApiUrl = result.configApiUrl;
+      assert(portsFileExistsStub.calledOnce);
+      assert(savePortsFileStub.calledOnce);
+
+      sendQuitCommand(result.configApiUrl, true, (err) => {
         if (err) {
           return done(err);
         }
-        sendQuitCommand(ports.configApiUrl, true, (err) => {
+        _configApiUrl = null;
+
+        assert(deletePortsFileStub.notCalled);
+
+        isProxyReachable(result, (reachable, err) => {
           if (err) {
             return done(err);
           }
-
-          let exists = portsFile.portsFileExists();
-          assert.equal(exists, true);
-          isProxyReachable(ports, (reachable, err) => {
-            if (err) {
-              return done(err);
-            }
-            assert.equal(reachable, false, "Proxy should not be reachable");
-  
-            portsFile.deletePortsFile((err) => {
-              if (err) {
-                return done(err);
-              }
-              return done();  
-            });         
-          });
+          assert.equal(reachable, false, "Proxy should not be reachable");
+          done();
         });
       });
     });
-  }).timeout(5000);
+  });
 
   it('quit command shuts down the proxy, delete portsFile', function(done) {
     // Arrange
-    mockPortsFilePath();
+    portsFileExistsStub.callsFake(function() { return false; });
+    let savedData;
+    savePortsFileStub.callsFake(function(ports, callback) { savedData = ports; return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
 
     // Act
     proxy.startProxy(null, null, false, (result, err) => {
@@ -276,27 +247,26 @@ describe('Proxy startup and shutdown', () => {
       if (err) {
         return done(err);
       }
-      
-      portsFile.parsePortsFile((ports, err) => {
+      _configApiUrl = result.configApiUrl;
+      assert(portsFileExistsStub.calledOnce);
+      assert(savePortsFileStub.calledOnce);
+
+      sendQuitCommand(result.configApiUrl, false, (err) => {
         if (err) {
           return done(err);
         }
-        sendQuitCommand(ports.configApiUrl, false, (err) => {
+        _configApiUrl = null;
+
+        assert(deletePortsFileStub.calledOnce);
+
+        isProxyReachable(result, (reachable, err) => {
           if (err) {
             return done(err);
           }
-
-          let exists = portsFile.portsFileExists();
-          assert.equal(exists, false);
-          isProxyReachable(ports, (reachable, err) => {
-            if (err) {
-              return done(err);
-            }
-            assert.equal(reachable, false, "Proxy should not be reachable");  
-            return done();  
-          });
+          assert.equal(reachable, false, "Proxy should not be reachable");  
+          return done();  
         });
       });
     });
-  }).timeout(5000);
+  });
 });

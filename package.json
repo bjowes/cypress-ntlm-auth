@@ -42,6 +42,6 @@
   "devDependencies": {
     "is-port-reachable": "^2.0.0",
     "mocha": "^5.2.0",
-    "mock-fs": "^4.7.0"
+    "sinon": "^7.2.2"
   }
 }
