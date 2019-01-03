@@ -2,321 +2,263 @@ const assert = require('assert');
 const portsFile = require('../../src/util/portsFile');
 const getPath = require('platform-folders');
 const path = require('path');
-const mockFs = require('mock-fs');
 const fs = require('fs');
+const sinon = require('sinon');
 
 const portsFileName = 'cypress-ntlm-auth.port';
-const notPortsFileName = 'dummy.port';
-const portsFilePath = getPath.getDataHome();
 const portsFileWithPath = path.join(getPath.getDataHome(), portsFileName);
 
-function mockPortsFilePath() {
-  let mockOptions = {};
-  mockOptions[portsFilePath] = {};
-  mockFs(mockOptions);
-}
+describe('portsFile delete operations', function() {
 
-function mockPortsFile(content) {
-  if (!content) { content = 'dummyPortsFile'; }
-
-  let mockOptions = {};
-  mockOptions[portsFilePath] = {};
-  mockOptions[portsFilePath][portsFileName] = content;
-  mockFs(mockOptions);
-}
-
-function mockDummyFile() {
-  let mockOptions = {};
-  mockOptions[portsFilePath] = {};
-  mockOptions[portsFilePath][notPortsFileName] = 'dummyContent';
-  mockFs(mockOptions);
-}
-
-function mockBadPath() {
-  let mockOptions = {};
-  mockOptions['anotherPath'] = {};
-  mockOptions['anotherPath'][notPortsFileName] = 'dummyContent';
-  mockFs(mockOptions);
-}
-
-describe('mock-fs validation', () => {
-  beforeEach(() => {
-    mockFs.restore(); // Removed fs mock
+  let unlinkStub;
+  
+  beforeEach(function() {
+    if (unlinkStub) { unlinkStub.restore(); }
+    unlinkStub = sinon.stub(fs, 'unlink');
   });
 
-  afterEach(() => {
-    mockFs.restore(); // Removed fs mock
+  after(function() {
+    if (unlinkStub) { unlinkStub.restore(); }
   });
 
-  it('Mocked ports file exists', () => {
+  it('Does return error if fs.unlink returns an error', function(done) {
     // Arrange
-    mockPortsFile();
-
-    // Act
-    var exists = fs.existsSync(portsFileWithPath);
-
-    // Assert
-    assert.equal(exists, true);
-  });
-
-  it('Not mocked ports file does not exist', () => {
-    // Arrange
-    mockDummyFile();
-
-    // Act
-    var exists = fs.existsSync(portsFileWithPath);
-
-    // Assert
-    assert.equal(exists, false);
-  });
-
-  it('Can delete mocked ports file', () => {
-    // Arrange
-    mockPortsFile();
-
-    // Act
-    fs.unlinkSync(portsFileWithPath);
-    var exists = fs.existsSync(portsFileWithPath);
-
-    // Assert
-    assert.equal(exists, false);
-  });
-
-  it('Can write and read mocked ports file', () => {
-    // Arrange
-    mockPortsFilePath();
-
-    // Act
-    fs.writeFileSync(portsFileWithPath, 'dummy');
-    var exists = fs.existsSync(portsFileWithPath);
-    var content = fs.readFileSync(portsFileWithPath);
-
-    // Assert
-    assert.equal(exists, true);
-    assert.equal(content, 'dummy');
-  });
-
-});
-
-describe('portsFile delete operations', () => {
-  beforeEach(() => {
-    mockFs.restore(); // Removed fs mock
-  });
-
-  afterEach(() => {
-    mockFs.restore(); // Removed fs mock
-  });
-
-  it('Does return error if the path to ports file does not exist', (done) => {
-    // Arrange
-    mockBadPath();
+    unlinkStub.callsFake(function(portsFile, callback) { return callback(new Error('test')); });
 
     // Act
     portsFile.deletePortsFile(function (err) {
       // Assert
+      assert(unlinkStub.calledOnceWith(portsFileWithPath));
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot delete ' + portsFileWithPath);
       done();
     });
   });
 
-  it('Does return error if the ports file does not exist', (done) => {
+  it('Does not return error when fs.unlink succeeds', function(done) {
     // Arrange
-    mockDummyFile();
+    unlinkStub.callsFake(function(portsFile, callback) { return callback(); });
 
     // Act
     portsFile.deletePortsFile(function (err) {
       // Assert
-      assert(err instanceof Error, 'We should get an Error.');
-      assert.equal(err.message, 'Cannot delete ' + portsFileWithPath);
-      done();
-    });
-  });
-
-  it('Does delete ports file', (done) => {
-    // Arrange
-    mockPortsFile();
-
-    // Act
-    portsFile.deletePortsFile(function (err) {
-      // Assert
+      assert(unlinkStub.calledOnceWith(portsFileWithPath));
       assert(!err, 'We should not get an Error.');
-      assert.equal(fs.existsSync(portsFileWithPath), false, 'Cannot delete ' + portsFileWithPath);
       done();
     });
-  });
+  }); 
 });
 
-describe('portsFile save operations', () => {
-  beforeEach(() => {
-    mockFs.restore(); // Removed fs mock
+describe('portsFile save operations', function() {
+  let writeStub;
+  
+  beforeEach(function() {
+    if (writeStub) { writeStub.restore(); }
+    writeStub = sinon.stub(fs, 'writeFile');
   });
 
-  afterEach(() => {
-    mockFs.restore(); // Removed fs mock
+  after(function() {
+    if (writeStub) { writeStub.restore(); }
   });
 
-  it('Does return error if the path to ports file does not exist', (done) => {
+  it('Does return error if fs.writeFile returns error', function(done) {
     // Arrange
-    mockBadPath();
+    writeStub.callsFake(function(portsFile, data, callback) { return callback(new Error('test')); });
+    let data = {dummy: 'dummy'};
 
     // Act
-    portsFile.savePortsFile({dummy: 'dummy'}, function (err) {
+    portsFile.savePortsFile(data, function (err) {
       // Assert
+      assert(writeStub.calledOnceWith(portsFileWithPath));
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot create ' + portsFileWithPath);
       done();
     });
   });
 
-  it('Can save the ports file', (done) => {
+  it('Does not return error if fs.writeFile succeeds', function(done) {
     // Arrange
-    mockPortsFilePath();
+    writeStub.callsFake(function(portsFile, data, callback) { return callback(); });
+    let data = {dummy: 'dummy'};
 
     // Act
-    portsFile.savePortsFile({dummy: 'dummy'}, function (err) {
+    portsFile.savePortsFile(data, function (err) {
       // Assert
+      assert(writeStub.calledOnceWith(portsFileWithPath, JSON.stringify(data)));
       assert(!err, 'We should not get an Error.');
-      assert.equal(fs.existsSync(portsFileWithPath), true, 'Cannot save ' + portsFileWithPath);
       done();
     });
   });
 });
 
-describe('portsFile exists operations', () => {
-  beforeEach(() => {
-    mockFs.restore(); // Removed fs mock
+describe('portsFile exists operations', function() {
+  let existsStub;
+  
+  beforeEach(function() {
+    if (existsStub) { existsStub.restore(); }
+    existsStub = sinon.stub(fs, 'existsSync');
   });
 
-  afterEach(() => {
-    mockFs.restore(); // Removed fs mock
+  after(function() {
+    if (existsStub) { existsStub.restore(); }
   });
 
-  it('Returns false if ports file does not exist', () => {
+  it('Returns false if ports file does not exist', function() {
     // Arrange
-    mockBadPath();
+    existsStub.callsFake(function(portsFile) { return false; });
 
     // Act
     var exists = portsFile.portsFileExists();
 
     // Assert
     assert.equal(exists, false);
+    assert(existsStub.calledOnceWith(portsFileWithPath));
   });
 
-  it('Returns true if ports file exists', () => {
+  it('Returns true if ports file exists', function() {
     // Arrange
-    mockPortsFile();
+    existsStub.callsFake(function(portsFile) { return true; });
 
     // Act
     var exists = portsFile.portsFileExists();
 
     // Assert
     assert.equal(exists, true);
+    assert(existsStub.calledOnceWith(portsFileWithPath));
   });
 });
 
-describe('portsFile parsing operations', () => {
-  beforeEach(() => {
-    mockFs.restore(); // Removed fs mock
+describe('portsFile parsing operations', function() {
+  let existsStub;
+  let readFileStub;
+  
+  beforeEach(function() {
+    if (existsStub) { existsStub.restore(); }
+    existsStub = sinon.stub(fs, 'existsSync');
+    if (readFileStub) { readFileStub.restore(); }
+    readFileStub = sinon.stub(fs, 'readFileSync');
   });
 
-  afterEach(() => {
-    mockFs.restore(); // Removed fs mock
+  after(function() {
+    if (existsStub) { existsStub.restore(); }
+    if (readFileStub) { readFileStub.restore(); }
   });
 
-  it('Returns error if port file content is not JSON', (done) => {
+  it('Returns error if port file content is not JSON', function(done) {
     // Arrange
-    mockPortsFile();
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return '<this is not JSON>'; });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
-      assert.equal(err.message, 'Unexpected token d in JSON at position 0');
+      assert.equal(err.message, 'Unexpected token < in JSON at position 0');
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns error if no file exists', (done) => {
+  it('Returns error if no file exists', function(done) {
     // Arrange
+    existsStub.callsFake(function(portsFile) { return false; });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'cypress-ntlm-auth proxy does not seem to be running. It must be started before cypress. Please see the docs.' +portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.notCalled);
       done();
     });
   });
 
-  it('Returns error if port file content is invalid', (done) => {
+  it('Returns error if port file content is invalid', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ dummy: 'dummy' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ dummy: 'dummy' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot parse ' + portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns error if port file content is missing configApiUrl', (done) => {
+  it('Returns error if port file content is missing configApiUrl', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ ntlmProxyUrl: 'dummy' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ ntlmProxyUrl: 'dummy' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot parse ' + portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns error if port file content is missing ntlmProxyUrl', (done) => {
+  it('Returns error if port file content is missing ntlmProxyUrl', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ configApiUrl: 'dummy' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ configApiUrl: 'dummy' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot parse ' + portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns error if ntlmProxyUrl cannot be parsed as an url', (done) => {
+  it('Returns error if ntlmProxyUrl cannot be parsed as an url', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ configApiUrl: 'http://localhost:1234', ntlmProxyUrl: 'dummy' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ configApiUrl: 'http://localhost:1234', ntlmProxyUrl: 'dummy' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot parse ' + portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns error if configApiUrl cannot be parsed as an url', (done) => {
+  it('Returns error if configApiUrl cannot be parsed as an url', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ configApiUrl: 'dummy', ntlmProxyUrl: 'http://localhost:1234' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ configApiUrl: 'dummy', ntlmProxyUrl: 'http://localhost:1234' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot parse ' + portsFileWithPath);
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
 
-  it('Returns object if file content is ok', (done) => {
+  it('Returns object if file content is ok', function(done) {
     // Arrange
-    mockPortsFile(JSON.stringify({ configApiUrl: 'http://127.0.0.1:1235', ntlmProxyUrl: 'http://localhost:1234' }));
+    existsStub.callsFake(function(portsFile) { return true; });
+    readFileStub.callsFake(function(portsFile) { return JSON.stringify({ configApiUrl: 'http://127.0.0.1:1235', ntlmProxyUrl: 'http://localhost:1234' }); });
 
     // Act
     portsFile.parsePortsFile(function (ports, err) {
@@ -324,6 +266,8 @@ describe('portsFile parsing operations', () => {
       assert(!err, 'We should not get an Error.');
       assert.equal(ports.ntlmProxyUrl, 'http://localhost:1234');
       assert.equal(ports.configApiUrl, 'http://127.0.0.1:1235');
+      assert(existsStub.calledOnceWith(portsFileWithPath));
+      assert(readFileStub.calledOnceWith(portsFileWithPath));
       done();
     });
   });
