@@ -121,7 +121,7 @@ describe('Proxy startup and shutdown', () => {
       assert(savePortsFileStub.calledOnce);
       return done();
     });
-  });
+  }).timeout(5000);;
 
   it('starting proxy should write portsFile', function(done) {
     // Arrange
@@ -151,7 +151,7 @@ describe('Proxy startup and shutdown', () => {
         return done();
       });
     });
-  });
+  }).timeout(5000);
 
   it('restarting proxy should terminate old proxy', function(done) {
     // Arrange
@@ -194,9 +194,9 @@ describe('Proxy startup and shutdown', () => {
       assert(parsePortsFileStub.calledOnce);
       assert(deletePortsFileStub.calledOnce);
       assert(savePortsFileStub.calledOnce);
-      done();
+      return done();
     });
-  });
+  }).timeout(5000);
 
   it('quit command shuts down the proxy, keep portsFile', function(done) {
     // Arrange
@@ -228,11 +228,11 @@ describe('Proxy startup and shutdown', () => {
             return done(err);
           }
           assert.equal(reachable, false, "Proxy should not be reachable");
-          done();
+          return done();
         });
       });
     });
-  });
+  }).timeout(5000);
 
   it('quit command shuts down the proxy, delete portsFile', function(done) {
     // Arrange
@@ -268,5 +268,5 @@ describe('Proxy startup and shutdown', () => {
         });
       });
     });
-  });
+  }).timeout(5000);
 });
