@@ -78,6 +78,7 @@ function shutDownProxy(keepPortsFile) {
   }
 
   debug('Shutting down NTLM proxy');
+  resetProxy();
   _ntlmProxy.close();
   _ntlmProxy = null;
   debug('Shutting down config API');
@@ -104,7 +105,6 @@ function validateShutDown(shutDownRetry) {
   setTimeout(() => { validateShutDown(shutDownRetry - 1) }, 100);
 }
 
-// TODO - can we really change the port on reset?
 function resetProxy() {
   // Clear config
   _ntlmHosts = {};

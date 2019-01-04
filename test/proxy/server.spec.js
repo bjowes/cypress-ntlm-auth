@@ -5,6 +5,8 @@ const sinon = require('sinon');
 
 const url = require('url');
 const http = require('http');
+const express = require('express');
+const bodyParser = require('body-parser');
 const isPortReachable = require('is-port-reachable');
 const MitmProxy = require('http-mitm-proxy');
 const getPort = require('get-port');
@@ -20,7 +22,7 @@ const proxy = require('../../src/proxy/server');
 // so we ensure this is done before the tests are executed to avoid timeouts
 let _mitmProxyInit = false;
 function initMitmProxy(callback) {
-  if (_mitmProxyInit) return;
+  if (_mitmProxyInit) return callback();
 
   let mitmProxy = MitmProxy();
   getPort().then((port) => {
@@ -298,14 +300,42 @@ describe('Proxy startup and shutdown', () => {
     });
   });
 });
-/*
-describe('Proxy config', function() {
+
+
+describe('Proxy authentication', function() {
   let savePortsFileStub;
   let portsFileExistsStub;
+  let deletePortsFileStub;
+  let remoteHost = express();
+  let remoteHostRequestHeaders;
+  let remoteHostReply;
+  let remoteHostListener;
+  let remoteHostWithPort;
 
+  function initRemoteHost(callback) {
+    remoteHost.use(bodyParser.raw());
+    remoteHostReply = 401;
+    remoteHost.use((req, res, next) => {
+      remoteHostRequestHeaders = req.headers;
+      res.sendStatus(remoteHostReply);
+    });
+    remoteHostListener = remoteHost.listen((err) => {
+      if (err) {
+        return callback(err);
+      }
+      remoteHostWithPort = 'localhost:' + remoteHostListener.address().port;
+      return callback();
+    });
+  }
+  
   before(function(done) {
     this.timeout(15000);
-    initMitmProxy(done);
+    initMitmProxy((err) => {
+      if (err) {
+        return done(err);
+      }
+      initRemoteHost(done);
+    });
   });
 
   beforeEach(function() {
@@ -313,6 +343,8 @@ describe('Proxy config', function() {
     savePortsFileStub = sinon.stub(portsFile, 'savePortsFile');
     if (portsFileExistsStub) { portsFileExistsStub.restore(); }
     portsFileExistsStub = sinon.stub(portsFile, 'portsFileExists');
+    if (deletePortsFileStub) { deletePortsFileStub.restore(); }
+    deletePortsFileStub = sinon.stub(portsFile, 'deletePortsFile');
     _configApiUrl = null;
   });
 
@@ -333,64 +365,16 @@ describe('Proxy config', function() {
   after(function() {
     if (savePortsFileStub) { savePortsFileStub.restore(); }
     if (portsFileExistsStub) { portsFileExistsStub.restore(); }
+    if (deletePortsFileStub) { deletePortsFileStub.restore(); }
+    remoteHostListener.close();
   });
 
-  it('unconfigured proxy shall not add authentication header', function() {
+  it('unconfigured proxy shall not add authentication header', function(done) {
     // Arrange
     portsFileExistsStub.returns(false);
     savePortsFileStub.callsFake(function(ports, callback) { return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
 
-    let remoteHost = express();
-    remoteHost.use(bodyParser.raw());
-    remoteHost.use()
-
-    function startConfigApi(callback) {
-      _configApp.use(bodyParser.json());
-    
-      _configApp.post('/ntlm-config', (req, res, next) => {
-        let validateResult = validateConfig(req.body);
-        if (!validateResult.ok) {
-          res.status(400).send('Config parse error. ' + validateResult.message);
-        } else {
-          debug('received valid config update');
-          updateConfig(req.body);
-          res.sendStatus(200);
-        }
-      });
-    
-      _configApp.post('/reset', (req, res, next) => {
-        debug('received reset');
-        resetProxy();
-        res.sendStatus(200);
-      });
-    
-      _configApp.get('/alive', (req, res, next) => {
-        debug('received alive');
-        res.sendStatus(200);
-      });
-    
-      _configApp.post('/quit', (req, res, next) => {
-        debug('received quit');
-        res.status(200).send('Over and out!');
-        shutDownProxy(req.body.keepPortsFile);
-      });
-    
-      let t1 = new Date();
-      getPort(7900).then((port) => {
-        let t2 = new Date();
-        _configAppListener = _configApp.listen(port, (err) => {
-          if (err) {
-            debug('Cannot start NTLM auth config API');
-            return callback(null, err);
-          }
-          let t3 = new Date();
-          debug('getPort: ' + (t2.getTime() - t1.getTime()) + 'ms, listen: ' + (t3.getTime() - t2.getTime()) + 'ms');
-          debug('NTLM auth config API listening on port: ' + port);
-          return callback(port, null);
-        });
-      });
-    }
-    
     // Act
     proxy.startProxy(null, null, false, (result, err) => {
       // Assert
@@ -398,33 +382,230 @@ describe('Proxy config', function() {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
+      let proxyUrl = url.parse(result.ntlmProxyUrl);
 
-      http.request({
+      let proxyReq = http.request({
         method: 'GET',
-        path: '/',
-        host: 'localhost',
-        port: '8888',
+        path:  '/test',
+        host: proxyUrl.hostname,
+        port: proxyUrl.port,
+        timeout: 15000,
+        headers: {
+          'Host': remoteHostWithPort
+        } 
+      }, (res) => {
+        assert.equal(res.statusCode, 401);
+        assert.equal('authorization' in remoteHostRequestHeaders, false);
+        done();
+      });
+      proxyReq.on('error', (err) => {
+        return done(err);
+      });
+      proxyReq.end();
+    });
+  });
+
+  it('configured proxy shall add authentication header', function(done) {
+    // Arrange
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.callsFake(function(ports, callback) { return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
+
+    // Act
+    proxy.startProxy(null, null, false, (result, err) => {
+      // Assert
+      if (err) {
+        return done(err);
+      }
+      _configApiUrl = result.configApiUrl;
+      let configUrl = url.parse(result.configApiUrl);
+      let hostConfig = {
+        ntlmHost: 'http://' + remoteHostWithPort,
+        username: 'nisse',
+        password: 'manpower',
+        domain: 'mnpwr'
+      };
+      let hostConfigJson = JSON.stringify(hostConfig)
+      let configReq = http.request({
+        method: 'POST',
+        path:  '/ntlm-config',
+        host: configUrl.hostname,
+        port: configUrl.port,
         timeout: 15000,
         headers: {
           'content-type': 'application/json; charset=UTF-8',
-          'content-length': Buffer.byteLength(quitBody)
-        }}));
+          'content-length': Buffer.byteLength(hostConfigJson)
+        } 
+      }, (res) => {
+        assert.equal(res.statusCode, 200);
 
-      })
+        let proxyUrl = url.parse(result.ntlmProxyUrl);
+
+        let proxyReq = http.request({
+          method: 'GET',
+          path:  '/test',
+          host: proxyUrl.hostname,
+          port: proxyUrl.port,
+          timeout: 15000,
+          headers: {
+            'Host': remoteHostWithPort
+          } 
+        }, (res) => {
+          assert.equal(res.statusCode, 401);
+          assert.equal('authorization' in remoteHostRequestHeaders, true);
+          done();
+        });
+        proxyReq.on('error', (err) => {
+          return done(err);
+        });
+        proxyReq.end();  
+      });
+      configReq.on('error', (err) => {
+        return done(err);
+      });
+      configReq.write(hostConfigJson);
+      configReq.end();
+    });
+  });
+
+  it('configured proxy shall not add authentication header for unconfigured host', function(done) {
+    // Arrange
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.callsFake(function(ports, callback) { return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
+
+    // Act
+    proxy.startProxy(null, null, false, (result, err) => {
+      // Assert
+      if (err) {
+        return done(err);
+      }
+      _configApiUrl = result.configApiUrl;
+      let configUrl = url.parse(result.configApiUrl);
+      let hostConfig = {
+        ntlmHost: 'http://some.other.host.com:4567',
+        username: 'nisse',
+        password: 'manpower',
+        domain: 'mnpwr'
+      };
+      let hostConfigJson = JSON.stringify(hostConfig)
+      let configReq = http.request({
+        method: 'POST',
+        path:  '/ntlm-config',
+        host: configUrl.hostname,
+        port: configUrl.port,
+        timeout: 15000,
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          'content-length': Buffer.byteLength(hostConfigJson)
+        } 
+      }, (res) => {
+        assert.equal(res.statusCode, 200);
+
+        let proxyUrl = url.parse(result.ntlmProxyUrl);
+
+        let proxyReq = http.request({
+          method: 'GET',
+          path:  '/test',
+          host: proxyUrl.hostname,
+          port: proxyUrl.port,
+          timeout: 15000,
+          headers: {
+            'Host': remoteHostWithPort
+          } 
+        }, (res) => {
+          assert.equal(res.statusCode, 401);
+          assert.equal('authorization' in remoteHostRequestHeaders, false);
+          done();
+        });
+        proxyReq.on('error', (err) => {
+          return done(err);
+        });
+        proxyReq.end();  
+      });
+      configReq.on('error', (err) => {
+        return done(err);
+      });
+      configReq.write(hostConfigJson);
+      configReq.end();
+    });
+  });
+
+  it('configured proxy shall not add authentication header after reset', function(done) {
+    // Arrange
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.callsFake(function(ports, callback) { return callback(); });
+    deletePortsFileStub.callsFake(function(callback) { return callback(); });
+
+    // Act
+    proxy.startProxy(null, null, false, (result, err) => {
+      // Assert
+      if (err) {
+        return done(err);
+      }
+      _configApiUrl = result.configApiUrl;
+      let configUrl = url.parse(result.configApiUrl);
+      let hostConfig = {
+        ntlmHost: 'http://' + remoteHostWithPort,
+        username: 'nisse',
+        password: 'manpower',
+        domain: 'mnpwr'
+      };
+      let hostConfigJson = JSON.stringify(hostConfig)
+      let configReq = http.request({
+        method: 'POST',
+        path:  '/ntlm-config',
+        host: configUrl.hostname,
+        port: configUrl.port,
+        timeout: 15000,
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          'content-length': Buffer.byteLength(hostConfigJson)
+        } 
+      }, (res) => {
+        assert.equal(res.statusCode, 200);
+
+        let configResetReq = http.request({
+          method: 'POST',
+          path:  '/reset',
+          host: configUrl.hostname,
+          port: configUrl.port,
+          timeout: 15000
+        }, (res) => {
+          assert.equal(res.statusCode, 200);
+          
+          let proxyUrl = url.parse(result.ntlmProxyUrl);
+
+          let proxyReq = http.request({
+            method: 'GET',
+            path:  '/test',
+            host: proxyUrl.hostname,
+            port: proxyUrl.port,
+            timeout: 15000,
+            headers: {
+              'Host': remoteHostWithPort
+            } 
+          }, (res) => {
+            assert.equal(res.statusCode, 401);
+            assert.equal('authorization' in remoteHostRequestHeaders, false);
+            done();
+          });
+          proxyReq.on('error', (err) => {
+            return done(err);
+          });
+          proxyReq.end();  
+        });
+        configResetReq.on('error', (err) => {
+          return done(err);
+        });
+        configResetReq.end();
+      });  
+      configReq.on('error', (err) => {
+        return done(err);
+      });
+      configReq.write(hostConfigJson);
+      configReq.end();
     });
 
-    // Assert
   });
-
-  it('configured proxy shall add authentication header', function() {
-
-  });
-
-  it('configured proxy shall not add authentication header for unconfigured host', function() {
-
-  });
-
-  it('configured proxy shall not add authentication header after reset', function() {
-
-  });
-});*/
+});
