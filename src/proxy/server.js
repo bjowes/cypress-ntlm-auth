@@ -78,6 +78,7 @@ function shutDownProxy(keepPortsFile) {
   }
 
   debug('Shutting down NTLM proxy');
+  resetProxy();
   _ntlmProxy.close();
   _ntlmProxy = null;
   debug('Shutting down config API');
@@ -104,7 +105,6 @@ function validateShutDown(shutDownRetry) {
   setTimeout(() => { validateShutDown(shutDownRetry - 1) }, 100);
 }
 
-// TODO - can we really change the port on reset?
 function resetProxy() {
   // Clear config
   _ntlmHosts = {};
@@ -143,7 +143,7 @@ function startConfigApi(callback) {
     shutDownProxy(req.body.keepPortsFile);
   });
 
-  getPort(7900).then((port) => {
+  getPort().then((port) => {
     _configAppListener = _configApp.listen(port, (err) => {
       if (err) {
         debug('Cannot start NTLM auth config API');
@@ -340,7 +340,7 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
     })
   });
 
-  getPort(7800).then((port) => {
+  getPort().then((port) => {
     _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false }, (err) => {
       if (err) {
         debug('cannot start proxy listener');
