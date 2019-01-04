@@ -6,12 +6,35 @@ const sinon = require('sinon');
 const url = require('url');
 const http = require('http');
 const isPortReachable = require('is-port-reachable');
+const MitmProxy = require('http-mitm-proxy');
+const getPort = require('get-port');
 
 const portsFile = require('../../src/util/portsFile');
 const portsFileName = 'cypress-ntlm-auth.port';
 const portsFileWithPath = path.join(getPath.getDataHome(), portsFileName);
 
+
 const proxy = require('../../src/proxy/server');
+
+// The MITM proxy takes a significant time to start the first time due to cert generation,
+// so we ensure this is done before the tests are executed to avoid timeouts
+let _mitmProxyInit = false;
+function initMitmProxy(callback) {
+  if (_mitmProxyInit) return;
+
+  let mitmProxy = MitmProxy();
+  getPort().then((port) => {
+    mitmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false }, (err) => {
+      if (err) {
+        return callback(err);
+      }
+      mitmProxy.close();
+      _mitmProxyInit = true;  
+      return callback();
+    });
+  });
+}
+
 let _configApiUrl;
 
 function sendQuitCommand(configApiUrl, keepPortsFile, callback) {
@@ -72,6 +95,11 @@ describe('Proxy startup and shutdown', () => {
   let deletePortsFileStub;
   let httpRequestStub;
 
+  before(function(done) {
+    this.timeout(15000);
+    initMitmProxy(done);
+  });
+
   beforeEach(function() {
     if (savePortsFileStub) { savePortsFileStub.restore(); }
     savePortsFileStub = sinon.stub(portsFile, 'savePortsFile');
@@ -121,7 +149,7 @@ describe('Proxy startup and shutdown', () => {
       assert(savePortsFileStub.calledOnce);
       return done();
     });
-  }).timeout(5000);;
+  });
 
   it('starting proxy should write portsFile', function(done) {
     // Arrange
@@ -151,7 +179,7 @@ describe('Proxy startup and shutdown', () => {
         return done();
       });
     });
-  }).timeout(5000);
+  });
 
   it('restarting proxy should terminate old proxy', function(done) {
     // Arrange
@@ -196,7 +224,7 @@ describe('Proxy startup and shutdown', () => {
       assert(savePortsFileStub.calledOnce);
       return done();
     });
-  }).timeout(5000);
+  });
 
   it('quit command shuts down the proxy, keep portsFile', function(done) {
     // Arrange
@@ -232,7 +260,7 @@ describe('Proxy startup and shutdown', () => {
         });
       });
     });
-  }).timeout(5000);
+  });
 
   it('quit command shuts down the proxy, delete portsFile', function(done) {
     // Arrange
@@ -268,5 +296,135 @@ describe('Proxy startup and shutdown', () => {
         });
       });
     });
-  }).timeout(5000);
+  });
 });
+/*
+describe('Proxy config', function() {
+  let savePortsFileStub;
+  let portsFileExistsStub;
+
+  before(function(done) {
+    this.timeout(15000);
+    initMitmProxy(done);
+  });
+
+  beforeEach(function() {
+    if (savePortsFileStub) { savePortsFileStub.restore(); }
+    savePortsFileStub = sinon.stub(portsFile, 'savePortsFile');
+    if (portsFileExistsStub) { portsFileExistsStub.restore(); }
+    portsFileExistsStub = sinon.stub(portsFile, 'portsFileExists');
+    _configApiUrl = null;
+  });
+
+  afterEach(function(done) {
+    if (_configApiUrl) {
+      sendQuitCommand(_configApiUrl, false, (err) => { // Shutdown the proxy listeners to allow a clean exit
+        if (err) {
+          return done(err);
+        }
+        return done();
+      }); 
+    }
+    if (!_configApiUrl) {
+      return done();
+    }
+  });
+
+  after(function() {
+    if (savePortsFileStub) { savePortsFileStub.restore(); }
+    if (portsFileExistsStub) { portsFileExistsStub.restore(); }
+  });
+
+  it('unconfigured proxy shall not add authentication header', function() {
+    // Arrange
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.callsFake(function(ports, callback) { return callback(); });
+
+    let remoteHost = express();
+    remoteHost.use(bodyParser.raw());
+    remoteHost.use()
+
+    function startConfigApi(callback) {
+      _configApp.use(bodyParser.json());
+    
+      _configApp.post('/ntlm-config', (req, res, next) => {
+        let validateResult = validateConfig(req.body);
+        if (!validateResult.ok) {
+          res.status(400).send('Config parse error. ' + validateResult.message);
+        } else {
+          debug('received valid config update');
+          updateConfig(req.body);
+          res.sendStatus(200);
+        }
+      });
+    
+      _configApp.post('/reset', (req, res, next) => {
+        debug('received reset');
+        resetProxy();
+        res.sendStatus(200);
+      });
+    
+      _configApp.get('/alive', (req, res, next) => {
+        debug('received alive');
+        res.sendStatus(200);
+      });
+    
+      _configApp.post('/quit', (req, res, next) => {
+        debug('received quit');
+        res.status(200).send('Over and out!');
+        shutDownProxy(req.body.keepPortsFile);
+      });
+    
+      let t1 = new Date();
+      getPort(7900).then((port) => {
+        let t2 = new Date();
+        _configAppListener = _configApp.listen(port, (err) => {
+          if (err) {
+            debug('Cannot start NTLM auth config API');
+            return callback(null, err);
+          }
+          let t3 = new Date();
+          debug('getPort: ' + (t2.getTime() - t1.getTime()) + 'ms, listen: ' + (t3.getTime() - t2.getTime()) + 'ms');
+          debug('NTLM auth config API listening on port: ' + port);
+          return callback(port, null);
+        });
+      });
+    }
+    
+    // Act
+    proxy.startProxy(null, null, false, (result, err) => {
+      // Assert
+      if (err) {
+        return done(err);
+      }
+      _configApiUrl = result.configApiUrl;
+
+      http.request({
+        method: 'GET',
+        path: '/',
+        host: 'localhost',
+        port: '8888',
+        timeout: 15000,
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          'content-length': Buffer.byteLength(quitBody)
+        }}));
+
+      })
+    });
+
+    // Assert
+  });
+
+  it('configured proxy shall add authentication header', function() {
+
+  });
+
+  it('configured proxy shall not add authentication header for unconfigured host', function() {
+
+  });
+
+  it('configured proxy shall not add authentication header after reset', function() {
+
+  });
+});*/

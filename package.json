@@ -7,7 +7,7 @@
     "proxy": "node src/proxy/index.js &",
     "launch": "node src/launcher/cypressNtlm.js",
     "pnl": "npm run proxy && npm run launch",
-    "test": "DEBUG=cypress* mocha --recursive"
+    "test": "mocha --recursive"
   },
   "engines": {
     "node": ">=8.2.1"

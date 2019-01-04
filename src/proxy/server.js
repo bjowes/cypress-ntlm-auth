@@ -143,12 +143,8 @@ function startConfigApi(callback) {
     shutDownProxy(req.body.keepPortsFile);
   });
 
-  let t1 = new Date();
   getPort().then((port) => {
-    let t2 = new Date();
     _configAppListener = _configApp.listen(port, (err) => {
-      let t3 = new Date();
-      debug('getPort: ' + (t2.getTime() - t1.getTime()) + 'ms, listen: ' + (t3.getTime() - t2.getTime()) + 'ms');
       if (err) {
         debug('Cannot start NTLM auth config API');
         return callback(null, err);
@@ -344,12 +340,8 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
     })
   });
 
-  let t1 = new Date();
   getPort().then((port) => {
-    let t2 = new Date();
     _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false }, (err) => {
-      let t3 = new Date();
-      debug('getPort: ' + (t2.getTime() - t1.getTime()) + 'ms, listen: ' + (t3.getTime() - t2.getTime()) + 'ms');
       if (err) {
         debug('cannot start proxy listener');
         return callback(null, err);
