@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3 - released 2019-01-06
+
+* Improved unit tests
+* Code cleanup with eslint
+* Minor fixes to NTLM handshake error handling
+
 ## 0.3.2 - released 2018-12-27
 
 * Don't show internal communication in Cypress test log
