@@ -62,16 +62,12 @@ module.exports = {
         if ('NTLM_AUTH_SHUTDOWN_WITH_CYPRESS' in config.env) {
           debug(config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS);
           _shutdownWithCypress =
-            config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS == true;
+            (config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS === 'true' ||
+             config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS === true);
         }
         _configApiUrl = ports.configApiUrl;
         resolve(config);
       });
     });
-  },
-  validateBrowser: function(browser = {}) {
-    if (browser.name !== 'chrome') {
-      debug('NTLM auth plugin only validated with Chrome browser. Detected ' + browser.name + ', use at your own risk!');
-    }
   }
 };

@@ -73,6 +73,8 @@ When the additions to package.json are done as described above, the most conveni
 npm run cypress-ntlm
 ```
 
+This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). The ntlm-proxy process is automatically terminated when cypress exits.
+
 ### ntlm-proxy
 
 This binary is available in the `node_modules/.bin` folder. Use it to start the ntlm-proxy manually.
@@ -218,6 +220,7 @@ The NTLM proxy will accept self-signed certificates for sites that are served fr
 * Upstream proxy support
 * Support custom http.Agent / https.Agent configuration
 * Configuration option to disable self-signed certificates even for localhost
+* Let Cypress bypass the proxy when communicating with the browser (possible if no ntlmHost is on localhost)
 
 ## Credits
 

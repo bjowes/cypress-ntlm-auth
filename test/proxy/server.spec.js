@@ -1,3 +1,5 @@
+// cSpell:ignore nisse, mnpwr
+
 const assert = require('assert');
 const getPath = require('platform-folders');
 const path = require('path');
@@ -454,7 +456,7 @@ describe('Proxy authentication', function () {
     remoteHostListener.close();
   });
 
-  it('unconfigured proxy shall not add authentication header', function (done) {
+  it('proxy without configuration shall not add authentication header', function (done) {
     // Arrange
     portsFileExistsStub.returns(false);
     savePortsFileStub.callsFake(function (ports, callback) {
@@ -485,7 +487,7 @@ describe('Proxy authentication', function () {
     });
   });
 
-  it('configured proxy shall add authentication header', function (done) {
+  it('proxy with configuration shall add authentication header', function (done) {
     // Arrange
     portsFileExistsStub.returns(false);
     savePortsFileStub.callsFake(function (ports, callback) {
@@ -533,7 +535,7 @@ describe('Proxy authentication', function () {
     });
   });
 
-  it('configured proxy shall not add authentication header for unconfigured host', function (done) {
+  it('proxy with configuration shall not add authentication header for another host', function (done) {
     // Arrange
     portsFileExistsStub.returns(false);
     savePortsFileStub.callsFake(function (ports, callback) {
@@ -574,7 +576,7 @@ describe('Proxy authentication', function () {
     });
   });
 
-  it('configured proxy shall not add authentication header after reset', function (done) {
+  it('proxy shall not add authentication header after reset', function (done) {
     // Arrange
     portsFileExistsStub.returns(false);
     savePortsFileStub.callsFake(function (ports, callback) {
