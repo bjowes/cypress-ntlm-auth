@@ -4,7 +4,7 @@
 
 
 /**
- * Adds NTLM autentication support to Cypress using custom commands.
+ * Adds NTLM authentication support to Cypress using custom commands.
  *
  * @example
  ```js
@@ -17,25 +17,31 @@
   cy.ntlmReset();
  ```
  */
- 
+
 const ntlm = (ntlmHost, username, password, domain, workstation) => {
   const log = {
     name: 'ntlm',
-    message: {ntlmHost, username}
-  }
+    message: { ntlmHost, username }
+  };
 
   const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
   const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
   if (!ntlmProxy || !ntlmConfigApi) {
-    throw new Error("The cypress-ntlm-auth plugin must be loaded before using this method");
+    throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
   }
 
   let result;
 
   cy.request({
-    method: 'POST', 
-    url: ntlmConfigApi + '/ntlm-config', 
-    body: {ntlmHost: ntlmHost, username: username, password: password, domain: domain, workstation: workstation},
+    method: 'POST',
+    url: ntlmConfigApi + '/ntlm-config',
+    body: {
+      ntlmHost: ntlmHost,
+      username: username,
+      password: password,
+      domain: domain,
+      workstation: workstation
+    },
     log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
@@ -53,30 +59,30 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
       domain: domain,
       workstation: workstation,
       result: result
-    }
-  }
+    };
+  };
 
   Cypress.log(log);
-}
+};
 
 
 const ntlmReset = () => {
   const log = {
     name: 'ntlmReset',
     message: {}
-  }
+  };
 
   const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
   const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
   if (!ntlmProxy || !ntlmConfigApi) {
-    throw new Error("The cypress-ntlm-auth plugin must be loaded before using this method");
+    throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
   }
 
   let result;
 
   cy.request({
-    method: 'POST', 
-    url: ntlmConfigApi + '/reset', 
+    method: 'POST',
+    url: ntlmConfigApi + '/reset',
     body: {},
     log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
@@ -91,11 +97,11 @@ const ntlmReset = () => {
   log.consoleProps = () => {
     return {
       result: result
-    }
-  }
+    };
+  };
 
   Cypress.log(log);
-}
+};
 
 Cypress.Commands.add('ntlm', { prevSubject: false }, ntlm);
 Cypress.Commands.add('ntlmReset', { prevSubject: false }, ntlmReset);
