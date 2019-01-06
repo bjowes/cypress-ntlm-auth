@@ -10,7 +10,7 @@ const portsFileName = 'cypress-ntlm-auth.port';
 const portsFile = path.join(getPath.getDataHome(), portsFileName);
 
 module.exports = {
-  deletePortsFile: function (callback) {
+  delete: function (callback) {
     fs.unlink(portsFile, function (err) {
       if (err) {
         debug(err);
@@ -20,7 +20,7 @@ module.exports = {
     });
   },
 
-  savePortsFile: function (ports, callback) {
+  save: function (ports, callback) {
     fs.writeFile(portsFile, JSON.stringify(ports),
       function (err) {
         if (err) {
@@ -33,11 +33,11 @@ module.exports = {
       });
   },
 
-  portsFileExists: function () {
+  exists: function () {
     return fs.existsSync(portsFile);
   },
 
-  parsePortsFile: function (callback) {
+  parse: function (callback) {
     if (fs.existsSync(portsFile)) {
       let data = fs.readFileSync(portsFile);
       let ports;
@@ -57,12 +57,19 @@ module.exports = {
 };
 
 function validatePortsFile(ports) {
-  if (!ports) return false;
-  if (!ports.configApiUrl || !ports.ntlmProxyUrl) return false;
-  let urltest = url.parse(ports.configApiUrl);
-  if (!urltest.protocol || !urltest.hostname || !urltest.port) return false;
-  urltest = url.parse(ports.ntlmProxyUrl);
-  if (!urltest.protocol || !urltest.hostname || !urltest.port) return false;
-
+  if (!ports) {
+    return false;
+  }
+  if (!ports.configApiUrl || !ports.ntlmProxyUrl) {
+    return false;
+  }
+  let urlTest = url.parse(ports.configApiUrl);
+  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port) {
+    return false;
+  }
+  urlTest = url.parse(ports.ntlmProxyUrl);
+  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port) {
+    return false;
+  }
   return true;
 }

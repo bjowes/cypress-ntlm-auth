@@ -1,6 +1,6 @@
 'use strict';
 
-const debug = require("debug")("cypress:ntlm-auth-plugin");
+const debug = require('debug')('cypress:ntlm-auth-plugin');
 const portsFile = require('../util/portsFile');
 const url = require('url');
 const http = require('http');
@@ -52,7 +52,7 @@ function sendQuitCommand() {
 module.exports = {
   initNtlmAuth: function(config) {
     return new Promise((resolve, reject) => {
-      portsFile.parsePortsFile((ports, err) => {
+      portsFile.parse((ports, err) => {
         if (err) {
           reject(err);
         }
@@ -61,11 +61,12 @@ module.exports = {
         debug(config.env);
         if ('NTLM_AUTH_SHUTDOWN_WITH_CYPRESS' in config.env) {
           debug(config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS);
-          _shutdownWithCypress = config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS == true;
+          _shutdownWithCypress =
+            config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS == true;
         }
         _configApiUrl = ports.configApiUrl;
-        resolve(config);  
-      });   
+        resolve(config);
+      });
     });
   },
   validateBrowser: function(browser = {}) {
@@ -73,4 +74,4 @@ module.exports = {
       debug('NTLM auth plugin only validated with Chrome browser. Detected ' + browser.name + ', use at your own risk!');
     }
   }
-}
+};

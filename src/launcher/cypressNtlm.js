@@ -5,8 +5,8 @@
 const portsFile = require('../util/portsFile');
 const cypress = require('cypress/lib/cli');
 
-if (portsFile.portsFileExists()) {
-    portsFile.parsePortsFile((ports, err) => {
+if (portsFile.exists()) {
+    portsFile.parse((ports, err) => {
         if (err) {
             throw err;
         }
