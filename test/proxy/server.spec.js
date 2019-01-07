@@ -1,7 +1,6 @@
 // cSpell:ignore nisse, mnpwr
 
 const assert = require('assert');
-const getPath = require('platform-folders');
 const path = require('path');
 const sinon = require('sinon');
 
@@ -14,8 +13,10 @@ const httpMitmProxy = require('http-mitm-proxy');
 const getPort = require('get-port');
 
 const portsFile = require('../../src/util/portsFile');
+
+const appDataPath = require('appdata-path');
 const portsFileName = 'cypress-ntlm-auth.port';
-const portsFileWithPath = path.join(getPath.getDataHome(), portsFileName);
+const portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), portsFileName);
 
 
 const proxy = require('../../src/proxy/server');

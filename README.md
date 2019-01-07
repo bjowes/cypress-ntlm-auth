@@ -44,6 +44,10 @@ module.exports = (on, config) => {
 
 (if you are using other plugins I trust you can merge this with your current file)
 
+Note that once this code is in place, cypress must be started using the cypress-ntlm launcher.
+If cypress is started without the launcher, the plugin will throw an error. To be able to run
+cypress without the launcher, the plugin must be disabled (commenting out the call to `initNtlmAuth` is sufficient).
+
 ### 2. Commands
 
 In the file `cypress/support/index.js` add this line

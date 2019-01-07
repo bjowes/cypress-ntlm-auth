@@ -1,45 +1,53 @@
 'use strict';
 
-const getPath = require('platform-folders');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const debug = require('debug')('cypress:ntlm-auth-plugin');
+const mkdirp = require('mkdirp');
 
+const appDataPath = require('appdata-path');
 const portsFileName = 'cypress-ntlm-auth.port';
-const portsFile = path.join(getPath.getDataHome(), portsFileName);
+const portsFileFolder = appDataPath('cypress-ntlm-auth');
+const portsFileWithPath = path.join(portsFileFolder, portsFileName);
 
 module.exports = {
   delete: function (callback) {
-    fs.unlink(portsFile, function (err) {
+    fs.unlink(portsFileWithPath, function (err) {
       if (err) {
         debug(err);
-        return callback(new Error('Cannot delete ' + portsFile));
+        return callback(new Error('Cannot delete ' + portsFileWithPath));
       }
       return callback(null);
     });
   },
 
   save: function (ports, callback) {
-    fs.writeFile(portsFile, JSON.stringify(ports),
-      function (err) {
-        if (err) {
-          debug(err);
-          return callback(new Error('Cannot create ' + portsFile));
-        } else {
-          debug('wrote ' + portsFile);
-        }
-        return callback(null);
-      });
+    mkdirp(portsFileFolder, (err) => {
+      if (err) {
+        debug(err);
+        return callback(new Error('Cannot create dir ' + portsFileFolder + '. ' + err));
+      }
+      fs.writeFile(portsFileWithPath, JSON.stringify(ports),
+        function (err) {
+          if (err) {
+            debug(err);
+            return callback(new Error('Cannot create file ' + portsFileWithPath + '. ' + err));
+          } else {
+            debug('wrote ' + portsFileWithPath);
+          }
+          return callback(null);
+        });
+    });
   },
 
   exists: function () {
-    return fs.existsSync(portsFile);
+    return fs.existsSync(portsFileWithPath);
   },
 
   parse: function (callback) {
-    if (fs.existsSync(portsFile)) {
-      let data = fs.readFileSync(portsFile);
+    if (fs.existsSync(portsFileWithPath)) {
+      let data = fs.readFileSync(portsFileWithPath);
       let ports;
       try {
         ports = JSON.parse(data);
@@ -49,9 +57,11 @@ module.exports = {
       if (validatePortsFile(ports)) {
         return callback(ports, null);
       }
-      return callback(null, new Error('Cannot parse ' + portsFile));
+      return callback(null, new Error('Cannot parse ' + portsFileWithPath));
     } else {
-      return callback(null, new Error('cypress-ntlm-auth proxy does not seem to be running. It must be started before cypress. Please see the docs.' + portsFile));
+      return callback(null,
+        new Error('cypress-ntlm-auth proxy does not seem to be running. '+
+        'It must be started before cypress. Please see the docs.' + portsFileWithPath));
     }
   }
 };

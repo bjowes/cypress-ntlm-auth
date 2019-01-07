@@ -1,12 +1,14 @@
 const assert = require('assert');
 const portsFile = require('../../src/util/portsFile');
-const getPath = require('platform-folders');
 const path = require('path');
 const fs = require('fs');
 const sinon = require('sinon');
+const proxyquire = require('proxyquire').noCallThru();
 
+const appDataPath = require('appdata-path');
 const portsFileName = 'cypress-ntlm-auth.port';
-const portsFileWithPath = path.join(getPath.getDataHome(), portsFileName);
+const portsFileFolder = appDataPath('cypress-ntlm-auth');
+const portsFileWithPath = path.join(portsFileFolder, portsFileName);
 
 describe('portsFile delete operations', function () {
 
@@ -58,9 +60,23 @@ describe('portsFile delete operations', function () {
 });
 
 describe('portsFile save operations', function () {
+  let mkdirpCount;
+  let mkdirpResult;
   let writeStub;
 
+  let portsFile = proxyquire('../../src/util/portsFile',
+    { 'mkdirp': function(path, callback) {
+      mkdirpCount++;
+      if (mkdirpResult) {
+        return callback();
+      }
+      return callback(new Error('test'));
+    }
+  });
+
   beforeEach(function () {
+    mkdirpCount = 0;
+    mkdirpResult = false;
     if (writeStub) {
       writeStub.restore();
     }
@@ -73,8 +89,25 @@ describe('portsFile save operations', function () {
     }
   });
 
+  it('Does return error if mkdirp returns error', function (done) {
+    // Arrange
+    mkdirpResult = false;
+    let data = { dummy: 'dummy' };
+
+    // Act
+    portsFile.save(data, function (err) {
+      // Assert
+      assert.equal(mkdirpCount, 1);
+      assert(writeStub.notCalled);
+      assert(err instanceof Error, 'We should get an Error.');
+      assert.equal(err.message, 'Cannot create dir ' + portsFileFolder + '. Error: test');
+      done();
+    });
+  });
+
   it('Does return error if fs.writeFile returns error', function (done) {
     // Arrange
+    mkdirpResult = true;
     writeStub.callsFake(function (portsFile, data, callback) {
       return callback(new Error('test'));
     });
@@ -83,15 +116,17 @@ describe('portsFile save operations', function () {
     // Act
     portsFile.save(data, function (err) {
       // Assert
+      assert.equal(mkdirpCount, 1);
       assert(writeStub.calledOnceWith(portsFileWithPath));
       assert(err instanceof Error, 'We should get an Error.');
-      assert.equal(err.message, 'Cannot create ' + portsFileWithPath);
+      assert.equal(err.message, 'Cannot create file ' + portsFileWithPath + '. Error: test');
       done();
     });
   });
 
   it('Does not return error if fs.writeFile succeeds', function (done) {
     // Arrange
+    mkdirpResult = true;
     writeStub.callsFake(function (portsFile, data, callback) {
       return callback();
     });
@@ -100,6 +135,7 @@ describe('portsFile save operations', function () {
     // Act
     portsFile.save(data, function (err) {
       // Assert
+      assert.equal(mkdirpCount, 1);
       assert(writeStub.calledOnceWith(portsFileWithPath, JSON.stringify(data)));
       assert(!err, 'We should not get an Error.');
       done();

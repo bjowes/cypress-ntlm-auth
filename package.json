@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "NTLM authentication plugin for Cypress",
   "main": "index.js",
   "scripts": {
@@ -32,17 +32,19 @@
   },
   "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme",
   "dependencies": {
+    "appdata-path": "^1.0.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "get-port": "^4.1.0",
     "http-mitm-proxy": "^0.6.1",
     "httpntlm": "^1.7.6",
-    "platform-folders": "^0.2.7"
+    "mkdirp": "^0.5.1"
   },
   "devDependencies": {
     "eslint": "^5.12.0",
     "is-port-reachable": "^2.0.0",
     "mocha": "^5.2.0",
+    "proxyquire": "^2.1.0",
     "sinon": "^7.2.2"
   }
 }
