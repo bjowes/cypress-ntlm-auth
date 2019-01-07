@@ -4,10 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const debug = require('debug')('cypress:ntlm-auth-plugin');
+const mkdirp = require('mkdirp');
 
 const appDataPath = require('appdata-path');
 const portsFileName = 'cypress-ntlm-auth.port';
-const portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), portsFileName);
+const portsFileFolder = appDataPath('cypress-ntlm-auth');
+const portsFileWithPath = path.join(portsFileFolder, portsFileName);
 
 module.exports = {
   delete: function (callback) {
@@ -21,16 +23,22 @@ module.exports = {
   },
 
   save: function (ports, callback) {
-    fs.writeFile(portsFileWithPath, JSON.stringify(ports),
-      function (err) {
-        if (err) {
-          debug(err);
-          return callback(new Error('Cannot create ' + portsFileWithPath));
-        } else {
-          debug('wrote ' + portsFileWithPath);
-        }
-        return callback(null);
-      });
+    mkdirp(portsFileFolder, (err) => {
+      if (err) {
+        debug(err);
+        return callback(new Error('Cannot create dir ' + portsFileFolder + '. ' + err));
+      }
+      fs.writeFile(portsFileWithPath, JSON.stringify(ports),
+        function (err) {
+          if (err) {
+            debug(err);
+            return callback(new Error('Cannot create file ' + portsFileWithPath + '. ' + err));
+          } else {
+            debug('wrote ' + portsFileWithPath);
+          }
+          return callback(null);
+        });
+    });
   },
 
   exists: function () {

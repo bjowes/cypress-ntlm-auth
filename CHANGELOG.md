@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4 - released 2019-01-07
+
+* Replaced platform-folders with appdata-path to reduce build complexity on Windows platform (no node-gyp toolchain required)
+* Added startup validation of HTTP_PROXY environment variable to detect invalid startup
+
 ## 0.3.3 - released 2019-01-06
 
 * Improved unit tests
