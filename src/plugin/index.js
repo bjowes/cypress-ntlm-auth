@@ -4,20 +4,22 @@ const debug = require('debug')('cypress:ntlm-auth-plugin');
 const portsFile = require('../util/portsFile');
 const url = require('url');
 const http = require('http');
+const nodeCleanup = require('node-cleanup');
 
 let _configApiUrl;
 let _shutdownWithCypress = true;
 
-process.on('SIGTERM', terminationSignal);
-process.on('SIGINT', terminationSignal);
-process.on('SIGQUIT', terminationSignal);
-
-function terminationSignal() {
-  debug('Detected termination signal');
+nodeCleanup((exitCode, signal) => {
+  if (exitCode) {
+    debug('Detected process exit with code', exitCode);
+  }
+  if (signal) {
+    debug('Detected termination signal', signal);
+  }
   if (_shutdownWithCypress) {
     sendQuitCommand();
   }
-}
+});
 
 function sendQuitCommand() {
   let configApiUrl = url.parse(_configApiUrl);
