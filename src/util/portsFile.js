@@ -74,11 +74,13 @@ function validatePortsFile(ports) {
     return false;
   }
   let urlTest = url.parse(ports.configApiUrl);
-  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port || !urlTest.slashes) {
+  if (!urlTest.protocol || !urlTest.hostname ||
+      !urlTest.port || !urlTest.slashes) {
     return false;
   }
   urlTest = url.parse(ports.ntlmProxyUrl);
-  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port || !urlTest.slashes) {
+  if (!urlTest.protocol || !urlTest.hostname ||
+      !urlTest.port || !urlTest.slashes) {
     return false;
   }
   return true;

@@ -74,11 +74,11 @@ Add this to the scripts section:
     "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
 ```
 
-Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner, just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress.
+Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner. Just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress.
 
 ## Startup
 
-### npm run
+### npm run cypress-ntlm
 
 When the additions to package.json are done as described above, the most convenient way to start Cypress with NTLM authentication is
 
@@ -107,7 +107,7 @@ DEBUG=* $(npm bin)/ntlm-proxy
 
 ### ntlm-proxy-exit
 
-This binary is available in the `node_modules/.bin` folder. Use it send an exit command to a ntlm-proxy running in the background.
+This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background.
 
 #### Example
 
@@ -217,10 +217,10 @@ cy.ntlmReset();
 Using ntlmReset to clear configuration.
 
 ```javascript
-cy.ntlm('https://zappa.intranet.acme.com', 'bobby', 'brown', 'acme');
-cy.visit('https://zappa.intranet.acme.com'); // This succeeds
+cy.ntlm('https://ntlm.acme.com', 'bobby', 'brown', 'acme');
+cy.visit('https://ntlm.acme.com'); // This succeeds
 cy.ntlmReset();
-cy.visit('https://zappa.intranet.acme.com'); // This fails (401)
+cy.visit('https://ntlm.acme.com'); // This fails (401)
 ```
 
 ## Notes
