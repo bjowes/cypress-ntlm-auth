@@ -23,7 +23,8 @@
   ],
   "bin": {
     "cypress-ntlm": "./src/launcher/cypressNtlm.js",
-    "ntlm-proxy": "./src/proxy/index.js"
+    "ntlm-proxy": "./src/proxy/index.js",
+    "ntlm-proxy-exit": "./src/launcher/ntlmProxyExit.js"
   },
   "author": "Björn Weström",
   "license": "MIT",

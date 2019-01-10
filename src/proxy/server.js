@@ -10,7 +10,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const url = require('url');
 
-const debug = require('debug')('cypress:ntlm-auth-plugin');
+const debug = require('debug')('cypress:plugin:ntlm-auth');
 
 const portsFile = require('../util/portsFile');
 
@@ -25,13 +25,23 @@ let _upstreamHttpProxy;
 let _upstreamHttpsProxy;
 
 function completeUrl(host, isSSL) {
-  let hostUrl = url.parse(host);
-  if (hostUrl.port === '443') {
+  let hostUrl;
+
+  if (host.indexOf('http://') !== -1) {
+    isSSL = false;
+    hostUrl = url.parse(host);
+  } else if (host.indexOf('https://') !== -1) {
     isSSL = true;
+    hostUrl = url.parse(host);
+  } else {
+    if (isSSL || (host.indexOf(':') !== -1 && host.split(':')[1] === '443')) {
+      isSSL = true;
+      hostUrl = url.parse('https://' + host);
+    } else {
+      hostUrl = url.parse('http://' + host);
+    }
   }
-  if (!hostUrl.protocol) {
-    hostUrl.protocol = isSSL ? 'https:' : 'http:';
-  }
+
   if (!hostUrl.port) {
     hostUrl.port = isSSL ? '443' : '80';
   }
@@ -66,7 +76,7 @@ function validateConfig(config) {
   }
 
   let urlTest = url.parse(config.ntlmHost);
-  if (!urlTest.hostname) {
+  if (!urlTest.hostname || !urlTest.protocol || !urlTest.slashes) {
     return { ok: false, message: 'Invalid ntlmHost, must be a valid URL (like https://www.google.com)' };
   }
 
@@ -365,7 +375,7 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
     }
 
     // Let non-proxied hosts tunnel through
-    let reqUrl = url.parse(req.url);
+    let reqUrl = url.parse(targetHost);
 
     debug('Tunnel to', req.url);
     var conn = net.connect(reqUrl.port, reqUrl.hostname, function () {

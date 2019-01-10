@@ -1,55 +1,7 @@
 'use strict';
 
-const debug = require('debug')('cypress:ntlm-auth-plugin');
+const debug = require('debug')('cypress:plugin:ntlm-auth');
 const portsFile = require('../util/portsFile');
-const url = require('url');
-const http = require('http');
-const nodeCleanup = require('node-cleanup');
-
-let _configApiUrl;
-let _shutdownWithCypress = true;
-
-nodeCleanup((exitCode, signal) => {
-  if (exitCode) {
-    debug('Detected process exit with code', exitCode);
-  }
-  if (signal) {
-    debug('Detected termination signal', signal);
-  }
-  if (_shutdownWithCypress) {
-    sendQuitCommand();
-  }
-});
-
-function sendQuitCommand() {
-  let configApiUrl = url.parse(_configApiUrl);
-  debug('sending shutdown command to NTLM proxy');
-  let quitBody = JSON.stringify({ keepPortsFile: false });
-  let quitReq = http.request({
-    method: 'POST',
-    path: '/quit',
-    host: configApiUrl.hostname,
-    port: configApiUrl.port,
-    timeout: 15000,
-    headers: {
-      'content-type': 'application/json',
-      'content-length': Buffer.byteLength(quitBody)
-    }
-  }, function (res) {
-    res.resume();
-    if (res.statusCode !== 200) {
-      debug('Unexpected response from NTLM proxy: ' + res.statusCode);
-      throw new Error('Unexpected response from NTLM proxy: ' + res.statusCode);
-    }
-    debug('shutdown successful');
-  });
-  quitReq.on('error', (err) => {
-    debug('shutdown request failed: ' + err);
-    throw new Error('shutdown request failed: ' + err);
-  });
-  quitReq.write(quitBody);
-  quitReq.end();
-}
 
 function validateEnvironment(ports, callback) {
   if (!process.env.HTTP_PROXY) {
@@ -69,12 +21,6 @@ function validateEnvironment(ports, callback) {
 function setupProxyEnvironment(config, ports) {
   config.env.NTLM_AUTH_PROXY = ports.ntlmProxyUrl;
   config.env.NTLM_AUTH_API = ports.configApiUrl;
-  if ('NTLM_AUTH_SHUTDOWN_WITH_CYPRESS' in config.env) {
-    _shutdownWithCypress =
-      (config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS === 'true' ||
-       config.env.NTLM_AUTH_SHUTDOWN_WITH_CYPRESS === true);
-  }
-  _configApiUrl = ports.configApiUrl;
   return config;
 }
 
