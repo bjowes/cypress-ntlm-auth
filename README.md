@@ -60,16 +60,25 @@ import 'cypress-ntlm-auth/src/commands';
 
 Add this to the scripts section:
 
+#### Mac and Linux
+
 ```json
     "ntlm-proxy": "ntlm-proxy &",
-    "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open"
+    "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
 ```
 
-Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner, just replace 'open' with the arguments you need - they will all be passed on to Cypress.
+#### Windows
+
+```json
+    "ntlm-proxy": "start \"ntlm-proxy\" /min ntlm-proxy",
+    "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
+```
+
+Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner. Just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress.
 
 ## Startup
 
-### npm run
+### npm run cypress-ntlm
 
 When the additions to package.json are done as described above, the most convenient way to start Cypress with NTLM authentication is
 
@@ -77,7 +86,7 @@ When the additions to package.json are done as described above, the most conveni
 npm run cypress-ntlm
 ```
 
-This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). The ntlm-proxy process is automatically terminated when cypress exits.
+This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). After Cypress exits, the ntlm-proxy process is  terminated.
 
 ### ntlm-proxy
 
@@ -94,6 +103,20 @@ $(npm bin)/ntlm-proxy &
 
 # Start NTLM proxy with debug logging to console
 DEBUG=* $(npm bin)/ntlm-proxy
+```
+
+### ntlm-proxy-exit
+
+This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background.
+
+#### Example
+
+```shell
+# Terminate NTLM proxy
+$(npm bin)/ntlm-proxy-exit
+
+# Start NTLM proxy with debug logging to console
+DEBUG=* $(npm bin)/ntlm-proxy-exit
 ```
 
 ### cypress-ntlm
@@ -119,7 +142,7 @@ The ntlm command is used to configure host/user mappings. After this command, al
 cy.ntlm(ntlmHost, username, password, domain, [workstation]);
 ```
 
-* ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query). Examples: `http://localhost:4200`, `https://service.windowsserver.intranet.company.com`
+* ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query). Examples: `http://localhost:4200`, `https://ntlm.acme.com`
 * username: the username for the account to authenticate with
 * password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
 * domain: the domain for the account to authenticate with (for AD account authentication)
@@ -133,17 +156,17 @@ Configuration set with the ntlm command persists until it is reset (see ntlmRese
 
 #### Example
 
-You want to test a IIS website on your intranet `https://zappa.intranet.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
+You want to test a IIS website on your intranet `https://ntlm.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
 
 ```javascript
-cy.ntlm('https://zappa.intranet.acme.com', 'bobby', 'brown', 'acme');
-// Access the zappa site with user bobby
-cy.visit('https://zappa.intranet.acme.com');
+cy.ntlm('https://ntlm.acme.com', 'bobby', 'brown', 'acme');
+// Access the ntlm site with user bobby
+cy.visit('https://ntlm.acme.com');
 // Test actions and asserts here
 
-cy.ntlm('https://zappa.intranet.acme.com', 'admin', 'secret', 'acme');
-// Access the zappa site with user admin
-cy.visit('https://zappa.intranet.acme.com');
+cy.ntlm('https://ntlm.acme.com', 'admin', 'secret', 'acme');
+// Access the ntlm site with user admin
+cy.visit('https://ntlm.acme.com');
 // Test actions and asserts here
 ```
 
@@ -155,17 +178,17 @@ You can then combine this with setting up multiple accounts to test your applica
 
 ```javascript
 // Read-only user access
-cy.ntlm('https://zappa.intranet.acme.com',
-    Cypress.env.ZAPPA_READONLY_USERNAME,
-    Cypress.env.ZAPPA_READONLY_PASSWORD,
-    Cypress.env.ZAPPA_READONLY_DOMAIN);
+cy.ntlm('https://ntlm.acme.com',
+    Cypress.env.NTLM_READONLY_USERNAME,
+    Cypress.env.NTLM_READONLY_PASSWORD,
+    Cypress.env.NTLM_READONLY_DOMAIN);
 // tests ...
 
 // Admin user access
-cy.ntlm('https://zappa.intranet.acme.com',
-    Cypress.env.ZAPPA_ADMIN_USERNAME,
-    Cypress.env.ZAPPA_ADMIN_PASSWORD,
-    Cypress.env.ZAPPA_ADMIN_DOMAIN);
+cy.ntlm('https://ntlm.intranet.acme.com',
+    Cypress.env.NTLM_ADMIN_USERNAME,
+    Cypress.env.NTLM_ADMIN_PASSWORD,
+    Cypress.env.NTLM_ADMIN_DOMAIN);
 // tests ...
 ```
 
@@ -194,21 +217,19 @@ cy.ntlmReset();
 Using ntlmReset to clear configuration.
 
 ```javascript
-cy.ntlm('https://zappa.intranet.acme.com', 'bobby', 'brown', 'acme');
-cy.visit('https://zappa.intranet.acme.com'); // This succeeds
+cy.ntlm('https://ntlm.acme.com', 'bobby', 'brown', 'acme');
+cy.visit('https://ntlm.acme.com'); // This succeeds
 cy.ntlmReset();
-cy.visit('https://zappa.intranet.acme.com'); // This fails (401)
+cy.visit('https://ntlm.acme.com'); // This fails (401)
 ```
 
 ## Notes
 
 ### ntlm-proxy process
 
-Since the ntlm-proxy process is intended to be used only by Cypress, it is terminated when Cypress exits. If for some reason you want to keep the ntlm-proxy process running independently of Cypress, please set the environment variable:
+The ntlm-proxy process is intended to be used only by Cypress, and should be terminated after Cypress exits. This requires that the ntlm-proxy-exit launcher is executed, as in the examples above. Otherwise it will stay in the background indefinitely (or until a new ntlm-proxy is started).
 
-```shell
-CYPRESS_NTLM_AUTH_SHUTDOWN_WITH_CYPRESS=false
-```
+In versions 0.4.0 and earlier, the proxy was terminated automatically on signals when Cypress exited. However, this approach has no support on Windows (no decent signal handling) - hence it was removed for consistent behavior across platforms.
 
 ### .http-mitm-proxy
 

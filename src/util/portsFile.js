@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const debug = require('debug')('cypress:ntlm-auth-plugin');
+const debug = require('debug')('cypress:plugin:ntlm-auth');
 const mkdirp = require('mkdirp');
 
 const appDataPath = require('appdata-path');
@@ -74,11 +74,13 @@ function validatePortsFile(ports) {
     return false;
   }
   let urlTest = url.parse(ports.configApiUrl);
-  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port) {
+  if (!urlTest.protocol || !urlTest.hostname ||
+      !urlTest.port || !urlTest.slashes) {
     return false;
   }
   urlTest = url.parse(ports.ntlmProxyUrl);
-  if (!urlTest.protocol || !urlTest.hostname || !urlTest.port) {
+  if (!urlTest.protocol || !urlTest.hostname ||
+      !urlTest.port || !urlTest.slashes) {
     return false;
   }
   return true;

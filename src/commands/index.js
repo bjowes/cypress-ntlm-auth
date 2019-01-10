@@ -4,20 +4,17 @@
 
 
 /**
- * Adds NTLM authentication support to Cypress using custom commands.
+ * Adds NTLM authentication support to Cypress for a specific host.
  *
  * @example
  ```js
-  // Enable NTLM auth for a specific site. You can call this multiple times to register several sites
-  cy.ntlm('https://frontend-ntlm.intranet.company.com', 'TheUser', 'ThePassword', 'TheDomain');
+  // Enable NTLM auth for a specific host. You can call this multiple times
+  // to register several hosts or change credentials.
+  cy.ntlm('https://ntlm.acme.com', 'TheUser', 'ThePassword', 'TheDomain');
   cy.visit('/');
   // Tests ...
-
-  // To disable NTLM auth for all hosts, use the ntlmReset command
-  cy.ntlmReset();
  ```
  */
-
 const ntlm = (ntlmHost, username, password, domain, workstation) => {
   const log = {
     name: 'ntlm',
@@ -65,6 +62,15 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
   Cypress.log(log);
 };
 
+/**
+ * Reset NTLM authentication for all configured hosts. Recommended before/after tests.
+ *
+ * @example
+ ```js
+  // Disables NTLM auth for all configured hosts.
+  cy.ntlmReset();
+ ```
+ */
 
 const ntlmReset = () => {
   const log = {
