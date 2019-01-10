@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 - released 2019-10-10
+
+* Changed termination handling for common handling also on Windows. This means that the ntlm-proxy is no longer terminated from the signals when cypress exits - instead a separate binary ntlm-proxy-exit is provided that will send the quit command to the ntlm-proxy. This can then be executed directly after cypress exits, see updated README.
+* Improved handling of hosts on standard ports (80/443)
+* Improved command example comments
+* Changed debug prefix to `cypress:plugin:ntlm-auth`
+
 ## 0.4.0 - released 2019-01-07
 
 * Replaced platform-folders with appdata-path to reduce build complexity on Windows platform (no node-gyp tool-chain required)
