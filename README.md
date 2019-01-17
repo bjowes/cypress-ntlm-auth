@@ -70,7 +70,7 @@ Add this to the scripts section:
 #### Windows
 
 ```json
-    "ntlm-proxy": "start \"ntlm-proxy\" /min ntlm-proxy",
+    "ntlm-proxy": "start /min \"ntlm-proxy\" cmd /c node_modules\\.bin\\ntlm-proxy",
     "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
 ```
 
@@ -92,7 +92,7 @@ This starts the ntlm-proxy as a separate process and runs cypress in headed mode
 
 This binary is available in the `node_modules/.bin` folder. Use it to start the ntlm-proxy manually.
 
-#### Example
+#### Example - Mac and Linux
 
 ```shell
 # Start NTLM proxy
@@ -102,32 +102,64 @@ $(npm bin)/ntlm-proxy
 $(npm bin)/ntlm-proxy &
 
 # Start NTLM proxy with debug logging to console
-DEBUG=* $(npm bin)/ntlm-proxy
+DEBUG=cypress:plugin:ntlm-auth $(npm bin)/ntlm-proxy
+```
+
+#### Example - Windows
+
+```shell
+# Start NTLM proxy
+node_modules\\.bin\\ntlm-proxy
+
+# Start NTLM proxy as a background process, close window when ntlm-proxy terminates
+start /min \"ntlm-proxy\" cmd /c node_modules\\.bin\\ntlm-proxy
+
+# Start NTLM proxy with debug logging to console
+set DEBUG=cypress:plugin:ntlm-auth
+node_modules\\.bin\\ntlm-proxy
 ```
 
 ### ntlm-proxy-exit
 
 This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background.
 
-#### Example
+#### Example - Mac and Linux
 
 ```shell
 # Terminate NTLM proxy
 $(npm bin)/ntlm-proxy-exit
 
-# Start NTLM proxy with debug logging to console
-DEBUG=* $(npm bin)/ntlm-proxy-exit
+# Stop NTLM proxy with debug logging to console
+DEBUG=cypress:plugin:ntlm-auth $(npm bin)/ntlm-proxy-exit
+```
+
+#### Example - Windows
+
+```shell
+# Terminate NTLM proxy
+node_modules\\.bin\\ntlm-proxy-exit
+
+# Stop NTLM proxy with debug logging to console
+set DEBUG=cypress:plugin:ntlm-auth
+node_modules\\.bin\\ntlm-proxy-exit
 ```
 
 ### cypress-ntlm
 
 This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. This command will fail if the proxy isn't already running.
 
-#### Example
+#### Example - Mac and Linux
 
 ```shell
 # Start Cypress with NTLM authentication
 $(npm bin)/cypress-ntlm
+```
+
+#### Example - Windows
+
+```shell
+# Start Cypress with NTLM authentication
+node_modules\\.bin\\cypress-ntlm
 ```
 
 ## Usage
@@ -204,7 +236,7 @@ This will persist until the current spec file is finished.
 
 ### cy.ntlmReset()
 
-The ntlmReset command is used to remove all configured ntlmHosts from previous ntlm command calls. Since the proxy configuration persists when a test case or spec file is finished, a good practice is to call ntlmReset in the beforeEach method. This ensures that you have a clean setup at the start of each test.
+The ntlmReset command is used to remove all configured ntlmHosts from previous ntlm command calls. Since the proxy configuration persists even when a test case or spec file is finished, a good practice is to call ntlmReset in the beforeEach method. This ensures that you have a clean setup at the start of each test.
 
 #### Syntax
 

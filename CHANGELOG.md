@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - released 2019-10-17
+
+* Fixed issue #11 - Requests other then GET are not properly send
+* Improved examples in README for Windows users
+* More robust handling of invalid states during NTLM handshake
+* Validation that NTLM handshake is fully complete
+* The Chrome browser sends three odd requests during startup to detect network behavior. These were logged as errors since they are connecting to non-existent hosts. Those errors are now filtered with understandable debug messages.
+
 ## 0.5.0 - released 2019-10-10
 
 * Changed termination handling for common handling also on Windows. This means that the ntlm-proxy is no longer terminated from the signals when cypress exits - instead a separate binary ntlm-proxy-exit is provided that will send the quit command to the ntlm-proxy. This can then be executed directly after cypress exits, see updated README.
