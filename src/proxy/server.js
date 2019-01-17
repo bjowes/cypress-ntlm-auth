@@ -24,6 +24,8 @@ let _ntlmProxyOwnsProcess;
 let _upstreamHttpProxy;
 let _upstreamHttpsProxy;
 
+const NtlmStateEnum = Object.freeze({ 'NotAuthenticated':0, 'Type1Sent':1, 'Type2Received':3, 'Type3Sent':4, 'Authenticated':5 });
+
 function completeUrl(host, isSSL) {
   let hostUrl;
 
@@ -259,13 +261,19 @@ function removeAgent(event, clientAddress) {
 function isAuthenticated(clientSocket, targetHost) {
   let clientAddress = getClientAddress(clientSocket);
   let ntlm = _agents[clientAddress].ntlm;
-  let auth = (targetHost in ntlm && ntlm[targetHost]);
+  let auth = (targetHost in ntlm &&
+    ntlm[targetHost] === NtlmStateEnum.Authenticated);
   return auth;
 }
 
-function setAuthenticated(clientSocket, targetHost, auth) {
+function setAuthenticationState(clientSocket, targetHost, authState) {
   let clientAddress = getClientAddress(clientSocket);
-  _agents[clientAddress].ntlm[targetHost] = auth;
+  _agents[clientAddress].ntlm[targetHost] = authState;
+}
+
+function getAuthenticationState(clientSocket, targetHost) {
+  let clientAddress = getClientAddress(clientSocket);
+  return _agents[clientAddress].ntlm[targetHost];
 }
 
 function clearAuthenticated(targetHost) {
@@ -287,6 +295,10 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
 
   function ntlmHandshake(targetHost, ctx, callback) {
     let fullUrl = targetHost + ctx.clientToProxyRequest.url;
+    let clientSocket = ctx.clientToProxyRequest.socket;
+    setAuthenticationState(clientSocket, targetHost,
+      NtlmStateEnum.NotAuthenticated);
+
     let ntlmOptions = {
       username: _ntlmHosts[targetHost].username,
       password: _ntlmHosts[targetHost].password,
@@ -300,8 +312,7 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
       port: ctx.proxyToServerRequestOptions.port,
-      headers: JSON.parse(
-        JSON.stringify(ctx.proxyToServerRequestOptions.headers)), // Deep copy
+      headers: {},
       agent: ctx.proxyToServerRequestOptions.agent,
     };
     requestOptions.headers['authorization'] = type1msg;
@@ -311,12 +322,18 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
       res.resume(); // Finalize the response so we can reuse the socket
       if (!res.headers['www-authenticate']) {
         debug('www-authenticate not found on response of second request during NTLM handshake with host', fullUrl);
+        setAuthenticationState(clientSocket, targetHost,
+          NtlmStateEnum.NotAuthenticated);
         return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl));
       }
       debug('received NTLM message type 2');
+      setAuthenticationState(clientSocket, targetHost,
+        NtlmStateEnum.Type2Received);
       let type2msg = ntlm.parseType2Message(res.headers['www-authenticate'], (err) => {
         if (err) {
           debug('Cannot parse NTLM message type 2 from host', fullUrl);
+          setAuthenticationState(clientSocket, targetHost,
+            NtlmStateEnum.NotAuthenticated);
           return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
         }
       });
@@ -326,18 +343,42 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
       }
       let type3msg = ntlm.createType3Message(type2msg, ntlmOptions);
       ctx.proxyToServerRequestOptions.headers['authorization'] = type3msg;
-      debug('Sending NTLM message type 3 with initial client request - handshake complete');
+      debug('Sending NTLM message type 3 with initial client request');
+      setAuthenticationState(clientSocket, targetHost, NtlmStateEnum.Type3Sent);
       return callback();
     });
     type1req.on('error', (err) => {
       debug('Error while sending NTLM message type 1:', err);
+      setAuthenticationState(clientSocket, targetHost,
+        NtlmStateEnum.NotAuthenticated);
       return callback(err);
     });
     debug('Sending  NTLM message type 1');
+    setAuthenticationState(clientSocket, targetHost, NtlmStateEnum.Type1Sent);
     type1req.end();
   }
 
+  function filterChromeStartup(ctx, errno, errorKind) {
+    if (!ctx || !ctx.clientToProxyRequest || !errno) {
+      return false;
+    }
+    let req = ctx.clientToProxyRequest;
+    if (req.method === 'HEAD' &&
+        req.url === '/' &&
+        req.headers.host.indexOf('.') === -1 &&
+        req.headers.host.indexOf(':') === -1 &&
+        req.headers.host.indexOf('/') === -1 &&
+        errorKind === 'PROXY_TO_SERVER_REQUEST_ERROR' &&
+        errno === 'ENOTFOUND') {
+      debug('Chrome startup HEAD request detected (host: ' + req.headers.host + '). Ignoring connection error.');
+      return true;
+    }
+  }
+
   _ntlmProxy.onError(function (ctx, err, errorKind) {
+    if (filterChromeStartup(ctx, err.errno, errorKind)) {
+      return;
+    }
     var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
     debug(errorKind + ' on ' + url + ':', err);
   });
@@ -352,20 +393,58 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
       if (isAuthenticated(ctx.clientToProxyRequest.socket, targetHost)) {
         return callback();
       }
-      setAuthenticated(ctx.clientToProxyRequest.socket, targetHost, false);
 
       ntlmHandshake(targetHost, ctx, (err) => {
         if (err) {
           debug('Cannot perform NTLM handshake. Let original message pass through');
-          return callback();
         }
-        setAuthenticated(ctx.clientToProxyRequest.socket, targetHost, true);
         return callback();
       });
     } else {
       debug('Request to ' + targetHost + ' - pass on');
       return callback();
     }
+  });
+
+  function ntlmHandshakeResponse(ctx, targetHost, callback) {
+    let clientSocket = ctx.clientToProxyRequest.socket;
+    let authState = getAuthenticationState(clientSocket, targetHost);
+    if (authState === NtlmStateEnum.NotAuthenticated) {
+      // NTLM auth failed (host may not support NTLM), just pass it through
+      return callback();
+    }
+    if (authState === NtlmStateEnum.Type3Sent) {
+      if (ctx.serverToProxyResponse.statusCode === 401) {
+        debug('NTLM authentication failed, invalid credentials.');
+        setAuthenticationState(clientSocket, targetHost,
+          NtlmStateEnum.NotAuthenticated);
+        return callback();
+      }
+      // According to NTLM spec, all other responses than 401 shall be treated as authentication successful
+      debug('NTLM authentication successful for host', targetHost);
+      setAuthenticationState(clientSocket, targetHost,
+        NtlmStateEnum.Authenticated);
+      return callback();
+    }
+
+    debug('Response from server in unexpected NTLM state ' + authState + ', resetting NTLM auth.');
+    setAuthenticationState(clientSocket, targetHost,
+      NtlmStateEnum.NotAuthenticated);
+    return callback();
+
+  }
+
+  _ntlmProxy.onResponse(function (ctx, callback) {
+    let targetHost = getTargetHost(ctx);
+    if (!(targetHost in _ntlmHosts)) {
+      return callback();
+    }
+
+    if (isAuthenticated(ctx.clientToProxyRequest.socket, targetHost)) {
+      return callback();
+    }
+
+    ntlmHandshakeResponse(ctx, targetHost, callback);
   });
 
   _ntlmProxy.onConnect(function (req, socket, head, callback) {
@@ -457,6 +536,7 @@ function stopOldProxy() {
 module.exports = {
   startProxy: function(httpProxy, httpsProxy, ntlmProxyOwnsProcess, callback) {
     _ntlmProxyOwnsProcess = ntlmProxyOwnsProcess ? true : false;
+
     stopOldProxy()
       .then(() => {
         startNtlmProxy(httpProxy, httpsProxy, (ntlmProxyPort, err) => {
