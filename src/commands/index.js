@@ -2,17 +2,15 @@
 
 /// <reference types="cypress" />
 
+const configValidator = require('../util/configValidator');
 
 /**
  * Adds NTLM authentication support to Cypress for a specific host.
- *
+ * You can call this multiple times to register several hosts or
+ * change credentials.
  * @example
  ```js
-  // Enable NTLM auth for a specific host. You can call this multiple times
-  // to register several hosts or change credentials.
   cy.ntlm('https://ntlm.acme.com', 'TheUser', 'ThePassword', 'TheDomain');
-  cy.visit('/');
-  // Tests ...
  ```
  */
 const ntlm = (ntlmHost, username, password, domain, workstation) => {
@@ -27,18 +25,23 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
   }
 
-  let result;
+  let ntlmConfig = {
+    ntlmHost: ntlmHost,
+    username: username,
+    password: password,
+    domain: domain,
+    workstation: workstation
+  };
+  let validationResult = configValidator.validate(ntlmConfig);
+  if (!validationResult.result) {
+    throw new Error(validationResult.message);
+  }
 
+  let result;
   cy.request({
     method: 'POST',
     url: ntlmConfigApi + '/ntlm-config',
-    body: {
-      ntlmHost: ntlmHost,
-      username: username,
-      password: password,
-      domain: domain,
-      workstation: workstation
-    },
+    body: ntlmConfig,
     log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
@@ -64,10 +67,8 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
 
 /**
  * Reset NTLM authentication for all configured hosts. Recommended before/after tests.
- *
  * @example
  ```js
-  // Disables NTLM auth for all configured hosts.
   cy.ntlmReset();
  ```
  */

@@ -9,8 +9,6 @@ const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
 const isPortReachable = require('is-port-reachable');
-const httpMitmProxy = require('http-mitm-proxy');
-const getPort = require('get-port');
 
 const portsFile = require('../../src/util/portsFile');
 
@@ -18,69 +16,12 @@ const appDataPath = require('appdata-path');
 const portsFileName = 'cypress-ntlm-auth.port';
 const portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), portsFileName);
 
+const proxyFacade = require('./proxyFacade');
 
 const proxy = require('../../src/proxy/server');
 
-// The MITM proxy takes a significant time to start the first time
-// due to cert generation, so we ensure this is done before the
-// tests are executed to avoid timeouts
-let _mitmProxyInit = false;
-function initMitmProxy(callback) {
-  if (_mitmProxyInit) {
-    return callback();
-  }
-
-  let mitmOptions = {
-    host: 'localhost',
-    port: null,
-    keepAlive: false,
-    silent: true,
-    forceSNI: false,
-  };
-
-  const mitmProxy = httpMitmProxy();
-  getPort().then((port) => {
-    mitmOptions.port = port;
-    mitmProxy.listen(mitmOptions, (err) => {
-      if (err) {
-        return callback(err);
-      }
-      mitmProxy.close();
-      _mitmProxyInit = true;
-      return callback();
-    });
-  });
-}
 
 let _configApiUrl;
-
-function sendQuitCommand(configApiUrl, keepPortsFile, callback) {
-  const configApi = url.parse(configApiUrl);
-  const quitBody = JSON.stringify({ keepPortsFile: keepPortsFile });
-  const quitReq = http.request({
-    method: 'POST',
-    path: '/quit',
-    host: configApi.hostname,
-    port: configApi.port,
-    timeout: 15000,
-    headers: {
-      'content-type': 'application/json; charset=UTF-8',
-      'content-length': Buffer.byteLength(quitBody),
-    },
-  }, function (res) {
-    res.resume();
-    if (res.statusCode !== 200) {
-      return callback(new Error(
-        'Unexpected response from NTLM proxy: ' + res.statusCode));
-    }
-    return callback();
-  });
-  quitReq.on('error', (err) => {
-    return callback(err);
-  });
-  quitReq.write(quitBody);
-  quitReq.end();
-}
 
 function isProxyReachable(ports, callback) {
   const configUrl = url.parse(ports.configApiUrl);
@@ -116,7 +57,7 @@ describe('Proxy startup and shutdown', () => {
 
   before(function (done) {
     this.timeout(15000);
-    initMitmProxy(done);
+    proxyFacade.initMitmProxy(done);
   });
 
   beforeEach(function () {
@@ -146,7 +87,7 @@ describe('Proxy startup and shutdown', () => {
     }
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      sendQuitCommand(_configApiUrl, false, (err) => {
+      proxyFacade.sendQuitCommand(_configApiUrl, false, (err) => {
         if (err) {
           return done(err);
         }
@@ -309,7 +250,7 @@ describe('Proxy startup and shutdown', () => {
       assert(portsFileExistsStub.calledOnce);
       assert(savePortsFileStub.calledOnce);
 
-      sendQuitCommand(result.configApiUrl, true, (err) => {
+      proxyFacade.sendQuitCommand(result.configApiUrl, true, (err) => {
         if (err) {
           return done(err);
         }
@@ -350,7 +291,7 @@ describe('Proxy startup and shutdown', () => {
       assert(portsFileExistsStub.calledOnce);
       assert(savePortsFileStub.calledOnce);
 
-      sendQuitCommand(result.configApiUrl, false, (err) => {
+      proxyFacade.sendQuitCommand(result.configApiUrl, false, (err) => {
         if (err) {
           return done(err);
         }
@@ -391,7 +332,7 @@ function initRemoteHost(callback) {
     if (err) {
       return callback(err);
     }
-    remoteHostWithPort = 'localhost:' + remoteHostListener.address().port;
+    remoteHostWithPort = 'http://localhost:' + remoteHostListener.address().port;
     return callback();
   });
 }
@@ -403,7 +344,7 @@ describe('Proxy authentication', function () {
 
   before(function (done) {
     this.timeout(15000);
-    initMitmProxy((err) => {
+    proxyFacade.initMitmProxy((err) => {
       if (err) {
         return done(err);
       }
@@ -432,7 +373,7 @@ describe('Proxy authentication', function () {
   afterEach(function (done) {
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      sendQuitCommand(_configApiUrl, false, (err) => {
+      proxyFacade.sendQuitCommand(_configApiUrl, false, (err) => {
         if (err) {
           return done(err);
         }
@@ -473,7 +414,7 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test',
+      proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
         (res, err) => {
           if (err) {
             return done(err);
@@ -498,7 +439,7 @@ describe('Proxy authentication', function () {
       return callback();
     });
     const hostConfig = {
-      ntlmHost: 'http://' + remoteHostWithPort,
+      ntlmHost: remoteHostWithPort,
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
@@ -512,15 +453,17 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      sendNtlmConfig(result.configApiUrl, hostConfig, (err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
         if (err) {
           return done(err);
         }
-        sendRemoteRequest(
+        assert.strictEqual(res.statusCode, 200);
+        proxyFacade.sendRemoteRequest(
           result.ntlmProxyUrl,
           remoteHostWithPort,
           'GET',
           '/test',
+          null,
           (res, err) => {
             if (err) {
               return done(err);
@@ -558,11 +501,12 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      sendNtlmConfig(result.configApiUrl, hostConfig, (err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
         if (err) {
           return done(err);
         }
-        sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', (res, err) => {
+        assert.strictEqual(res.statusCode, 200);
+        proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null, (res, err) => {
           if (err) {
             return done(err);
           }
@@ -587,7 +531,7 @@ describe('Proxy authentication', function () {
       return callback();
     });
     const hostConfig = {
-      ntlmHost: 'http://' + remoteHostWithPort,
+      ntlmHost: remoteHostWithPort,
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
@@ -599,15 +543,16 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      sendNtlmConfig(result.configApiUrl, hostConfig, (err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
         if (err) {
           return done(err);
         }
-        sendNtlmReset(result.configApiUrl, (err) => {
+        assert.strictEqual(res.statusCode, 200);
+        proxyFacade.sendNtlmReset(result.configApiUrl, (err) => {
           if (err) {
             return done(err);
           }
-          sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', (res, err) => {
+          proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null, (res, err) => {
             if (err) {
               return done(err);
             }
@@ -623,67 +568,3 @@ describe('Proxy authentication', function () {
     });
   });
 });
-
-function sendNtlmConfig(configApiUrl, hostConfig, callback) {
-  const configUrl = url.parse(configApiUrl);
-  const hostConfigJson = JSON.stringify(hostConfig);
-  const configReq = http.request({
-    method: 'POST',
-    path: '/ntlm-config',
-    host: configUrl.hostname,
-    port: configUrl.port,
-    timeout: 15000,
-    headers: {
-      'content-type': 'application/json; charset=UTF-8',
-      'content-length': Buffer.byteLength(hostConfigJson),
-    },
-  }, (res) => {
-    assert.equal(res.statusCode, 200);
-    return callback();
-  });
-  configReq.on('error', (err) => {
-    return callback(err);
-  });
-  configReq.write(hostConfigJson);
-  configReq.end();
-}
-
-function sendNtlmReset(configApiUrl, callback) {
-  const configUrl = url.parse(configApiUrl);
-  const configReq = http.request({
-    method: 'POST',
-    path: '/reset',
-    host: configUrl.hostname,
-    port: configUrl.port,
-    timeout: 15000,
-  }, (res) => {
-    assert.equal(res.statusCode, 200);
-    return callback();
-  });
-  configReq.on('error', (err) => {
-    return callback(err);
-  });
-  configReq.end();
-}
-
-function sendRemoteRequest(
-  ntlmProxyUrl, remoteHostWithPort, method, path, callback) {
-  const proxyUrl = url.parse(ntlmProxyUrl);
-
-  const proxyReq = http.request({
-    method: method,
-    path: path,
-    host: proxyUrl.hostname,
-    port: proxyUrl.port,
-    timeout: 15000,
-    headers: {
-      'Host': remoteHostWithPort,
-    },
-  }, (res) => {
-    return callback(res, null);
-  });
-  proxyReq.on('error', (err) => {
-    return callback(null, err);
-  });
-  proxyReq.end();
-}

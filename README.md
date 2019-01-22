@@ -174,13 +174,11 @@ The ntlm command is used to configure host/user mappings. After this command, al
 cy.ntlm(ntlmHost, username, password, domain, [workstation]);
 ```
 
-* ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query). Examples: `http://localhost:4200`, `https://ntlm.acme.com`
+* ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
 * username: the username for the account to authenticate with
 * password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
-* domain: the domain for the account to authenticate with (for AD account authentication)
-* workstation: the workstation for the account to authenticate with (for local machine account authentication)
-
-The arguments domain and workstation are mutually exclusive. For AD account authentication, set the domain argument but don't set the workstation argument (null or empty string are accepted). For local machine account authentication, set the workstation argument but don't set the domain argument (null or empty string are accepted). If both arguments are set, this command will return an error.
+* domain (optional): the domain for the account to authenticate with (for AD account authentication)
+* workstation (optional): the workstation name of the client
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost.
 

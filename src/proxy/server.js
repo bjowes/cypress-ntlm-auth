@@ -13,6 +13,7 @@ const url = require('url');
 const debug = require('debug')('cypress:plugin:ntlm-auth');
 
 const portsFile = require('../util/portsFile');
+const configValidator = require('../util/configValidator');
 
 let _ntlmHosts = {};
 let _ntlmProxy;
@@ -69,21 +70,6 @@ function updateConfig(config) {
   _ntlmHosts[targetHost] = hostConfig;
 }
 
-function validateConfig(config) {
-  if (!config.ntlmHost ||
-    !config.username ||
-    !config.password ||
-    !(config.domain || config.workstation)) {
-    return { ok: false, message: 'Incomplete configuration. ntlmHost, username, password and either domain or workstation are required fields.' };
-  }
-
-  let urlTest = url.parse(config.ntlmHost);
-  if (!urlTest.hostname || !urlTest.protocol || !urlTest.slashes) {
-    return { ok: false, message: 'Invalid ntlmHost, must be a valid URL (like https://www.google.com)' };
-  }
-
-  return { ok: true };
-}
 
 function shutDownProxy(keepPortsFile, exitProcess) {
   debug('Shutting down');
@@ -137,7 +123,7 @@ function startConfigApi(callback) {
   _configApp.use(bodyParser.json());
 
   _configApp.post('/ntlm-config', (req, res) => {
-    let validateResult = validateConfig(req.body);
+    let validateResult = configValidator.validate(req.body);
     if (!validateResult.ok) {
       res.status(400).send('Config parse error. ' + validateResult.message);
     } else {
