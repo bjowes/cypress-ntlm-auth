@@ -4,6 +4,7 @@ const express = require('express');
 const ntlm = require('express-ntlm');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const path = require('path');
 
 const appNoAuth = express();
 const appNtlmAuth = express();
@@ -93,16 +94,18 @@ module.exports = {
     });
   },
   startHttpsServer: function(useNtlm, callback) {
+    let httpMitmProxyDir = path.resolve(process.cwd(), '.http-mitm-proxy');
     if (useNtlm) {
       httpsServer = https.createServer({
-        key: fs.readFileSync(__dirname + '/../../.http-mitm-proxy/keys/localhost.key'),
-        cert: fs.readFileSync(__dirname + '/../../.http-mitm-proxy/certs/localhost.pem'),
-        ca: fs.readFileSync(__dirname + '/../../.http-mitm-proxy/certs/ca.pem')
+        key: fs.readFileSync(path.resolve(httpMitmProxyDir, 'keys/localhost.key')),
+        cert: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/localhost.pem')),
+        ca: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/ca.pem'))
       }, appNtlmAuth);
     } else {
       httpsServer = https.createServer({
-        key: fs.readFileSync(__dirname + '/server.key'),
-        cert: fs.readFileSync(__dirname + '/server.cert')
+        key: fs.readFileSync(path.resolve(httpMitmProxyDir, 'keys/localhost.key')),
+        cert: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/localhost.pem')),
+        ca: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/ca.pem'))
       }, appNoAuth);
     }
     httpsServer.listen(0, '127.0.0.1', 511, (err) => {
