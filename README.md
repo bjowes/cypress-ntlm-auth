@@ -164,14 +164,14 @@ node_modules\\.bin\\cypress-ntlm
 
 ## Usage
 
-### cy.ntlm(ntlmHost, username, password, domain, [workstation])
+### cy.ntlm(ntlmHost, username, password, [domain, [workstation]])
 
 The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host will be initiated with a NTLM login handshake with the specified user. This includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
 #### Syntax
 
 ```javascript
-cy.ntlm(ntlmHost, username, password, domain, [workstation]);
+cy.ntlm(ntlmHost, username, password, [domain, [workstation]]);
 ```
 
 * ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
