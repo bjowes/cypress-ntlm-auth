@@ -1,10 +1,10 @@
 # Changelog
 
-## 0.6.1 - released 2019-01-22
+## 0.7.0 - released 2019-01-22
 
+* More complete input validation for arguments to cy.ntlm command and better error reporting
 * Corrected docs regarding domain and workstation arguments
 * More unit tests
-* More complete input validation for arguments to cy.ntlm command and better error reporting
 
 ## 0.6.0 - released 2019-01-17
 
