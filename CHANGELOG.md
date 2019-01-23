@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1 - released 2019-01-23
+
+* Corrected input validation on cy.ntlm command
+* Unit tests for HTTPS
+
 ## 0.7.0 - released 2019-01-22
 
 * More complete input validation for arguments to cy.ntlm command and better error reporting

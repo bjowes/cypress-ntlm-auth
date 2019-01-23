@@ -11,7 +11,6 @@ let httpsUrl;
 let savePortsFileStub;
 let portsFileExistsStub;
 
-/* further work on cert generation needed
 describe('Proxy for HTTPS host with NTLM', function() {
   let ntlmHostConfig;
 
@@ -28,27 +27,21 @@ describe('Proxy for HTTPS host with NTLM', function() {
       if (err) {
         return done(err);
       }
-      proxy.startProxy(null, null, false, (result, err) => {
-        if (err) {
-          return done(err);
-        }
-        configApiUrl = result.configApiUrl;
-        ntlmProxyUrl = result.ntlmProxyUrl;
-        // Send request to fake localhost server to trigger cert generation
-        proxyFacade.sendRemoteRequest(ntlmProxyUrl, 'https://localhost:54321', 'GET', '/dummy/does/not/exist', null, (res, err) => {
+      expressServer.startHttpsServer(true, (url) => {
+        httpsUrl = url;
+        ntlmHostConfig = {
+          ntlmHost: httpsUrl,
+          username: 'nisse',
+          password: 'manpower',
+          domain: 'mptst'
+        };
+        proxy.startProxy(null, null, null, false, false, (result, err) => {
           if (err) {
             return done(err);
           }
-          expressServer.startHttpsServer(true, (url) => {
-            httpsUrl = url;
-            ntlmHostConfig = {
-              ntlmHost: httpsUrl,
-              username: 'nisse',
-              password: 'manpower',
-              domain: 'mptst'
-            };
-            return done();
-          });
+          configApiUrl = result.configApiUrl;
+          ntlmProxyUrl = result.ntlmProxyUrl;
+          return done();
         });
       });
     });
@@ -230,4 +223,124 @@ describe('Proxy for HTTPS host with NTLM', function() {
     });
   });
 });
-*/
+
+describe('Proxy for HTTPS host without NTLM', function() {
+
+  before('Start HTTPS server and proxy', function (done) {
+    portsFileExistsStub = sinon.stub(portsFile, 'exists');
+    portsFileExistsStub.returns(false);
+    savePortsFileStub = sinon.stub(portsFile, 'save');
+    savePortsFileStub.callsFake(function (ports, callback) {
+      return callback();
+    });
+
+    this.timeout(15000);
+    proxyFacade.initMitmProxy((err) => {
+      if (err) {
+        return done(err);
+      }
+      expressServer.startHttpsServer(false, (url) => {
+        httpsUrl = url;
+        proxy.startProxy(null, null, null, false, false, (result, err) => {
+          if (err) {
+            return done(err);
+          }
+          configApiUrl = result.configApiUrl;
+          ntlmProxyUrl = result.ntlmProxyUrl;
+          return done();
+        });
+      });
+    });
+  });
+
+  after('Stop HTTPS server and proxy', function(done) {
+    if (savePortsFileStub) {
+      savePortsFileStub.restore();
+    }
+    if (portsFileExistsStub) {
+      portsFileExistsStub.restore();
+    }
+
+    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
+      if (err) {
+        return done(err);
+      }
+      configApiUrl = null;
+      ntlmProxyUrl = null;
+      httpsUrl = null;
+      expressServer.stopHttpsServer((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
+      });
+    });
+  });
+
+  it('should pass through GET requests for non NTLM host', function(done) {
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, (res, err) => {
+      if (err) {
+        return done(err);
+      }
+      assert.strictEqual(res.statusCode, 200);
+      assert(res.body.length > 20);
+      let body = JSON.parse(res.body);
+      assert.strictEqual(body.reply, 'OK ÅÄÖéß');
+      return done();
+    });
+  });
+
+  it('should pass through POST requests for non NTLM host', function(done) {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, (res, err) => {
+      if (err) {
+        return done(err);
+      }
+      assert.strictEqual(res.statusCode, 200);
+      assert(res.body.length > 20);
+      let body = JSON.parse(res.body);
+      assert.strictEqual(body.ntlmHost, 'https://my.test.host/');
+      assert.strictEqual(body.reply, 'OK ÅÄÖéß');
+      return done();
+    });
+  });
+
+  it('should pass through PUT requests for non NTLM host', function(done) {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body, (res, err) => {
+      if (err) {
+        return done(err);
+      }
+      assert.strictEqual(res.statusCode, 200);
+      assert(res.body.length > 20);
+      let body = JSON.parse(res.body);
+      assert.strictEqual(body.ntlmHost, 'https://my.test.host/');
+      assert.strictEqual(body.reply, 'OK ÅÄÖéß');
+      return done();
+    });
+  });
+
+  it('should pass through DELETE requests for non NTLM host', function(done) {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, (res, err) => {
+      if (err) {
+        return done(err);
+      }
+      assert.strictEqual(res.statusCode, 200);
+      assert(res.body.length > 20);
+      let body = JSON.parse(res.body);
+      assert.strictEqual(body.ntlmHost, 'https://my.test.host/');
+      assert.strictEqual(body.reply, 'OK ÅÄÖéß');
+      return done();
+    });
+  });
+});

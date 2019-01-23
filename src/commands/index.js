@@ -33,7 +33,7 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     workstation: workstation
   };
   let validationResult = configValidator.validate(ntlmConfig);
-  if (!validationResult.result) {
+  if (!validationResult.ok) {
     throw new Error(validationResult.message);
   }
 

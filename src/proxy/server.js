@@ -467,7 +467,7 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
   });
 }
 
-function stopOldProxy() {
+function stopOldProxy(allowMultipleProxies) {
   return new Promise((resolve, reject) =>  {
     if (portsFile.exists()) {
       portsFile.parse((ports, err) => {
@@ -475,6 +475,10 @@ function stopOldProxy() {
           reject(err);
         }
 
+        if (allowMultipleProxies) {
+          debug('Existing proxy instance found, leave it running since multiple proxies are allowed');
+          resolve();
+        }
         let configApiUrl = url.parse(ports.configApiUrl);
         debug('Existing proxy instance found, sending shutdown');
         let quitBody = JSON.stringify({ keepPortsFile: true });
@@ -520,10 +524,11 @@ function stopOldProxy() {
 }
 
 module.exports = {
-  startProxy: function(httpProxy, httpsProxy, ntlmProxyOwnsProcess, callback) {
+  startProxy: function(httpProxy, httpsProxy, noProxy,
+    ntlmProxyOwnsProcess, allowMultipleProxies, callback) {
     _ntlmProxyOwnsProcess = ntlmProxyOwnsProcess ? true : false;
 
-    stopOldProxy()
+    stopOldProxy(allowMultipleProxies)
       .then(() => {
         startNtlmProxy(httpProxy, httpsProxy, (ntlmProxyPort, err) => {
           if (err) {
