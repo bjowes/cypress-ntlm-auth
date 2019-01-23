@@ -124,7 +124,7 @@ describe('Proxy startup and shutdown', () => {
     });
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       assert(err instanceof Error, 'We should get an Error.');
       assert.equal(err.message, 'Cannot create ' + portsFileWithPath);
@@ -145,7 +145,7 @@ describe('Proxy startup and shutdown', () => {
     });
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
@@ -203,7 +203,7 @@ describe('Proxy startup and shutdown', () => {
         return callback(incomingResponseStub);
       });
 
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
@@ -241,7 +241,7 @@ describe('Proxy startup and shutdown', () => {
     });
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
@@ -282,7 +282,7 @@ describe('Proxy startup and shutdown', () => {
     });
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
@@ -409,7 +409,7 @@ describe('Proxy authentication', function () {
     });
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       if (err) {
         return done(err);
       }
@@ -447,7 +447,7 @@ describe('Proxy authentication', function () {
     remoteHostResponseWwwAuthHeader = 'test';
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       // Assert
       if (err) {
         return done(err);
@@ -496,7 +496,7 @@ describe('Proxy authentication', function () {
     };
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       if (err) {
         return done(err);
       }
@@ -538,7 +538,7 @@ describe('Proxy authentication', function () {
     };
 
     // Act
-    proxy.startProxy(null, null, false, (result, err) => {
+    proxy.startProxy(null, null, null, false, false, (result, err) => {
       if (err) {
         return done(err);
       }

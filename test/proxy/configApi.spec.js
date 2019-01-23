@@ -24,7 +24,7 @@ describe('Configuration API', () => {
       if (err) {
         return done(err);
       }
-      proxy.startProxy(null, null, false, (result, err) => {
+      proxy.startProxy(null, null, null, false, false, (result, err) => {
         if (err) {
           return done(err);
         }

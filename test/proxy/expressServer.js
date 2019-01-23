@@ -5,6 +5,7 @@ const ntlm = require('express-ntlm');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const pki = require('node-forge').pki;
 
 const appNoAuth = express();
 const appNtlmAuth = express();
@@ -67,6 +68,101 @@ function initExpress(app, useNtlm) {
 initExpress(appNoAuth, false);
 initExpress(appNtlmAuth, true);
 
+function yesterday() {
+  let d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d;
+}
+
+function tomorrow() {
+  let d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function randomSerialNumber() {
+	// generate random 16 bytes hex string
+	var sn = '';
+	for (var i=0; i<4; i++) {
+		sn += ('00000000' + Math.floor(Math.random()*Math.pow(256, 4)).toString(16)).slice(-8);
+	}
+	return sn;
+}
+
+function generateSelfSignedCert(callback) {
+  var keysServer = pki.rsa.generateKeyPair(1024);
+  var certServer = pki.createCertificate();
+  certServer.publicKey = keysServer.publicKey;
+  certServer.serialNumber = randomSerialNumber();
+  certServer.validity.notBefore = yesterday();
+  certServer.validity.notAfter = tomorrow();
+  var subject = [{
+    name: 'commonName',
+    value: 'localhost'
+  }, {
+    name: 'countryName',
+    value: 'SE'
+  }, {
+    shortName: 'ST',
+    value: 'Legoland'
+  }, {
+    name: 'localityName',
+    value: 'Bricksburg'
+  }, {
+    name: 'organizationName',
+    value: 'TestOrg'
+  }, {
+    shortName: 'OU',
+    value: 'TestOrg'
+  }];
+  certServer.setSubject(subject);
+  certServer.setIssuer(subject);
+
+  let extensions = [{
+    name: 'basicConstraints',
+    cA: true
+  }, {
+    name: 'keyUsage',
+    keyCertSign: true,
+    digitalSignature: true,
+    nonRepudiation: true,
+    keyEncipherment: true,
+    dataEncipherment: true
+  }, {
+    name: 'extKeyUsage',
+    serverAuth: true,
+    clientAuth: true,
+    codeSigning: true,
+    emailProtection: true,
+    timeStamping: true
+  }, {
+    name: 'nsCertType',
+    client: true,
+    server: true,
+    email: true,
+    objsign: true,
+    sslCA: true,
+    emailCA: true,
+    objCA: true
+  }, {
+    name: 'subjectAltName',
+    altNames: [{
+      type: 2, // hostname
+      value: 'localhost'
+    }, {
+      type: 7, // IP
+      ip: '127.0.0.1'
+    }]
+  }, {
+    name: 'subjectKeyIdentifier'
+  }];
+  certServer.setExtensions(extensions);
+  certServer.sign(keysServer.privateKey);
+  return callback(pki.certificateToPem(certServer),
+    pki.privateKeyToPem(keysServer.privateKey),
+    pki.publicKeyToPem(keysServer.publicKey));
+}
+
 let httpServer;
 let httpsServer;
 
@@ -94,26 +190,25 @@ module.exports = {
     });
   },
   startHttpsServer: function(useNtlm, callback) {
-    let httpMitmProxyDir = path.resolve(process.cwd(), '.http-mitm-proxy');
-    if (useNtlm) {
-      httpsServer = https.createServer({
-        key: fs.readFileSync(path.resolve(httpMitmProxyDir, 'keys/localhost.key')),
-        cert: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/localhost.pem')),
-        ca: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/ca.pem'))
-      }, appNtlmAuth);
-    } else {
-      httpsServer = https.createServer({
-        key: fs.readFileSync(path.resolve(httpMitmProxyDir, 'keys/localhost.key')),
-        cert: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/localhost.pem')),
-        ca: fs.readFileSync(path.resolve(httpMitmProxyDir, 'certs/ca.pem'))
-      }, appNoAuth);
-    }
-    httpsServer.listen(0, '127.0.0.1', 511, (err) => {
-      if (err) {
-        throw err;
+    generateSelfSignedCert((certPem, privateKeyPem, publicKeyPem) => {
+      if (useNtlm) {
+        httpsServer = https.createServer({
+          key: privateKeyPem,
+          cert: certPem
+        }, appNtlmAuth);
+      } else {
+        httpsServer = https.createServer({
+          key: privateKeyPem,
+          cert: certPem
+        }, appNoAuth);
       }
-      let url = 'https://localhost:' + httpsServer.address().port;
-      callback(url);
+      httpsServer.listen(0, '127.0.0.1', 511, (err) => {
+        if (err) {
+          throw err;
+        }
+        let url = 'https://localhost:' + httpsServer.address().port;
+        callback(url);
+      });
     });
   },
   stopHttpsServer: function(callback) {
