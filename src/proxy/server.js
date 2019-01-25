@@ -9,6 +9,8 @@ const https = require('https');
 const express = require('express');
 const bodyParser = require('body-parser');
 const url = require('url');
+const HttpProxyAgent = require('http-proxy-agent');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const debug = require('debug')('cypress:plugin:ntlm-auth');
 
@@ -24,6 +26,7 @@ let _ntlmProxyOwnsProcess;
 
 let _upstreamHttpProxy;
 let _upstreamHttpsProxy;
+let _upstreamNoProxy;
 
 const NtlmStateEnum = Object.freeze({ 'NotAuthenticated':0, 'Type1Sent':1, 'Type2Received':3, 'Type3Sent':4, 'Authenticated':5 });
 
@@ -59,8 +62,7 @@ function updateConfig(config) {
     username: config.username,
     password: config.password,
     domain: config.domain || '',
-    workstation: config.workstation || '',
-    proxy: getUpstreamProxyConfig(config.ntlmHost)
+    workstation: config.workstation || ''
   };
 
   if (targetHost in _ntlmHosts) {
@@ -86,10 +88,16 @@ function shutDownProxy(keepPortsFile, exitProcess) {
   resetProxy();
   _ntlmProxy.close();
   _ntlmProxy = null;
+  _upstreamHttpProxy = null;
+  _upstreamHttpsProxy = null;
+  _upstreamNoProxy = null;
+
   debug('Shutting down config API');
   _configAppListener.close(() => {
     _configAppListener = null;
+    _ports = null;
     if (exitProcess) {
+      // Failsafe in case some socket wasn't closed
       process.exit(0);
     }
   });
@@ -162,24 +170,43 @@ function startConfigApi(callback) {
   });
 }
 
-function getUpstreamProxyConfig(ntlmHost) {
-  let hostUrl = url.parse(ntlmHost);
-  let proxy = null;
+function matchWithWildcardRule(str, rule) {
+  return new RegExp('^' + rule.split('*').join('.*') + '$').test(str);
+}
+
+function targetInNoProxy(ntlmHost) {
+  if (!_upstreamNoProxy) {
+    return false;
+  }
+
+  let match = false;
+  let ntlmHostUrl = url.parse(ntlmHost);
+  _upstreamNoProxy.forEach(rule => {
+    if (matchWithWildcardRule(ntlmHostUrl.hostname, rule)) {
+      match = true;
+    }
+  });
+  return match;
+}
+
+function setUpstreamProxyConfig(ntlmHost, isSSL, agentOptions) {
   let proxyUrl = null;
 
-  if (hostUrl.protocol === 'https:' && _upstreamHttpsProxy) {
-    proxyUrl = url.parse(_upstreamHttpsProxy);
-  } else if (hostUrl.protocol === 'http:' && _upstreamHttpProxy) {
-    proxyUrl = url.parse(_upstreamHttpProxy);
+  if (targetInNoProxy(ntlmHost)) {
+    return false;
+  }
+  if (isSSL && _upstreamHttpsProxy) {
+    proxyUrl = _upstreamHttpsProxy;
+  } else if (!isSSL && _upstreamHttpProxy) {
+    proxyUrl = _upstreamHttpProxy;
   }
   if (proxyUrl) {
-    proxy = {
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      protocol: proxyUrl.protocol.slice(0, -1) // remove trailing ':'
-    };
+    agentOptions.host = proxyUrl.hostname;
+    agentOptions.port = proxyUrl.port;
+    agentOptions.protocol = proxyUrl.protocol;
+    return true;
   }
-  return proxy;
+  return false;
 }
 
 function isLocalhost(host) {
@@ -198,36 +225,60 @@ function getClientAddress(clientSocket) {
 
 let _agents = {};
 let agentCount = 0;
-function getAgent(clientSocket, isSSL, targetHost) {
+function getAgentFromClientSocket(clientSocket, isSSL, targetHost) {
   let clientAddress = getClientAddress(clientSocket);
   if (clientAddress in _agents) {
     return _agents[clientAddress].agent;
   }
 
-  // Allow self-signed certificates if target is on localhost
-  let rejectUnauthorized = !isLocalhost(targetHost);
-
-  let agentOptions = {
-    keepAlive: true,
-    maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
-    rejectUnauthorized: rejectUnauthorized
-  };
-  let agent = isSSL ?
-    new https.Agent(agentOptions) :
-    new http.Agent(agentOptions);
+  let agent = getAgent(isSSL, targetHost, true);
   agent._cyAgentId = agentCount;
   agentCount++;
   _agents[clientAddress] = { agent: agent, ntlm: {} };
   clientSocket.on('close', () => removeAgent('close', clientAddress));
   clientSocket.on('end', () => removeAgent('end', clientAddress));
-  debug('Created agent for ' + clientAddress);
+  debug('Created NTLM ready agent for client ' + clientAddress + ' to target ' + targetHost);
+  return agent;
+}
+
+function getNonNtlmAgent(isSSL, targetHost) {
+  let agent = getAgent(isSSL, targetHost, false);
+  agent._cyAgentId = agentCount;
+  agentCount++;
+  debug('Created non-NTLM agent for target ' + targetHost);
+  return agent;
+}
+
+function getAgent(isSSL, targetHost, useNtlm) {
+  let agentOptions = {
+    keepAlive: useNtlm,
+    rejectUnauthorized: !isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
+  };
+  if (useNtlm) {
+    // Only one connection per peer -> 1:1 match between inbound and outbound socket
+    agentOptions.maxSockets = 1;
+  }
+  let useUpstreamProxy = setUpstreamProxyConfig(
+    targetHost, isSSL, agentOptions);
+  let agent;
+  if (useUpstreamProxy) {
+    agent = isSSL ?
+      new HttpsProxyAgent(agentOptions) :
+      new HttpProxyAgent(agentOptions);
+  } else {
+    agent = isSSL ?
+      new https.Agent(agentOptions) :
+      new http.Agent(agentOptions);
+  }
   return agent;
 }
 
 function removeAllAgents(event) {
   for (var property in _agents) {
     if (Object.hasOwnProperty(property)) {
-      _agents[property].agent.destroy(); // Destroys any sockets to servers
+      if (_agents[property].agent.destroy) {
+        _agents[property].agent.destroy(); // Destroys any sockets to servers
+      }
     }
   }
   _agents = {};
@@ -236,7 +287,9 @@ function removeAllAgents(event) {
 
 function removeAgent(event, clientAddress) {
   if (clientAddress in _agents) {
-    _agents[clientAddress].agent.destroy(); // Destroys any sockets to servers
+    if (_agents[clientAddress].agent.destroy) {
+      _agents[clientAddress].agent.destroy(); // Destroys any sockets to servers
+    }
     delete _agents[clientAddress];
     debug('Removed agent for ' + clientAddress + ' due to socket.' + event);
   } else {
@@ -273,11 +326,32 @@ function clearAuthenticated(targetHost) {
   }
 }
 
-function startNtlmProxy(httpProxy, httpsProxy, callback) {
+function validateUpstreamProxy(proxyUrl, parameterName) {
+  if (!proxyUrl) {
+    return false;
+  }
+  let proxyParsed = url.parse(proxyUrl);
+  if (!proxyParsed.protocol || !proxyParsed.hostname || !proxyParsed.port || proxyParsed.path !== '/') {
+    throw new Error('Invalid ' + parameterName + ' argument. It must be a complete URL without path. Example: http://proxy.acme.com:8080');
+  }
+  return true;
+}
+
+function upstreamProxySetup(httpProxy, httpsProxy, noProxy) {
+  if (validateUpstreamProxy(httpProxy, 'HTTP_PROXY')) {
+    _upstreamHttpProxy = url.parse(httpProxy);
+  }
+  if (validateUpstreamProxy(httpsProxy, 'HTTPS_PROXY')) {
+    _upstreamHttpsProxy = url.parse(httpsProxy);
+  }
+  if (noProxy) { // May be a comma separated list of hosts
+    _upstreamNoProxy = noProxy.split(',').map(item => item.trim());
+  }
+}
+
+function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
   _ntlmProxy = httpMitmProxy();
-  // TODO implement and verify with upstream proxy
-  _upstreamHttpProxy = httpProxy;
-  _upstreamHttpsProxy = httpsProxy;
+  upstreamProxySetup(httpProxy, httpsProxy, noProxy);
 
   function ntlmHandshake(targetHost, ctx, callback) {
     let fullUrl = targetHost + ctx.clientToProxyRequest.url;
@@ -369,13 +443,17 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
     debug(errorKind + ' on ' + url + ':', err);
   });
 
+  function filterConfigApiRequests(targetHost) {
+    return (targetHost === _ports.configApiUrl);
+  }
+
   _ntlmProxy.onRequest(function (ctx, callback) {
     let targetHost = getTargetHost(ctx);
     if (targetHost in _ntlmHosts) {
       debug('Request to ' + targetHost + ' in registered NTLM Hosts');
       ctx.proxyToServerRequestOptions.agent =
-        getAgent(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
-
+        getAgentFromClientSocket(ctx.clientToProxyRequest.socket,
+          ctx.isSSL, targetHost);
       if (isAuthenticated(ctx.clientToProxyRequest.socket, targetHost)) {
         return callback();
       }
@@ -387,7 +465,11 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
         return callback();
       });
     } else {
-      debug('Request to ' + targetHost + ' - pass on');
+      if (!filterConfigApiRequests(targetHost)) {
+        debug('Request to ' + targetHost + ' - pass on');
+      }
+      ctx.proxyToServerRequestOptions.agent =
+        getNonNtlmAgent(ctx.isSSL, targetHost);
       return callback();
     }
   });
@@ -439,7 +521,12 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
       return callback();
     }
 
-    // Let non-proxied hosts tunnel through
+    if (_upstreamHttpsProxy) {
+      // Don't tunnel if we need to go through an upstream proxy
+      return callback();
+    }
+
+    // Let non-NTLM hosts tunnel through
     let reqUrl = url.parse(targetHost);
 
     debug('Tunnel to', req.url);
@@ -456,7 +543,7 @@ function startNtlmProxy(httpProxy, httpsProxy, callback) {
   });
 
   getPort().then((port) => {
-    _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: false, silent: true, forceSNI: false }, (err) => {
+    _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: true, silent: true, forceSNI: false }, (err) => {
       if (err) {
         debug('Cannot start proxy listener', err);
         return callback(null, err);
@@ -472,12 +559,12 @@ function stopOldProxy(allowMultipleProxies) {
     if (portsFile.exists()) {
       portsFile.parse((ports, err) => {
         if (err) {
-          reject(err);
+          return reject(err);
         }
 
         if (allowMultipleProxies) {
           debug('Existing proxy instance found, leave it running since multiple proxies are allowed');
-          resolve();
+          return resolve();
         }
         let configApiUrl = url.parse(ports.configApiUrl);
         debug('Existing proxy instance found, sending shutdown');
@@ -496,29 +583,29 @@ function stopOldProxy(allowMultipleProxies) {
           res.resume();
           if (res.statusCode !== 200) {
             debug('Unexpected response from old proxy instance: ' + res.statusCode);
-            reject(new Error('Unexpected response from old proxy instance: ' + res.statusCode));
+            return reject(new Error('Unexpected response from old proxy instance: ' + res.statusCode));
           }
           portsFile.delete((err) => {
             if (err) {
-              reject(err);
+              return reject(err);
             }
-            resolve();
+            return resolve();
           });
         });
         quitReq.on('error', (err) => {
           debug('Quit request failed, trying to delete the ports file: ' + err);
           portsFile.delete((err) => {
             if (err) {
-              reject(err);
+              return reject(err);
             }
-            resolve();
+            return resolve();
           });
         });
         quitReq.write(quitBody);
         quitReq.end();
       });
     } else {
-      resolve();
+      return resolve();
     }
   });
 }
@@ -530,7 +617,7 @@ module.exports = {
 
     stopOldProxy(allowMultipleProxies)
       .then(() => {
-        startNtlmProxy(httpProxy, httpsProxy, (ntlmProxyPort, err) => {
+        startNtlmProxy(httpProxy, httpsProxy, noProxy, (ntlmProxyPort, err) => {
           if (err) {
             return callback(null, err);
           }

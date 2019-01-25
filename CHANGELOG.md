@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 - released 2019-01-25
+
+* Upstream proxy support
+* Further improvements to unit tests
+
+## 0.7.2 - released 2019-01-23
+
+* Filter out confusing debug logs from cy.ntlm and cy.ntlmReset calls
+
 ## 0.7.1 - released 2019-01-23
 
 * Corrected input validation on cy.ntlm command
