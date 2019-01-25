@@ -1,5 +1,4 @@
 const url = require('url');
-const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const httpMitmProxy = require('http-mitm-proxy');
@@ -18,8 +17,14 @@ module.exports = {
       keepAlive: true,
       silent: true,
       forceSNI: false,
-      httpAgent: new http.Agent({ keepAlive: true, rejectUnauthorized: rejectUnauthorized }),
-      httpsAgent: new https.Agent({ keepAlive: true, rejectUnauthorized: rejectUnauthorized }),
+      httpAgent: new http.Agent({
+        keepAlive: true,
+        rejectUnauthorized: rejectUnauthorized
+      }),
+      httpsAgent: new https.Agent({
+        keepAlive: true,
+        rejectUnauthorized: rejectUnauthorized
+      }),
     };
 
     const mitmProxy = httpMitmProxy();
@@ -157,11 +162,12 @@ module.exports = {
       headers['content-length'] = Buffer.byteLength(bodyJson);
     }
 
-    let proto = remoteHostUrl.protocol === 'http:' ? http : https;
     if (remoteHostUrl.protocol === 'http:') {
-      sendProxiedHttpRequest(method, remoteHostUrl, path, proxyUrl, headers, bodyJson, callback);
+      sendProxiedHttpRequest(method, remoteHostUrl, path,
+        proxyUrl, headers, bodyJson, callback);
     } else {
-      sendProxiedHttpsRequest(method, remoteHostUrl, path, proxyUrl, headers, bodyJson, callback);
+      sendProxiedHttpsRequest(method, remoteHostUrl, path,
+        proxyUrl, headers, bodyJson, callback);
     }
   }
 
@@ -212,7 +218,7 @@ function sendProxiedHttpsRequest(
     path: remoteHostUrl.href,
   });
 
-  connectReq.on('connect', function(res, socket, head) {
+  connectReq.on('connect', function(res, socket /*, head*/) {
     if (res.statusCode !== 200) {
       return callback(null, new Error('Unexpected response code on CONNECT', res.statusCode));
     }

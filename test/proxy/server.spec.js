@@ -81,21 +81,13 @@ describe('Proxy startup and shutdown', () => {
     _configApiUrl = null;
   });
 
-  afterEach(function (done) {
+  afterEach(function () {
     if (httpRequestStub) {
       httpRequestStub.restore();
     }
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      proxyFacade.sendQuitCommand(_configApiUrl, false, (err) => {
-        if (err) {
-          return done(err);
-        }
-        return done();
-      });
-    }
-    if (!_configApiUrl) {
-      return done();
+      proxy.shutDown(false);
     }
   });
 
@@ -427,7 +419,8 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
+        (res, err) => {
         if (err) {
           return done(err);
         }
@@ -468,12 +461,14 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
+        (res, err) => {
         if (err) {
           return done(err);
         }
         assert.strictEqual(res.statusCode, 200);
-        proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null, (res, err) => {
+        proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
+        (res, err) => {
           if (err) {
             return done(err);
           }
@@ -503,7 +498,8 @@ describe('Proxy authentication', function () {
         return done(err);
       }
       _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig, (res, err) => {
+      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
+        (res, err) => {
         if (err) {
           return done(err);
         }
@@ -512,7 +508,8 @@ describe('Proxy authentication', function () {
           if (err) {
             return done(err);
           }
-          proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null, (res, err) => {
+          proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
+          (res, err) => {
             if (err) {
               return done(err);
             }

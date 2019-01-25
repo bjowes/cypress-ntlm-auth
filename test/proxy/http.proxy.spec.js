@@ -1,3 +1,5 @@
+// cSpell:ignore nisse, mptst
+
 const expressServer = require('./expressServer');
 const proxyFacade = require('./proxyFacade');
 const sinon = require('sinon');
@@ -55,19 +57,12 @@ describe('Proxy for HTTP host with NTLM', function() {
       portsFileExistsStub.restore();
     }
 
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
+    proxy.shutDown(true);
+    expressServer.stopHttpServer((err) => {
       if (err) {
         return done(err);
       }
-      configApiUrl = null;
-      ntlmProxyUrl = null;
-      httpUrl = null;
-      expressServer.stopHttpServer((err) => {
-        if (err) {
-          return done(err);
-        }
-        return done();
-      });
+      return done();
     });
   });
 
@@ -261,19 +256,12 @@ describe('Proxy for HTTP host without NTLM', function() {
       portsFileExistsStub.restore();
     }
 
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
+    proxy.shutDown(true);
+    expressServer.stopHttpServer((err) => {
       if (err) {
         return done(err);
       }
-      configApiUrl = null;
-      ntlmProxyUrl = null;
-      httpUrl = null;
-      expressServer.stopHttpServer((err) => {
-        if (err) {
-          return done(err);
-        }
-        return done();
-      });
+      return done();
     });
   });
 

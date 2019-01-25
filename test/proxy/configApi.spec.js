@@ -1,3 +1,5 @@
+// cSpell:ignore nisse, mnpwr, mptest
+
 const proxyFacade = require('./proxyFacade');
 const sinon = require('sinon');
 const assert = require('assert');
@@ -34,21 +36,14 @@ describe('Configuration API', () => {
     });
   });
 
-  after(function (done) {
+  after(function () {
     if (savePortsFileStub) {
       savePortsFileStub.restore();
     }
     if (portsFileExistsStub) {
       portsFileExistsStub.restore();
     }
-
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
-      if (err) {
-        return done(err);
-      }
-      configApiUrl = null;
-      return done();
-    });
+    proxy.shutDown(true);
   });
 
   it('ntlm-config should return bad request if the username contains backslash', function (done) {
@@ -62,8 +57,9 @@ describe('Configuration API', () => {
 
     // Act
     proxyFacade.sendNtlmConfig(configApiUrl, hostConfig, (res, err) => {
-      assert.equal(res.statusCode, 400);
-      assert.equal(res.body, 'Config parse error. Username contains invalid characters or is too long.');
+      assert.strictEqual(err, null);
+      assert.strictEqual(res.statusCode, 400);
+      assert.strictEqual(res.body, 'Config parse error. Username contains invalid characters or is too long.');
       return done();
     });
   });
@@ -79,8 +75,9 @@ describe('Configuration API', () => {
 
     // Act
     proxyFacade.sendNtlmConfig(configApiUrl, hostConfig, (res, err) => {
-      assert.equal(res.statusCode, 400);
-      assert.equal(res.body, 'Config parse error. Domain contains invalid characters or is too long.');
+      assert.strictEqual(err, null);
+      assert.strictEqual(res.statusCode, 400);
+      assert.strictEqual(res.body, 'Config parse error. Domain contains invalid characters or is too long.');
       return done();
     });
   });
@@ -96,8 +93,9 @@ describe('Configuration API', () => {
 
     // Act
     proxyFacade.sendNtlmConfig(configApiUrl, hostConfig, (res, err) => {
-      assert.equal(res.statusCode, 400);
-      assert.equal(res.body, 'Config parse error. Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)');
+      assert.strictEqual(err, null);
+      assert.strictEqual(res.statusCode, 400);
+      assert.strictEqual(res.body, 'Config parse error. Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)');
       return done();
     });
   });
