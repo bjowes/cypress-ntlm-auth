@@ -1,3 +1,6 @@
+<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD033 -->
+
 # cypress-ntlm-auth
 
 NTLM authentication plugin for [Cypress](https://www.cypress.io/)
@@ -166,8 +169,8 @@ node_modules\\.bin\\cypress-ntlm
 
 If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
 
-* `HTTP_PROXY` - The URL to the proxy for accessing external HTTP resources. Example: http://proxy.acme.com:8080
-* `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Example: http://proxy.acme.com:8080
+* `HTTP_PROXY` - The URL to the proxy for accessing external HTTP resources. Example: `http://proxy.acme.com:8080`
+* `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Example: `http://proxy.acme.com:8080`
 * `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Normally you want to include `localhost` and the host you are testing, and likely other local network resources used from the browser when accessing the host you are testing. Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: localhost,*.acme.com
 
 If the host you are testing is located on the internet (not your intranet) the NTLM authentication is able to pass through also the internet proxy. In this case `NO_PROXY` only needs to include `localhost`.

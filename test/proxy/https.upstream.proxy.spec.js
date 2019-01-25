@@ -1,3 +1,5 @@
+// cSpell:ignore nisse, mptst
+
 const expressServer = require('./expressServer');
 const proxyFacade = require('./proxyFacade');
 const sinon = require('sinon');
@@ -37,7 +39,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err, errorKind) {
+      upstreamProxy.onError(function (ctx, err /*, errorKind */) {
         return done(err);
       });
       expressServer.startHttpsServer(true, (url) => {
@@ -48,7 +50,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
           password: 'manpower',
           domain: 'mptst'
         };
-        proxy.startProxy(null, upstreamProxyUrl, null, false, false, (result, err) => {
+        proxy.startProxy(null, upstreamProxyUrl, null, false, false,
+          (result, err) => {
           if (err) {
             return done(err);
           }
@@ -68,20 +71,13 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       portsFileExistsStub.restore();
     }
 
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
-      if (err) {
-        return done(err);
-      }
-      configApiUrl = null;
-      ntlmProxyUrl = null;
-      httpsUrl = null;
-      proxyFacade.stopMitmProxy(upstreamProxy, () => {
-        expressServer.stopHttpsServer((err) => {
-          if (err) {
-            return done(err);
-          }
-          return done();
-        });
+    proxy.shutDown(true);
+    proxyFacade.stopMitmProxy(upstreamProxy, () => {
+      expressServer.stopHttpsServer((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
       });
     });
   });
@@ -102,7 +98,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         return done(err);
       }
       assert.strictEqual(res.statusCode, 200);
-      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, (res, err) => {
+      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null,
+      (res, err) => {
         if (err) {
           return done(err);
         }
@@ -117,7 +114,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
   });
 
   it('should return 401 for unconfigured host on GET requests', function(done) {
-    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, (res, err) => {
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null,
+    (res, err) => {
       if (err) {
         return done(err);
       }
@@ -137,7 +135,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         return done(err);
       }
       assert.strictEqual(res.statusCode, 200);
-      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, (res, err) => {
+      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body,
+      (res, err) => {
         if (err) {
           return done(err);
         }
@@ -157,7 +156,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       ntlmHost: 'https://my.test.host/'
     };
 
-    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, (res, err) => {
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body,
+    (res, err) => {
       if (err) {
         return done(err);
       }
@@ -177,7 +177,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         return done(err);
       }
       assert.strictEqual(res.statusCode, 200);
-      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body, (res, err) => {
+      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body,
+      (res, err) => {
         if (err) {
           return done(err);
         }
@@ -197,7 +198,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       ntlmHost: 'https://my.test.host/'
     };
 
-    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body, (res, err) => {
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body,
+    (res, err) => {
       if (err) {
         return done(err);
       }
@@ -217,7 +219,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         return done(err);
       }
       assert.strictEqual(res.statusCode, 200);
-      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, (res, err) => {
+      proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body,
+      (res, err) => {
         if (err) {
           return done(err);
         }
@@ -237,7 +240,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       ntlmHost: 'https://my.test.host/'
     };
 
-    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, (res, err) => {
+    proxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body,
+    (res, err) => {
       if (err) {
         return done(err);
       }
@@ -269,12 +273,13 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err, errorKind) {
+      upstreamProxy.onError(function (ctx, err /*, errorKind*/) {
         return done(err);
       });
       expressServer.startHttpsServer(false, (url) => {
         httpsUrl = url;
-        proxy.startProxy(null, upstreamProxyUrl, null, false, false, (result, err) => {
+        proxy.startProxy(null, upstreamProxyUrl, null, false, false,
+          (result, err) => {
           if (err) {
             return done(err);
           }
@@ -294,20 +299,13 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
       portsFileExistsStub.restore();
     }
 
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
-      if (err) {
-        return done(err);
-      }
-      configApiUrl = null;
-      ntlmProxyUrl = null;
-      httpsUrl = null;
-      proxyFacade.stopMitmProxy(upstreamProxy, () => {
-        expressServer.stopHttpsServer((err) => {
-          if (err) {
-            return done(err);
-          }
-          return done();
-        });
+    proxy.shutDown(true);
+    proxyFacade.stopMitmProxy(upstreamProxy, () => {
+      expressServer.stopHttpsServer((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
       });
     });
   });
@@ -409,7 +407,7 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err, errorKind) {
+      upstreamProxy.onError(function (ctx, err /*, errorKind*/) {
         return done(err);
       });
       expressServer.startHttpsServer(false, (url) => {
@@ -419,15 +417,8 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
     });
   });
 
-  afterEach('Stop proxy', function(done) {
-    proxyFacade.sendQuitCommand(configApiUrl, true, (err) => {
-      if (err) {
-        return done(err);
-      }
-      configApiUrl = null;
-      ntlmProxyUrl = null;
-      return done();
-    });
+  afterEach('Stop proxy', function() {
+    proxy.shutDown(true);
   });
 
   after('Stop HTTP server', function(done) {
@@ -454,7 +445,8 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
   });
 
   it('should not use upstream proxy for https host when only http upstream proxy is defined', function(done) {
-    proxy.startProxy(upstreamProxyUrl, null, null, false, false, (result, err) => {
+    proxy.startProxy(upstreamProxyUrl, null, null, false, false,
+      (result, err) => {
       if (err) {
         return done(err);
       }

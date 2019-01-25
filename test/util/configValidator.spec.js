@@ -1,3 +1,5 @@
+// cSpell:ignore nisse, manpwr, mptest, testpc
+
 const assert = require('assert');
 const configValidator = require('../../src/util/configValidator');
 
@@ -113,7 +115,7 @@ describe('configValidator domain', function() {
 
   it('Does return error if domain is too long', function () {
     // Arrange
-    config.domain = 'a'.repeat(16);;
+    config.domain = 'a'.repeat(16);
 
     // Act
     let result = configValidator.validate(config);

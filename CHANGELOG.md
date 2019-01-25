@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1 - released 2019-01-26
+
+* Unit test refactoring
+* Cleanup after lint
+
 ## 0.8.0 - released 2019-01-25
 
 * Upstream proxy support

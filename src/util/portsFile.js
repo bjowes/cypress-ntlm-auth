@@ -67,10 +67,7 @@ module.exports = {
 };
 
 function validatePortsFile(ports) {
-  if (!ports) {
-    return false;
-  }
-  if (!ports.configApiUrl || !ports.ntlmProxyUrl) {
+  if (!ports || !ports.configApiUrl || !ports.ntlmProxyUrl) {
     return false;
   }
   let urlTest = url.parse(ports.configApiUrl);

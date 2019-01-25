@@ -25,7 +25,8 @@ module.exports = {
       return { ok: false, message: 'Domain contains invalid characters or is too long.' };
     }
 
-    if (config.workstation && !validateDomainOrWorkstation(config.workstation)) {
+    if (config.workstation &&
+      !validateDomainOrWorkstation(config.workstation)) {
       return { ok: false, message: 'Workstation contains invalid characters or is too long.' };
     }
 

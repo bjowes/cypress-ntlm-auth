@@ -1,10 +1,10 @@
+// cSpell:ignore Legoland, Bricksburg, objsign
+
 const http = require('http');
 const https = require('https');
 const express = require('express');
 const ntlm = require('express-ntlm');
 const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
 const pki = require('node-forge').pki;
 
 const appNoAuth = express();
@@ -14,6 +14,9 @@ function initExpress(app, useNtlm) {
   app.use(bodyParser.json());
 
   app.use(function(err, req, res, next) {
+    if (res.headersSent) {
+      return next(err);
+    }
     res.status(err.status || 500);
     res.render('error', {
         message: err.message,
@@ -203,7 +206,7 @@ module.exports = {
     });
   },
   startHttpsServer: function(useNtlm, callback) {
-    generateSelfSignedCert((certPem, privateKeyPem, publicKeyPem) => {
+    generateSelfSignedCert((certPem, privateKeyPem /*, publicKeyPem */) => {
       if (useNtlm) {
         httpsServer = https.createServer({
           key: privateKeyPem,

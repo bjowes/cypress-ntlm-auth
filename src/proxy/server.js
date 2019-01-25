@@ -631,7 +631,7 @@ module.exports = {
             };
             portsFile.save(_ports, (err) => {
               if (err) {
-                shutDownProxy(true);
+                shutDownProxy(true, _ntlmProxyOwnsProcess);
                 return callback(null, err);
               }
               return callback(_ports, null);
@@ -643,7 +643,7 @@ module.exports = {
         return callback(null, err);
       });
     },
-  shutDown: function(keepPortsFile, exitProcess) {
-    shutDownProxy(keepPortsFile, exitProcess);
+  shutDown: function(keepPortsFile) {
+    shutDownProxy(keepPortsFile, _ntlmProxyOwnsProcess);
   }
 };
