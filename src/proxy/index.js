@@ -6,8 +6,12 @@ const proxyServer = require('./server');
 const nodeCleanup = require('node-cleanup');
 const debug = require('debug')('cypress:plugin:ntlm-auth');
 
-proxyServer.startProxy(process.env.HTTP_PROXY, process.env.HTTPS_PROXY,
-  null, true, false,
+proxyServer.startProxy(
+  process.env.HTTP_PROXY,
+  process.env.HTTPS_PROXY,
+  process.env.NO_PROXY,
+  true,
+  false,
   (ports, err) => {
     if (err) {
       debug('Could not start ntlm-proxy');

@@ -89,10 +89,8 @@ function randomSerialNumber() {
 	return sn;
 }
 
-function generateSelfSignedCert(callback) {
-  var keysServer = pki.rsa.generateKeyPair(1024);
-  var certServer = pki.createCertificate();
-  certServer.publicKey = keysServer.publicKey;
+function configureCert(certServer, publicKey) {
+  certServer.publicKey = publicKey;
   certServer.serialNumber = randomSerialNumber();
   certServer.validity.notBefore = yesterday();
   certServer.validity.notAfter = tomorrow();
@@ -157,10 +155,25 @@ function generateSelfSignedCert(callback) {
     name: 'subjectKeyIdentifier'
   }];
   certServer.setExtensions(extensions);
+}
+
+let certPem;
+let privateKeyPem;
+let publicKeyPem;
+
+function generateSelfSignedCert(callback) {
+  if (certPem && privateKeyPem && publicKeyPem) {
+    return callback(certPem, privateKeyPem, publicKeyPem);
+  }
+
+  var keysServer = pki.rsa.generateKeyPair(1024);
+  var certServer = pki.createCertificate();
+  configureCert(certServer, keysServer.publicKey);
   certServer.sign(keysServer.privateKey);
-  return callback(pki.certificateToPem(certServer),
-    pki.privateKeyToPem(keysServer.privateKey),
-    pki.publicKeyToPem(keysServer.publicKey));
+  certPem = pki.certificateToPem(certServer);
+  privateKeyPem = pki.privateKeyToPem(keysServer.privateKey);
+  publicKeyPem = pki.publicKeyToPem(keysServer.publicKey);
+  return callback(certPem, privateKeyPem, publicKeyPem);
 }
 
 let httpServer;

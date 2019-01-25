@@ -340,7 +340,6 @@ function initRemoteHost(callback) {
 describe('Proxy authentication', function () {
   let savePortsFileStub;
   let portsFileExistsStub;
-  let deletePortsFileStub;
 
   before(function (done) {
     this.timeout(15000);
@@ -350,21 +349,15 @@ describe('Proxy authentication', function () {
       }
       initRemoteHost(done);
     });
+    savePortsFileStub = sinon.stub(portsFile, 'save');
+    portsFileExistsStub = sinon.stub(portsFile, 'exists');
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.callsFake(function (ports, callback) {
+      return callback();
+    });
   });
 
   beforeEach(function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    savePortsFileStub = sinon.stub(portsFile, 'save');
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    portsFileExistsStub = sinon.stub(portsFile, 'exists');
-    if (deletePortsFileStub) {
-      deletePortsFileStub.restore();
-    }
-    deletePortsFileStub = sinon.stub(portsFile, 'delete');
     _configApiUrl = null;
     remoteHostRequestHeaders = new Array();
     remoteHostResponseWwwAuthHeader = null;
@@ -373,7 +366,7 @@ describe('Proxy authentication', function () {
   afterEach(function (done) {
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      proxyFacade.sendQuitCommand(_configApiUrl, false, (err) => {
+      proxyFacade.sendQuitCommand(_configApiUrl, true, (err) => {
         if (err) {
           return done(err);
         }
@@ -392,22 +385,10 @@ describe('Proxy authentication', function () {
     if (portsFileExistsStub) {
       portsFileExistsStub.restore();
     }
-    if (deletePortsFileStub) {
-      deletePortsFileStub.restore();
-    }
     remoteHostListener.close();
   });
 
   it('proxy without configuration shall not add authentication header', function (done) {
-    // Arrange
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.callsFake(function (ports, callback) {
-      return callback();
-    });
-    deletePortsFileStub.callsFake(function (callback) {
-      return callback();
-    });
-
     // Act
     proxy.startProxy(null, null, null, false, false, (result, err) => {
       if (err) {
@@ -431,13 +412,6 @@ describe('Proxy authentication', function () {
 
   it('proxy with configuration shall add authentication header', function (done) {
     // Arrange
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.callsFake(function (ports, callback) {
-      return callback();
-    });
-    deletePortsFileStub.callsFake(function (callback) {
-      return callback();
-    });
     const hostConfig = {
       ntlmHost: remoteHostWithPort,
       username: 'nisse',
@@ -481,13 +455,6 @@ describe('Proxy authentication', function () {
 
   it('proxy with configuration shall not add authentication header for another host', function (done) {
     // Arrange
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.callsFake(function (ports, callback) {
-      return callback();
-    });
-    deletePortsFileStub.callsFake(function (callback) {
-      return callback();
-    });
     const hostConfig = {
       ntlmHost: 'http://some.other.host.com:4567',
       username: 'nisse',
@@ -523,13 +490,6 @@ describe('Proxy authentication', function () {
 
   it('proxy shall not add authentication header after reset', function (done) {
     // Arrange
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.callsFake(function (ports, callback) {
-      return callback();
-    });
-    deletePortsFileStub.callsFake(function (callback) {
-      return callback();
-    });
     const hostConfig = {
       ntlmHost: remoteHostWithPort,
       username: 'nisse',

@@ -11,17 +11,15 @@ const getPort = require('get-port');
 let _mitmProxyInit = false;
 
 module.exports = {
-  initMitmProxy: function(callback) {
-    if (_mitmProxyInit) {
-      return callback();
-    }
-
+  startMitmProxy: function(rejectUnauthorized, callback) {
     let mitmOptions = {
       host: 'localhost',
       port: null,
-      keepAlive: false,
+      keepAlive: true,
       silent: true,
       forceSNI: false,
+      httpAgent: new http.Agent({ keepAlive: true, rejectUnauthorized: rejectUnauthorized }),
+      httpsAgent: new https.Agent({ keepAlive: true, rejectUnauthorized: rejectUnauthorized }),
     };
 
     const mitmProxy = httpMitmProxy();
@@ -29,9 +27,28 @@ module.exports = {
       mitmOptions.port = port;
       mitmProxy.listen(mitmOptions, (err) => {
         if (err) {
-          return callback(err);
+          return callback(null, null, err);
         }
-        mitmProxy.close();
+        return callback(mitmProxy, 'http://localhost:' + port, null);
+      });
+    });
+  },
+
+  stopMitmProxy: function(mitmProxy, callback) {
+    mitmProxy.close();
+    return callback();
+  },
+
+  initMitmProxy: function(callback) {
+    if (_mitmProxyInit) {
+      return callback();
+    }
+
+    module.exports.startMitmProxy(false, (mitmProxy, proxyUrl, err) => {
+      if (err) {
+        return callback(err);
+      }
+      module.exports.stopMitmProxy(mitmProxy, () => {
         _mitmProxyInit = true;
         return callback();
       });
