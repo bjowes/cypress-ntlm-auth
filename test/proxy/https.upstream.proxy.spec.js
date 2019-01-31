@@ -39,8 +39,9 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err /*, errorKind */) {
-        return done(err);
+      upstreamProxy.onError(function (ctx, err, errorKind) {
+        var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+        console.log('upstreamProxy: ' + errorKind + ' on ' + url + ':', err);
       });
       expressServer.startHttpsServer(true, (url) => {
         httpsUrl = url;
@@ -273,8 +274,9 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err /*, errorKind*/) {
-        return done(err);
+      upstreamProxy.onError(function (ctx, err, errorKind) {
+        var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+        console.log('upstreamProxy: ' + errorKind + ' on ' + url + ':', err);
       });
       expressServer.startHttpsServer(false, (url) => {
         httpsUrl = url;
@@ -407,8 +409,9 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
         upstreamProxyReqCount++;
         return callback();
       });
-      upstreamProxy.onError(function (ctx, err /*, errorKind*/) {
-        return done(err);
+      upstreamProxy.onError(function (ctx, err, errorKind) {
+        var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+        console.log('upstreamProxy: ' + errorKind + ' on ' + url + ':', err);
       });
       expressServer.startHttpsServer(false, (url) => {
         httpsUrl = url;

@@ -32,6 +32,12 @@ module.exports = {
       mitmOptions.port = port;
 
       // Prevents exceptions from client connection termination
+      mitmProxy.onError(function (ctx, err, errorKind) {
+        var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+        console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
+      });
+
+      // Prevents exceptions from client connection termination
       mitmProxy.onConnect(function (req, socket, head, callback) {
         socket.on('error', function(err) {
           if (err.errno === 'ECONNRESET') {
