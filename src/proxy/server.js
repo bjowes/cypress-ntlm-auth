@@ -516,6 +516,15 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
   });
 
   _ntlmProxy.onConnect(function (req, socket, head, callback) {
+    // Prevents exceptions from client connection termination
+    socket.on('error', function(err) {
+      if (err.errno === 'ECONNRESET') {
+        debug('socket used by CONNECT was reset by client.');
+      } else {
+        debug('socket used by CONNECT had an unexpected error', err);
+      }
+    });
+
     let targetHost = completeUrl(req.url, true);
     if (targetHost in _ntlmHosts) {
       return callback();
