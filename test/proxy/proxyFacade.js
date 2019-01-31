@@ -30,6 +30,19 @@ module.exports = {
     const mitmProxy = httpMitmProxy();
     getPort().then((port) => {
       mitmOptions.port = port;
+
+      // Prevents exceptions from client connection termination
+      mitmProxy.onConnect(function (req, socket, head, callback) {
+        socket.on('error', function(err) {
+          if (err.errno === 'ECONNRESET') {
+            // debug('socket used by CONNECT was reset by client.');
+          } else {
+            throw new Error('socket used by CONNECT had an unexpected error', err);
+          }
+        });
+        return callback();
+      });
+
       mitmProxy.listen(mitmOptions, (err) => {
         if (err) {
           return callback(null, null, err);
@@ -115,12 +128,6 @@ module.exports = {
         res.body = responseBody;
         return callback(res, null);
       });
-/*
-      if (res.statusCode !== 200) {
-        return callback(new Error('Unexpected response status code on config', res.statusCode));
-      } else {
-        return callback();
-      } */
     });
     configReq.on('error', (err) => {
       return callback(null, err);
@@ -219,6 +226,7 @@ function sendProxiedHttpsRequest(
   });
 
   connectReq.on('connect', function(res, socket /*, head*/) {
+    res.resume();
     if (res.statusCode !== 200) {
       return callback(null, new Error('Unexpected response code on CONNECT', res.statusCode));
     }
