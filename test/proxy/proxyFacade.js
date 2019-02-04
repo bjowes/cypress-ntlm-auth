@@ -31,14 +31,16 @@ module.exports = {
     getPort().then((port) => {
       mitmOptions.port = port;
 
-      // Prevents exceptions from client connection termination
       mitmProxy.onError(function (ctx, err, errorKind) {
         var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
         console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
       });
 
+      /*
       // Prevents exceptions from client connection termination
       mitmProxy.onConnect(function (req, socket, head, callback) {
+
+
         socket.on('error', function(err) {
           if (err.errno === 'ECONNRESET') {
             // debug('socket used by CONNECT was reset by client.');
@@ -48,6 +50,7 @@ module.exports = {
         });
         return callback();
       });
+      */
 
       mitmProxy.listen(mitmOptions, (err) => {
         if (err) {

@@ -516,6 +516,7 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
   });
 
   _ntlmProxy.onConnect(function (req, socket, head, callback) {
+    /*
     // Prevents exceptions from client connection termination
     socket.on('error', function(err) {
       if (err.errno === 'ECONNRESET') {
@@ -524,6 +525,7 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
         debug('socket used by CONNECT had an unexpected error', err);
       }
     });
+*/
 
     let targetHost = completeUrl(req.url, true);
     if (targetHost in _ntlmHosts) {
@@ -539,12 +541,22 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
     let reqUrl = url.parse(targetHost);
 
     debug('Tunnel to', req.url);
-    var conn = net.connect(reqUrl.port, reqUrl.hostname, function () {
+    var conn = net.connect({
+      port: reqUrl.port,
+      host: reqUrl.hostname,
+      allowHalfOpen: true
+    }, function () {
+      conn.on('finish', () => {
+        socket.destroy();
+      });
+
       socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function () {
+        conn.write(head);
         conn.pipe(socket);
         socket.pipe(conn);
       });
     });
+
 
     conn.on('error', function (e) {
       debug('Tunnel error', e);
