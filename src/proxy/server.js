@@ -516,17 +516,6 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
   });
 
   _ntlmProxy.onConnect(function (req, socket, head, callback) {
-    /*
-    // Prevents exceptions from client connection termination
-    socket.on('error', function(err) {
-      if (err.errno === 'ECONNRESET') {
-        debug('socket used by CONNECT was reset by client.');
-      } else {
-        debug('socket used by CONNECT had an unexpected error', err);
-      }
-    });
-*/
-
     let targetHost = completeUrl(req.url, true);
     if (targetHost in _ntlmHosts) {
       return callback();
@@ -557,11 +546,22 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
       });
     });
 
-
-    conn.on('error', function (e) {
-      debug('Tunnel error', e);
+    conn.on('error', function(err) {
+      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET');
+    });
+    socket.on('error', function(err) {
+      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET');
     });
   });
+
+  // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
+  function filterSocketConnReset(err, socketDescription) {
+    if (err.errno === 'ECONNRESET') {
+      debug('Got ECONNRESET on ' + socketDescription + ', ignoring.');
+    } else {
+      debug('Got unexpected error on ' + socketDescription, err);
+    }
+  }
 
   getPort().then((port) => {
     _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: true, silent: true, forceSNI: false }, (err) => {

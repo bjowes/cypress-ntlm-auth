@@ -37,7 +37,7 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "get-port": "^4.1.0",
-    "http-mitm-proxy": "^0.6.1",
+    "http-mitm-proxy": "https://github.com/bjowes/node-http-mitm-proxy/tarball/socket-reset",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
     "https-proxy-agent": "^2.2.1",

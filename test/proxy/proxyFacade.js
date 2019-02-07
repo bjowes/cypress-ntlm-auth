@@ -36,22 +36,6 @@ module.exports = {
         console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
       });
 
-      /*
-      // Prevents exceptions from client connection termination
-      mitmProxy.onConnect(function (req, socket, head, callback) {
-
-
-        socket.on('error', function(err) {
-          if (err.errno === 'ECONNRESET') {
-            // debug('socket used by CONNECT was reset by client.');
-          } else {
-            throw new Error('socket used by CONNECT had an unexpected error', err);
-          }
-        });
-        return callback();
-      });
-      */
-
       mitmProxy.listen(mitmOptions, (err) => {
         if (err) {
           return callback(null, null, err);
@@ -231,11 +215,10 @@ function sendProxiedHttpsRequest(
     host: proxyUrl.hostname,
     port: proxyUrl.port,
     method: 'CONNECT',
-    path: remoteHostUrl.href,
+    path: remoteHostUrl.host,
   });
 
   connectReq.on('connect', function(res, socket /*, head*/) {
-    res.resume();
     if (res.statusCode !== 200) {
       return callback(null, new Error('Unexpected response code on CONNECT', res.statusCode));
     }
