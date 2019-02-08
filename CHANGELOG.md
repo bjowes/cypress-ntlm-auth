@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 - released 2019-02-08
+
+* Enabled automated unit tests for Windows, OS X and Linux with multiple node versions with Travis-CI
+* Improved handling of sockets (used when proxying HTTPS sites) - the ECONNRESET error was not raised on early versions of node and it occurs more commonly on other platforms (Windows). The automated unit tests therefore required that these errors were handled.
+* Uses custom version of http-mitm-proxy with improved socket handling (see above) while waiting for a fixed release
+
 ## 0.8.1 - released 2019-01-26
 
 * Unit test refactoring

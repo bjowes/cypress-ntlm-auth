@@ -530,17 +530,38 @@ function startNtlmProxy(httpProxy, httpsProxy, noProxy, callback) {
     let reqUrl = url.parse(targetHost);
 
     debug('Tunnel to', req.url);
-    var conn = net.connect(reqUrl.port, reqUrl.hostname, function () {
+    var conn = net.connect({
+      port: reqUrl.port,
+      host: reqUrl.hostname,
+      allowHalfOpen: true
+    }, function () {
+      conn.on('finish', () => {
+        socket.destroy();
+      });
+
       socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function () {
+        conn.write(head);
         conn.pipe(socket);
         socket.pipe(conn);
       });
     });
 
-    conn.on('error', function (e) {
-      debug('Tunnel error', e);
+    conn.on('error', function(err) {
+      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET');
+    });
+    socket.on('error', function(err) {
+      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET');
     });
   });
+
+  // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
+  function filterSocketConnReset(err, socketDescription) {
+    if (err.errno === 'ECONNRESET') {
+      debug('Got ECONNRESET on ' + socketDescription + ', ignoring.');
+    } else {
+      debug('Got unexpected error on ' + socketDescription, err);
+    }
+  }
 
   getPort().then((port) => {
     _ntlmProxy.listen({ host: 'localhost', port: port, keepAlive: true, silent: true, forceSNI: false }, (err) => {

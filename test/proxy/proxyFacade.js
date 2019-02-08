@@ -30,6 +30,12 @@ module.exports = {
     const mitmProxy = httpMitmProxy();
     getPort().then((port) => {
       mitmOptions.port = port;
+
+      mitmProxy.onError(function (ctx, err, errorKind) {
+        var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+        console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
+      });
+
       mitmProxy.listen(mitmOptions, (err) => {
         if (err) {
           return callback(null, null, err);
@@ -115,12 +121,6 @@ module.exports = {
         res.body = responseBody;
         return callback(res, null);
       });
-/*
-      if (res.statusCode !== 200) {
-        return callback(new Error('Unexpected response status code on config', res.statusCode));
-      } else {
-        return callback();
-      } */
     });
     configReq.on('error', (err) => {
       return callback(null, err);
@@ -215,7 +215,7 @@ function sendProxiedHttpsRequest(
     host: proxyUrl.hostname,
     port: proxyUrl.port,
     method: 'CONNECT',
-    path: remoteHostUrl.href,
+    path: remoteHostUrl.host,
   });
 
   connectReq.on('connect', function(res, socket /*, head*/) {
