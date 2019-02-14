@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.1 - released 2019-02-14
+
+* Bumped versions of dependencies, now using official version of http-mitm-proxy again
+* Added LGTM checking
+
 ## 0.9.0 - released 2019-02-08
 
 * Enabled automated unit tests for Windows, OS X and Linux with multiple node versions with Travis-CI

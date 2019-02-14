@@ -37,7 +37,7 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "get-port": "^4.1.0",
-    "http-mitm-proxy": "https://github.com/bjowes/node-http-mitm-proxy/tarball/socket-reset#84c97a3ee8accb689756be20148d5e689c61ccd9",
+    "http-mitm-proxy": "^0.7.0",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
     "https-proxy-agent": "^2.2.1",
@@ -45,11 +45,11 @@
     "node-cleanup": "^2.1.2"
   },
   "devDependencies": {
-    "eslint": "^5.12.1",
+    "eslint": "^5.13.0",
     "express-ntlm": "^2.3.0",
     "is-port-reachable": "^2.0.0",
     "mocha": "^5.2.0",
-    "node-forge": "^0.7.6",
+    "node-forge": "^0.8.0",
     "proxyquire": "^2.1.0",
     "sinon": "^7.2.3"
   }
