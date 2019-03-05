@@ -49,7 +49,8 @@ function completeUrl(host, isSSL) {
   }
 
   if (!hostUrl.port) {
-    hostUrl.port = isSSL ? '443' : '80';
+    let port = isSSL ? '443' : '80';
+    return hostUrl.protocol + '//' + hostUrl.hostname + ':' + port + '/';
   }
 
   return hostUrl.href;

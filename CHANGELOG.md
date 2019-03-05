@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.2 - released 2019-03-05
+
+* Fixed issue #23: proxying sites on default ports when cy.ntlm was called without the port number.
+* Updated dependencies
+
 ## 0.9.1 - released 2019-02-14
 
 * Bumped versions of dependencies, now using official version of http-mitm-proxy again

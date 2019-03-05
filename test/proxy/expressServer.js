@@ -183,13 +183,16 @@ let httpServer;
 let httpsServer;
 
 module.exports = {
-  startHttpServer: function(useNtlm, callback) {
+  startHttpServer: function(useNtlm, port, callback) {
+    if (!port) {
+      port = 0;
+    }
     if (useNtlm) {
       httpServer = http.createServer(appNtlmAuth);
     } else {
       httpServer = http.createServer(appNoAuth);
     }
-    httpServer.listen(0, '127.0.0.1', 511, (err) => {
+    httpServer.listen(port, '127.0.0.1', 511, (err) => {
       if (err) {
         throw err;
       }
@@ -205,7 +208,10 @@ module.exports = {
       }
     });
   },
-  startHttpsServer: function(useNtlm, callback) {
+  startHttpsServer: function(useNtlm, port, callback) {
+    if (!port) {
+      port = 0;
+    }
     generateSelfSignedCert((certPem, privateKeyPem /*, publicKeyPem */) => {
       if (useNtlm) {
         httpsServer = https.createServer({
@@ -218,7 +224,7 @@ module.exports = {
           cert: certPem
         }, appNoAuth);
       }
-      httpsServer.listen(0, '127.0.0.1', 511, (err) => {
+      httpsServer.listen(port, '127.0.0.1', 511, (err) => {
         if (err) {
           throw err;
         }

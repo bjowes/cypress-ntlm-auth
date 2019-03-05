@@ -29,7 +29,7 @@ describe('Proxy for HTTPS host with NTLM', function() {
       if (err) {
         return done(err);
       }
-      expressServer.startHttpsServer(true, (url) => {
+      expressServer.startHttpsServer(true, null, (url) => {
         httpsUrl = url;
         ntlmHostConfig = {
           ntlmHost: httpsUrl,
@@ -234,7 +234,7 @@ describe('Proxy for HTTPS host without NTLM', function() {
       if (err) {
         return done(err);
       }
-      expressServer.startHttpsServer(false, (url) => {
+      expressServer.startHttpsServer(false, null, (url) => {
         httpsUrl = url;
         proxy.startProxy(null, null, null, false, false, (result, err) => {
           if (err) {
