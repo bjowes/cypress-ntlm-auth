@@ -7,7 +7,7 @@
     "proxy": "node src/proxy/index.js &",
     "launch": "node src/launcher/cypressNtlm.js",
     "pnl": "npm run proxy && npm run launch",
-    "test": "mocha --recursive"
+    "test": "mocha test/**/*.spec.js"
   },
   "engines": {
     "node": ">=8.2.1"
@@ -36,7 +36,7 @@
     "appdata-path": "^1.0.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
-    "get-port": "^4.1.0",
+    "get-port": "^4.2.0",
     "http-mitm-proxy": "^0.7.0",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
@@ -45,12 +45,12 @@
     "node-cleanup": "^2.1.2"
   },
   "devDependencies": {
-    "eslint": "^5.13.0",
+    "eslint": "^5.15.1",
     "express-ntlm": "^2.3.0",
     "is-port-reachable": "^2.0.0",
-    "mocha": "^5.2.0",
-    "node-forge": "^0.8.0",
+    "mocha": "^6.0.2",
+    "node-forge": "^0.8.1",
     "proxyquire": "^2.1.0",
-    "sinon": "^7.2.3"
+    "sinon": "^7.2.7"
   }
 }

@@ -42,7 +42,7 @@ describe('Proxy for HTTP host with NTLM and upstream proxy', function() {
       upstreamProxy.onError(function (ctx, err /*, errorKind */ ) {
         return done(err);
       });
-      expressServer.startHttpServer(true, (url) => {
+      expressServer.startHttpServer(true, null, (url) => {
         httpUrl = url;
         ntlmHostConfig = {
           ntlmHost: httpUrl,
@@ -268,7 +268,7 @@ describe('Proxy for HTTP host without NTLM and upstream proxy', function() {
       upstreamProxy.onError(function (ctx, err /*, errorKind */) {
         return done(err);
       });
-      expressServer.startHttpServer(false, (url) => {
+      expressServer.startHttpServer(false, null, (url) => {
         httpUrl = url;
         proxy.startProxy(upstreamProxyUrl, null, null, false, false,
           (result, err) => {
@@ -402,7 +402,7 @@ describe('Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY', function
       upstreamProxy.onError(function (ctx, err /*, errorKind */) {
         return done(err);
       });
-      expressServer.startHttpServer(false, (url) => {
+      expressServer.startHttpServer(false, null, (url) => {
         httpUrl = url;
         return done();
       });
