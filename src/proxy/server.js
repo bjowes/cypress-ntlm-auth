@@ -77,7 +77,7 @@ function updateConfig(config) {
 
 function shutDownProxy(keepPortsFile, exitProcess) {
   debug('Shutting down');
-  console.log('Total number of agents created: ', agentCount);
+  debug('Total number of agents created: ', agentCount);
 
   if (!keepPortsFile) {
     portsFile.delete((err) => {
