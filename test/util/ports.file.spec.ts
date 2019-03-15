@@ -1,18 +1,11 @@
-//const proxyquire = require('proxyquire').noCallThru();
-
-import fse, { mkdirp } from 'fs-extra';
-import { debug as debugInit } from 'debug';
-const debug = debugInit('cypress:plugin:ntlm-auth');
-
+import fse from 'fs-extra';
 import assert from 'assert';
 import sinon from 'sinon';
 import chai from 'chai';
 import path from 'path';
-import  url from 'url';
 import appDataPath from 'appdata-path';
 import { PortsFile } from '../../src/models/ports.file.model';
 import { PortsFileHandler } from '../../src/util/ports.file';
-import { isExportDeclaration, textChangeRangeIsUnchanged } from 'typescript';
 
 const _portsFileName = 'cypress-ntlm-auth.port';
 const _portsFileFolder = appDataPath('cypress-ntlm-auth');
@@ -197,7 +190,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if port file content is not JSON', function () {
+    it('Does throw if ports file content is not JSON', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns('<this is not JSON>');
@@ -215,7 +208,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if no file exists', function () {
+    it('Does throw if no file exists', function () {
       // Arrange
       existsStub.returns(false);
 
@@ -231,7 +224,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if port file content is invalid', function () {
+    it('Does throw if ports file content is invalid', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns({ dummy: 'dummy' });
@@ -248,7 +241,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if port file content is missing configApiUrl', function () {
+    it('Does throw if ports file content is missing configApiUrl', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns({ ntlmProxyUrl: 'dummy' });
@@ -265,7 +258,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if port file content is missing ntlmProxyUrl', function () {
+    it('Does throw if ports file content is missing ntlmProxyUrl', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns({ configApiUrl: 'dummy' });
@@ -282,7 +275,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if ntlmProxyUrl cannot be parsed as an url', function () {
+    it('Does throw if ntlmProxyUrl cannot be parsed as an url', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns({ configApiUrl: 'http://localhost:1234', ntlmProxyUrl: 'dummy' });
@@ -299,7 +292,7 @@ describe('PortsFileHandler', function () {
       }
     });
 
-    it('Returns error if configApiUrl cannot be parsed as an url', function () {
+    it('Does throw if configApiUrl cannot be parsed as an url', function () {
       // Arrange
       existsStub.returns(true);
       readFileStub.returns({ configApiUrl: 'dummy', ntlmProxyUrl: 'http://localhost:1234' });
