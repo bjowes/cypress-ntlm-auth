@@ -2,29 +2,31 @@ import { debug } from './debug';
 
 import fse from 'fs-extra';
 import path from 'path';
-import  url from 'url';
+import * as url from 'url';
 import appDataPath from 'appdata-path';
 import { PortsFile } from '../models/ports.file.model';
+import { injectable } from 'inversify';
 
-export class PortsFileHandler {
-  private static readonly _portsFileFolder = appDataPath('cypress-ntlm-auth');
-  private static readonly _portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), 'cypress-ntlm-auth.port');
+@injectable()
+export class PortsFileService {
+  private readonly _portsFileFolder = appDataPath('cypress-ntlm-auth');
+  private readonly _portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), 'cypress-ntlm-auth.port');
 
-  static async delete() {
+ async delete() {
     await fse.unlink(this._portsFileWithPath);
   }
 
-  static async save(ports: PortsFile) {
+ async save(ports: PortsFile) {
     await fse.mkdirp(this._portsFileFolder);
     await fse.writeJson(this._portsFileWithPath, ports);
     debug('wrote ' + this._portsFileWithPath);
   }
 
-  static exists(): boolean {
+ exists(): boolean {
     return fse.existsSync(this._portsFileWithPath);
   }
 
-  static parse(): PortsFile {
+ parse(): PortsFile {
     if (this.exists()) {
       let data = fse.readJsonSync(this._portsFileWithPath);
       return this.validatePortsFile(data);
@@ -34,7 +36,7 @@ export class PortsFileHandler {
     }
   }
 
-  private static validatePortsFile(data: Object): PortsFile {
+  private validatePortsFile(data: Object): PortsFile {
     let ports = data as PortsFile;
 
     if (!ports || !ports.configApiUrl || !ports.ntlmProxyUrl) {

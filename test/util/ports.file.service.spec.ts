@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import fse from 'fs-extra';
 import assert from 'assert';
 import sinon from 'sinon';
@@ -5,14 +7,15 @@ import chai from 'chai';
 import path from 'path';
 import appDataPath from 'appdata-path';
 import { PortsFile } from '../../src/models/ports.file.model';
-import { PortsFileHandler } from '../../src/util/ports.file';
+import { PortsFileService } from '../../src/util/ports.file.service';
 
 const _portsFileName = 'cypress-ntlm-auth.port';
 const _portsFileFolder = appDataPath('cypress-ntlm-auth');
 const _portsFileWithPath = path.join(_portsFileFolder, _portsFileName);
 
-describe('PortsFileHandler', function () {
+describe('PortsFileService', function () {
   let existsStub = sinon.stub(fse, 'existsSync');
+  let portsFileService = new PortsFileService();
 
   describe('delete operations', function () {
     let unlinkStub = sinon.stub(fse, 'unlink');
@@ -36,7 +39,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        await PortsFileHandler.delete();
+        await portsFileService.delete();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -50,7 +53,7 @@ describe('PortsFileHandler', function () {
       // Arrange
 
       // Act
-      await PortsFileHandler.delete();
+      await portsFileService.delete();
       assert(unlinkStub.calledOnceWith(_portsFileWithPath));
     });
   });
@@ -86,7 +89,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        await PortsFileHandler.save(data);
+        await portsFileService.save(data);
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -103,7 +106,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        await PortsFileHandler.save(data);
+        await portsFileService.save(data);
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -119,7 +122,7 @@ describe('PortsFileHandler', function () {
       let data = { configApiUrl: 'dummy', ntlmProxyUrl: 'dummy' } as PortsFile;
 
       // Act & Assert
-      await PortsFileHandler.save(data);
+      await portsFileService.save(data);
       chai.expect(mkdirpStub.getCall(0).args[0]).to.be.equal(_portsFileFolder);
       chai.expect(writeJsonStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
       chai.expect(writeJsonStub.getCall(0).args[1]).to.be.equal(data);
@@ -146,7 +149,7 @@ describe('PortsFileHandler', function () {
       existsStub.returns(false);
 
       // Act
-      var exists = PortsFileHandler.exists();
+      var exists = portsFileService.exists();
 
       // Assert
       assert.equal(exists, false);
@@ -158,7 +161,7 @@ describe('PortsFileHandler', function () {
       existsStub.returns(true);
 
       // Act
-      var exists = PortsFileHandler.exists();
+      var exists = portsFileService.exists();
 
       // Assert
       assert.equal(exists, true);
@@ -197,7 +200,7 @@ describe('PortsFileHandler', function () {
 
       // Act
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -214,7 +217,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -231,7 +234,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -248,7 +251,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -265,7 +268,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -282,7 +285,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -299,7 +302,7 @@ describe('PortsFileHandler', function () {
 
       // Act & Assert
       try {
-        let ports = PortsFileHandler.parse();
+        let ports = portsFileService.parse();
         chai.assert.fail('should throw');
       } catch (err) {
         chai.expect(err).to.be.a('Error');
@@ -315,7 +318,7 @@ describe('PortsFileHandler', function () {
       readFileStub.returns({ configApiUrl: 'http://127.0.0.1:1235', ntlmProxyUrl: 'http://localhost:1234' });
 
       // Act & Assert
-      let ports = PortsFileHandler.parse();
+      let ports = portsFileService.parse();
       chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
       chai.expect(readFileStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
       chai.expect(ports.ntlmProxyUrl).to.be.equal('http://localhost:1234');
