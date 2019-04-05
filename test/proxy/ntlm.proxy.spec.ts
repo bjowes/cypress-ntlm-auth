@@ -1,18 +1,14 @@
+// cSpell:ignore nisse, mnpwr
+
 import 'reflect-metadata';
 import 'mocha';
 
 import sinon from 'sinon';
 import { expect } from 'chai';
-import chai  from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-chai.use(chaiAsPromised);
 
-import url from 'url';
-import axios, { AxiosRequestConfig } from 'axios';
-
-//const express = require('express');
-//const bodyParser = require('body-parser');
-const isPortReachable = require('is-port-reachable');
+import http from 'http';
+import express from 'express';
+import bodyParser from 'body-parser';
 import { Container } from 'inversify';
 
 import { PortsFileService } from '../../src/util/ports.file.service';
@@ -20,31 +16,19 @@ import { ProxyFacade } from './proxy.facade';
 
 import { CoreServer } from '../../src/proxy/core.server';
 import { PortsFile } from '../../src/models/ports.file.model';
+import { AddressInfo } from 'net';
+import { NtlmConfig } from '../../src/models/ntlm.config.model';
 
-async function isProxyReachable(ports: PortsFile): Promise<boolean> {
-  const configUrl = url.parse(ports.configApiUrl);
-  const proxyUrl = url.parse(ports.ntlmProxyUrl);
+let _configApiUrl: string | undefined;
 
-  let reachable = await isPortReachable(proxyUrl.port, { host: proxyUrl.hostname });
-  if (!reachable) {
-    return false;
-  }
-  reachable = await isPortReachable(configUrl.port, { host: configUrl.hostname });
-  if (!reachable) {
-    return false;
-  }
-  return true;
-}
+let remoteHost = express();
+let remoteHostRequestHeaders: http.IncomingHttpHeaders[];
+let remoteHostResponseWwwAuthHeader: string | undefined;
+let remoteHostReply: number;
+let remoteHostListener: http.Server | undefined;
+let remoteHostWithPort: string;
 
-/*
-const remoteHost = express();
-let remoteHostRequestHeaders;
-let remoteHostResponseWwwAuthHeader;
-let remoteHostReply;
-let remoteHostListener;
-let remoteHostWithPort;
-
-function initRemoteHost(callback) {
+async function initRemoteHost() {
   remoteHost.use(bodyParser.raw());
   remoteHostReply = 401;
   remoteHost.use((req, res) => {
@@ -54,53 +38,52 @@ function initRemoteHost(callback) {
     }
     res.sendStatus(remoteHostReply);
   });
-  remoteHostListener = remoteHost.listen((err) => {
-    if (err) {
-      return callback(err);
-    }
-    remoteHostWithPort = 'http://localhost:' + remoteHostListener.address().port;
-    return callback();
+
+  remoteHostListener = await new Promise<http.Server>((resolve, reject) => {
+    let listener = remoteHost.listen(null, (err: Error) => {
+      if (err) {
+        reject(err);
+      }
+    });
+    resolve(listener);
   });
+  if (remoteHostListener) {
+    let addressInfo = remoteHostListener.address() as AddressInfo;
+    remoteHostWithPort = 'http://localhost:' + addressInfo.port;
+  } else {
+    throw new Error('Could not start test server');
+  }
 }
 
 describe('NTLM Proxy authentication', function () {
-  let savePortsFileStub;
-  let portsFileExistsStub;
+  let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
+  let portsFileExistsStub: sinon.SinonStub<[], boolean>;
+  let proxyFacade = new ProxyFacade();
+  let coreServer: CoreServer;
+  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
 
-  before(function (done) {
+  before(async function () {
     this.timeout(15000);
-    proxyFacade.initMitmProxy((err) => {
-      if (err) {
-        return done(err);
-      }
-      initRemoteHost(done);
-    });
-    savePortsFileStub = sinon.stub(portsFile, 'save');
-    portsFileExistsStub = sinon.stub(portsFile, 'exists');
+    await proxyFacade.initMitmProxy();
+    await initRemoteHost();
+    savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
+    portsFileExistsStub = sinon.stub(PortsFileService.prototype, 'exists');
     portsFileExistsStub.returns(false);
-    savePortsFileStub.callsFake(function (ports, callback) {
-      return callback();
-    });
+    savePortsFileStub.returns(Promise.resolve());
   });
 
   beforeEach(function () {
-    _configApiUrl = null;
-    remoteHostRequestHeaders = new Array();
-    remoteHostResponseWwwAuthHeader = null;
+    coreServer = dependencyInjection.get(CoreServer);
+    _configApiUrl = undefined;
+    remoteHostRequestHeaders = [];
+    remoteHostResponseWwwAuthHeader = undefined;
   });
 
-  afterEach(function (done) {
+  afterEach(async function () {
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      proxyFacade.sendQuitCommand(_configApiUrl, true, (err) => {
-        if (err) {
-          return done(err);
-        }
-        return done();
-      });
-    }
-    if (!_configApiUrl) {
-      return done();
+      await ProxyFacade.sendQuitCommand(_configApiUrl, true);
+      _configApiUrl = undefined;
     }
   });
 
@@ -111,34 +94,25 @@ describe('NTLM Proxy authentication', function () {
     if (portsFileExistsStub) {
       portsFileExistsStub.restore();
     }
-    remoteHostListener.close();
+    if (remoteHostListener) {
+      remoteHostListener.close();
+    }
   });
 
-  it('proxy without configuration shall not add authentication header', function (done) {
+  it('proxy without configuration shall not add authentication header', async function () {
     // Act
-    proxy.startProxy(null, null, null, false, false, (result, err) => {
-      if (err) {
-        return done(err);
-      }
-      _configApiUrl = result.configApiUrl;
-      proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
-        (res, err) => {
-          if (err) {
-            return done(err);
-          }
-
-          // Assert
-          assert.equal(res.statusCode, 401);
-          let firstRequestHeaders = remoteHostRequestHeaders.shift();
-          assert.equal('authorization' in firstRequestHeaders, false);
-          done();
-        });
-    });
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    _configApiUrl = ports.configApiUrl;
+    let res = await ProxyFacade.sendRemoteRequest(ports.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null);
+    expect(res.status).to.be.equal(401);
+    let firstRequestHeaders = remoteHostRequestHeaders.shift();
+    expect(firstRequestHeaders).to.be.not.null;
+    expect(firstRequestHeaders && 'authorization' in firstRequestHeaders).to.be.false;
   });
 
-  it('proxy with configuration shall add authentication header', function (done) {
+  it('proxy with configuration shall add authentication header', async function () {
     // Arrange
-    const hostConfig = {
+    const hostConfig: NtlmConfig = {
       ntlmHost: remoteHostWithPort,
       username: 'nisse',
       password: 'manpower',
@@ -147,42 +121,21 @@ describe('NTLM Proxy authentication', function () {
     remoteHostResponseWwwAuthHeader = 'test';
 
     // Act
-    proxy.startProxy(null, null, null, false, false, (result, err) => {
-      // Assert
-      if (err) {
-        return done(err);
-      }
-      _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
-        (res, err) => {
-        if (err) {
-          return done(err);
-        }
-        assert.strictEqual(res.statusCode, 200);
-        proxyFacade.sendRemoteRequest(
-          result.ntlmProxyUrl,
-          remoteHostWithPort,
-          'GET',
-          '/test',
-          null,
-          (res, err) => {
-            if (err) {
-              return done(err);
-            }
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    _configApiUrl = ports.configApiUrl;
+    let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
+    expect(res.status).to.be.equal(200);
 
-            // Assert
-            assert.equal(res.statusCode, 401);
-            let firstRequestHeaders = remoteHostRequestHeaders.shift();
-            assert.equal('authorization' in firstRequestHeaders, true);
-            done();
-          });
-      });
-    });
+    res = await ProxyFacade.sendRemoteRequest(ports.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null);
+    expect(res.status).to.be.equal(401);
+    let firstRequestHeaders = remoteHostRequestHeaders.shift();
+    expect(firstRequestHeaders).to.be.not.null;
+    expect(firstRequestHeaders && 'authorization' in firstRequestHeaders).to.be.true;
   });
 
-  it('proxy with configuration shall not add authentication header for another host', function (done) {
+  it('proxy with configuration shall not add authentication header for another host', async function () {
     // Arrange
-    const hostConfig = {
+    const hostConfig: NtlmConfig = {
       ntlmHost: 'http://some.other.host.com:4567',
       username: 'nisse',
       password: 'manpower',
@@ -190,36 +143,21 @@ describe('NTLM Proxy authentication', function () {
     };
 
     // Act
-    proxy.startProxy(null, null, null, false, false, (result, err) => {
-      if (err) {
-        return done(err);
-      }
-      _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
-        (res, err) => {
-        if (err) {
-          return done(err);
-        }
-        assert.strictEqual(res.statusCode, 200);
-        proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
-        (res, err) => {
-          if (err) {
-            return done(err);
-          }
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    _configApiUrl = ports.configApiUrl;
+    let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
+    expect(res.status).to.be.equal(200);
 
-          // Assert
-          assert.equal(res.statusCode, 401);
-          let firstRequestHeaders = remoteHostRequestHeaders.shift();
-          assert.equal('authorization' in firstRequestHeaders, false);
-          done();
-        });
-      });
-    });
+    res = await ProxyFacade.sendRemoteRequest(ports.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null);
+    expect(res.status).to.be.equal(401);
+    let firstRequestHeaders = remoteHostRequestHeaders.shift();
+    expect(firstRequestHeaders).to.be.not.null;
+    expect(firstRequestHeaders && 'authorization' in firstRequestHeaders).to.be.false;
   });
 
-  it('proxy shall not add authentication header after reset', function (done) {
+  it('proxy shall not add authentication header after reset', async function () {
     // Arrange
-    const hostConfig = {
+    const hostConfig: NtlmConfig = {
       ntlmHost: remoteHostWithPort,
       username: 'nisse',
       password: 'manpower',
@@ -227,37 +165,17 @@ describe('NTLM Proxy authentication', function () {
     };
 
     // Act
-    proxy.startProxy(null, null, null, false, false, (result, err) => {
-      if (err) {
-        return done(err);
-      }
-      _configApiUrl = result.configApiUrl;
-      proxyFacade.sendNtlmConfig(result.configApiUrl, hostConfig,
-        (res, err) => {
-        if (err) {
-          return done(err);
-        }
-        assert.strictEqual(res.statusCode, 200);
-        proxyFacade.sendNtlmReset(result.configApiUrl, (err) => {
-          if (err) {
-            return done(err);
-          }
-          proxyFacade.sendRemoteRequest(result.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null,
-          (res, err) => {
-            if (err) {
-              return done(err);
-            }
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    _configApiUrl = ports.configApiUrl;
+    let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
+    expect(res.status).to.be.equal(200);
 
-            // Assert
-            assert.equal(res.statusCode, 401);
-            let firstRequestHeaders = remoteHostRequestHeaders.shift();
-            assert.equal('authorization' in firstRequestHeaders, false);
-            done();
-          });
-        });
-      });
-    });
+    await ProxyFacade.sendNtlmReset(ports.configApiUrl);
+
+    res = await ProxyFacade.sendRemoteRequest(ports.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null);
+    expect(res.status).to.be.equal(401);
+    let firstRequestHeaders = remoteHostRequestHeaders.shift();
+    expect(firstRequestHeaders).to.be.not.null;
+    expect(firstRequestHeaders && 'authorization' in firstRequestHeaders).to.be.false;
   });
 });
-*/
-

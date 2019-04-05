@@ -47,5 +47,5 @@ export function toCompleteUrl(host: string, addProtocol: boolean, useSSL?: boole
     throw new Error('Missing mandatory properties of complete url: ' + JSON.stringify(hostUrl));
   }
 
-  return { hostname: hostUrl.hostname, port: hostUrl.port, protocol: hostUrl.protocol, href: hostUrl.href, path: 'future' };
+  return { hostname: hostUrl.hostname, port: hostUrl.port, protocol: hostUrl.protocol, href: hostUrl.href, path: hostUrl.path };
 };

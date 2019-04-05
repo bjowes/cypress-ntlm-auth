@@ -1,9 +1,14 @@
 import http from 'http';
 import https from 'https';
-import url, { resolve } from 'url';
+
+import url from 'url';
 import httpMitmProxy from 'http-mitm-proxy';
 import getPort from 'get-port';
 import axios, { AxiosResponse } from 'axios';
+import tunnel from 'tunnel';
+import fs from 'fs';
+import path from 'path';
+
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 
 export class ProxyFacade {
@@ -13,7 +18,8 @@ export class ProxyFacade {
   private _mitmProxyInit = false;
   private _mitmProxy: httpMitmProxy.IProxy = httpMitmProxy();
 
-  async startMitmProxy(rejectUnauthorized: boolean): Promise<string> {
+  async startMitmProxy(rejectUnauthorized: boolean,
+    requestCallback?: (ctx: httpMitmProxy.IContext, callback: (error?: Error) => void) => void): Promise<string> {
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: 'localhost',
       port: undefined,
@@ -36,8 +42,10 @@ export class ProxyFacade {
       var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
       console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
     });
-    //await this._mitmProxy.listen(mitmOptions); // TODO ???
 
+    if (requestCallback) {
+      this._mitmProxy.onRequest(requestCallback);
+    }
 
     await new Promise((resolve, reject) => this._mitmProxy.listen(mitmOptions, (err: Error) => {
       if (err) {
@@ -63,6 +71,11 @@ export class ProxyFacade {
     this._mitmProxyInit = true;
   }
 
+  get mitmCaCert(): Buffer {
+    const caCertPath = path.join(process.cwd(), '.http-mitm-proxy', 'certs', 'ca.pem');
+    return fs.readFileSync(caCertPath);
+  }
+
   static async sendQuitCommand(configApiUrl: string, keepPortsFile: boolean): Promise<AxiosResponse<string>> {
     let res = await axios.post(configApiUrl + '/quit',
      { keepPortsFile: keepPortsFile }, { timeout: 15000 });
@@ -83,7 +96,7 @@ export class ProxyFacade {
   }
 
   static async sendNtlmReset(configApiUrl: string): Promise<AxiosResponse<string>> {
-    let res = await axios.post(configApiUrl + '/ntlm-config',
+    let res = await axios.post(configApiUrl + '/reset',
       null, { timeout: 15000 });
     if (res.status !== 200) {
       throw new Error('Unexpected response status code on reset' + res.status);
@@ -91,7 +104,16 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any): Promise<AxiosResponse<any>> {
+  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer): Promise<AxiosResponse<any>> {
+    const remoteHostUrl = url.parse(remoteHostWithPort);
+    if (remoteHostUrl.protocol === 'http:') {
+      return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body);
+    } else {
+      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, caCert);
+    }
+  }
+
+  private static async sendProxiedHttpRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
@@ -112,98 +134,39 @@ export class ProxyFacade {
     return res;
   }
 
-  /*
-  private sendProxiedHttpRequest(
-    method: string, remoteHostUrl: string, path: string, proxyUrl: string, headers: any, bodyJson: string, callback) {
-    headers['Host'] = remoteHostUrl.host;
-
-    const proxyReq = http.request({
-      method: method,
-      path: path,
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      timeout: 3000,
-      headers: headers,
-    }, (res) => {
-      let responseBody;
-      res.setEncoding('utf8');
-      res.on('data', function(chunk) {
-        if (!responseBody) {
-          responseBody = chunk;
-        } else {
-          responseBody += chunk;
-        }
-      });
-      res.on('end', function() {
-        res.body = responseBody;
-        return callback(res, null);
-      });
-    });
-    proxyReq.on('error', (err) => {
-      return callback(null, err);
-    });
-    if (bodyJson) {
-      proxyReq.write(bodyJson);
+  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer) {
+    const proxyUrl = url.parse(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !proxyUrl.port) {
+      throw new Error('Invalid proxy url');
     }
-    proxyReq.end();
 
-  }
-  */
-/*
-  private sendProxiedHttpsRequest(
-    method, remoteHostUrl, path, proxyUrl, headers, bodyJson, callback) {
-    var connectReq = http.request({ // establishing a tunnel
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      method: 'CONNECT',
-      path: remoteHostUrl.host,
-    });
+    let ca: Buffer[] = [];
+    if (caCert) {
+      ca = [caCert];
+    }
 
-    connectReq.on('connect', function(res, socket /*, head) {
-      if (res.statusCode !== 200) {
-        return callback(null, new Error('Unexpected response code on CONNECT', res.statusCode));
-      }
-
-      var req = https.request({
-        method: method,
-        path: path,
-        host: remoteHostUrl.host,
-        timeout: 3000,
-        socket: socket, // using a tunnel
-        agent: false,    // cannot use a default agent
-        headers: headers,
-        // We can ignore the self-signed certs on the testing webserver
-        // Cypress will also ignore this
-        rejectUnauthorized: false
-      }, function(res) {
-        let responseBody;
-        res.setEncoding('utf8');
-        res.on('data', function(chunk) {
-          if (!responseBody) {
-            responseBody = chunk;
-          } else {
-            responseBody += chunk;
+    const tun = tunnel.httpsOverHttp({
+      proxy: {
+          host: proxyUrl.hostname,
+          port: +proxyUrl.port,
+          headers: {
+            'User-Agent': 'Node'
           }
-        });
-        res.on('end', function() {
-          res.body = responseBody;
-          return callback(res, null);
-        });
-      });
-
-      req.on('error', (err) => {
-        return callback(null, err);
-      });
-
-      if (bodyJson) {
-        req.write(bodyJson);
-      }
-      req.end();
+      },
+      ca: ca
     });
 
-    connectReq.on('error', (err) => {
-      return callback(null, err);
+    let res = await axios.request({
+      method: method,
+      baseURL: remoteHostWithPort,
+      url: path,
+      httpsAgent: tun,
+      proxy: false,
+      timeout: 3000,
+      data: body,
+
+      validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
     });
-    connectReq.end();
-  } */
+    return res;
+  }
 };

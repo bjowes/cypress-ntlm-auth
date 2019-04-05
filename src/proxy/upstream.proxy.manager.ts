@@ -68,8 +68,8 @@ export class UpstreamProxyManager {
     return false;
   }
 
-  hasHttpsUpstreamProxy(): boolean {
-    return this._httpsProxyUrl !== undefined;
+  hasHttpsUpstreamProxy(ntlmHostUrl: CompleteUrl): boolean {
+    return (this._httpsProxyUrl !== undefined && this.targetInNoProxy(ntlmHostUrl) === false);
   }
 
   reset() {

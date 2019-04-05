@@ -1,4 +1,3 @@
-// cSpell:ignore nisse, mnpwr
 import 'reflect-metadata';
 import 'mocha';
 

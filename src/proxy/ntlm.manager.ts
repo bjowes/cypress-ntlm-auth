@@ -106,19 +106,12 @@ export class NtlmManager {
 
   private canHandleNtlmAuthentication(res: http.IncomingMessage): boolean {
     if (res && res.statusCode === 401) {
-        // Ensure that we're talking NTLM here
-        // Once we have the www-authenticate header, split it so we can ensure we can talk NTLM
-        const wwwAuthenticate = res.headers['www-authenticate'];
-
-        if (wwwAuthenticate) {
-            const mechanisms = wwwAuthenticate.split(', ');
-            const index = mechanisms.indexOf("NTLM");
-            if (index >= 0) {
-                return true;
-            }
-        }
+      // Ensure that we're talking NTLM here
+      const wwwAuthenticate = res.headers['www-authenticate'];
+      if (wwwAuthenticate && wwwAuthenticate.startsWith('NTLM ')) {
+        return true;
+      }
     }
-
     return false;
 }
 

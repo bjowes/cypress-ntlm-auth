@@ -11,9 +11,9 @@ export class Main {
     this._coreServer = coreServer;
   }
 
-  async run(httpProxy: string, httpsProxy: string, noProxy: string, allowMultipleInstances: boolean) {
+  async run(allowMultipleInstances: boolean, httpProxy?: string, httpsProxy?: string, noProxy?: string, ) {
     try {
-      let ports = await this._coreServer.start(httpProxy, httpsProxy, noProxy, allowMultipleInstances);
+      let ports = await this._coreServer.start(allowMultipleInstances, httpProxy, httpsProxy, noProxy);
       debug('Startup done!');
       debug(ports);
     } catch (err){

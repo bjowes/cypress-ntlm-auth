@@ -12,6 +12,8 @@ import { ConfigStore } from './config.store';
 import { NtlmManager } from './ntlm.manager';
 import { UpstreamProxyManager } from './upstream.proxy.manager';
 
+let self: NtlmProxyMitm;
+
 @injectable()
 export class NtlmProxyMitm {
   private readonly _configStore: ConfigStore;
@@ -26,6 +28,9 @@ export class NtlmProxyMitm {
     this._connectionContextManager = connectionContextManager;
     this._ntlmManager = ntlmManager;
     this._upstreamProxyManager = upstreamProxyManager;
+    // Keep track of instance since methods will be triggered from HttpMitmProxy
+    // events which means that 'this' is no longer the class instance
+    self = this;
   }
 
   private filterChromeStartup(ctx: IContext, errno: string | undefined, errorKind: string) {
@@ -47,7 +52,7 @@ export class NtlmProxyMitm {
   }
 
   onError(ctx: IContext, error: NodeJS.ErrnoException, errorKind: string) {
-    if (this.filterChromeStartup(ctx, error.code, errorKind)) {
+    if (self.filterChromeStartup(ctx, error.code, errorKind)) {
       return;
     }
     var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
@@ -55,33 +60,33 @@ export class NtlmProxyMitm {
   }
 
   private filterConfigApiRequestLogging(targetHost: CompleteUrl) {
-    return (targetHost.href === this._configServer.configApiUrl);
+    return (targetHost.href === self._configServer.configApiUrl);
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    let targetHost = this.getTargetHost(ctx);
+    let targetHost = self.getTargetHost(ctx);
     if (targetHost) {
-      if (this._configStore.exists(targetHost)) {
-        debug('Request to ' + targetHost + ' in registered NTLM Hosts');
-        let context = this._connectionContextManager
+      if (self._configStore.exists(targetHost)) {
+        debug('Request to ' + targetHost.href + ' in registered NTLM Hosts');
+        let context = self._connectionContextManager
           .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
         ctx.proxyToServerRequestOptions.agent = context.agent;
         if (context.isAuthenticated(targetHost)) {
           return callback();
         }
 
-        this._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException) => {
+        self._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException) => {
           if (err) {
             debug('Cannot perform NTLM handshake. Let original message pass through');
           }
           return callback();
         });
       } else {
-        if (!this.filterConfigApiRequestLogging(targetHost)) {
-          debug('Request to ' + targetHost + ' - pass on');
+        if (!self.filterConfigApiRequestLogging(targetHost)) {
+          debug('Request to ' + targetHost.href + ' - pass on');
         }
         ctx.proxyToServerRequestOptions.agent =
-          this._connectionContextManager.getNonNtlmAgent(ctx.isSSL, targetHost);
+          self._connectionContextManager.getNonNtlmAgent(ctx.isSSL, targetHost);
         return callback();
       }
     } else {
@@ -96,23 +101,23 @@ export class NtlmProxyMitm {
       return undefined;
     }
     let host = ctx.clientToProxyRequest.headers.host;
-    return toCompleteUrl(host, ctx.isSSL);
+    return toCompleteUrl(host, ctx.isSSL, true);
   }
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    let targetHost = this.getTargetHost(ctx);
-    if (!targetHost || !(this._configStore.exists(targetHost))) {
+    let targetHost = self.getTargetHost(ctx);
+    if (!targetHost || !(self._configStore.exists(targetHost))) {
       return callback();
     }
 
-    let context = this._connectionContextManager
+    let context = self._connectionContextManager
       .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
 
     if (context.isAuthenticated(targetHost)) {
       return callback();
     }
 
-    this._ntlmManager.ntlmHandshakeResponse(ctx, targetHost, context, callback);
+    self._ntlmManager.ntlmHandshakeResponse(ctx, targetHost, context, callback);
   }
 
   onConnect(req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -121,12 +126,12 @@ export class NtlmProxyMitm {
       return callback();
     }
 
-    let targetHost = toCompleteUrl(req.url, true);
-    if (this._configStore.exists(targetHost)) {
+    let targetHost = toCompleteUrl(req.url, true, true);
+    if (self._configStore.exists(targetHost)) {
       return callback();
     }
 
-    if (this._upstreamProxyManager.hasHttpsUpstreamProxy()) {
+    if (self._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost)) {
       // Don't tunnel if we need to go through an upstream proxy
       return callback();
     }
