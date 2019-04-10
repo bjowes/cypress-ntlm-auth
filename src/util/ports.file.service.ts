@@ -6,9 +6,10 @@ import * as url from 'url';
 import appDataPath from 'appdata-path';
 import { PortsFile } from '../models/ports.file.model';
 import { injectable } from 'inversify';
+import { IPortsFileService } from './interfaces/i.ports.file.service';
 
 @injectable()
-export class PortsFileService {
+export class PortsFileService implements IPortsFileService {
   private readonly _portsFileFolder = appDataPath('cypress-ntlm-auth');
   private readonly _portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), 'cypress-ntlm-auth.port');
 

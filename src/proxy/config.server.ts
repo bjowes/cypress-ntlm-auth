@@ -1,20 +1,25 @@
-import http from 'http';
-import express from 'express';
-import bodyParser from 'body-parser';
 import getPort from 'get-port';
 
-import { ConfigController } from './config.controller';
+import { IConfigController } from './interfaces/i.config.controller';
 import { debug } from '../util/debug';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
+import { IConfigServer } from './interfaces/i.config.server';
+import { IExpressServer } from './interfaces/i.express.server';
+import { TYPES } from './dependency.injection.types';
 
 @injectable()
-export class ConfigServer {
-  private readonly _configApp: express.Application = express();
-  private _configAppListener?: http.Server = undefined;
+export class ConfigServer implements IConfigServer {
   private _configApiUrl?: string = undefined;
   private initDone: boolean = false;
+  private _expressServer: IExpressServer;
+  private _configController: IConfigController;
 
-  constructor(private _configController: ConfigController) {}
+  constructor(
+    @inject(TYPES.IExpressServer) expressServer: IExpressServer,
+    @inject(TYPES.IConfigController) configController: IConfigController) {
+      this._expressServer = expressServer;
+      this._configController = configController;
+    }
 
   get configApiUrl(): string {
     if (this._configApiUrl) {
@@ -27,21 +32,19 @@ export class ConfigServer {
     if (this.initDone) {
       return;
     }
-    this._configApp.use(bodyParser.json());
-    this._configApp.use('/', this._configController.router);
+    this._expressServer.use('/', this._configController.router);
     this.initDone = true;
   }
 
   async start(port?: number): Promise<string> {
     this.init();
-    if (!port) {
-      port = await getPort();
-    }
 
     try {
-      this._configAppListener = await this._configApp.listen(port);
+      if (!port) {
+        port = await getPort();
+      }
+      this._configApiUrl = await this._expressServer.listen(port);
       debug('NTLM auth config API listening on port:', port);
-      this._configApiUrl = 'http://127.0.0.1:' + port
       return this._configApiUrl;
     } catch (err) {
       debug('Cannot start NTLM auth config API');
@@ -51,16 +54,13 @@ export class ConfigServer {
 
   async stop() {
     debug('Shutting down config API');
-    if (this._configAppListener) {
-      try {
-        await this._configAppListener.close();
-        this._configAppListener = undefined;
-        this._configApiUrl = undefined;
-        debug('NTLM auth config API stopped');
-      } catch (err) {
-        debug('Cannot stop NTLM auth config API');
-        throw err;
-      }
+    try {
+      await this._expressServer.close();
+      this._configApiUrl = undefined;
+      debug('NTLM auth config API stopped');
+    } catch (err) {
+      debug('Cannot stop NTLM auth config API');
+      throw err;
     }
   }
 };

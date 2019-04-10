@@ -1,26 +1,36 @@
 import { Socket } from 'net';
-import { ConnectionContext } from './connection.context';
 import { CompleteUrl } from '../models/complete.url.model';
 import { debug } from '../util/debug';
-import { injectable } from 'inversify';
-import { UpstreamProxyManager } from './upstream.proxy.manager';
+import { injectable, interfaces, inject } from 'inversify';
 import http from 'http';
 import https from 'https';
-import { ConfigController } from './config.controller';
+import { IConfigController } from './interfaces/i.config.controller';
+import { IConnectionContextManager } from './interfaces/i.connection.context.manager';
+import { IConnectionContext } from './interfaces/i.connection.context';
+import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
+import { TYPES } from './dependency.injection.types';
 const HttpProxyAgent = require('http-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
 interface ConnectionContextHash {
-  [ntlmHostUrl: string]: ConnectionContext
+  [ntlmHostUrl: string]: IConnectionContext
 };
 
 @injectable()
-export class ConnectionContextManager {
+export class ConnectionContextManager implements IConnectionContextManager {
   private _agentCount: number = 0;
   private _connectionContexts: ConnectionContextHash = {};
+  private _upstreamProxyManager: IUpstreamProxyManager;
+  private _configController: IConfigController;
+  private ConnectionContext: interfaces.Newable<IConnectionContext>;
 
-  constructor(private _upstreamProxyManager: UpstreamProxyManager,
-  private _configController: ConfigController) {
+  constructor(@inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
+  @inject(TYPES.IConfigController) configController: IConfigController,
+  @inject(TYPES.NewableIConnectionContext) connectionContext: interfaces.Newable<IConnectionContext>) {
+    this._upstreamProxyManager = upstreamProxyManager;
+    this._configController = configController;
+    this.ConnectionContext = connectionContext;
+
     this._configController.configApiEvent.addListener('configUpdate',
       (ntlmHostUrl: CompleteUrl) => this.clearAuthentication(ntlmHostUrl));
   }
@@ -29,7 +39,7 @@ export class ConnectionContextManager {
     return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
   }
 
-  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl): ConnectionContext {
+  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
@@ -37,7 +47,8 @@ export class ConnectionContextManager {
 
     let agent = this.getAgent(isSSL, targetHost, true);
     agent._cyAgentId = this._agentCount++;
-    let context = new ConnectionContext(agent);
+    let context = new this.ConnectionContext();
+    context.agent = agent;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
     clientSocket.on('end', () => this.removeAgent('end', clientAddress));

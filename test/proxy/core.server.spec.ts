@@ -11,13 +11,14 @@ import url from 'url';
 import axios, { AxiosRequestConfig } from 'axios';
 
 const isPortReachable = require('is-port-reachable');
-import { Container } from 'inversify';
 
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { ProxyFacade } from './proxy.facade';
 
-import { CoreServer } from '../../src/proxy/core.server';
 import { PortsFile } from '../../src/models/ports.file.model';
+import { DependencyInjection } from '../../src/proxy/dependency.injection';
+import { ICoreServer } from '../../src/proxy/interfaces/i.core.server';
+import { TYPES } from '../../src/proxy/dependency.injection.types';
 
 async function isProxyReachable(ports: PortsFile): Promise<boolean> {
   const configUrl = url.parse(ports.configApiUrl);
@@ -41,8 +42,8 @@ describe('Core server startup and shutdown', () => {
   let deletePortsFileStub: sinon.SinonStub<[], Promise<void>>;
   let httpRequestStub: sinon.SinonStub<[string, any?, (AxiosRequestConfig | undefined)?], Promise<{}>>;
   let proxyFacade = new ProxyFacade();
-  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
-  let coreServer: CoreServer;
+  let dependencyInjection = new DependencyInjection();
+  let coreServer: ICoreServer;
   let _configApiUrl: string | undefined;
 
   before(async function () {
@@ -68,7 +69,7 @@ describe('Core server startup and shutdown', () => {
     }
     deletePortsFileStub = sinon.stub(PortsFileService.prototype, 'delete');
 
-    coreServer = dependencyInjection.get(CoreServer);
+    coreServer = dependencyInjection.get(TYPES.ICoreServer);
     _configApiUrl = undefined;
   });
 

@@ -18,6 +18,9 @@ import { CoreServer } from '../../src/proxy/core.server';
 import { PortsFile } from '../../src/models/ports.file.model';
 import { AddressInfo } from 'net';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
+import { DependencyInjection } from '../../src/proxy/dependency.injection';
+import { ICoreServer } from '../../src/proxy/interfaces/i.core.server';
+import { TYPES } from '../../src/proxy/dependency.injection.types';
 
 let _configApiUrl: string | undefined;
 
@@ -59,8 +62,8 @@ describe('NTLM Proxy authentication', function () {
   let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
   let portsFileExistsStub: sinon.SinonStub<[], boolean>;
   let proxyFacade = new ProxyFacade();
-  let coreServer: CoreServer;
-  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
 
   before(async function () {
     this.timeout(15000);
@@ -73,7 +76,7 @@ describe('NTLM Proxy authentication', function () {
   });
 
   beforeEach(function () {
-    coreServer = dependencyInjection.get(CoreServer);
+    coreServer = dependencyInjection.get(TYPES.ICoreServer);
     _configApiUrl = undefined;
     remoteHostRequestHeaders = [];
     remoteHostResponseWwwAuthHeader = undefined;

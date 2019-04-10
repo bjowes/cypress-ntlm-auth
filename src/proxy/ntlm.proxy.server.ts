@@ -2,18 +2,20 @@ import httpMitmProxy from 'http-mitm-proxy';
 import getPort from 'get-port';
 
 import { debug } from '../util/debug';
-import { NtlmProxyMitm } from './ntlm.proxy.mitm';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
+import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
+import { INtlmProxyMitm } from './interfaces/i.ntlm.proxy.mitm';
+import { TYPES } from './dependency.injection.types';
 
 @injectable()
-export class NtlmProxyServer {
+export class NtlmProxyServer implements INtlmProxyServer {
   private readonly _ntlmProxy: httpMitmProxy.IProxy;
-  private readonly _ntlmProxyMitm: NtlmProxyMitm;
   private initDone: boolean = false;
   private _ntlmProxyListening: boolean = false;
   private _ntlmProxyUrl?: string;
+  private _ntlmProxyMitm: INtlmProxyMitm;
 
-  constructor(ntlmProxyMitm: NtlmProxyMitm) {
+  constructor(@inject(TYPES.INtlmProxyMitm) ntlmProxyMitm: INtlmProxyMitm) {
     this._ntlmProxyMitm = ntlmProxyMitm;
     this._ntlmProxy = httpMitmProxy();
   }

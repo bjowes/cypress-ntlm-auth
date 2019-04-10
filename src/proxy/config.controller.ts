@@ -1,18 +1,22 @@
 import { Router, Request, Response } from 'express';
 import { ConfigValidator } from '../util/config.validator';
-import { ConfigStore } from './config.store';
 import { debug } from '../util/debug';
 import { toCompleteUrl } from '../util/url.converter';
 import { NtlmConfig } from '../models/ntlm.config.model';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { EventEmitter } from 'events';
+import { IConfigController } from './interfaces/i.config.controller';
+import { IConfigStore } from './interfaces/i.config.store';
+import { TYPES } from './dependency.injection.types';
 
 @injectable()
-export class ConfigController {
+export class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
+  private _configStore: IConfigStore;
 
-  constructor(private _configStore: ConfigStore) {
+  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore) {
+    this._configStore = configStore;
     this.router.post('/ntlm-config', (req: Request, res: Response) => this.ntlmConfig(req, res));
     this.router.post('/reset', (req: Request, res: Response) => this.reset(req, res));
     this.router.get('/alive', (req: Request, res: Response) => this.alive(req, res));

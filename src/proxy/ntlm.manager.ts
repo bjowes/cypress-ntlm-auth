@@ -1,24 +1,26 @@
 import { IContext } from 'http-mitm-proxy';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import http from 'http';
 import https from 'https';
-import { ConnectionContext } from './connection.context';
 import { NtlmStateEnum } from '../models/ntlm.state.enum';
 import { debug } from '../util/debug';
 import { CompleteUrl } from '../models/complete.url.model';
-import { ConfigStore } from './config.store';
+import { IConfigStore } from './interfaces/i.config.store';
+import { IConnectionContext } from './interfaces/i.connection.context';
+import { INtlmManager } from './interfaces/i.ntlm.manager';
+import { TYPES } from './dependency.injection.types';
 
 const ntlm = require('httpntlm').ntlm;
 
 @injectable()
-export class NtlmManager {
-  private _configStore: ConfigStore;
+export class NtlmManager implements INtlmManager {
+  private _configStore: IConfigStore;
 
-  constructor(configStore: ConfigStore) {
+  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore) {
     this._configStore = configStore;
   }
 
-  ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: ConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
+  ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config = this._configStore.get(ntlmHostUrl)
@@ -80,7 +82,7 @@ export class NtlmManager {
   }
 
 
-  ntlmHandshakeResponse(ctx: IContext, ntlmHostUrl: CompleteUrl, context: ConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
+  ntlmHandshakeResponse(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let authState = context.getState(ntlmHostUrl);
     if (authState === NtlmStateEnum.NotAuthenticated) {
       // NTLM auth failed (host may not support NTLM), just pass it through

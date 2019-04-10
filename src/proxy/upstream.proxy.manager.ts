@@ -3,9 +3,10 @@ import url from 'url';
 import { CompleteUrl } from "../models/complete.url.model";
 import { toCompleteUrl } from '../util/url.converter';
 import { injectable } from 'inversify';
+import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 
 @injectable()
-export class UpstreamProxyManager {
+export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _httpProxyUrl?: CompleteUrl;
   private _httpsProxyUrl?: CompleteUrl;
   private _noProxyUrls?: string[];

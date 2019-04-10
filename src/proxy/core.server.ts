@@ -1,26 +1,42 @@
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 
-import { ConfigServer } from "./config.server";
-import { NtlmProxyServer } from "./ntlm.proxy.server";
 import { PortsFile } from '../models/ports.file.model';
-import { PortsFileService } from '../util/ports.file.service';
-import { UpstreamProxyManager } from './upstream.proxy.manager';
-import { ConfigStore } from './config.store';
-import { ConnectionContextManager } from './connection.context.manager';
 import { debug } from '../util/debug';
 import axios from 'axios';
-import { ConfigController } from './config.controller';
+import { IConfigController } from './interfaces/i.config.controller';
+import { IConfigServer } from './interfaces/i.config.server';
+import { IConfigStore } from './interfaces/i.config.store';
+import { IConnectionContextManager } from './interfaces/i.connection.context.manager';
+import { ICoreServer } from './interfaces/i.core.server';
+import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
+import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
+import { IPortsFileService } from '../util/interfaces/i.ports.file.service';
+import { TYPES } from './dependency.injection.types';
 
 @injectable()
-export class CoreServer {
+export class CoreServer implements ICoreServer {
+  private _configServer: IConfigServer;
+  private _ntlmProxyServer: INtlmProxyServer;
+  private _portsFileService: IPortsFileService;
+  private _upstreamProxyManager: IUpstreamProxyManager;
+  private _configStore: IConfigStore;
+  private _connectionContextManager: IConnectionContextManager;
+  private _configController: IConfigController;
 
-  constructor(private _configServer: ConfigServer,
-  private _ntlmProxyServer: NtlmProxyServer,
-  private _portsFileService: PortsFileService,
-  private _upstreamProxyManager: UpstreamProxyManager,
-  private _configStore: ConfigStore,
-  private _connectionContextManager: ConnectionContextManager,
-  private _configController: ConfigController) {
+  constructor(@inject(TYPES.IConfigServer) configServer: IConfigServer,
+  @inject(TYPES.INtlmProxyServer) ntlmProxyServer: INtlmProxyServer,
+  @inject(TYPES.IPortsFileService) portsFileService: IPortsFileService,
+  @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
+  @inject(TYPES.IConfigStore) configStore: IConfigStore,
+  @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
+  @inject(TYPES.IConfigController) configController: IConfigController) {
+    this._configServer = configServer;
+    this._ntlmProxyServer = ntlmProxyServer;
+    this._portsFileService = portsFileService;
+    this._upstreamProxyManager = upstreamProxyManager;
+    this._configStore = configStore;
+    this._connectionContextManager = connectionContextManager;
+    this._configController = configController;
 
     this._configController.configApiEvent.addListener('reset', () => this.ntlmConfigReset());
     this._configController.configApiEvent.addListener('quit',
@@ -31,12 +47,24 @@ export class CoreServer {
     await this.stopExistingInstance(allowMultipleInstances);
     this._upstreamProxyManager.init(httpProxy, httpsProxy, noProxy);
     let configApiUrl = await this._configServer.start();
-    let ntlmProxyUrl = await this._ntlmProxyServer.start();
+    let ntlmProxyUrl: string;
+    try {
+      ntlmProxyUrl = await this._ntlmProxyServer.start();
+    } catch (err) {
+      await this._configServer.stop();
+      throw err;
+    }
     let ports: PortsFile = {
       configApiUrl: configApiUrl,
       ntlmProxyUrl: ntlmProxyUrl
     };
-    await this._portsFileService.save(ports);
+    try {
+      await this._portsFileService.save(ports);
+    } catch (err) {
+      await this._configServer.stop();
+      this._ntlmProxyServer.stop();
+      throw err;
+    }
     return ports;
   }
 

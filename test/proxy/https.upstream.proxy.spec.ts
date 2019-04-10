@@ -16,6 +16,9 @@ import { CoreServer } from '../../src/proxy/core.server';
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { PortsFile } from '../../src/models/ports.file.model';
+import { DependencyInjection } from '../../src/proxy/dependency.injection';
+import { TYPES } from '../../src/proxy/dependency.injection.types';
+import { ICoreServer } from '../../src/proxy/interfaces/i.core.server';
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -29,8 +32,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
   let ntlmHostConfig: NtlmConfig;
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
-  let coreServer: CoreServer;
-  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
 
   before('Start HTTPS server and proxy', async function () {
     savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
@@ -50,7 +53,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       password: 'manpower',
       domain: 'mptst'
     };
-    coreServer = dependencyInjection.get(CoreServer);
+    coreServer = dependencyInjection.get(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
@@ -168,8 +171,8 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
 describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
-  let coreServer: CoreServer;
-  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
 
   before('Start HTTPS server and proxy', async function () {
     savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
@@ -183,7 +186,7 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
       return callback();
     });
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    coreServer = dependencyInjection.get(CoreServer);
+    coreServer = dependencyInjection.get(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
@@ -254,8 +257,8 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
 describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', function() {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
-  let coreServer: CoreServer;
-  let dependencyInjection = new Container({ autoBindInjectable: true, defaultScope: "Singleton" });
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
 
   before('Start HTTPS server', async function () {
     savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
@@ -269,7 +272,7 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
       return callback();
     });
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    coreServer = dependencyInjection.get(CoreServer);
+    coreServer = dependencyInjection.get(TYPES.ICoreServer);
   });
 
   afterEach('Stop proxy', async function() {

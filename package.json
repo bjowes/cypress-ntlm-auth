@@ -8,8 +8,9 @@
     "launch": "node src/launcher/cypressNtlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha test/**/*.spec.js",
-    "test-ts": "mocha --require ts-node/register test/**/*.spec.ts",
-    "tsc": "tsc"
+    "test-ts": "mocha --require ts-node/register --require source-map-support/register test/**/*.spec.ts",
+    "tsc": "tsc",
+    "coverage": "nyc --require ts-node/register --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test-ts"
   },
   "engines": {
     "node": ">=8.2.1"
@@ -51,6 +52,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
+    "@fluffy-spoon/substitute": "^1.87.0",
     "@types/assert": "^1.4.2",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
@@ -73,6 +75,7 @@
     "node-forge": "^0.8.2",
     "proxyquire": "^2.1.0",
     "sinon": "^7.3.0",
+    "source-map-support": "^0.5.11",
     "ts-node": "^8.0.3",
     "tunnel": "0.0.6",
     "typescript": "^3.3.4000"

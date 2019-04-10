@@ -2,13 +2,14 @@ import { NtlmConfig } from '../models/ntlm.config.model';
 import { toCompleteUrl } from '../util/url.converter';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
+import { IConfigStore } from './interfaces/i.config.store';
 
 interface NtlmHostConfigHash {
   [ntlmHost: string]: NtlmConfig
 };
 
 @injectable()
-export class ConfigStore {
+export class ConfigStore implements IConfigStore {
   private ntlmHosts: NtlmHostConfigHash = {};
 
   updateConfig(config: NtlmConfig) {

@@ -1,13 +1,15 @@
 import { DependencyInjection } from "./dependency.injection";
-import { CoreServer } from "./core.server";
 import { debug } from '../util/debug';
+import { ICoreServer } from "./interfaces/i.core.server";
+import { inject } from "inversify";
+import { TYPES } from "./dependency.injection.types";
 
 const dependencyInjection = new DependencyInjection();
 
 export class Main {
-  private _coreServer: CoreServer;
+  private _coreServer: ICoreServer;
 
-  constructor(coreServer: CoreServer) {
+  constructor(@inject(TYPES.ICoreServer) coreServer: ICoreServer) {
     this._coreServer = coreServer;
   }
 

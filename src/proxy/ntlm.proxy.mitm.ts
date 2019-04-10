@@ -4,30 +4,37 @@ import net from 'net';
 import http from 'http';
 import { toCompleteUrl } from '../util/url.converter';
 import { debug } from '../util/debug';
-import { ConnectionContextManager } from './connection.context.manager';
 import { CompleteUrl } from '../models/complete.url.model';
-import { injectable } from 'inversify';
-import { ConfigServer } from './config.server';
-import { ConfigStore } from './config.store';
-import { NtlmManager } from './ntlm.manager';
-import { UpstreamProxyManager } from './upstream.proxy.manager';
+import { injectable, inject } from 'inversify';
+import { IConfigServer } from './interfaces/i.config.server';
+import { IConfigStore } from './interfaces/i.config.store';
+import { IConnectionContextManager } from './interfaces/i.connection.context.manager';
+import { INtlmProxyMitm } from './interfaces/i.ntlm.proxy.mitm';
+import { INtlmManager } from './interfaces/i.ntlm.manager';
+import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
+import { TYPES } from './dependency.injection.types';
 
 let self: NtlmProxyMitm;
 
 @injectable()
-export class NtlmProxyMitm {
-  private readonly _configStore: ConfigStore;
-  private readonly _configServer: ConfigServer;
-  private readonly _connectionContextManager: ConnectionContextManager;
-  private readonly _ntlmManager: NtlmManager;
-  private readonly _upstreamProxyManager: UpstreamProxyManager;
+export class NtlmProxyMitm implements INtlmProxyMitm {
+  private _configStore: IConfigStore;
+  private _configServer: IConfigServer;
+  private _connectionContextManager: IConnectionContextManager;
+  private _ntlmManager: INtlmManager;
+  private _upstreamProxyManager: IUpstreamProxyManager;
 
-  constructor(configStore: ConfigStore, configServer: ConfigServer, connectionContextManager: ConnectionContextManager, ntlmManager: NtlmManager, upstreamProxyManager: UpstreamProxyManager) {
-    this._configStore = configStore;
-    this._configServer = configServer;
-    this._connectionContextManager = connectionContextManager;
-    this._ntlmManager = ntlmManager;
-    this._upstreamProxyManager = upstreamProxyManager;
+  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.IConfigServer) configServer: IConfigServer,
+    @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
+    @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
+    @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager) {
+      this._configStore = configStore;
+      this._configServer = configServer;
+      this._connectionContextManager = connectionContextManager;
+      this._ntlmManager = ntlmManager;
+      this._upstreamProxyManager = upstreamProxyManager;
+
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
     self = this;

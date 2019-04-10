@@ -2,6 +2,7 @@ import { Socket } from 'net';
 import { NtlmStateEnum } from '../models/ntlm.state.enum';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
+import { IConnectionContext } from './interfaces/i.connection.context';
 
 interface ClientConnectionHash {
   [clientAddress: string]: Connection;
@@ -17,17 +18,16 @@ interface Connection {
 }
 
 @injectable()
-export class ConnectionContext {
+export class ConnectionContext implements IConnectionContext {
   private _agent: any;
   private _ntlmHost?: CompleteUrl;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
 
-  constructor(agent: any) {
-    this._agent = agent;
-  }
-
   get agent(): any {
     return this._agent;
+  }
+  set agent(agent: any) {
+    this._agent = agent;
   }
 
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean {

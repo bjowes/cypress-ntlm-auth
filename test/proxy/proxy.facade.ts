@@ -85,6 +85,15 @@ export class ProxyFacade {
     return res;
   }
 
+  static async sendAliveRequest(configApiUrl: string): Promise<AxiosResponse<string>> {
+    let res = await axios.get(configApiUrl + '/alive',
+      { timeout: 15000 });
+    if (res.status !== 200) {
+      throw new Error('Unexpected response from NTLM proxy: ' + res.status);
+    }
+    return res;
+  }
+
   static async sendNtlmConfig(configApiUrl: string, hostConfig: NtlmConfig): Promise<AxiosResponse<string>> {
     let res = await axios.post(configApiUrl + '/ntlm-config',
       hostConfig,
