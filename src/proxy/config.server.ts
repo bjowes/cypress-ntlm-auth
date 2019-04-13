@@ -1,25 +1,28 @@
 import getPort from 'get-port';
 
 import { IConfigController } from './interfaces/i.config.controller';
-import { debug } from '../util/debug';
 import { injectable, inject } from 'inversify';
 import { IConfigServer } from './interfaces/i.config.server';
-import { IExpressServer } from './interfaces/i.express.server';
+import { IExpressServerFacade } from './interfaces/i.express.server.facade';
 import { TYPES } from './dependency.injection.types';
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
 @injectable()
 export class ConfigServer implements IConfigServer {
   private _configApiUrl?: string = undefined;
   private initDone: boolean = false;
-  private _expressServer: IExpressServer;
+  private _expressServer: IExpressServerFacade;
   private _configController: IConfigController;
+  private _debug: IDebugLogger;
 
   constructor(
-    @inject(TYPES.IExpressServer) expressServer: IExpressServer,
-    @inject(TYPES.IConfigController) configController: IConfigController) {
-      this._expressServer = expressServer;
-      this._configController = configController;
-    }
+    @inject(TYPES.IExpressServerFacade) expressServer: IExpressServerFacade,
+    @inject(TYPES.IConfigController) configController: IConfigController,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+    this._expressServer = expressServer;
+    this._configController = configController;
+    this._debug = debug;
+  }
 
   get configApiUrl(): string {
     if (this._configApiUrl) {
@@ -44,22 +47,22 @@ export class ConfigServer implements IConfigServer {
         port = await getPort();
       }
       this._configApiUrl = await this._expressServer.listen(port);
-      debug('NTLM auth config API listening on port:', port);
+      this._debug.log('NTLM auth config API listening on port:', port);
       return this._configApiUrl;
     } catch (err) {
-      debug('Cannot start NTLM auth config API');
+      this._debug.log('Cannot start NTLM auth config API');
       throw err;
     }
   }
 
   async stop() {
-    debug('Shutting down config API');
+    this._debug.log('Shutting down config API');
     try {
       await this._expressServer.close();
       this._configApiUrl = undefined;
-      debug('NTLM auth config API stopped');
+      this._debug.log('NTLM auth config API stopped');
     } catch (err) {
-      debug('Cannot stop NTLM auth config API');
+      this._debug.log('Cannot stop NTLM auth config API');
       throw err;
     }
   }

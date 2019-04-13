@@ -1,28 +1,28 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import 'reflect-metadata';
 import 'mocha';
-import sinon from 'sinon';
 import { Substitute, SubstituteOf, Arg } from '@fluffy-spoon/substitute';
 
 import { expect } from 'chai';
 import { ConfigServer } from '../../src/proxy/config.server';
 import { IConfigController } from '../../src/proxy/interfaces/i.config.controller';
-import { IExpressServer } from '../../src/proxy/interfaces/i.express.server';
+import { IExpressServerFacade } from '../../src/proxy/interfaces/i.express.server.facade';
+import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 
 describe('ConfigServer', () => {
   let configServer: ConfigServer;
   let configControllerMock: SubstituteOf<IConfigController>;
-  let expressServerMock: SubstituteOf<IExpressServer>;
+  let expressServerMock: SubstituteOf<IExpressServerFacade>;
+  let debugMock: SubstituteOf<IDebugLogger>;
 
   beforeEach(function () {
-    sinon.reset();
     configControllerMock = Substitute.for<IConfigController>();
-    expressServerMock = Substitute.for<IExpressServer>();
-    configServer = new ConfigServer(expressServerMock, configControllerMock);
+    expressServerMock = Substitute.for<IExpressServerFacade>();
+    debugMock = Substitute.for<IDebugLogger>();
+    configServer = new ConfigServer(expressServerMock, configControllerMock, debugMock);
   });
 
   after(function () {
-    sinon.restore();
   });
 
   it('configApiUrl should throw if start has not been called', async function () {
@@ -40,7 +40,6 @@ describe('ConfigServer', () => {
 
   it('start should use a free port if undefined', async function () {
     let listenPort: any;
-    expressServerMock.listen(Arg.any()).returns(Promise.resolve('http://127.0.0.1:2000'));
     expressServerMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port)})
 
     await configServer.start();

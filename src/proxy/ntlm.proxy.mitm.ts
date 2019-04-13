@@ -3,7 +3,6 @@ import { IContext } from 'http-mitm-proxy';
 import net from 'net';
 import http from 'http';
 import { toCompleteUrl } from '../util/url.converter';
-import { debug } from '../util/debug';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable, inject } from 'inversify';
 import { IConfigServer } from './interfaces/i.config.server';
@@ -13,6 +12,7 @@ import { INtlmProxyMitm } from './interfaces/i.ntlm.proxy.mitm';
 import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
 let self: NtlmProxyMitm;
 
@@ -23,17 +23,21 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private _connectionContextManager: IConnectionContextManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
+  private _debug: IDebugLogger;
 
-  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore,
+  constructor(
+    @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.IConfigServer) configServer: IConfigServer,
     @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
     @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
-    @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager) {
-      this._configStore = configStore;
-      this._configServer = configServer;
-      this._connectionContextManager = connectionContextManager;
-      this._ntlmManager = ntlmManager;
-      this._upstreamProxyManager = upstreamProxyManager;
+    @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+    this._configStore = configStore;
+    this._configServer = configServer;
+    this._connectionContextManager = connectionContextManager;
+    this._ntlmManager = ntlmManager;
+    this._upstreamProxyManager = upstreamProxyManager;
+    this._debug = debug;
 
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
@@ -53,7 +57,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         req.headers.host.indexOf('/') === -1 &&
         errorKind === 'PROXY_TO_SERVER_REQUEST_ERROR' &&
         errno === 'ENOTFOUND') {
-      debug('Chrome startup HEAD request detected (host: ' + req.headers.host + '). Ignoring connection error.');
+      self._debug.log('Chrome startup HEAD request detected (host: ' + req.headers.host + '). Ignoring connection error.');
       return true;
     }
   }
@@ -63,7 +67,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return;
     }
     var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
-    debug(errorKind + ' on ' + url + ':', error);
+    self._debug.log(errorKind + ' on ' + url + ':', error);
   }
 
   private filterConfigApiRequestLogging(targetHost: CompleteUrl) {
@@ -74,7 +78,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     let targetHost = self.getTargetHost(ctx);
     if (targetHost) {
       if (self._configStore.exists(targetHost)) {
-        debug('Request to ' + targetHost.href + ' in registered NTLM Hosts');
+        self._debug.log('Request to ' + targetHost.href + ' in registered NTLM Hosts');
         let context = self._connectionContextManager
           .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
         ctx.proxyToServerRequestOptions.agent = context.agent;
@@ -84,13 +88,13 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
         self._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException) => {
           if (err) {
-            debug('Cannot perform NTLM handshake. Let original message pass through');
+            self._debug.log('Cannot perform NTLM handshake. Let original message pass through');
           }
           return callback();
         });
       } else {
         if (!self.filterConfigApiRequestLogging(targetHost)) {
-          debug('Request to ' + targetHost.href + ' - pass on');
+          self._debug.log('Request to ' + targetHost.href + ' - pass on');
         }
         ctx.proxyToServerRequestOptions.agent =
           self._connectionContextManager.getNonNtlmAgent(ctx.isSSL, targetHost);
@@ -104,7 +108,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   private getTargetHost(ctx: IContext): CompleteUrl | undefined {
     if (!ctx.clientToProxyRequest.headers.host) {
-      debug('Invalid request - Could not read "host" header from incoming request to proxy');
+      self._debug.log('Invalid request - Could not read "host" header from incoming request to proxy');
       return undefined;
     }
     let host = ctx.clientToProxyRequest.headers.host;
@@ -129,7 +133,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   onConnect(req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error?: NodeJS.ErrnoException) => void) {
     if (!req.url) {
-      debug('Invalid connect request - cannot read target url');
+      self._debug.log('Invalid connect request - cannot read target url');
       return callback();
     }
 
@@ -144,7 +148,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
 
     // Let non-NTLM hosts tunnel through
-    debug('Tunnel to', req.url);
+    self._debug.log('Tunnel to', req.url);
     var conn = net.connect({
       port: +targetHost.port,
       host: targetHost.hostname,
@@ -171,9 +175,9 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
     function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string) {
       if (err.code === 'ECONNRESET') {
-        debug('Got ECONNRESET on ' + socketDescription + ', ignoring.');
+        self._debug.log('Got ECONNRESET on ' + socketDescription + ', ignoring.');
       } else {
-        debug('Got unexpected error on ' + socketDescription, err);
+        self._debug.log('Got unexpected error on ' + socketDescription, err);
       }
     }
   }

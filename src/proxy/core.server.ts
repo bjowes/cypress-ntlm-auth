@@ -1,8 +1,7 @@
 import { injectable, inject } from 'inversify';
+import axios from 'axios';
 
 import { PortsFile } from '../models/ports.file.model';
-import { debug } from '../util/debug';
-import axios from 'axios';
 import { IConfigController } from './interfaces/i.config.controller';
 import { IConfigServer } from './interfaces/i.config.server';
 import { IConfigStore } from './interfaces/i.config.store';
@@ -12,6 +11,7 @@ import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { IPortsFileService } from '../util/interfaces/i.ports.file.service';
 import { TYPES } from './dependency.injection.types';
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
 @injectable()
 export class CoreServer implements ICoreServer {
@@ -22,14 +22,17 @@ export class CoreServer implements ICoreServer {
   private _configStore: IConfigStore;
   private _connectionContextManager: IConnectionContextManager;
   private _configController: IConfigController;
+  private _debug: IDebugLogger;
 
-  constructor(@inject(TYPES.IConfigServer) configServer: IConfigServer,
-  @inject(TYPES.INtlmProxyServer) ntlmProxyServer: INtlmProxyServer,
-  @inject(TYPES.IPortsFileService) portsFileService: IPortsFileService,
-  @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
-  @inject(TYPES.IConfigStore) configStore: IConfigStore,
-  @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
-  @inject(TYPES.IConfigController) configController: IConfigController) {
+  constructor(
+    @inject(TYPES.IConfigServer) configServer: IConfigServer,
+    @inject(TYPES.INtlmProxyServer) ntlmProxyServer: INtlmProxyServer,
+    @inject(TYPES.IPortsFileService) portsFileService: IPortsFileService,
+    @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
+    @inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
+    @inject(TYPES.IConfigController) configController: IConfigController,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configServer = configServer;
     this._ntlmProxyServer = ntlmProxyServer;
     this._portsFileService = portsFileService;
@@ -37,6 +40,7 @@ export class CoreServer implements ICoreServer {
     this._configStore = configStore;
     this._connectionContextManager = connectionContextManager;
     this._configController = configController;
+    this._debug = debug;
 
     this._configController.configApiEvent.addListener('reset', () => this.ntlmConfigReset());
     this._configController.configApiEvent.addListener('quit',
@@ -60,6 +64,7 @@ export class CoreServer implements ICoreServer {
     };
     try {
       await this._portsFileService.save(ports);
+      this._debug.log('wrote %s', this._portsFileService.fullPath())
     } catch (err) {
       await this._configServer.stop();
       this._ntlmProxyServer.stop();
@@ -81,17 +86,17 @@ export class CoreServer implements ICoreServer {
   private async stopExistingInstance(allowMultipleInstances: boolean) {
     if (this._portsFileService.exists()) {
       if (allowMultipleInstances) {
-        debug('Existing proxy instance found, leave it running since multiple instances are allowed');
+        this._debug.log('Existing proxy instance found, leave it running since multiple instances are allowed');
         return;
       }
-      debug('Existing proxy instance found, sending shutdown');
+      this._debug.log('Existing proxy instance found, sending shutdown');
       let ports = this._portsFileService.parse();
       try {
         await axios.post(ports.configApiUrl + '/quit',
         { keepPortsFile: true },
         { timeout: 15000 });
       } catch (err) {
-        debug('Quit request failed, trying to delete the ports file: ' + err);
+        this._debug.log('Quit request failed, trying to delete the ports file: ' + err);
       }
       await this._portsFileService.delete();
     }

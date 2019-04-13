@@ -32,11 +32,17 @@ import { NtlmProxyMitm } from './ntlm.proxy.mitm';
 import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
 import { NtlmProxyServer } from './ntlm.proxy.server';
 
-import { IExpressServer } from './interfaces/i.express.server';
-import { ExpressServer } from './express.server';
+import { IExpressServerFacade } from './interfaces/i.express.server.facade';
+import { ExpressServerFacade } from './express.server.facade';
 
 import { IPortsFileService } from '../util/interfaces/i.ports.file.service';
 import { PortsFileService } from '../util/ports.file.service';
+
+import { IHttpMitmProxyFacade } from './interfaces/i.http.mitm.proxy.facade';
+import { HttpMitmProxyFacade } from './http.mitm.proxy.facade';
+
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { DebugLogger } from '../util/debug.logger';
 
 
 export class DependencyInjection {
@@ -49,7 +55,9 @@ export class DependencyInjection {
     this._container.bind<IConfigStore>(TYPES.IConfigStore).to(ConfigStore);
     this._container.bind<IConnectionContextManager>(TYPES.IConnectionContextManager).to(ConnectionContextManager);
     this._container.bind<ICoreServer>(TYPES.ICoreServer).to(CoreServer);
-    this._container.bind<IExpressServer>(TYPES.IExpressServer).to(ExpressServer);
+    this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
+    this._container.bind<IExpressServerFacade>(TYPES.IExpressServerFacade).to(ExpressServerFacade);
+    this._container.bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade).to(HttpMitmProxyFacade);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container.bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm).to(NtlmProxyMitm);
     this._container.bind<INtlmProxyServer>(TYPES.INtlmProxyServer).to(NtlmProxyServer);

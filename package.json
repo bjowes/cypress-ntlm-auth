@@ -8,9 +8,9 @@
     "launch": "node src/launcher/cypressNtlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha test/**/*.spec.js",
-    "test-ts": "mocha --require ts-node/register --require source-map-support/register test/**/*.spec.ts",
+    "test-ts": "mocha --require ./test/tshooks.js --require source-map-support/register test/**/*.spec.ts",
     "tsc": "tsc",
-    "coverage": "nyc --require ts-node/register --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test-ts"
+    "coverage": "nyc --require ./test/tshooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test-ts"
   },
   "engines": {
     "node": ">=8.2.1"

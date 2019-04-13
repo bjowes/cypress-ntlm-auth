@@ -2,12 +2,12 @@ import express, { RequestHandler } from 'express';
 import http from 'http';
 import bodyParser from 'body-parser';
 import { injectable } from 'inversify';
-import { IExpressServer } from './interfaces/i.express.server';
+import { IExpressServerFacade } from './interfaces/i.express.server.facade';
 import { PathParams } from 'express-serve-static-core';
 
 
 @injectable()
-export class ExpressServer implements IExpressServer {
+export class ExpressServerFacade implements IExpressServerFacade {
   private readonly _app: express.Application = express();
   private _listener?: http.Server;
 
@@ -15,7 +15,7 @@ export class ExpressServer implements IExpressServer {
     this._app.use(bodyParser.json())
   }
 
-  use(path: PathParams, ...handlers: RequestHandler[]): IExpressServer {
+  use(path: PathParams, ...handlers: RequestHandler[]): IExpressServerFacade {
     this._app.use(path, handlers);
     return this;
   }

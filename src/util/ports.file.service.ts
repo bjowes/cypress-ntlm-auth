@@ -1,5 +1,3 @@
-import { debug } from './debug';
-
 import fse from 'fs-extra';
 import path from 'path';
 import * as url from 'url';
@@ -13,21 +11,24 @@ export class PortsFileService implements IPortsFileService {
   private readonly _portsFileFolder = appDataPath('cypress-ntlm-auth');
   private readonly _portsFileWithPath = path.join(appDataPath('cypress-ntlm-auth'), 'cypress-ntlm-auth.port');
 
- async delete() {
+  fullPath(): string {
+    return this._portsFileWithPath;
+  }
+
+  async delete() {
     await fse.unlink(this._portsFileWithPath);
   }
 
- async save(ports: PortsFile) {
+  async save(ports: PortsFile) {
     await fse.mkdirp(this._portsFileFolder);
     await fse.writeJson(this._portsFileWithPath, ports);
-    debug('wrote ' + this._portsFileWithPath);
   }
 
- exists(): boolean {
+  exists(): boolean {
     return fse.existsSync(this._portsFileWithPath);
   }
 
- parse(): PortsFile {
+  parse(): PortsFile {
     if (this.exists()) {
       let data = fse.readJsonSync(this._portsFileWithPath);
       return this.validatePortsFile(data);

@@ -3,21 +3,25 @@ import { injectable, inject } from 'inversify';
 import http from 'http';
 import https from 'https';
 import { NtlmStateEnum } from '../models/ntlm.state.enum';
-import { debug } from '../util/debug';
 import { CompleteUrl } from '../models/complete.url.model';
 import { IConfigStore } from './interfaces/i.config.store';
 import { IConnectionContext } from './interfaces/i.connection.context';
 import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { TYPES } from './dependency.injection.types';
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
 const ntlm = require('httpntlm').ntlm;
 
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
+  private _debug: IDebugLogger;
 
-  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore) {
+  constructor(
+    @inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
+    this._debug = debug;
   }
 
   ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -47,16 +51,16 @@ export class NtlmManager implements INtlmManager {
       res.resume(); // Finalize the response so we can reuse the socket
 
       if (this.canHandleNtlmAuthentication(res) === false) {
-        debug('www-authenticate not found on response of second request during NTLM handshake with host', fullUrl);
+        this._debug.log('www-authenticate not found on response of second request during NTLM handshake with host', fullUrl);
         context.resetState(ntlmHostUrl);
         return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl));
       }
 
-      debug('received NTLM message type 2');
+      this._debug.log('received NTLM message type 2');
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
       let type2msg = ntlm.parseType2Message(res.headers['www-authenticate'], (err: Error) => {
         if (err) {
-          debug('Cannot parse NTLM message type 2 from host', fullUrl);
+          this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
           context.resetState(ntlmHostUrl);
           return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
         }
@@ -67,16 +71,16 @@ export class NtlmManager implements INtlmManager {
       }
       let type3msg = ntlm.createType3Message(type2msg, ntlmOptions);
       ctx.proxyToServerRequestOptions.headers['authorization'] = type3msg;
-      debug('Sending NTLM message type 3 with initial client request');
+      this._debug.log('Sending NTLM message type 3 with initial client request');
       context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
       return callback();
     });
     type1req.on('error', (err) => {
-      debug('Error while sending NTLM message type 1:', err);
+      this._debug.log('Error while sending NTLM message type 1:', err);
       context.resetState(ntlmHostUrl);
       return callback(err);
     });
-    debug('Sending  NTLM message type 1');
+    this._debug.log('Sending  NTLM message type 1');
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     type1req.end();
   }
@@ -90,17 +94,17 @@ export class NtlmManager implements INtlmManager {
     }
     if (authState === NtlmStateEnum.Type3Sent) {
       if (ctx.serverToProxyResponse.statusCode === 401) {
-        debug('NTLM authentication failed, invalid credentials.');
+        this._debug.log('NTLM authentication failed, invalid credentials.');
         context.resetState(ntlmHostUrl);
         return callback();
       }
       // According to NTLM spec, all other responses than 401 shall be treated as authentication successful
-      debug('NTLM authentication successful for host', ntlmHostUrl);
+      this._debug.log('NTLM authentication successful for host', ntlmHostUrl);
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
       return callback();
     }
 
-    debug('Response from server in unexpected NTLM state ' + authState + ', resetting NTLM auth.');
+    this._debug.log('Response from server in unexpected NTLM state ' + authState + ', resetting NTLM auth.');
     context.resetState(ntlmHostUrl);
     return callback();
 

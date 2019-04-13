@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { ConfigValidator } from '../util/config.validator';
-import { debug } from '../util/debug';
 import { toCompleteUrl } from '../util/url.converter';
 import { NtlmConfig } from '../models/ntlm.config.model';
 import { injectable, inject } from 'inversify';
@@ -8,15 +7,20 @@ import { EventEmitter } from 'events';
 import { IConfigController } from './interfaces/i.config.controller';
 import { IConfigStore } from './interfaces/i.config.store';
 import { TYPES } from './dependency.injection.types';
+import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
 @injectable()
 export class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;
+  private _debug: IDebugLogger;
 
-  constructor(@inject(TYPES.IConfigStore) configStore: IConfigStore) {
+  constructor(
+    @inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
+    this._debug = debug;
     this.router.post('/ntlm-config', (req: Request, res: Response) => this.ntlmConfig(req, res));
     this.router.post('/reset', (req: Request, res: Response) => this.reset(req, res));
     this.router.get('/alive', (req: Request, res: Response) => this.alive(req, res));
@@ -28,15 +32,15 @@ export class ConfigController implements IConfigController {
       if (!validateResult.ok) {
         res.status(400).send('Config parse error. ' + validateResult.message);
       } else {
-        debug('Received valid config update');
+        this._debug.log('Received valid config update');
         let config = req.body as NtlmConfig;
         let ntlmHostUrl = toCompleteUrl(config.ntlmHost, false);
         if (this._configStore.exists(ntlmHostUrl)) {
           // Trigger removal of existing authentication cache
           this.configApiEvent.emit('configUpdate', ntlmHostUrl);
-          debug('Updating host', ntlmHostUrl.href);
+          this._debug.log('Updating host', ntlmHostUrl.href);
         } else {
-          debug('Added new host' , ntlmHostUrl.href);
+          this._debug.log('Added new host' , ntlmHostUrl.href);
         }
         this._configStore.updateConfig(config);
         res.sendStatus(200);
@@ -44,18 +48,18 @@ export class ConfigController implements IConfigController {
   }
 
   private reset(req: Request, res: Response) {
-    debug('Received reset');
+    this._debug.log('Received reset');
     this.configApiEvent.emit('reset');
     res.sendStatus(200);
   }
 
   private alive(req: Request, res: Response) {
-    debug('Received alive');
+    this._debug.log('Received alive');
     res.sendStatus(200);
   }
 
   private quit(req: Request, res: Response) {
-    debug('Received quit');
+    this._debug.log('Received quit');
     res.status(200).send('Over and out!');
     let keepPortsFile = req.body && req.body.keepPortsFile;
     this.configApiEvent.emit('quit', keepPortsFile);
