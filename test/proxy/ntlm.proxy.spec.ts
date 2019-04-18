@@ -181,4 +181,21 @@ describe('NTLM Proxy authentication', function () {
     expect(firstRequestHeaders).to.be.not.null;
     expect(firstRequestHeaders && 'authorization' in firstRequestHeaders).to.be.false;
   });
+
+  it('proxy shall return error but keep working after incoming non-proxy request', async function() {
+    const hostConfig: NtlmConfig = {
+      ntlmHost: remoteHostWithPort,
+      username: 'nisse',
+      password: 'manpower',
+      domain: 'mnpwr',
+    };
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    _configApiUrl = ports.configApiUrl;
+
+    let res = await ProxyFacade.sendNtlmConfig(ports.ntlmProxyUrl, hostConfig, 250);
+    expect(res.status).to.be.equal(504);
+
+    res = await ProxyFacade.sendRemoteRequest(ports.ntlmProxyUrl, remoteHostWithPort, 'GET', '/test', null);
+    expect(res.status).to.be.equal(401);
+  });
 });

@@ -2,6 +2,7 @@ import { IContext } from 'http-mitm-proxy';
 
 import net from 'net';
 import http from 'http';
+import url from 'url';
 import { toCompleteUrl } from '../util/url.converter';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable, inject } from 'inversify';
@@ -13,6 +14,7 @@ import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
 
 let self: NtlmProxyMitm;
 
@@ -24,6 +26,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
   private _debug: IDebugLogger;
+  private _ntlmProxyPort: string | undefined;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
@@ -42,6 +45,19 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
     self = this;
+  }
+
+  get NtlmProxyPort(): string {
+    if (this._ntlmProxyPort !== undefined) {
+      return this._ntlmProxyPort;
+    }
+    throw new Error('Cannot get ntlmProxyPort, port has not been set!');
+  }
+  set NtlmProxyPort(port: string) {
+    if (port === '') {
+      this._ntlmProxyPort = undefined;
+    }
+    this._ntlmProxyPort = port;
   }
 
   private filterChromeStartup(ctx: IContext, errno: string | undefined, errorKind: string) {
@@ -101,18 +117,28 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         return callback();
       }
     } else {
-      return callback();
+      // The http-mitm-proxy cannot handle this scenario, if no target host header
+      // is set it will get stuck in an infinite loop
+      return callback(new Error('Invalid request - Could not read "host" header or "host" header refers to this proxy'));
     }
   }
 
+  private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
+    return hostUrl.isLocalhost && hostUrl.port === self.NtlmProxyPort;
+  }
 
-  private getTargetHost(ctx: IContext): CompleteUrl | undefined {
+  private getTargetHost(ctx: IContext): CompleteUrl | null {
     if (!ctx.clientToProxyRequest.headers.host) {
       self._debug.log('Invalid request - Could not read "host" header from incoming request to proxy');
-      return undefined;
+      return null;
     }
     let host = ctx.clientToProxyRequest.headers.host;
-    return toCompleteUrl(host, ctx.isSSL, true);
+    let hostUrl = toCompleteUrl(host, ctx.isSSL, true);
+    if (self.isNtlmProxyAddress(hostUrl)) {
+      self._debug.log('Invalid request - host header refers to this proxy');
+      return null;
+    }
+    return hostUrl;
   }
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {

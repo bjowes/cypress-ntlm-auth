@@ -8,21 +8,21 @@ import { ConfigServer } from '../../src/proxy/config.server';
 import { IConfigController } from '../../src/proxy/interfaces/i.config.controller';
 import { IExpressServerFacade } from '../../src/proxy/interfaces/i.express.server.facade';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
+import { DebugLogger } from '../../src/util/debug.logger';
 
 describe('ConfigServer', () => {
   let configServer: ConfigServer;
   let configControllerMock: SubstituteOf<IConfigController>;
   let expressServerMock: SubstituteOf<IExpressServerFacade>;
   let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     configControllerMock = Substitute.for<IConfigController>();
     expressServerMock = Substitute.for<IExpressServerFacade>();
     debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
     configServer = new ConfigServer(expressServerMock, configControllerMock, debugMock);
-  });
-
-  after(function () {
   });
 
   it('configApiUrl should throw if start has not been called', async function () {

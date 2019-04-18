@@ -47,5 +47,18 @@ export function toCompleteUrl(host: string, addProtocol: boolean, useSSL?: boole
     throw new Error('Missing mandatory properties of complete url: ' + JSON.stringify(hostUrl));
   }
 
-  return { hostname: hostUrl.hostname, port: hostUrl.port, protocol: hostUrl.protocol, href: hostUrl.href, path: hostUrl.path };
+  const completeUrl: CompleteUrl = {
+    hostname: hostUrl.hostname,
+    port: hostUrl.port,
+    protocol: hostUrl.protocol,
+    href: hostUrl.href,
+    path: hostUrl.path,
+    isLocalhost: isLocalhost(hostUrl.hostname)
+  }
+
+  return completeUrl;
 };
+
+function isLocalhost(hostname: string) {
+  return (hostname === 'localhost' || hostname === '127.0.0.1');
+}

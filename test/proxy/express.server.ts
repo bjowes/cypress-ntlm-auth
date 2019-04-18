@@ -4,9 +4,11 @@ import http from 'http';
 import https from 'https';
 import express from 'express';
 import ntlm from 'express-ntlm';
+import net from 'net';
 import bodyParser from 'body-parser';
 import { pki } from 'node-forge';
 import { AddressInfo } from 'net';
+import { networkInterfaces } from 'os';
 
 interface ExpressError extends Error {
   status?: number
@@ -22,6 +24,9 @@ export class ExpressServer {
 
   private httpServer: http.Server;
   private httpsServer: https.Server;
+
+  private httpServerSockets = new Set<net.Socket>();
+  private httpsServerSockets = new Set<net.Socket>();
 
   constructor() {
     this.initExpress(this.appNoAuth, false);
@@ -200,6 +205,12 @@ export class ExpressServer {
     } else {
       this.httpServer = http.createServer(this.appNoAuth);
     }
+    this.httpServer.on('connection', socket => {
+      this.httpServerSockets.add(socket);
+      socket.on('close', () => {
+        this.httpServerSockets.delete(socket);
+      });
+    });
     return await new Promise<string>((resolve, reject) => {
       this.httpServer.listen(port, '127.0.0.1', 511, (err: Error) => {
         if (err) {
@@ -223,6 +234,13 @@ export class ExpressServer {
     });
   }
 
+  destroyHttpSockets() {
+    for (const socket of this.httpServerSockets.values()) {
+      socket.destroy();
+    }
+    this.httpServerSockets = new Set();
+  }
+
   async startHttpsServer(useNtlm: boolean, port?: number): Promise<string> {
     if (!port) {
       port = 0;
@@ -238,6 +256,14 @@ export class ExpressServer {
         cert: this.certPem
       }, this.appNoAuth);
     }
+
+    this.httpsServer.on('connection', socket => {
+      this.httpsServerSockets.add(socket);
+      socket.on('close', () => {
+        this.httpsServerSockets.delete(socket);
+      });
+    });
+
     return await new Promise<string>((resolve, reject) => {
       this.httpsServer.listen(port, '127.0.0.1', 511, (err: Error) => {
         if (err) {
@@ -261,7 +287,14 @@ export class ExpressServer {
     });
   }
 
-  public get caCert(): Buffer {
+  destroyHttpsSockets() {
+    for (const socket of this.httpsServerSockets.values()) {
+      socket.destroy();
+    }
+    this.httpsServerSockets = new Set();
+  }
+
+  get caCert(): Buffer {
     return Buffer.from(this.certPem, 'utf8');
   }
 }

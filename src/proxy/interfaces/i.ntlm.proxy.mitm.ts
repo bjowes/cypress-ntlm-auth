@@ -7,4 +7,5 @@ export interface INtlmProxyMitm {
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void): void;
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void): void;
   onConnect(req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error?: NodeJS.ErrnoException) => void): void;
+  NtlmProxyPort: string;
 }

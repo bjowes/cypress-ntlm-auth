@@ -10,9 +10,9 @@ import { expect } from 'chai';
 import chai  from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
-import { Container } from 'inversify';
 
-import { CoreServer } from '../../src/proxy/core.server';
+import http from 'http';
+
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { PortsFile } from '../../src/models/ports.file.model';
@@ -145,6 +145,35 @@ describe('Proxy for HTTP host with NTLM', function() {
     };
     let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'DELETE', '/delete', body);
     expect(res.status, 'remote request should return 401').to.be.equal(401);
+  });
+
+  it('should handle authentication for multiple POST requests on one socket', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let agent = new http.Agent({ keepAlive: true });
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    agent.destroy();
   });
 });
 

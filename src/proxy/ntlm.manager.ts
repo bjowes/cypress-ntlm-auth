@@ -119,6 +119,5 @@ export class NtlmManager implements INtlmManager {
       }
     }
     return false;
-}
-
+  }
 };

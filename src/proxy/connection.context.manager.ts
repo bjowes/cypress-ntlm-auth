@@ -56,7 +56,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
     clientSocket.on('end', () => this.removeAgent('end', clientAddress));
-    this._debug.log('Created NTLM ready agent for client ' + clientAddress + ' to target ' + targetHost);
+    this._debug.log('Created NTLM ready agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
   }
 
@@ -64,18 +64,14 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let agent = this.getAgent(isSSL, targetHost, false);
     agent._cyAgentId = this._agentCount;
     this._agentCount++;
-    this._debug.log('Created non-NTLM agent for target ' + targetHost);
+    this._debug.log('Created non-NTLM agent for target ' + targetHost.href);
     return agent;
-  }
-
-  private isLocalhost(hostUrl: CompleteUrl) {
-    return (hostUrl.hostname === 'localhost' || hostUrl.hostname === '127.0.0.1');
   }
 
   getAgent(isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean) {
     let agentOptions: https.AgentOptions = {
       keepAlive: useNtlm,
-      rejectUnauthorized: !this.isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
+      rejectUnauthorized: !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
     };
     if (useNtlm) {
       // Only one connection per peer -> 1:1 match between inbound and outbound socket

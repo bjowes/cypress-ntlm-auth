@@ -94,11 +94,11 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendNtlmConfig(configApiUrl: string, hostConfig: NtlmConfig): Promise<AxiosResponse<string>> {
+  static async sendNtlmConfig(configApiUrl: string, hostConfig: NtlmConfig, timeout?: number): Promise<AxiosResponse<string>> {
     let res = await axios.post(configApiUrl + '/ntlm-config',
       hostConfig,
       {
-        timeout: 15000,
+        timeout: timeout,
         validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
       });
     return res;
@@ -113,16 +113,16 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer): Promise<AxiosResponse<any>> {
+  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer, agent?: http.Agent): Promise<AxiosResponse<any>> {
     const remoteHostUrl = url.parse(remoteHostWithPort);
     if (remoteHostUrl.protocol === 'http:') {
-      return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body);
+      return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
       return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, caCert);
     }
   }
 
-  private static async sendProxiedHttpRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any) {
+  private static async sendProxiedHttpRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, agent?: http.Agent) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
@@ -130,6 +130,7 @@ export class ProxyFacade {
 
     let res = await axios.request({
       method: method,
+      httpAgent: agent || new http.Agent(),
       baseURL: remoteHostWithPort,
       url: path,
       proxy: {

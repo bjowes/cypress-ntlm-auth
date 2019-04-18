@@ -8,17 +8,20 @@ import { NtlmProxyServer } from '../../src/proxy/ntlm.proxy.server';
 import { INtlmProxyMitm } from '../../src/proxy/interfaces/i.ntlm.proxy.mitm';
 import { IHttpMitmProxyFacade } from '../../src/proxy/interfaces/i.http.mitm.proxy.facade';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
+import { DebugLogger } from '../../src/util/debug.logger';
 
 describe('NtlmProxyServer', () => {
   let ntlmProxyServer: NtlmProxyServer;
   let ntlmProxyMitmMock: SubstituteOf<INtlmProxyMitm>;
   let httpMitmProxyMock: SubstituteOf<IHttpMitmProxyFacade>;
   let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     ntlmProxyMitmMock = Substitute.for<INtlmProxyMitm>();
     httpMitmProxyMock = Substitute.for<IHttpMitmProxyFacade>();
     debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyServer = new NtlmProxyServer(ntlmProxyMitmMock, httpMitmProxyMock, debugMock);
   });
 

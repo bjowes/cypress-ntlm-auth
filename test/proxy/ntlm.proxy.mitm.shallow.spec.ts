@@ -2,6 +2,7 @@
 import 'reflect-metadata';
 import 'mocha';
 import { Substitute, SubstituteOf, Arg } from '@fluffy-spoon/substitute';
+import net from 'net';
 
 import { expect } from 'chai';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
@@ -13,8 +14,10 @@ import { NtlmProxyMitm } from '../../src/proxy/ntlm.proxy.mitm';
 import { IContext } from 'http-mitm-proxy';
 import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
+import { DebugLogger } from '../../src/util/debug.logger';
+import { ExpressServer } from './express.server';
 
-describe('NtlmProxyMitm', () => {
+describe('NtlmProxyMitm error logging', () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
   let configServerMock: SubstituteOf<IConfigServer>;
@@ -22,6 +25,7 @@ describe('NtlmProxyMitm', () => {
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
   let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     configStoreMock = Substitute.for<IConfigStore>();
@@ -30,8 +34,10 @@ describe('NtlmProxyMitm', () => {
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
-      configServerMock, connectionContextManagerMock, ntlmManagerMock, upstreamProxyManagerMock, debugMock);
+      configServerMock, connectionContextManagerMock, ntlmManagerMock,
+      upstreamProxyManagerMock, debugMock);
   });
 
   it('connection errors should not throw when no context', async function () {
@@ -87,60 +93,231 @@ describe('NtlmProxyMitm', () => {
     ntlmProxyMitm.onError(ctx, error, 'PROXY_TO_SERVER_REQUEST_ERROR');
     debugMock.received(1).log('Chrome startup HEAD request detected (host: ' + mockHost + '). Ignoring connection error.')
   });
-/*
-  it('ntlmProxyUrl should return url with assigned port', async function () {
-    httpMitmProxyMock.listen(2000).returns(Promise.resolve('http://127.0.0.1:2000'));
+});
 
-    await ntlmProxyServer.start(2000);
+describe('NtlmProxyMitm REQUEST', () => {
+  let ntlmProxyMitm: NtlmProxyMitm;
+  let configStoreMock: SubstituteOf<IConfigStore>;
+  let configServerMock: SubstituteOf<IConfigServer>;
+  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let ntlmManagerMock: SubstituteOf<INtlmManager>;
+  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
 
-    httpMitmProxyMock.received(1).listen(2000);
-    expect(ntlmProxyServer.ntlmProxyUrl).to.be.equal('http://127.0.0.1:2000');
+  beforeEach(async function () {
+    configStoreMock = Substitute.for<IConfigStore>();
+    configServerMock = Substitute.for<IConfigServer>();
+    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    ntlmManagerMock = Substitute.for<INtlmManager>();
+    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+
+    debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
+      configServerMock, connectionContextManagerMock, ntlmManagerMock,
+      upstreamProxyManagerMock, debugMock);
   });
 
-  it('start should use a free port if undefined', async function () {
-    let listenPort: any;
-    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port)})
-
-    await ntlmProxyServer.start();
-    httpMitmProxyMock.received(1).listen(Arg.any());
-    expect(listenPort).to.be.greaterThan(0);
-    expect(ntlmProxyServer.ntlmProxyUrl).to.contain('http://127.0.0.1:' + listenPort);
+  it('invalid url should throw', async function() {
+    const message = Substitute.for<IncomingMessage>();
+    const ctx = Substitute.for<IContext>();
+    ctx.clientToProxyRequest.returns(message);
+    message.headers.returns({hostMissing: 'test'});
+    let callbackCount = 0;
+    let callbackWithErrorCount = 0;
+    await expect(() => ntlmProxyMitm.onRequest(ctx, (err: Error) => { callbackCount++; if (err) { callbackWithErrorCount++; throw err; } }))
+      .throws('Invalid request - Could not read "host" header or "host" header refers to this proxy');
+    expect(callbackCount).to.equal(1);
+    expect(callbackWithErrorCount).to.equal(1);
   });
 
-  it('start should call init', async function () {
-    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve('http://127.0.0.1:2000'));
+});
 
-    await ntlmProxyServer.start();
+describe('NtlmProxyMitm CONNECT', () => {
+  let ntlmProxyMitm: NtlmProxyMitm;
+  let configStoreMock: SubstituteOf<IConfigStore>;
+  let configServerMock: SubstituteOf<IConfigServer>;
+  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let ntlmManagerMock: SubstituteOf<INtlmManager>;
+  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
 
-    httpMitmProxyMock.received(1).use(Arg.any());
+  let httpsUrl: string;
+  let urlNoProtocol: string;
+  let socketMock: SubstituteOf<net.Socket>;
+  let expressServer = new ExpressServer();
+
+  let socketEventListener: (err: NodeJS.ErrnoException) => void;
+  let serverStream: NodeJS.WritableStream;
+
+  before(async function() {
+    httpsUrl = await expressServer.startHttpsServer(false, undefined);
+    urlNoProtocol = httpsUrl.substring(httpsUrl.indexOf('localhost'));
   });
 
-  it('start should throw if listen fails', async function () {
-    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { return Promise.reject('test')} )
+  beforeEach(async function () {
+    socketEventListener = undefined;
+    serverStream = undefined;
 
-    await expect(ntlmProxyServer.start()).to.be.rejectedWith('test');
+    socketMock = Substitute.for<net.Socket>();
+    socketMock.on(Arg.all()).mimicks((event: string, listener) => {
+      if (event === 'error') {
+        socketEventListener = listener;
+      }
+      return socketMock;
+    });
+    socketMock.write(Arg.all()).mimicks((data, encoding, callback) => {
+      return callback();
+    });
+    socketMock.pipe(Arg.all()).mimicks((stream) => {
+      serverStream = stream;
+      return socketMock;
+    });
+
+    configStoreMock = Substitute.for<IConfigStore>();
+    configStoreMock.exists(Arg.any()).returns(false);
+
+    configServerMock = Substitute.for<IConfigServer>();
+    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    ntlmManagerMock = Substitute.for<INtlmManager>();
+    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+    upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+
+    debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
+      configServerMock, connectionContextManagerMock, ntlmManagerMock,
+      upstreamProxyManagerMock, debugMock);
   });
 
-  it('init should just initialize once', function () {
-    ntlmProxyServer.init();
-    httpMitmProxyMock.received(1).use(Arg.any());
-
-    ntlmProxyServer.init();
-    httpMitmProxyMock.received(1).use(Arg.any());
+  after(async function() {
+    await expressServer.stopHttpsServer();
   });
 
-  it('stop should close server listener', async function () {
-    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve('http://127.0.0.1:2000'));
-    await ntlmProxyServer.start();
-    await ntlmProxyServer.stop();
-    httpMitmProxyMock.received(1).close();
+  it('invalid url should not throw', async function() {
+    let req = Substitute.for<IncomingMessage>();
+    req.url.returns(null);
+    let callbackCount = 0;
+    ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { callbackCount++; if (err) throw err; });
+    expect(callbackCount).to.equal(1);
   });
 
-  it('stop should throw if close throws', async function () {
-    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve('http://127.0.0.1:2000'));
-    httpMitmProxyMock.close().mimicks(() => { throw new Error('test') });
-    await ntlmProxyServer.start();
-    expect(() => ntlmProxyServer.stop()).to.throw('test');
+  it('unknown socket error after connect should not throw', async function() {
+    let req = Substitute.for<IncomingMessage>();
+    req.url.returns(urlNoProtocol);
+    const error: NodeJS.ErrnoException = {
+      message: 'testmessage',
+      name: 'testname',
+      code: 'ENOTFOUND'
+    };
+
+    ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
+    await waitForServerStream();
+    socketEventListener.call(this, error);
+    debugMock.received(1).log('Got unexpected error on ' + 'CLIENT_TO_PROXY_SOCKET', error);
+    serverStream.end();
   });
-  */
+
+  it('ECONNRESET socket error after connect should not throw', async function() {
+    let req = Substitute.for<IncomingMessage>();
+    req.url.returns(urlNoProtocol);
+    const error: NodeJS.ErrnoException = {
+      message: 'testmessage',
+      name: 'testname',
+      code: 'ECONNRESET'
+    };
+
+    ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
+    await waitForServerStream();
+    socketEventListener.call(this, error);
+    debugMock.received(1).log('Got ECONNRESET on ' + 'CLIENT_TO_PROXY_SOCKET' + ', ignoring.');
+    serverStream.end();
+  });
+
+  it('unknown peer socket error after connect should not throw', async function() {
+    let req = Substitute.for<IncomingMessage>();
+    req.url.returns(urlNoProtocol);
+    const error: NodeJS.ErrnoException = {
+      message: 'testmessage',
+      name: 'testname',
+      code: 'ENOTFOUND'
+    };
+
+    ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
+    await waitForServerStream();
+    serverStream.emit('error', error);
+    debugMock.received(1).log('Got unexpected error on ' + 'PROXY_TO_SERVER_SOCKET', error);
+    serverStream.end();
+  });
+
+  it('ECONNRESET peer socket error after connect should not throw', async function() {
+    let req = Substitute.for<IncomingMessage>();
+    req.url.returns(urlNoProtocol);
+    const error: NodeJS.ErrnoException = {
+      message: 'testmessage',
+      name: 'testname',
+      code: 'ECONNRESET'
+    };
+
+    ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
+    await waitForServerStream();
+    serverStream.emit('error', error);
+    debugMock.received(1).log('Got ECONNRESET on ' + 'PROXY_TO_SERVER_SOCKET' + ', ignoring.');
+    serverStream.end();
+  });
+
+  const sleepMs = (ms: number) => new Promise(res => setTimeout(res, ms))
+  async function sleep(ms: number): Promise<void> {
+    await sleepMs(ms);
+  }
+
+  async function waitForServerStream(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      for (let i = 0; i < 40; i++) {
+        if (serverStream) {
+          resolve();
+        }
+        await sleep(25);
+      }
+      reject();
+    });
+  }
+});
+
+describe('NtlmProxyMitm NtlmProxyPort', () => {
+  let ntlmProxyMitm: NtlmProxyMitm;
+  let configStoreMock: SubstituteOf<IConfigStore>;
+  let configServerMock: SubstituteOf<IConfigServer>;
+  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let ntlmManagerMock: SubstituteOf<INtlmManager>;
+  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
+
+  beforeEach(async function () {
+    configStoreMock = Substitute.for<IConfigStore>();
+    configServerMock = Substitute.for<IConfigServer>();
+    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    ntlmManagerMock = Substitute.for<INtlmManager>();
+    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+
+    debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
+      configServerMock, connectionContextManagerMock, ntlmManagerMock,
+      upstreamProxyManagerMock, debugMock);
+  });
+
+  it('NtlmProxyPort should throw if not initialized', async function() {
+    await expect(() => ntlmProxyMitm.NtlmProxyPort)
+      .throws('Cannot get ntlmProxyPort, port has not been set!');
+  });
+
+  it('NtlmProxyPort should not throw if initialized', async function() {
+    ntlmProxyMitm.NtlmProxyPort = "1234";
+    expect(ntlmProxyMitm.NtlmProxyPort).to.be.equal("1234");
+  });
+
 });

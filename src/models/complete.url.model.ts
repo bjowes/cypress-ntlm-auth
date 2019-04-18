@@ -4,4 +4,5 @@ export interface CompleteUrl {
   protocol: string;
   href: string;
   path: string;
+  isLocalhost: boolean;
 }
