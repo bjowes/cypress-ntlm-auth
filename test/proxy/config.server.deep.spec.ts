@@ -1,5 +1,4 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import 'reflect-metadata';
 import 'mocha';
 
 //const proxyFacade = require('./proxyFacade');

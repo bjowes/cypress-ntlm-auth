@@ -1,6 +1,5 @@
 // cSpell:ignore nisse, mnpwr
 
-import 'reflect-metadata';
 import 'mocha';
 
 import sinon from 'sinon';

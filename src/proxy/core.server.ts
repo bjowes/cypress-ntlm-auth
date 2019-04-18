@@ -76,6 +76,7 @@ export class CoreServer implements ICoreServer {
   async stop(keepPortsFile: boolean) {
     if (keepPortsFile === false) {
       await this._portsFileService.delete();
+      this._debug.log('ports file deleted');
     }
     this.ntlmConfigReset();
     await this._configServer.stop();
@@ -99,6 +100,7 @@ export class CoreServer implements ICoreServer {
         this._debug.log('Quit request failed, trying to delete the ports file: ' + err);
       }
       await this._portsFileService.delete();
+      this._debug.log('ports file deleted');
     }
   }
 

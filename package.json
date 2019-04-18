@@ -4,13 +4,12 @@
   "description": "NTLM authentication plugin for Cypress",
   "main": "index.js",
   "scripts": {
-    "proxy": "node src/proxy/index.js &",
-    "launch": "node src/launcher/cypressNtlm.js",
+    "proxy": "node src/launcher/ntlm.proxy.main.js &",
+    "launch": "node src/launcher/cypress.ntlm.js",
     "pnl": "npm run proxy && npm run launch",
-    "test": "mocha test/**/*.spec.js",
-    "test-ts": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
+    "test": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
     "tsc": "tsc",
-    "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test-ts"
+    "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test"
   },
   "engines": {
     "node": ">=8.2.1"
@@ -25,9 +24,9 @@
     "windows authentication"
   ],
   "bin": {
-    "cypress-ntlm": "./src/launcher/cypressNtlm.js",
-    "ntlm-proxy": "./src/proxy/index.js",
-    "ntlm-proxy-exit": "./src/launcher/ntlmProxyExit.js"
+    "cypress-ntlm": "./src/launcher/cypress.ntlm.js",
+    "ntlm-proxy": "./src/launcher/ntlm.proxy.main.js",
+    "ntlm-proxy-exit": "./src/launcher/ntlm.proxy.exit.main.js"
   },
   "author": "Björn Weström",
   "license": "MIT",

@@ -1,6 +1,7 @@
 
 import { Container, interfaces } from 'inversify';
 import { TYPES } from './dependency.injection.types';
+import 'reflect-metadata';
 
 import { IConfigController } from './interfaces/i.config.controller';
 import { ConfigController } from './config.controller';
@@ -44,6 +45,11 @@ import { HttpMitmProxyFacade } from './http.mitm.proxy.facade';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 import { DebugLogger } from '../util/debug.logger';
 
+import { INtlmProxyExit } from '../util/interfaces/i.ntlm.proxy.exit';
+import { NtlmProxyExit } from '../util/ntlm.proxy.exit';
+
+import { IMain } from './interfaces/i.main';
+import { Main } from './main';
 
 export class DependencyInjection {
   private _container: Container;
@@ -58,7 +64,9 @@ export class DependencyInjection {
     this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
     this._container.bind<IExpressServerFacade>(TYPES.IExpressServerFacade).to(ExpressServerFacade);
     this._container.bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade).to(HttpMitmProxyFacade);
+    this._container.bind<IMain>(TYPES.IMain).to(Main);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
+    this._container.bind<INtlmProxyExit>(TYPES.INtlmProxyExit).to(NtlmProxyExit);
     this._container.bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm).to(NtlmProxyMitm);
     this._container.bind<INtlmProxyServer>(TYPES.INtlmProxyServer).to(NtlmProxyServer);
     this._container.bind<IPortsFileService>(TYPES.IPortsFileService).to(PortsFileService);
@@ -67,7 +75,7 @@ export class DependencyInjection {
     this._container.bind<interfaces.Newable<IConnectionContext>>(TYPES.NewableIConnectionContext).toConstructor<IConnectionContext>(ConnectionContext);
   }
 
-  get(typename: symbol): any {
+  get<T>(typename: symbol): T {
     return this._container.get(typename);
   }
 }

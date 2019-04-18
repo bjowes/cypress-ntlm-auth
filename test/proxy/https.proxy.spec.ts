@@ -1,5 +1,4 @@
 // cSpell:ignore nisse, mptst
-import 'reflect-metadata';
 import 'mocha';
 
 import { ExpressServer } from './express.server';

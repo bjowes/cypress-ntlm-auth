@@ -1,12 +1,11 @@
-import { DependencyInjection } from "./dependency.injection";
 import { ICoreServer } from "./interfaces/i.core.server";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IMain } from "./interfaces/i.main";
 
-const dependencyInjection = new DependencyInjection();
-
-export class Main {
+@injectable()
+export class Main implements IMain {
   private _coreServer: ICoreServer;
   private _debug: IDebugLogger;
 
@@ -17,7 +16,7 @@ export class Main {
     this._debug = debug;
   }
 
-  async run(allowMultipleInstances: boolean, httpProxy?: string, httpsProxy?: string, noProxy?: string, ) {
+  async run(allowMultipleInstances: boolean, httpProxy?: string, httpsProxy?: string, noProxy?: string) {
     try {
       let ports = await this._coreServer.start(allowMultipleInstances, httpProxy, httpsProxy, noProxy);
       this._debug.log('Startup done!');
@@ -28,7 +27,7 @@ export class Main {
     }
   }
 
-  stop() {
-    this._coreServer.stop(false);
+  async stop() {
+    await this._coreServer.stop(false);
   }
 }

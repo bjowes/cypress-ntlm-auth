@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import fse from 'fs-extra';
 import assert from 'assert';
 import sinon from 'sinon';
