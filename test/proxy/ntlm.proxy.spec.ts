@@ -42,7 +42,7 @@ async function initRemoteHost() {
   });
 
   remoteHostListener = await new Promise<http.Server>((resolve, reject) => {
-    let listener = remoteHost.listen(null, (err: Error) => {
+    let listener = remoteHost.listen((err: Error) => {
       if (err) {
         reject(err);
       }
