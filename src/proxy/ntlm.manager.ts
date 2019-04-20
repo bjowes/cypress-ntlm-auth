@@ -99,7 +99,7 @@ export class NtlmManager implements INtlmManager {
         return callback();
       }
       // According to NTLM spec, all other responses than 401 shall be treated as authentication successful
-      this._debug.log('NTLM authentication successful for host', ntlmHostUrl);
+      this._debug.log('NTLM authentication successful for host', ntlmHostUrl.href);
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
       return callback();
     }

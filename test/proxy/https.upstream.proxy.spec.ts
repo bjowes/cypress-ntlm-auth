@@ -52,7 +52,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
       password: 'manpower',
       domain: 'mptst'
     };
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
@@ -185,7 +185,7 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
       return callback();
     });
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
@@ -271,7 +271,7 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
       return callback();
     });
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
   });
 
   afterEach('Stop proxy', async function() {

@@ -68,7 +68,7 @@ describe('Core server startup and shutdown', () => {
     }
     deletePortsFileStub = sinon.stub(PortsFileService.prototype, 'delete');
 
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     _configApiUrl = undefined;
   });
 

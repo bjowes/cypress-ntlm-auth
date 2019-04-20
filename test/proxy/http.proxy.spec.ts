@@ -47,7 +47,7 @@ describe('Proxy for HTTP host with NTLM', function() {
       password: 'manpower',
       domain: 'mptst'
     };
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
@@ -198,7 +198,7 @@ describe('Proxy for HTTP host without NTLM', function() {
       password: 'manpower',
       domain: 'mptst'
     };
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;

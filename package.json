@@ -2,13 +2,13 @@
   "name": "cypress-ntlm-auth",
   "version": "0.9.2",
   "description": "NTLM authentication plugin for Cypress",
-  "main": "index.js",
+  "main": "dist/proxy/main.js",
   "scripts": {
-    "proxy": "node src/launcher/ntlm.proxy.main.js &",
-    "launch": "node src/launcher/cypress.ntlm.js",
+    "proxy": "src/launchers/ntlm.proxy.main.js",
+    "launch": "src/launchers/cypress.ntlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
-    "tsc": "tsc",
+    "build": "tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js",
     "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test"
   },
   "engines": {
@@ -24,10 +24,13 @@
     "windows authentication"
   ],
   "bin": {
-    "cypress-ntlm": "./src/launcher/cypress.ntlm.js",
-    "ntlm-proxy": "./src/launcher/ntlm.proxy.main.js",
-    "ntlm-proxy-exit": "./src/launcher/ntlm.proxy.exit.main.js"
+    "cypress-ntlm": "./dist/launchers/cypress.ntlm.js",
+    "ntlm-proxy": "./dist/launchers/ntlm.proxy.main.js",
+    "ntlm-proxy-exit": "./dist/launchers/ntlm.proxy.exit.main.js"
   },
+  "files": [
+    "dist/"
+  ],
   "author": "Björn Weström",
   "license": "MIT",
   "bugs": {
@@ -55,28 +58,32 @@
     "@types/assert": "^1.4.2",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
-    "@types/debug": "^4.1.2",
+    "@types/debug": "^4.1.4",
     "@types/express": "^4.16.1",
     "@types/express-ntlm": "^2.3.0",
     "@types/fs-extra": "^5.0.5",
     "@types/mocha": "^5.2.6",
-    "@types/node": "^10.14.1",
+    "@types/node": "^10.14.5",
     "@types/node-cleanup": "^2.1.0",
-    "@types/node-forge": "^0.8.1",
-    "@types/sinon": "^7.0.10",
+    "@types/node-forge": "^0.8.2",
+    "@types/sinon": "^7.0.11",
     "@types/tunnel": "0.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^5.15.3",
+    "eslint": "^5.16.0",
     "express-ntlm": "^2.3.0",
-    "is-port-reachable": "^2.0.0",
-    "mocha": "^6.0.2",
+    "is-port-reachable": "^2.0.1",
+    "mocha": "^6.1.4",
     "node-forge": "^0.8.2",
     "proxyquire": "^2.1.0",
-    "sinon": "^7.3.0",
-    "source-map-support": "^0.5.11",
-    "ts-node": "^8.0.3",
+    "shx": "^0.3.2",
+    "sinon": "^7.3.2",
+    "source-map-support": "^0.5.12",
+    "ts-node": "^8.1.0",
     "tunnel": "0.0.6",
-    "typescript": "^3.3.4000"
+    "typescript": "^3.4.4"
+  },
+  "peerDependencies": {
+    "cypress": "^3.1.0"
   }
 }

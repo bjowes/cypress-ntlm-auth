@@ -100,7 +100,7 @@ export class CoreServer implements ICoreServer {
         this._debug.log('Quit request failed, trying to delete the ports file: ' + err);
       }
       await this._portsFileService.delete();
-      this._debug.log('ports file deleted');
+      this._debug.log('Ports file deleted');
     }
   }
 

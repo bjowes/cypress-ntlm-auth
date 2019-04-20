@@ -2,7 +2,7 @@
 
 /// <reference types="cypress" />
 
-const configValidator = require('../util/configValidator');
+const ConfigValidator = require('../util/config.validator').ConfigValidator;
 
 /**
  * Adds NTLM authentication support to Cypress for a specific host.
@@ -32,7 +32,7 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     domain: domain,
     workstation: workstation
   };
-  let validationResult = configValidator.validate(ntlmConfig);
+  let validationResult = ConfigValidator.validate(ntlmConfig);
   if (!validationResult.ok) {
     throw new Error(validationResult.message);
   }

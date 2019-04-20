@@ -75,7 +75,7 @@ describe('NTLM Proxy authentication', function () {
   });
 
   beforeEach(function () {
-    coreServer = dependencyInjection.get(TYPES.ICoreServer);
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     _configApiUrl = undefined;
     remoteHostRequestHeaders = [];
     remoteHostResponseWwwAuthHeader = undefined;

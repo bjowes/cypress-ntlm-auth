@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 - released 2019-04-20
+
+* *BREAKING CHANGE*: The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.
+  * Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
+  * Update your import path in `cypress/support/index.js`: change `import 'cypress-ntlm-auth/src/commands'` to `import 'cypress-ntlm-auth/dist/commands'`
+* Rewritten in TypeScript
+* Improved unit testing
+* Fixed issue #28: Plain GET call to proxy causes infinite loop
+* Updated dependencies
+
 ## 0.9.2 - released 2019-03-05
 
 * Fixed issue #23: proxying sites on default ports when cy.ntlm was called without the port number.

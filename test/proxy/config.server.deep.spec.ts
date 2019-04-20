@@ -4,21 +4,21 @@ import 'mocha';
 //const proxyFacade = require('./proxyFacade');
 import { ProxyFacade } from './proxy.facade';
 import { expect } from 'chai';
-import { ConfigServer } from '../../src/proxy/config.server';
-import { ConfigStore } from '../../src/proxy/config.store';
 import { toCompleteUrl } from '../../src/util/url.converter';
 import { DependencyInjection } from '../../src/proxy/dependency.injection';
 import { TYPES } from '../../src/proxy/dependency.injection.types';
+import { IConfigServer } from '../../src/proxy/interfaces/i.config.server';
+import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
 
 describe('Config API (ConfigServer deep tests)', () => {
   let configApiUrl: string;
   let dependencyInjection = new DependencyInjection();
-  let configServer: ConfigServer;
-  let configStore: ConfigStore;
+  let configServer: IConfigServer;
+  let configStore: IConfigStore;
 
   before(async function () {
-    configServer = dependencyInjection.get(TYPES.IConfigServer);
-    configStore = dependencyInjection.get(TYPES.IConfigStore);
+    configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
+    configStore = dependencyInjection.get<IConfigStore>(TYPES.IConfigStore);
     configServer.init();
     configApiUrl = await configServer.start();
   });
