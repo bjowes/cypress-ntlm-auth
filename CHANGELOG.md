@@ -6,7 +6,9 @@
   * Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
   * Update your import path in `cypress/support/index.js`: change `import 'cypress-ntlm-auth/src/commands'` to `import 'cypress-ntlm-auth/dist/commands'`
 * Rewritten in TypeScript
+* Applied dependency injection to simplify unit testing
 * Improved unit testing
+* Added manual duration tests to validate that there are no apparent memory leaks
 * Fixed issue #28: Plain GET call to proxy causes infinite loop
 * Updated dependencies
 
