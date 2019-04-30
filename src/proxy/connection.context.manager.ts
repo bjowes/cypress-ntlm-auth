@@ -68,10 +68,17 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return agent;
   }
 
+  private nodeTlsRejectUnauthorized(): boolean {
+    if (process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
+      return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0';
+    }
+    return true;
+  }
+
   getAgent(isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean) {
     let agentOptions: https.AgentOptions = {
       keepAlive: useNtlm,
-      rejectUnauthorized: !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
+      rejectUnauthorized: this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
     };
     if (useNtlm) {
       // Only one connection per peer -> 1:1 match between inbound and outbound socket
