@@ -27,6 +27,7 @@ let _ntlmProxyOwnsProcess;
 let _upstreamHttpProxy;
 let _upstreamHttpsProxy;
 let _upstreamNoProxy;
+let agentCount = 0;
 
 const NtlmStateEnum = Object.freeze({ 'NotAuthenticated':0, 'Type1Sent':1, 'Type2Received':3, 'Type3Sent':4, 'Authenticated':5 });
 
@@ -76,6 +77,7 @@ function updateConfig(config) {
 
 function shutDownProxy(keepPortsFile, exitProcess) {
   debug('Shutting down');
+  debug('Total number of agents created: ', agentCount);
 
   if (!keepPortsFile) {
     portsFile.delete((err) => {
@@ -96,6 +98,7 @@ function shutDownProxy(keepPortsFile, exitProcess) {
   debug('Shutting down config API');
   _configAppListener.close(() => {
     _configAppListener = null;
+    agentCount = 0;
     _ports = null;
     if (exitProcess) {
       // Failsafe in case some socket wasn't closed
@@ -225,7 +228,6 @@ function getClientAddress(clientSocket) {
 }
 
 let _agents = {};
-let agentCount = 0;
 function getAgentFromClientSocket(clientSocket, isSSL, targetHost) {
   let clientAddress = getClientAddress(clientSocket);
   if (clientAddress in _agents) {
@@ -250,10 +252,17 @@ function getNonNtlmAgent(isSSL, targetHost) {
   return agent;
 }
 
+function nodeTlsRejectUnauthorized() {
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
+    return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0';
+  }
+  return true;
+}
+
 function getAgent(isSSL, targetHost, useNtlm) {
   let agentOptions = {
     keepAlive: useNtlm,
-    rejectUnauthorized: !isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
+    rejectUnauthorized: nodeTlsRejectUnauthorized() && !isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
   };
   if (useNtlm) {
     // Only one connection per peer -> 1:1 match between inbound and outbound socket
