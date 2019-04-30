@@ -252,10 +252,17 @@ function getNonNtlmAgent(isSSL, targetHost) {
   return agent;
 }
 
+function nodeTlsRejectUnauthorized() {
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
+    return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0';
+  }
+  return true;
+}
+
 function getAgent(isSSL, targetHost, useNtlm) {
   let agentOptions = {
     keepAlive: useNtlm,
-    rejectUnauthorized: !isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
+    rejectUnauthorized: nodeTlsRejectUnauthorized() && !isLocalhost(targetHost) // Allow self-signed certificates if target is on localhost
   };
   if (useNtlm) {
     // Only one connection per peer -> 1:1 match between inbound and outbound socket
