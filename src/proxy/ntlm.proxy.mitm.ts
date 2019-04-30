@@ -2,7 +2,6 @@ import { IContext } from 'http-mitm-proxy';
 
 import net from 'net';
 import http from 'http';
-import url from 'url';
 import { toCompleteUrl } from '../util/url.converter';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable, inject } from 'inversify';
@@ -14,7 +13,6 @@ import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
-import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
 
 let self: NtlmProxyMitm;
 

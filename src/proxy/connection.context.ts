@@ -1,4 +1,3 @@
-import { Socket } from 'net';
 import { NtlmStateEnum } from '../models/ntlm.state.enum';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
