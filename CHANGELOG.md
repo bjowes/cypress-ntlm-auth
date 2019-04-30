@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - released 2019-04-20
+## 1.0.0 - released 2019-05-xx
 
 * *BREAKING CHANGE*: The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.
   * Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
@@ -11,6 +11,12 @@
 * Added manual duration tests to validate that there are no apparent memory leaks
 * Fixed issue #28: Plain GET call to proxy causes infinite loop
 * Updated dependencies
+
+## 0.9.3 - released 2019-04-30
+
+* Fixed issue #32: ntlm-proxy now respects the `NODE_TLS_REJECT_UNAUTHORIZED` environment variable
+* Added manual duration tests
+* Minor adjustment to logging format
 
 ## 0.9.2 - released 2019-03-05
 
