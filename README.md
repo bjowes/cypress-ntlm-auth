@@ -283,6 +283,10 @@ The http-mitm-proxy library will create a .http-mitm-proxy folder with generated
 
 The NTLM proxy will accept self-signed certificates for sites that are served from localhost. This is convenient for testing local development builds without requiring a full CA chain for the certificates, while still requiring proper certificates from external servers.
 
+### HTTPS/SSL/TLS issues
+
+Getting certificates right can be a burden. When accessing a HTTPS site, the site certificate is validated by ntlm-proxy (just like web browsers do). If the validation fails, the proxy will return an error code (504). If you are unable to resolve the certificate issues you can use the standard Node workaround by setting the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0` before starting ntlm-proxy. If you are running Node 11 or later, you will (rightfully) get a warning when doing this, since disabling the certificate validation makes your machine more vulnerable to MITM attacks. When used only in a development environment and only for testing an internal site, the risk is significantly reduced - but I would still strongly recommend resolving the certificate issues instead of relying on the workaround.
+
 ## Planned work
 
 * More real-world testing against Windows servers

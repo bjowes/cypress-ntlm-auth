@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3 - released 2019-04-30
+
+* Fixed issue #32: ntlm-proxy now respects the `NODE_TLS_REJECT_UNAUTHORIZED` environment variable
+* Added manual duration tests
+* Minor adjustment to logging format
+
 ## 0.9.2 - released 2019-03-05
 
 * Fixed issue #23: proxying sites on default ports when cy.ntlm was called without the port number.
