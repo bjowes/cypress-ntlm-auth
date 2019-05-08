@@ -18,7 +18,8 @@ checkPortsFileExists(5000, 200)
   require('cypress/lib/cli').init();
 })
 .catch(() => {
-  throw new Error('ntlm-proxy must be started before this command');
+  process.stderr.write('ERROR: ntlm-proxy must be started before this command\n');
+  process.exit(1);
 })
 
 function checkPortsFileExists(timeout: number, interval: number): Promise<boolean> {
@@ -28,9 +29,9 @@ function checkPortsFileExists(timeout: number, interval: number): Promise<boolea
 
     function handleTimeout() {
       clearTimeout(intervalTimerId);
-      const error = new Error('Portsfile not found before timed out')
-      error.name = 'PATH_CHECK_TIMED_OUT'
-      reject(error)
+      const error = new Error('Ports file not found before timed out');
+      error.name = 'PATH_CHECK_TIMED_OUT';
+      reject(error);
     }
 
     function handleInterval() {
@@ -43,5 +44,5 @@ function checkPortsFileExists(timeout: number, interval: number): Promise<boolea
     }
 
     handleInterval();
-  })
+  });
 }
