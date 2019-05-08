@@ -150,7 +150,7 @@ node_modules\\.bin\\ntlm-proxy-exit
 
 ### cypress-ntlm
 
-This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. This command will fail if the proxy isn't already running.
+This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. This command expects the ntlm-proxy to be running. If it isn't, cypress-ntlm will wait up to 5 seconds for ntlm-proxy to start. If ntlm-proxy still hasn't started, the cypress-ntlm command will fail.
 
 #### Example - Mac and Linux
 
