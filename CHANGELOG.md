@@ -2,7 +2,7 @@
 
 ## 0.9.4 - released 2019-05-08
 
-* Fixed issue #34: cypress-ntlm now waits 5 seconds for ntlm-proxy to start before giving up
+* Fixed issue #34: cypress-ntlm now waits up to 5 seconds for ntlm-proxy to start before giving up
 
 ## 0.9.3 - released 2019-04-30
 
