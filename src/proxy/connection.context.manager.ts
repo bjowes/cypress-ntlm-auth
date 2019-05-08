@@ -101,7 +101,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   clearAuthentication(ntlmHostUrl: CompleteUrl) {
     for (var property in this._connectionContexts) {
-      if (Object.hasOwnProperty(property)) { // TODO - is this right with Object ?
+      if (this._connectionContexts.hasOwnProperty(property)) {
         this._connectionContexts[property].resetState(ntlmHostUrl);
       }
     }
@@ -109,7 +109,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   removeAllConnectionContexts(event: string) {
     for (var property in this._connectionContexts) {
-      if (Object.hasOwnProperty(property)) { // TODO is this right?
+      if (this._connectionContexts.hasOwnProperty(property)) {
         if (this._connectionContexts[property].agent.destroy) {
           this._connectionContexts[property].agent.destroy(); // Destroys any sockets to servers
         }
