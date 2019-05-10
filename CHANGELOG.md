@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - released 2019-05-xx
+## 1.0.0 - released 2019-05-11
 
 * *BREAKING CHANGE*: The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.
   * Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
