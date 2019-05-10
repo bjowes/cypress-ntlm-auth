@@ -28,6 +28,9 @@ export class ExpressServer {
   private httpServerSockets = new Set<net.Socket>();
   private httpsServerSockets = new Set<net.Socket>();
 
+  private lastRequestHeaders: http.IncomingHttpHeaders;
+  private sendNtlmType2Header: string = null;
+
   constructor() {
     this.initExpress(this.appNoAuth, false);
     this.initExpress(this.appNtlmAuth, true);
@@ -58,42 +61,66 @@ export class ExpressServer {
     }
 
     app.get('/get', (req, res) => {
+      this.lastRequestHeaders = req.headers;
       let body = {
         message: 'Expecting larger payload on GET',
         reply: 'OK ÅÄÖéß'
       };
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(JSON.stringify(body));
+      if (this.sendNtlmType2Header !== null) {
+        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
+        res.sendStatus(401);
+      } else {
+        res.status(200).send(JSON.stringify(body));
+      }
     });
 
     app.post('/post', (req, res) => {
+      this.lastRequestHeaders = req.headers;
       if (!req.body || !('ntlmHost' in req.body)) {
         res.status(400).send('Invalid body');
       }
 
       req.body.reply = 'OK ÅÄÖéß';
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(JSON.stringify(req.body));
+      if (this.sendNtlmType2Header !== null) {
+        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
+        res.sendStatus(401);
+      } else {
+        res.status(200).send(JSON.stringify(req.body));
+      }
     });
 
     app.put('/put', (req, res) => {
+      this.lastRequestHeaders = req.headers;
       if (!req.body || !('ntlmHost' in req.body)) {
         res.status(400).send('Invalid body');
       }
 
       req.body.reply = 'OK ÅÄÖéß';
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(req.body);
+      if (this.sendNtlmType2Header !== null) {
+        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
+        res.sendStatus(401);
+      } else {
+        res.status(200).send(req.body);
+      }
     });
 
     app.delete('/delete', (req, res) => {
+      this.lastRequestHeaders = req.headers;
       if (!req.body || !('ntlmHost' in req.body)) {
         res.status(400).send('Invalid body');
       }
 
       req.body.reply = 'OK ÅÄÖéß';
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(req.body);
+      if (this.sendNtlmType2Header !== null) {
+        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
+        res.sendStatus(401);
+      } else {
+        res.status(200).send(req.body);
+      }
     });
   }
 
@@ -296,6 +323,15 @@ export class ExpressServer {
 
   get caCert(): Buffer {
     return Buffer.from(this.certPem, 'utf8');
+  }
+
+  lastRequestContainedAuthHeader(): boolean {
+    return this.lastRequestHeaders.authorization !== undefined &&
+           this.lastRequestHeaders.authorization.length > 0;
+  }
+
+  sendNtlmType2(fakeHeader: string) {
+    this.sendNtlmType2Header = fakeHeader;
   }
 }
 

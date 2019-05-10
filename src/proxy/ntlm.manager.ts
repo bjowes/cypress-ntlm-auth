@@ -58,16 +58,24 @@ export class NtlmManager implements INtlmManager {
 
       this._debug.log('received NTLM message type 2');
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
-      let type2msg = ntlm.parseType2Message(res.headers['www-authenticate'], (err: Error) => {
-        if (err) {
-          this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
-          context.resetState(ntlmHostUrl);
-          return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
+      let type2msg: any;
+      try {
+        type2msg = ntlm.parseType2Message(res.headers['www-authenticate'], (err: Error) => {
+          if (err) {
+            this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
+            context.resetState(ntlmHostUrl);
+            return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
+          }
+        });
+        if (!type2msg) {
+          // Let the error callback from parseType2Message process this
+          return;
         }
-      });
-      if (!type2msg) {
-        // Let the error callback from parseType2Message process this
-        return;
+      } catch (err) {
+        this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
+        this._debug.log(err);
+        context.resetState(ntlmHostUrl);
+        return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
       }
       let type3msg = ntlm.createType3Message(type2msg, ntlmOptions);
       ctx.proxyToServerRequestOptions.headers['authorization'] = type3msg;
