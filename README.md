@@ -22,6 +22,13 @@ Read the intro at [their site](https://www.cypress.io/) and find out if it is th
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
+## *BREAKING CHANGE* from release 1.0.0
+
+The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.
+
+* Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
+* Update your import path in `cypress/support/index.js`: change `import 'cypress-ntlm-auth/src/commands'` to `import 'cypress-ntlm-auth/dist/commands'`
+
 ## Install
 
 ```shell
@@ -39,7 +46,7 @@ Follow these steps to configure Cypress to utilize this plugin:
 Modify the file `cypress/plugins/index.js` so it contains:
 
 ```javascript
-const ntlmAuth = require('cypress-ntlm-auth/src/plugin');
+const ntlmAuth = require('cypress-ntlm-auth/dist/plugin');
 module.exports = (on, config) => {
   config = ntlmAuth.initNtlmAuth(config);
   return config;
@@ -57,7 +64,7 @@ cypress without the launcher, the plugin must be disabled (commenting out the ca
 In the file `cypress/support/index.js` add this line
 
 ```javascript
-import 'cypress-ntlm-auth/src/commands';
+import 'cypress-ntlm-auth/dist/commands';
 ```
 
 ### 3. package.json
@@ -292,6 +299,26 @@ Getting certificates right can be a burden. When accessing a HTTPS site, the sit
 * More real-world testing against Windows servers
 * Support custom http.Agent / https.Agent configuration
 * Configuration option to disable self-signed certificates even for localhost
+
+## Build instructions
+
+### Transpile
+
+The plugin has been rewritten in TypeScript (release 1.0.0) and the git repository does not include the transpiled files. Hence, if you need to build the plugin from source:
+
+```script
+npm run build
+```
+
+This transpiles the sources into the `dist` folder, copies additional files to `dist` and sets permissions for the launchers.
+
+### Test
+
+To run the unit test suite:
+
+```script
+npm test
+```
 
 ## Credits
 
