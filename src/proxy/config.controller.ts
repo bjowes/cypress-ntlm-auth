@@ -64,4 +64,4 @@ export class ConfigController implements IConfigController {
     let keepPortsFile = req.body && req.body.keepPortsFile;
     this.configApiEvent.emit('quit', keepPortsFile);
   }
-};
+}

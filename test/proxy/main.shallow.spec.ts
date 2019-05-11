@@ -26,7 +26,7 @@ describe('Main shallow', () => {
   it('Core start pass', async function () {
     let testPorts = { configApiUrl: 'configApi', ntlmProxyUrl: 'ntlmProxy' } as PortsFile;
     coreServerMock.start(Arg.all()).mimicks(() => {
-      return Promise.resolve(testPorts) });
+      return Promise.resolve(testPorts); });
     await main.run(false, undefined, undefined, undefined);
 
     coreServerMock.received(1).start(Arg.any());
@@ -36,7 +36,7 @@ describe('Main shallow', () => {
 
   it('Core start fails', async function () {
     coreServerMock.start(Arg.all()).mimicks(() => {
-      return Promise.reject(new Error('test error'))
+      return Promise.reject(new Error('test error'));
     });
     await expect(main.run(false, undefined, undefined, undefined)).to.rejectedWith('test error');
     debugMock.received(1).log('Could not start ntlm-proxy');

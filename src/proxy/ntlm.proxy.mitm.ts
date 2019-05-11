@@ -80,7 +80,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     if (self.filterChromeStartup(ctx, error.code, errorKind)) {
       return;
     }
-    var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+    let url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
     self._debug.log(errorKind + ' on ' + url + ':', error);
   }
 
@@ -173,7 +173,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Let non-NTLM hosts tunnel through
     self._debug.log('Tunnel to', req.url);
-    var conn = net.connect({
+    let conn = net.connect({
       port: +targetHost.port,
       host: targetHost.hostname,
       allowHalfOpen: true
@@ -205,6 +205,4 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       }
     }
   }
-
-
 }

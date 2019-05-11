@@ -64,7 +64,7 @@ export class CoreServer implements ICoreServer {
     };
     try {
       await this._portsFileService.save(ports);
-      this._debug.log('wrote %s', this._portsFileService.fullPath())
+      this._debug.log('wrote %s', this._portsFileService.fullPath());
     } catch (err) {
       await this._configServer.stop();
       this._ntlmProxyServer.stop();

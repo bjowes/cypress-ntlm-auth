@@ -5,8 +5,8 @@ import { injectable } from 'inversify';
 import { IConfigStore } from './interfaces/i.config.store';
 
 interface NtlmHostConfigHash {
-  [ntlmHost: string]: NtlmConfig
-};
+  [ntlmHost: string]: NtlmConfig;
+}
 
 @injectable()
 export class ConfigStore implements IConfigStore {
@@ -36,4 +36,4 @@ export class ConfigStore implements IConfigStore {
   clear() {
     this.ntlmHosts = {};
   }
-};
+}

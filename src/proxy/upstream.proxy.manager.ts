@@ -78,4 +78,4 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     this._httpsProxyUrl = undefined;
     this._noProxyUrls = undefined;
   }
-};
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 - released 2019-05-13
+
+* Replaced eslint with tslint due to move to TypeScript
+* Fixed linter errors
+* Updated dependencies, removed unused dependencies
+
 ## 1.0.0 - released 2019-05-11
 
 * *BREAKING CHANGE*: The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.

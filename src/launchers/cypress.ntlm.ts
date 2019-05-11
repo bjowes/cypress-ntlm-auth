@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import { DependencyInjection } from '../proxy/dependency.injection';
-import { TYPES } from '../proxy/dependency.injection.types';
-import { IPortsFileService } from '../util/interfaces/i.ports.file.service';
+// reflect-metadata is required since PortsFileService has decorator injectable
+import 'reflect-metadata';
 
-const container = new DependencyInjection();
-let portsFileService = container.get<IPortsFileService>(TYPES.IPortsFileService);
+import { PortsFileService } from '../util/ports.file.service';
+
+let portsFileService = new PortsFileService();
 
 checkPortsFileExists(5000, 200)
 .then(() => {
@@ -20,7 +20,7 @@ checkPortsFileExists(5000, 200)
 .catch(() => {
   process.stderr.write('ERROR: ntlm-proxy must be started before this command\n');
   process.exit(1);
-})
+});
 
 function checkPortsFileExists(timeout: number, interval: number): Promise<boolean> {
   return new Promise((resolve, reject) => {

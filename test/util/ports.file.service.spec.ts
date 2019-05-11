@@ -43,7 +43,7 @@ describe('PortsFileService', function () {
         chai.expect(err).to.be.a('Error');
         let error = err as Error;
         chai.expect(err.name).to.be.equal('cannot delete');
-        assert(unlinkStub.calledOnceWith(_portsFileWithPath));
+        chai.assert(unlinkStub.calledOnceWith(_portsFileWithPath));
       }
     });
 
@@ -52,7 +52,7 @@ describe('PortsFileService', function () {
 
       // Act
       await portsFileService.delete();
-      assert(unlinkStub.calledOnceWith(_portsFileWithPath));
+      chai.assert(unlinkStub.calledOnceWith(_portsFileWithPath));
     });
   });
 
@@ -147,10 +147,10 @@ describe('PortsFileService', function () {
       existsStub.returns(false);
 
       // Act
-      var exists = portsFileService.exists();
+      let exists = portsFileService.exists();
 
       // Assert
-      assert.equal(exists, false);
+      chai.assert.equal(exists, false);
       chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
     });
 
@@ -159,10 +159,10 @@ describe('PortsFileService', function () {
       existsStub.returns(true);
 
       // Act
-      var exists = portsFileService.exists();
+      let exists = portsFileService.exists();
 
       // Assert
-      assert.equal(exists, true);
+      chai.assert.equal(exists, true);
       chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
     });
   });

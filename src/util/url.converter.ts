@@ -54,10 +54,10 @@ export function toCompleteUrl(host: string, addProtocol: boolean, useSSL?: boole
     href: hostUrl.href,
     path: hostUrl.path,
     isLocalhost: isLocalhost(hostUrl.hostname)
-  }
+  };
 
   return completeUrl;
-};
+}
 
 function isLocalhost(hostname: string) {
   return (hostname === 'localhost' || hostname === '127.0.0.1');

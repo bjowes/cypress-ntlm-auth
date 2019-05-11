@@ -12,7 +12,7 @@ export class ExpressServerFacade implements IExpressServerFacade {
   private _listener?: http.Server;
 
   constructor() {
-    this._app.use(bodyParser.json())
+    this._app.use(bodyParser.json());
   }
 
   use(path: PathParams, ...handlers: RequestHandler[]): IExpressServerFacade {
@@ -46,4 +46,4 @@ export class ExpressServerFacade implements IExpressServerFacade {
       }
     });
   }
-};
+}

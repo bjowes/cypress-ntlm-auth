@@ -42,7 +42,7 @@ describe('NtlmProxyExit shallow', () => {
       callUrl = url;
       callBody = body;
       callOptions = options;
-      return Promise.resolve({ status: 200 })
+      return Promise.resolve({ status: 200 });
     });
     const portsFile = {
       configApiUrl: 'configApi',

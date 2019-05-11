@@ -40,7 +40,7 @@ describe('ConfigServer', () => {
 
   it('start should use a free port if undefined', async function () {
     let listenPort: any;
-    expressServerMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port)})
+    expressServerMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port); });
 
     await configServer.start();
     expressServerMock.received(1).listen(Arg.any());
@@ -57,7 +57,7 @@ describe('ConfigServer', () => {
   });
 
   it('start should throw if listen fails', async function () {
-    expressServerMock.listen(Arg.all()).mimicks((port: any) => { return Promise.reject('test')} )
+    expressServerMock.listen(Arg.all()).mimicks((port: any) => { return Promise.reject('test'); } );
 
     await expect(configServer.start()).to.be.rejectedWith('test');
   });

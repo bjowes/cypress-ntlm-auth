@@ -11,7 +11,7 @@ import { AddressInfo } from 'net';
 import { networkInterfaces } from 'os';
 
 interface ExpressError extends Error {
-  status?: number
+  status?: number;
 }
 
 export class ExpressServer {
@@ -138,8 +138,8 @@ export class ExpressServer {
 
   private randomSerialNumber(): string {
     // generate random 16 bytes hex string
-    var sn = '';
-    for (var i=0; i<4; i++) {
+    let sn = '';
+    for (let i=0; i<4; i++) {
       sn += ('00000000' + Math.floor(Math.random()*Math.pow(256, 4)).toString(16)).slice(-8);
     }
     return sn;
@@ -150,7 +150,7 @@ export class ExpressServer {
     certServer.serialNumber = this.randomSerialNumber();
     certServer.validity.notBefore = this.yesterday();
     certServer.validity.notAfter = this.tomorrow();
-    var subject = [{
+    let subject = [{
       name: 'commonName',
       value: 'localhost'
     }, {
@@ -214,8 +214,8 @@ export class ExpressServer {
   }
 
   private generateSelfSignedCert() {
-    var keysServer = pki.rsa.generateKeyPair(1024);
-    var certServer = pki.createCertificate();
+    let keysServer = pki.rsa.generateKeyPair(1024);
+    let certServer = pki.createCertificate();
     this.configureCert(certServer, keysServer.publicKey);
     certServer.sign(keysServer.privateKey);
     this.certPem = pki.certificateToPem(certServer);
@@ -239,14 +239,13 @@ export class ExpressServer {
       });
     });
     return await new Promise<string>((resolve, reject) => {
-      this.httpServer.listen(port, '127.0.0.1', 511, (err: Error) => {
-        if (err) {
-          reject(err);
-        }
+      this.httpServer.on('listening', () => {
         let addressInfo = this.httpServer.address() as AddressInfo;
-        let url = 'http://localhost:' + addressInfo.port;
+        const url = 'http://localhost:' + addressInfo.port;
         resolve(url);
       });
+      this.httpServer.on('error', reject);
+      this.httpServer.listen(port);
     });
   }
 
@@ -292,14 +291,13 @@ export class ExpressServer {
     });
 
     return await new Promise<string>((resolve, reject) => {
-      this.httpsServer.listen(port, '127.0.0.1', 511, (err: Error) => {
-        if (err) {
-          reject(err);
-        }
+      this.httpsServer.on('listening', () => {
         let addressInfo = this.httpsServer.address() as AddressInfo;
-        let url = 'https://localhost:' + addressInfo.port;
+        const url = 'https://localhost:' + addressInfo.port;
         resolve(url);
       });
+      this.httpsServer.on('error', reject);
+      this.httpsServer.listen(port);
     });
   }
 

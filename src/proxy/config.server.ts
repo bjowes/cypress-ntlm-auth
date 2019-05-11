@@ -1,4 +1,4 @@
-import getPort from 'get-port';
+const getPort = require('get-port');
 
 import { IConfigController } from './interfaces/i.config.controller';
 import { injectable, inject } from 'inversify';
@@ -45,6 +45,10 @@ export class ConfigServer implements IConfigServer {
     try {
       if (!port) {
         port = await getPort();
+        if (port === undefined) {
+          this._debug.log('Cannot find free port');
+          throw new Error('Cannot find free port');
+        }
       }
       this._configApiUrl = await this._expressServer.listen(port);
       this._debug.log('NTLM auth config API listening on port:', port);
@@ -66,4 +70,4 @@ export class ConfigServer implements IConfigServer {
       throw err;
     }
   }
-};
+}

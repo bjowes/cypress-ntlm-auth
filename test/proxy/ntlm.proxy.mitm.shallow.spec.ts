@@ -85,13 +85,13 @@ describe('NtlmProxyMitm error logging', () => {
     const message = Substitute.for<IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
-    const mockHost = 'nctwerijlksf'
+    const mockHost = 'nctwerijlksf';
     message.headers.returns({host: mockHost});
     message.method.returns('HEAD');
     message.url.returns('/');
 
     ntlmProxyMitm.onError(ctx, error, 'PROXY_TO_SERVER_REQUEST_ERROR');
-    debugMock.received(1).log('Chrome startup HEAD request detected (host: ' + mockHost + '). Ignoring connection error.')
+    debugMock.received(1).log('Chrome startup HEAD request detected (host: ' + mockHost + '). Ignoring connection error.');
   });
 });
 
@@ -169,7 +169,8 @@ describe('NtlmProxyMitm CONNECT', () => {
       return socketMock;
     });
     socketMock.write(Arg.all()).mimicks((data, encoding, callback) => {
-      return callback();
+      callback();
+      return true;
     });
     socketMock.pipe(Arg.all()).mimicks((stream) => {
       serverStream = stream;
@@ -268,7 +269,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     serverStream.end();
   });
 
-  const sleepMs = (ms: number) => new Promise(res => setTimeout(res, ms))
+  const sleepMs = (ms: number) => new Promise(res => setTimeout(res, ms));
   async function sleep(ms: number): Promise<void> {
     await sleepMs(ms);
   }
