@@ -85,6 +85,6 @@
     "vrsource-tslint-rules": "^6.0.0"
   },
   "peerDependencies": {
-    "cypress": "^3.1.0"
+    "cypress": "^3.3.0"
   }
 }
