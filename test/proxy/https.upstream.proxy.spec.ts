@@ -9,9 +9,7 @@ import { expect } from 'chai';
 import chai  from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
-import { Container } from 'inversify';
 
-import { CoreServer } from '../../src/proxy/core.server';
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { PortsFile } from '../../src/models/ports.file.model';
@@ -295,13 +293,13 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
     upstreamProxyReqCount = 0;
   });
 
-  it('should not use upstream proxy for https host when only http upstream proxy is defined', async function() {
+  it.only('should use upstream proxy for https host when only http upstream proxy is defined', async function() {
     let ports = await coreServer.start(false, upstreamProxyUrl, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, expressServer.caCert);
-    expect(upstreamProxyReqCount, 'should not pass through upstream proxy').to.be.equal(0);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, 'should not pass through upstream proxy').to.be.equal(1);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal('Expecting larger payload on GET');
