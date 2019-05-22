@@ -4,6 +4,7 @@ export let TYPES = {
   IConfigStore: Symbol.for('IConfigStore'),
   IConnectionContextManager: Symbol.for('IConnectionContextManager'),
   ICoreServer: Symbol.for('ICoreServer'),
+  ICypressNtlm: Symbol.for('ICypressNtlm'),
   IDebugLogger: Symbol.for('IDebugLogger'),
   IExpressServerFacade: Symbol.for('IExpressServerFacade'),
   IHttpMitmProxyFacade: Symbol.for('IHttpMitmProxyFacade'),

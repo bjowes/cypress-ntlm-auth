@@ -323,4 +323,72 @@ describe('PortsFileService', function () {
       chai.expect(ports.configApiUrl).to.be.equal('http://127.0.0.1:1235');
     });
   });
+
+  describe('recentlyModified operations', function () {
+    let statSyncStub = sinon.stub(fse, 'statSync');
+
+    beforeEach(function () {
+      if (existsStub) {
+        existsStub.restore();
+      }
+      existsStub = sinon.stub(fse, 'existsSync');
+      if (statSyncStub) {
+        statSyncStub.restore();
+      }
+      statSyncStub = sinon.stub(fse, 'statSync');
+    });
+
+    after(function () {
+      if (existsStub) {
+        existsStub.restore();
+      }
+      if (statSyncStub) {
+        statSyncStub.restore();
+      }
+    });
+
+    it('Returns false if ports file does not exist', function () {
+      // Arrange
+      existsStub.returns(false);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, false);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+    });
+
+    it('Returns false if ports file is older than 10 seconds', function () {
+      // Arrange
+      existsStub.returns(true);
+      statSyncStub.returns({
+        mtime: new Date(new Date().getTime() - (11 * 1000))
+      } as fse.Stats);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, false);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+      chai.expect(statSyncStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+    });
+
+    it('Returns true if ports file is new', function () {
+      // Arrange
+      existsStub.returns(true);
+      statSyncStub.returns({
+        mtime: new Date(new Date().getTime() - (2 * 1000))
+      } as fse.Stats);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, true);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+      chai.expect(statSyncStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+    });
+  });
 });

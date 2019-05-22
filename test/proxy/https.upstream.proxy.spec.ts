@@ -293,7 +293,7 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
     upstreamProxyReqCount = 0;
   });
 
-  it.only('should use upstream proxy for https host when only http upstream proxy is defined', async function() {
+  it('should use upstream proxy for https host when only http upstream proxy is defined', async function() {
     let ports = await coreServer.start(false, upstreamProxyUrl, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
