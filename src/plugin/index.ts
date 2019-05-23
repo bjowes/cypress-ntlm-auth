@@ -1,12 +1,12 @@
-import { DependencyInjection } from '../proxy/dependency.injection';
-import { TYPES } from '../proxy/dependency.injection.types';
-import { IDebugLogger } from '../util/interfaces/i.debug.logger';
-import { IPortsFileService } from '../util/interfaces/i.ports.file.service';
-import { PortsFile } from '../models/ports.file.model';
+// reflect-metadata is required since PortsFileService and DebugLogger has decorator injectable
+import 'reflect-metadata';
 
-const container = new DependencyInjection();
-let portsFileService = container.get<IPortsFileService>(TYPES.IPortsFileService);
-let debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
+import { PortsFile } from '../models/ports.file.model';
+import { DebugLogger } from '../util/debug.logger';
+import { PortsFileService } from '../util/ports.file.service';
+
+let portsFileService = new PortsFileService();
+let debug = new DebugLogger();
 
 function validateEnvironment(ports: PortsFile) {
   if (!process.env.HTTP_PROXY) {
@@ -32,8 +32,8 @@ interface ICypressConfig {
   env: {
     NTLM_AUTH_PROXY?: string,
     NTLM_AUTH_API?: string
-  }
-};
+  };
+}
 
 export function initNtlmAuth(config: ICypressConfig): Promise<ICypressConfig> {
   return new Promise((resolve, reject) => {

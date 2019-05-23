@@ -13,8 +13,8 @@ const HttpProxyAgent = require('http-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
 interface ConnectionContextHash {
-  [ntlmHostUrl: string]: IConnectionContext
-};
+  [ntlmHostUrl: string]: IConnectionContext;
+}
 
 @injectable()
 export class ConnectionContextManager implements IConnectionContextManager {
@@ -100,7 +100,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   clearAuthentication(ntlmHostUrl: CompleteUrl) {
-    for (var property in this._connectionContexts) {
+    for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
         this._connectionContexts[property].resetState(ntlmHostUrl);
       }
@@ -108,7 +108,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   removeAllConnectionContexts(event: string) {
-    for (var property in this._connectionContexts) {
+    for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
         if (this._connectionContexts[property].agent.destroy) {
           this._connectionContexts[property].agent.destroy(); // Destroys any sockets to servers
@@ -130,5 +130,4 @@ export class ConnectionContextManager implements IConnectionContextManager {
       this._debug.log('RemoveAgent called but agent does not exist (socket.' + event + ' for ' + clientAddress);
     }
   }
-
-};
+}

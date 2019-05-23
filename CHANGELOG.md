@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.1 - released 2019-05-23
+
+* Replaced eslint with tslint due to move to TypeScript
+* Fixed linter errors
+* Updated dependencies, removed unused dependencies
+* More stable startup procedure - if an old ntlm-proxy instance is detected, cypress-ntlm will wait a bit for it to quit before polling for the new instance
+* Upstream proxies: HTTP_PROXY covers also SSL traffic (HTTPS_PROXY only overrides it)
+* Check if cypress is installed on launch
+* Updated dependencies
+* Lowest supported version of nodejs is now 8.9.3 (since Cypress updated its supported version)
+
 ## 1.0.0 - released 2019-05-11
 
 * *BREAKING CHANGE*: The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.

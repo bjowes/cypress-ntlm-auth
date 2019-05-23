@@ -39,7 +39,7 @@ describe('NtlmManager NTLM errors', () => {
 
   after(async function() {
     await expressServer.stopHttpServer();
-  })
+  });
 
   it('Invalid credentials shall be logged and clear auth state', async function () {
     const message = Substitute.for<IncomingMessage>();
@@ -50,7 +50,7 @@ describe('NtlmManager NTLM errors', () => {
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err });
+    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     debugMock.received(1).log('NTLM authentication failed, invalid credentials.');
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
   });
@@ -64,7 +64,7 @@ describe('NtlmManager NTLM errors', () => {
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err });
+    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.Authenticated);
   });
 
@@ -77,7 +77,7 @@ describe('NtlmManager NTLM errors', () => {
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err });
+    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     debugMock.received(1).log('Response from server in unexpected NTLM state ' + NtlmStateEnum.Type1Sent + ', resetting NTLM auth.');
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
   });

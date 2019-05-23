@@ -43,7 +43,7 @@ describe('PortsFileService', function () {
         chai.expect(err).to.be.a('Error');
         let error = err as Error;
         chai.expect(err.name).to.be.equal('cannot delete');
-        assert(unlinkStub.calledOnceWith(_portsFileWithPath));
+        chai.assert(unlinkStub.calledOnceWith(_portsFileWithPath));
       }
     });
 
@@ -52,7 +52,7 @@ describe('PortsFileService', function () {
 
       // Act
       await portsFileService.delete();
-      assert(unlinkStub.calledOnceWith(_portsFileWithPath));
+      chai.assert(unlinkStub.calledOnceWith(_portsFileWithPath));
     });
   });
 
@@ -147,10 +147,10 @@ describe('PortsFileService', function () {
       existsStub.returns(false);
 
       // Act
-      var exists = portsFileService.exists();
+      let exists = portsFileService.exists();
 
       // Assert
-      assert.equal(exists, false);
+      chai.assert.equal(exists, false);
       chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
     });
 
@@ -159,10 +159,10 @@ describe('PortsFileService', function () {
       existsStub.returns(true);
 
       // Act
-      var exists = portsFileService.exists();
+      let exists = portsFileService.exists();
 
       // Assert
-      assert.equal(exists, true);
+      chai.assert.equal(exists, true);
       chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
     });
   });
@@ -321,6 +321,74 @@ describe('PortsFileService', function () {
       chai.expect(readFileStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
       chai.expect(ports.ntlmProxyUrl).to.be.equal('http://localhost:1234');
       chai.expect(ports.configApiUrl).to.be.equal('http://127.0.0.1:1235');
+    });
+  });
+
+  describe('recentlyModified operations', function () {
+    let statSyncStub = sinon.stub(fse, 'statSync');
+
+    beforeEach(function () {
+      if (existsStub) {
+        existsStub.restore();
+      }
+      existsStub = sinon.stub(fse, 'existsSync');
+      if (statSyncStub) {
+        statSyncStub.restore();
+      }
+      statSyncStub = sinon.stub(fse, 'statSync');
+    });
+
+    after(function () {
+      if (existsStub) {
+        existsStub.restore();
+      }
+      if (statSyncStub) {
+        statSyncStub.restore();
+      }
+    });
+
+    it('Returns false if ports file does not exist', function () {
+      // Arrange
+      existsStub.returns(false);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, false);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+    });
+
+    it('Returns false if ports file is older than 10 seconds', function () {
+      // Arrange
+      existsStub.returns(true);
+      statSyncStub.returns({
+        mtime: new Date(new Date().getTime() - (11 * 1000))
+      } as fse.Stats);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, false);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+      chai.expect(statSyncStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+    });
+
+    it('Returns true if ports file is new', function () {
+      // Arrange
+      existsStub.returns(true);
+      statSyncStub.returns({
+        mtime: new Date(new Date().getTime() - (2 * 1000))
+      } as fse.Stats);
+
+      // Act
+      let result = portsFileService.recentlyModified();
+
+      // Assert
+      chai.assert.equal(result, true);
+      chai.expect(existsStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
+      chai.expect(statSyncStub.getCall(0).args[0]).to.be.equal(_portsFileWithPath);
     });
   });
 });

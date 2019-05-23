@@ -21,6 +21,9 @@ import { ConfigServer } from './config.server';
 import { ICoreServer } from './interfaces/i.core.server';
 import { CoreServer } from './core.server';
 
+import { ICypressNtlm } from '../util/interfaces/i.cypress.ntlm';
+import { CypressNtlm } from '../util/cypress.ntlm';
+
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { UpstreamProxyManager } from './upstream.proxy.manager';
 
@@ -61,6 +64,7 @@ export class DependencyInjection {
     this._container.bind<IConfigStore>(TYPES.IConfigStore).to(ConfigStore);
     this._container.bind<IConnectionContextManager>(TYPES.IConnectionContextManager).to(ConnectionContextManager);
     this._container.bind<ICoreServer>(TYPES.ICoreServer).to(CoreServer);
+    this._container.bind<ICypressNtlm>(TYPES.ICypressNtlm).to(CypressNtlm);
     this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
     this._container.bind<IExpressServerFacade>(TYPES.IExpressServerFacade).to(ExpressServerFacade);
     this._container.bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade).to(HttpMitmProxyFacade);

@@ -40,7 +40,7 @@ describe('NtlmProxyServer', () => {
 
   it('start should use a free port if undefined', async function () {
     let listenPort: any;
-    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port)})
+    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { listenPort = port; return Promise.resolve('http://127.0.0.1:' + port); });
 
     await ntlmProxyServer.start();
     httpMitmProxyMock.received(1).listen(Arg.any());
@@ -57,7 +57,7 @@ describe('NtlmProxyServer', () => {
   });
 
   it('start should throw if listen fails', async function () {
-    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { return Promise.reject('test')} )
+    httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => { return Promise.reject('test'); } );
 
     await expect(ntlmProxyServer.start()).to.be.rejectedWith('test');
   });
@@ -79,7 +79,7 @@ describe('NtlmProxyServer', () => {
 
   it('stop should throw if close throws', async function () {
     httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve('http://127.0.0.1:2000'));
-    httpMitmProxyMock.close().mimicks(() => { throw new Error('test') });
+    httpMitmProxyMock.close().mimicks(() => { throw new Error('test'); });
     await ntlmProxyServer.start();
     expect(() => ntlmProxyServer.stop()).to.throw('test');
   });

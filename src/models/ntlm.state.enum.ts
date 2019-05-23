@@ -4,4 +4,4 @@ export enum NtlmStateEnum {
   Type2Received = 2,
   Type3Sent = 3,
   Authenticated = 4
-};
+}

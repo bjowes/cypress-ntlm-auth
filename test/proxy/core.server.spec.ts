@@ -151,7 +151,7 @@ describe('Core server startup and shutdown', () => {
       callUrl = url;
       callBody = body;
       callOptions = options;
-      return Promise.resolve({})
+      return Promise.resolve({});
     });
 
     let ports = await coreServer.start(false, undefined, undefined, undefined);

@@ -36,4 +36,4 @@ export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
       this._ntlmProxyListening = false;
     }
   }
-};
+}

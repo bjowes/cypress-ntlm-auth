@@ -3,7 +3,7 @@ import https from 'https';
 
 import url from 'url';
 import httpMitmProxy from 'http-mitm-proxy';
-import getPort from 'get-port';
+const getPort = require('get-port');
 import axios, { AxiosResponse } from 'axios';
 import tunnel from 'tunnel';
 import fs from 'fs';
@@ -39,7 +39,7 @@ export class ProxyFacade {
     mitmOptions.port = port;
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
-      var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+      let url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
       console.log('proxyFacade: ' + errorKind + ' on ' + url + ':', err);
     });
 
@@ -179,4 +179,4 @@ export class ProxyFacade {
     });
     return res;
   }
-};
+}

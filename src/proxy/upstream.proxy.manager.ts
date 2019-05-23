@@ -57,7 +57,8 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     }
     if (isSSL && this._httpsProxyUrl) {
       proxyUrl = this._httpsProxyUrl;
-    } else if (!isSSL && this._httpProxyUrl) {
+    } else if (this._httpProxyUrl) {
+      // Use HTTP_PROXY also for HTTPS if no HTTPS_PROXY is defined
       proxyUrl = this._httpProxyUrl;
     }
     if (proxyUrl) {
@@ -70,7 +71,9 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
   }
 
   hasHttpsUpstreamProxy(ntlmHostUrl: CompleteUrl): boolean {
-    return (this._httpsProxyUrl !== undefined && this.targetInNoProxy(ntlmHostUrl) === false);
+    return ((this._httpProxyUrl !== undefined ||
+             this._httpsProxyUrl !== undefined) &&
+             this.targetInNoProxy(ntlmHostUrl) === false);
   }
 
   reset() {
@@ -78,4 +81,4 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     this._httpsProxyUrl = undefined;
     this._noProxyUrls = undefined;
   }
-};
+}

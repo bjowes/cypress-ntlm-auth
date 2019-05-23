@@ -27,7 +27,7 @@ export class NtlmManager implements INtlmManager {
   ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-    let config = this._configStore.get(ntlmHostUrl)
+    let config = this._configStore.get(ntlmHostUrl);
     let ntlmOptions = {
       username: config.username,
       password: config.password,
@@ -128,4 +128,4 @@ export class NtlmManager implements INtlmManager {
     }
     return false;
   }
-};
+}

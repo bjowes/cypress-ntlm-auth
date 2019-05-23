@@ -1,4 +1,4 @@
-import getPort from 'get-port';
+const getPort = require('get-port');
 
 import { injectable, inject } from 'inversify';
 import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
@@ -45,6 +45,10 @@ export class NtlmProxyServer implements INtlmProxyServer {
     try {
       if (!port) {
         port = await getPort();
+        if (port === undefined) {
+          this._debug.log('Cannot find free port');
+          throw new Error('Cannot find free port');
+        }
       }
       this._ntlmProxyUrl = await this._httpMitmProxy.listen(port);
       this._debug.log('NTLM auth proxy listening on port:', port);
@@ -63,4 +67,4 @@ export class NtlmProxyServer implements INtlmProxyServer {
     this._ntlmProxyUrl = undefined;
     this._ntlmProxyMitm.NtlmProxyPort = '';
   }
-};
+}

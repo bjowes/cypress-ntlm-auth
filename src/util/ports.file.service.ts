@@ -1,5 +1,6 @@
 import fse from 'fs-extra';
 import path from 'path';
+import util from 'util';
 import * as url from 'url';
 import appDataPath from 'appdata-path';
 import { PortsFile } from '../models/ports.file.model';
@@ -36,6 +37,19 @@ export class PortsFileService implements IPortsFileService {
       throw new Error('cypress-ntlm-auth proxy does not seem to be running. '+
         'It must be started before cypress. Please see the docs.' + this._portsFileWithPath);
     }
+  }
+
+  // Was the ports file modified within the last 10 seconds?
+  recentlyModified(): boolean {
+    if (this.exists()) {
+      let stats = fse.statSync(this._portsFileWithPath);
+      let mtime = new Date(util.inspect(stats.mtime));
+      let now = new Date();
+      if ((now.getTime() - mtime.getTime()) < 10 * 1000) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private validatePortsFile(data: Object): PortsFile {

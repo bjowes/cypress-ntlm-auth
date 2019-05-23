@@ -3,19 +3,6 @@ import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
 import { IConnectionContext } from './interfaces/i.connection.context';
 
-interface ClientConnectionHash {
-  [clientAddress: string]: Connection;
-};
-
-interface ConnectionAuthenticationHash {
-  [ntlmHostUrl: string]: NtlmStateEnum
-};
-
-interface Connection {
-  agent: any;
-  ntlmHosts: ConnectionAuthenticationHash;
-}
-
 @injectable()
 export class ConnectionContext implements IConnectionContext {
   private _agent: any;
@@ -53,5 +40,4 @@ export class ConnectionContext implements IConnectionContext {
       this._ntlmState = NtlmStateEnum.NotAuthenticated;
     }
   }
-
-};
+}
