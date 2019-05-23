@@ -75,14 +75,14 @@ Add this to the scripts section:
 
 ```json
     "ntlm-proxy": "ntlm-proxy &",
-    "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
+    "cypress-ntlm": "npm run ntlm-proxy && (cypress-ntlm open ; ntlm-proxy-exit)"
 ```
 
 #### Windows
 
 ```json
     "ntlm-proxy": "start /min \"ntlm-proxy\" cmd /c node_modules\\.bin\\ntlm-proxy",
-    "cypress-ntlm": "npm run ntlm-proxy && cypress-ntlm open && ntlm-proxy-exit"
+    "cypress-ntlm": "npm run ntlm-proxy && (cypress-ntlm open & ntlm-proxy-exit)"
 ```
 
 Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner. Just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress.
@@ -159,6 +159,10 @@ node_modules\\.bin\\ntlm-proxy-exit
 
 This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. This command expects the ntlm-proxy to be running. If it isn't, cypress-ntlm will wait up to 5 seconds for ntlm-proxy to start. If ntlm-proxy still hasn't started, the cypress-ntlm command will fail.
 
+If an older instance of ntlm-proxy is still running, cypress-ntlm will pause for a few seconds to allow it to terminate before polling for the new instance.
+
+It will also validate that cypress is installed.
+
 #### Example - Mac and Linux
 
 ```shell
@@ -177,8 +181,8 @@ node_modules\\.bin\\cypress-ntlm
 
 If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
 
-* `HTTP_PROXY` - The URL to the proxy for accessing external HTTP resources. Example: `http://proxy.acme.com:8080`
-* `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Example: `http://proxy.acme.com:8080`
+* `HTTP_PROXY` - The URL to the proxy for accessing external HTTP/HTTPS resources. Example: `http://proxy.acme.com:8080`
+* `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
 * `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Normally you want to include `localhost` and the host you are testing, and likely other local network resources used from the browser when accessing the host you are testing. Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: localhost,*.acme.com
 
 If the host you are testing is located on the internet (not your intranet) the NTLM authentication is able to pass through also the internet proxy. In this case `NO_PROXY` only needs to include `localhost`.
@@ -292,7 +296,15 @@ The NTLM proxy will accept self-signed certificates for sites that are served fr
 
 ### HTTPS/SSL/TLS issues
 
-Getting certificates right can be a burden. When accessing a HTTPS site, the site certificate is validated by ntlm-proxy (just like web browsers do). If the validation fails, the proxy will return an error code (504). If you are unable to resolve the certificate issues you can use the standard Node workaround by setting the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0` before starting ntlm-proxy. If you are running Node 11 or later, you will (rightfully) get a warning when doing this, since disabling the certificate validation makes your machine more vulnerable to MITM attacks. When used only in a development environment and only for testing an internal site, the risk is significantly reduced - but I would still strongly recommend resolving the certificate issues instead of relying on the workaround.
+Getting certificates right can be a burden. When accessing a HTTPS site, the site certificate is validated by ntlm-proxy (just like web browsers do). If the validation fails, the proxy will return an error code (504).
+
+#### Corporate CA certificates
+
+Many corporate intranets utilize SSL inspection, which means that your HTTPS traffic is decrypted, inspected, and then encrypted with an internal corporate certificate. Since Node doesn't trust the corporate certificates CA, it will raise an error. Download the certificate to your machine and set the environment variable `NODE_EXTRA_CA_CERTS` to the full path to the certificate file. This will make Node trust it as a CA.
+
+#### Disable TLS validation
+
+If you are unable to resolve the certificate issues you can use the standard Node workaround by setting the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0` before starting ntlm-proxy. If you are running Node 11 or later, you will (rightfully) get a warning when doing this, since disabling the certificate validation makes your machine more vulnerable to MITM attacks. When used only in a development environment and only for testing an internal site, the risk is significantly reduced - but I would still strongly recommend resolving the certificate issues instead of relying on the workaround.
 
 ## Planned work
 
