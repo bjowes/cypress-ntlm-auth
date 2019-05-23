@@ -24,6 +24,15 @@ export class CypressNtlm implements ICypressNtlm {
     self = this;
   }
 
+  checkCypressIsInstalled(): boolean {
+    try {
+      const result = require.resolve('cypress');
+      return result !== null && result !== undefined;
+    } catch {
+      return false;
+    }
+  }
+
   checkProxyIsRunning(timeout: number, interval: number): Promise<PortsFile> {
     return new Promise((resolve, reject) => {
       const timeoutTimerId = setTimeout(handleTimeout, timeout);

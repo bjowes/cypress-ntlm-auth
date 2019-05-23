@@ -7,6 +7,11 @@ import { ICypressNtlm } from '../util/interfaces/i.cypress.ntlm';
 const container = new DependencyInjection();
 let cypressNtlm = container.get<ICypressNtlm>(TYPES.ICypressNtlm);
 
+if (cypressNtlm.checkCypressIsInstalled() === false) {
+  process.stderr.write('ERROR: cypress-ntlm requires Cypress to be installed.\n');
+  process.exit(1);
+}
+
 cypressNtlm.checkProxyIsRunning(5000, 200)
 .then((portsFile) => {
   process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
