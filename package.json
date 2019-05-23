@@ -73,7 +73,7 @@
     "express-ntlm": "^2.3.0",
     "is-port-reachable": "^2.0.1",
     "mocha": "^6.1.4",
-    "node-forge": "^0.8.3",
+    "node-forge": "^0.8.4",
     "shx": "^0.3.2",
     "sinon": "^7.3.2",
     "source-map-support": "^0.5.12",
