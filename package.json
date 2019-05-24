@@ -45,7 +45,7 @@
     "express": "^4.17.0",
     "fs-extra": "^8.0.1",
     "get-port": "^5.0.0",
-    "http-mitm-proxy": "^0.7.0",
+    "http-mitm-proxy": "git://github.com/bjowes/node-http-mitm-proxy.git#ea1f0d385ac104deaf14bea1b8e47a78f5dab611",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
     "https-proxy-agent": "^2.2.1",
