@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 - released 2019-05-24
+
+* Use custom version of node-http-mitm-proxy to resolve issue with delayed 304 responses in Cypress
+
 ## 1.0.1 - released 2019-05-23
 
 * Replaced eslint with tslint due to move to TypeScript
