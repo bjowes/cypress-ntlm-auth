@@ -94,7 +94,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (self._configStore.exists(targetHost)) {
         self._debug.log('Request to ' + targetHost.href + ' in registered NTLM Hosts');
         let context = self._connectionContextManager
-          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
+          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
         ctx.proxyToServerRequestOptions.agent = context.agent;
         if (context.isAuthenticated(targetHost)) {
           return callback();
@@ -110,8 +110,9 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         if (!self.filterConfigApiRequestLogging(targetHost)) {
           self._debug.log('Request to ' + targetHost.href + ' - pass on');
         }
-        ctx.proxyToServerRequestOptions.agent =
-          self._connectionContextManager.getNonNtlmAgent(ctx.isSSL, targetHost);
+        let context = self._connectionContextManager
+        .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, false);
+        ctx.proxyToServerRequestOptions.agent = context.agent;
         return callback();
       }
     } else {
@@ -146,7 +147,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
 
     let context = self._connectionContextManager
-      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
+      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
 
     if (context.isAuthenticated(targetHost)) {
       return callback();
