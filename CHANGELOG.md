@@ -3,6 +3,7 @@
 ## 1.0.3 - released 2019-05-29
 
 * Fix issue #40, direct tunnels are now properly closed when client closes connection.
+* Removes also non-NTLM agents on proxy shutdown
 
 ## 1.0.2 - released 2019-05-24
 
