@@ -182,6 +182,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       conn.on('finish', () => {
         socket.destroy();
       });
+      socket.on('close', () => {
+        self._debug.log('client closed socket, closing tunnel to ', req.url);
+        conn.end();
+      });
 
       socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function () {
         conn.write(head);

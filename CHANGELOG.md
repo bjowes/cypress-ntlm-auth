@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - released 2019-05-29
+
+* Fix issue #40, direct tunnels are now properly closed when client closes connection.
+
 ## 1.0.2 - released 2019-05-24
 
 * Use custom version of node-http-mitm-proxy to resolve issue with delayed 304 responses in Cypress
