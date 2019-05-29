@@ -43,29 +43,22 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
   }
 
-  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl): IConnectionContext {
+  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
     }
 
-    let agent = this.getAgent(isSSL, targetHost, true);
+    let agent = this.getAgent(isSSL, targetHost, useNtlm);
     agent._cyAgentId = this._agentCount++;
     let context = new this.ConnectionContext();
     context.agent = agent;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
     clientSocket.on('end', () => this.removeAgent('end', clientAddress));
-    this._debug.log('Created NTLM ready agent for client ' + clientAddress + ' to target ' + targetHost.href);
+    this._debug.log('Created ' + (useNtlm ? 'NTLM ready' : 'non-NTLM') +
+      ' agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
-  }
-
-  getNonNtlmAgent(isSSL: boolean, targetHost: CompleteUrl): any {
-    let agent = this.getAgent(isSSL, targetHost, false);
-    agent._cyAgentId = this._agentCount;
-    this._agentCount++;
-    this._debug.log('Created non-NTLM agent for target ' + targetHost.href);
-    return agent;
   }
 
   private nodeTlsRejectUnauthorized(): boolean {
