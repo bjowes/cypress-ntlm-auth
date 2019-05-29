@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 - released 2019-05-29
+
+* Patch for 1.0.3, the release did not include the latest build
+
 ## 1.0.3 - released 2019-05-29
 
 * Fix issue #40, direct tunnels are now properly closed when client closes connection.
