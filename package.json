@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "NTLM authentication plugin for Cypress",
   "main": "dist/proxy/main.js",
   "scripts": {
