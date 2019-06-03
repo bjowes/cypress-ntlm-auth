@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5 - released 2019-06-03
+
+* Updated node-http-mitm-proxy for better handling of https tunnel closing
+
 ## 1.0.4 - released 2019-05-29
 
 * Patch for 1.0.3, the release did not include the latest build
