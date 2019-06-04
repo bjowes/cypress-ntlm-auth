@@ -182,6 +182,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       conn.on('finish', () => {
         socket.destroy();
       });
+      socket.on('close', () => {
+        self._debug.log('client closed socket, closing tunnel to ', req.url);
+        conn.end();
+      });
 
       socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function () {
         conn.write(head);
@@ -191,18 +195,18 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     });
 
     conn.on('error', function(err: NodeJS.ErrnoException) {
-      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET');
+      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET', req.url);
     });
     socket.on('error', function(err: NodeJS.ErrnoException) {
-      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET');
+      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET', req.url);
     });
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
-    function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string) {
+    function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string, url: string | undefined) {
       if (err.code === 'ECONNRESET') {
-        self._debug.log('Got ECONNRESET on ' + socketDescription + ', ignoring.');
+        self._debug.log('Got ECONNRESET on ' + socketDescription + ', ignoring. Target: ' + url);
       } else {
-        self._debug.log('Got unexpected error on ' + socketDescription, err);
+        self._debug.log('Got unexpected error on ' + socketDescription + '. Target: ' + url, err);
       }
     }
   }

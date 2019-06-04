@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.6 - released 2019-06-03
+
+* Patch for 1.0.5, the release did not include the latest build
+  
+## 1.0.5 - released 2019-06-03
+
+* Updated node-http-mitm-proxy for better handling of https tunnel closing
+
+## 1.0.4 - released 2019-05-29
+
+* Patch for 1.0.3, the release did not include the latest build
+
+## 1.0.3 - released 2019-05-29
+
+* Fix issue #40, direct tunnels are now properly closed when client closes connection.
+* Removes also non-NTLM agents on proxy shutdown
+
 ## 1.0.2 - released 2019-05-24
 
 * Use custom version of node-http-mitm-proxy to resolve issue with delayed 304 responses in Cypress

@@ -120,7 +120,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
       delete this._connectionContexts[clientAddress];
       this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
     } else {
-      this._debug.log('RemoveAgent called but agent does not exist (socket.' + event + ' for ' + clientAddress);
+      this._debug.log('RemoveAgent called for ' + clientAddress + ' due to socket.' + event + ', but agent does not exist');
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "description": "NTLM authentication plugin for Cypress",
   "main": "dist/proxy/main.js",
   "scripts": {
@@ -45,7 +45,7 @@
     "express": "^4.17.0",
     "fs-extra": "^8.0.1",
     "get-port": "^5.0.0",
-    "http-mitm-proxy": "git://github.com/bjowes/node-http-mitm-proxy.git#ea1f0d385ac104deaf14bea1b8e47a78f5dab611",
+    "http-mitm-proxy": "git://github.com/joeferner/node-http-mitm-proxy.git#66ac0f5d3298f66b731f90ebf1e9b430fa5d76eb",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
     "https-proxy-agent": "^2.2.1",
