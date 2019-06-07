@@ -92,6 +92,16 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return agent;
   }
 
+  // Untracked agents are used for requests to the config API.
+  // These should not be destroyed on reset since that breaks the config API response.
+  getUntrackedAgent(targetHost: CompleteUrl) {
+    let agent: any;
+    agent = new http.Agent();
+    agent._cyAgentId = this._agentCount++;
+    this._debug.log('Created untracked agent for target ' + targetHost.href);
+    return agent;
+  }
+
   clearAuthentication(ntlmHostUrl: CompleteUrl) {
     for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {

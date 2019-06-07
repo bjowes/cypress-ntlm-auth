@@ -1,4 +1,4 @@
-import { IContext } from 'http-mitm-proxy';
+import { IContext } from '@bjowes/http-mitm-proxy';
 
 import net from 'net';
 import http from 'http';
@@ -84,8 +84,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     self._debug.log(errorKind + ' on ' + url + ':', error);
   }
 
-  private filterConfigApiRequestLogging(targetHost: CompleteUrl) {
-    return (targetHost.href === self._configServer.configApiUrl);
+  private isConfigApiRequest(targetHost: CompleteUrl) {
+    return (targetHost.href.startsWith(self._configServer.configApiUrl));
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -107,12 +107,15 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           return callback();
         });
       } else {
-        if (!self.filterConfigApiRequestLogging(targetHost)) {
+        if (self.isConfigApiRequest(targetHost)) {
+          self._debug.log('Request to config API');
+          ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(targetHost);
+        } else {
           self._debug.log('Request to ' + targetHost.href + ' - pass on');
+          let context = self._connectionContextManager
+            .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, false);
+          ctx.proxyToServerRequestOptions.agent = context.agent;
         }
-        let context = self._connectionContextManager
-        .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, false);
-        ctx.proxyToServerRequestOptions.agent = context.agent;
         return callback();
       }
     } else {
