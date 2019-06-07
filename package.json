@@ -9,6 +9,7 @@
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
     "build": "tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js",
+    "prepare": "npm run build",
     "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test",
     "lint": "tslint --project ."
   },
@@ -39,13 +40,13 @@
   },
   "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme",
   "dependencies": {
+    "@bjowes/http-mitm-proxy": "^0.7.1",
     "appdata-path": "^1.0.0",
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.0",
     "fs-extra": "^8.0.1",
     "get-port": "^5.0.0",
-    "http-mitm-proxy": "git://github.com/joeferner/node-http-mitm-proxy.git#66ac0f5d3298f66b731f90ebf1e9b430fa5d76eb",
     "http-proxy-agent": "^2.1.0",
     "httpntlm": "^1.7.6",
     "https-proxy-agent": "^2.2.1",

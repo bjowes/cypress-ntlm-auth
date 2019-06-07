@@ -1,4 +1,4 @@
-import { IContext } from 'http-mitm-proxy';
+import { IContext } from '@bjowes/http-mitm-proxy';
 import net from 'net';
 import http from 'http';
 

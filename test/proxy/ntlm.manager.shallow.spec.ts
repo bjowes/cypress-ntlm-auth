@@ -6,7 +6,7 @@ import { Substitute, SubstituteOf, Arg } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import http from 'http';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
-import { IContext } from 'http-mitm-proxy';
+import { IContext } from '@bjowes/http-mitm-proxy';
 import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';
