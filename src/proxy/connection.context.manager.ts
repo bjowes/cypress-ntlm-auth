@@ -43,29 +43,22 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
   }
 
-  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl): IConnectionContext {
+  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
     }
 
-    let agent = this.getAgent(isSSL, targetHost, true);
+    let agent = this.getAgent(isSSL, targetHost, useNtlm);
     agent._cyAgentId = this._agentCount++;
     let context = new this.ConnectionContext();
     context.agent = agent;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
     clientSocket.on('end', () => this.removeAgent('end', clientAddress));
-    this._debug.log('Created NTLM ready agent for client ' + clientAddress + ' to target ' + targetHost.href);
+    this._debug.log('Created ' + (useNtlm ? 'NTLM ready' : 'non-NTLM') +
+      ' agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
-  }
-
-  getNonNtlmAgent(isSSL: boolean, targetHost: CompleteUrl): any {
-    let agent = this.getAgent(isSSL, targetHost, false);
-    agent._cyAgentId = this._agentCount;
-    this._agentCount++;
-    this._debug.log('Created non-NTLM agent for target ' + targetHost.href);
-    return agent;
   }
 
   private nodeTlsRejectUnauthorized(): boolean {
@@ -99,6 +92,16 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return agent;
   }
 
+  // Untracked agents are used for requests to the config API.
+  // These should not be destroyed on reset since that breaks the config API response.
+  getUntrackedAgent(targetHost: CompleteUrl) {
+    let agent: any;
+    agent = new http.Agent();
+    agent._cyAgentId = this._agentCount++;
+    this._debug.log('Created untracked agent for target ' + targetHost.href);
+    return agent;
+  }
+
   clearAuthentication(ntlmHostUrl: CompleteUrl) {
     for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
@@ -127,7 +130,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
       delete this._connectionContexts[clientAddress];
       this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
     } else {
-      this._debug.log('RemoveAgent called but agent does not exist (socket.' + event + ' for ' + clientAddress);
+      this._debug.log('RemoveAgent called for ' + clientAddress + ' due to socket.' + event + ', but agent does not exist');
     }
   }
 }

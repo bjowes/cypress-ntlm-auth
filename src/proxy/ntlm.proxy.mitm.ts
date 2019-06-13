@@ -1,4 +1,4 @@
-import { IContext } from 'http-mitm-proxy';
+import { IContext } from '@bjowes/http-mitm-proxy';
 
 import net from 'net';
 import http from 'http';
@@ -84,8 +84,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     self._debug.log(errorKind + ' on ' + url + ':', error);
   }
 
-  private filterConfigApiRequestLogging(targetHost: CompleteUrl) {
-    return (targetHost.href === self._configServer.configApiUrl);
+  private isConfigApiRequest(targetHost: CompleteUrl) {
+    return (targetHost.href.startsWith(self._configServer.configApiUrl));
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -94,7 +94,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (self._configStore.exists(targetHost)) {
         self._debug.log('Request to ' + targetHost.href + ' in registered NTLM Hosts');
         let context = self._connectionContextManager
-          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
+          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
         ctx.proxyToServerRequestOptions.agent = context.agent;
         if (context.isAuthenticated(targetHost)) {
           return callback();
@@ -107,11 +107,15 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           return callback();
         });
       } else {
-        if (!self.filterConfigApiRequestLogging(targetHost)) {
+        if (self.isConfigApiRequest(targetHost)) {
+          self._debug.log('Request to config API');
+          ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(targetHost);
+        } else {
           self._debug.log('Request to ' + targetHost.href + ' - pass on');
+          let context = self._connectionContextManager
+            .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, false);
+          ctx.proxyToServerRequestOptions.agent = context.agent;
         }
-        ctx.proxyToServerRequestOptions.agent =
-          self._connectionContextManager.getNonNtlmAgent(ctx.isSSL, targetHost);
         return callback();
       }
     } else {
@@ -146,7 +150,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
 
     let context = self._connectionContextManager
-      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost);
+      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
 
     if (context.isAuthenticated(targetHost)) {
       return callback();
@@ -181,6 +185,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       conn.on('finish', () => {
         socket.destroy();
       });
+      socket.on('close', () => {
+        self._debug.log('client closed socket, closing tunnel to ', req.url);
+        conn.end();
+      });
 
       socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function () {
         conn.write(head);
@@ -190,18 +198,18 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     });
 
     conn.on('error', function(err: NodeJS.ErrnoException) {
-      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET');
+      filterSocketConnReset(err, 'PROXY_TO_SERVER_SOCKET', req.url);
     });
     socket.on('error', function(err: NodeJS.ErrnoException) {
-      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET');
+      filterSocketConnReset(err, 'CLIENT_TO_PROXY_SOCKET', req.url);
     });
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
-    function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string) {
+    function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string, url: string | undefined) {
       if (err.code === 'ECONNRESET') {
-        self._debug.log('Got ECONNRESET on ' + socketDescription + ', ignoring.');
+        self._debug.log('Got ECONNRESET on ' + socketDescription + ', ignoring. Target: ' + url);
       } else {
-        self._debug.log('Got unexpected error on ' + socketDescription, err);
+        self._debug.log('Got unexpected error on ' + socketDescription + '. Target: ' + url, err);
       }
     }
   }

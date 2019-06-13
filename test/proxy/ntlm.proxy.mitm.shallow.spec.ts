@@ -11,7 +11,7 @@ import { IConnectionContextManager } from '../../src/proxy/interfaces/i.connecti
 import { INtlmManager } from '../../src/proxy/interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from '../../src/proxy/interfaces/i.upstream.proxy.manager';
 import { NtlmProxyMitm } from '../../src/proxy/ntlm.proxy.mitm';
-import { IContext } from 'http-mitm-proxy';
+import { IContext } from '@bjowes/http-mitm-proxy';
 import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';
@@ -217,7 +217,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
     await waitForServerStream();
     socketEventListener.call(this, error);
-    debugMock.received(1).log('Got unexpected error on ' + 'CLIENT_TO_PROXY_SOCKET', error);
+    debugMock.received(1).log('Got unexpected error on ' + 'CLIENT_TO_PROXY_SOCKET. Target: ' + urlNoProtocol, error);
     serverStream.end();
   });
 
@@ -233,7 +233,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
     await waitForServerStream();
     socketEventListener.call(this, error);
-    debugMock.received(1).log('Got ECONNRESET on ' + 'CLIENT_TO_PROXY_SOCKET' + ', ignoring.');
+    debugMock.received(1).log('Got ECONNRESET on ' + 'CLIENT_TO_PROXY_SOCKET' + ', ignoring. Target: ' + urlNoProtocol);
     serverStream.end();
   });
 
@@ -249,7 +249,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
     await waitForServerStream();
     serverStream.emit('error', error);
-    debugMock.received(1).log('Got unexpected error on ' + 'PROXY_TO_SERVER_SOCKET', error);
+    debugMock.received(1).log('Got unexpected error on ' + 'PROXY_TO_SERVER_SOCKET. Target: ' + urlNoProtocol, error);
     serverStream.end();
   });
 
@@ -265,7 +265,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     ntlmProxyMitm.onConnect(req, socketMock, '', (err: Error) => { if (err) throw err; });
     await waitForServerStream();
     serverStream.emit('error', error);
-    debugMock.received(1).log('Got ECONNRESET on ' + 'PROXY_TO_SERVER_SOCKET' + ', ignoring.');
+    debugMock.received(1).log('Got ECONNRESET on ' + 'PROXY_TO_SERVER_SOCKET' + ', ignoring. Target: ' + urlNoProtocol);
     serverStream.end();
   });
 

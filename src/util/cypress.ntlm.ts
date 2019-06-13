@@ -35,7 +35,7 @@ export class CypressNtlm implements ICypressNtlm {
 
   checkProxyIsRunning(timeout: number, interval: number): Promise<PortsFile> {
     return new Promise((resolve, reject) => {
-      const timeoutTimerId = setTimeout(handleTimeout, timeout);
+      const timeoutTimerId = global.setTimeout(handleTimeout, timeout);
       let intervalTimerId: NodeJS.Timeout;
 
       function handleTimeout() {
@@ -58,20 +58,20 @@ export class CypressNtlm implements ICypressNtlm {
                   resolve(portsFile);
                 } else {
                   self._debug.log('Invalid response from ntlm-proxy. May just have been removed. Retrying...');
-                  intervalTimerId = setTimeout(handleInterval, interval);
+                  intervalTimerId = global.setTimeout(handleInterval, interval);
                 }
               })
               .catch(() => {
                 self._debug.log('Failed to contact ntlm-proxy. May just have been removed. Retrying...');
-                intervalTimerId = setTimeout(handleInterval, interval);
+                intervalTimerId = global.setTimeout(handleInterval, interval);
               });
           } catch (err) {
             // Intentionally ignore
             self._debug.log('Failed to parse ports file. May just have been removed. Retrying...');
-            intervalTimerId = setTimeout(handleInterval, interval);
+            intervalTimerId = global.setTimeout(handleInterval, interval);
           }
         } else {
-          intervalTimerId = setTimeout(handleInterval, interval);
+          intervalTimerId = global.setTimeout(handleInterval, interval);
         }
       }
 
@@ -82,7 +82,7 @@ export class CypressNtlm implements ICypressNtlm {
         // Older ports file => old ntlm-proxy instance still running or failed to cleanup
         // Wait 2000 ms to avoid finding an old proxy instance
         self._debug.log('Older ports file present. Waiting 2000 ms for new proxy instance to remove it.');
-        intervalTimerId = setTimeout(handleInterval, 2000);
+        intervalTimerId = global.setTimeout(handleInterval, 2000);
       }
     });
   }
