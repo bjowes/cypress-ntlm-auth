@@ -67,7 +67,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         req.url === '/' &&
         req.headers.host &&
         req.headers.host.indexOf('.') === -1 &&
-        req.headers.host.indexOf(':') === -1 &&
+        (req.headers.host.indexOf(':') === -1 || req.headers.host.indexOf(':80') !== -1) &&
         req.headers.host.indexOf('/') === -1 &&
         errorKind === 'PROXY_TO_SERVER_REQUEST_ERROR' &&
         errno === 'ENOTFOUND') {

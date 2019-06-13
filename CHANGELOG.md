@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 - released 2019-06-13
+
+* Fixed #50: Support for NTLMv1 and NTLMv2 through new NTLM library
+* Chrome network probing no longer logged as errors
+* Bumped dependencies
+
 ## 1.0.7 - released 2019-06-07
 
 * Added prepare script to ensure that the latest build is always included on publish
