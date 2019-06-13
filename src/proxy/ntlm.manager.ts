@@ -28,14 +28,7 @@ export class NtlmManager implements INtlmManager {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config = this._configStore.get(ntlmHostUrl);
-    let ntlmOptions = {
-      username: config.username,
-      password: config.password,
-      domain: config.domain,
-      workstation: config.workstation,
-      url: fullUrl
-    };
-    let type1msg = ntlm.createType1Message(config.domain, config.workstation);
+    let type1msg = ntlm.createType1Message(config.workstation, config.domain);
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
@@ -61,7 +54,7 @@ export class NtlmManager implements INtlmManager {
       let type2msg: any;
       try {
         type2msg = ntlm.decodeType2Message(res.headers['www-authenticate']);
-        this._debug.log('Decoded type 2 message:', type2msg);
+        this._debug.log('Received NTLM message type 2, NTLM version:' + type2msg.version);
       } catch (err) {
         this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
         this._debug.log(err);
@@ -83,7 +76,6 @@ export class NtlmManager implements INtlmManager {
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     type1req.end();
   }
-
 
   ntlmHandshakeResponse(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let authState = context.getState(ntlmHostUrl);

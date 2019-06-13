@@ -18,8 +18,8 @@ export class ConfigStore implements IConfigStore {
       ntlmHost: ntlmHostUrl.href,
       username: config.username,
       password: config.password,
-      domain: config.domain || '',
-      workstation: config.workstation || ''
+      domain: config.domain ? config.domain.toUpperCase() : undefined,
+      workstation: config.workstation
     };
 
     this.ntlmHosts[ntlmHostUrl.href] = hostConfig;
