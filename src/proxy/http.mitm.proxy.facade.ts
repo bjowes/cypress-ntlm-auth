@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import httpMitmProxy = require('http-mitm-proxy');
+import httpMitmProxy = require('@bjowes/http-mitm-proxy');
 import { IHttpMitmProxyFacade } from './interfaces/i.http.mitm.proxy.facade';
 
 

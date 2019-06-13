@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7 - released 2019-06-07
+
+* Added prepare script to ensure that the latest build is always included on publish
+* Fixed #46, cy.ntlmReset now works as intended
+* Replaced git reference of http-mitm-proxy dependency with a scoped package to simplify installation procedure. Will revert to the original library when it is released to npm
+* Bumped dependencies
+
 ## 1.0.6 - released 2019-06-03
 
 * Patch for 1.0.5, the release did not include the latest build

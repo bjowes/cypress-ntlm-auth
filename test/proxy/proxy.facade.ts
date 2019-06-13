@@ -2,9 +2,9 @@ import http from 'http';
 import https from 'https';
 
 import url from 'url';
-import httpMitmProxy from 'http-mitm-proxy';
+import httpMitmProxy from '@bjowes/http-mitm-proxy';
 const getPort = require('get-port');
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, Method } from 'axios';
 import tunnel from 'tunnel';
 import fs from 'fs';
 import path from 'path';
@@ -113,7 +113,7 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer, agent?: http.Agent): Promise<AxiosResponse<any>> {
+  static async sendRemoteRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, caCert?: Buffer, agent?: http.Agent): Promise<AxiosResponse<any>> {
     const remoteHostUrl = url.parse(remoteHostWithPort);
     if (remoteHostUrl.protocol === 'http:') {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
@@ -122,7 +122,7 @@ export class ProxyFacade {
     }
   }
 
-  private static async sendProxiedHttpRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, agent?: http.Agent) {
+  private static async sendProxiedHttpRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, agent?: http.Agent) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
@@ -144,7 +144,7 @@ export class ProxyFacade {
     return res;
   }
 
-  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: string, path: string, body: any, caCert?: Buffer) {
+  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, caCert?: Buffer) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
