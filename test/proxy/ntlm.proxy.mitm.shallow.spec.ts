@@ -76,7 +76,7 @@ describe('NtlmProxyMitm error logging', () => {
     debugMock.received(1).log('SOME' + ' on ' + '/testurl' + ':', error);
   });
 
-  it('chrome startup connection tests should not throw', async function () {
+  it('chrome startup connection tests (host without port) should not throw', function () {
     const error: NodeJS.ErrnoException = {
       message: 'testmessage',
       name: 'testname',
@@ -86,6 +86,24 @@ describe('NtlmProxyMitm error logging', () => {
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     const mockHost = 'nctwerijlksf';
+    message.headers.returns({host: mockHost});
+    message.method.returns('HEAD');
+    message.url.returns('/');
+
+    ntlmProxyMitm.onError(ctx, error, 'PROXY_TO_SERVER_REQUEST_ERROR');
+    debugMock.received(1).log('Chrome startup HEAD request detected (host: ' + mockHost + '). Ignoring connection error.');
+  });
+
+  it('chrome startup connection tests (host with port) should not throw', function () {
+    const error: NodeJS.ErrnoException = {
+      message: 'testmessage',
+      name: 'testname',
+      code: 'ENOTFOUND'
+    };
+    const message = Substitute.for<IncomingMessage>();
+    const ctx = Substitute.for<IContext>();
+    ctx.clientToProxyRequest.returns(message);
+    const mockHost = 'nctwerijlksf:80';
     message.headers.returns({host: mockHost});
     message.method.returns('HEAD');
     message.url.returns('/');

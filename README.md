@@ -335,6 +335,6 @@ npm test
 ## Credits
 
 * [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
-* [httpntlm](https://github.com/SamDecrock/node-http-ntlm) - the NTLM methods from this library is used to generate and parse the NTLM messages.
+* [ntlm-client](https://github.com/clncln1/node-ntlm-client) - the NTLM methods from this library is used to generate and parse the NTLM messages. Support both NTLMv1 and NTLMv2.
 * [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
 * [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.

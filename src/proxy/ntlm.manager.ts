@@ -49,12 +49,11 @@ export class NtlmManager implements INtlmManager {
         return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl));
       }
 
-      this._debug.log('Received NTLM message type 2');
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
       let type2msg: any;
       try {
         type2msg = ntlm.decodeType2Message(res.headers['www-authenticate']);
-        this._debug.log('Received NTLM message type 2, NTLM version:' + type2msg.version);
+        this._debug.log('Received NTLM message type 2, using NTLMv' + type2msg.version);
       } catch (err) {
         this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
         this._debug.log(err);
