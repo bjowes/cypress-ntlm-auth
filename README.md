@@ -305,7 +305,7 @@ If the recommended startup scripts from above are used, the ntlm-proxy will be t
 
 ### Debug logging of NTLM headers
 
-To write also the NTLM headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM headers is an attack vector for the account password.
+To write also the NTLM headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM headers is an attack vector for the account, especially if you are using NTLMv1.
 
 ## Notes
 
