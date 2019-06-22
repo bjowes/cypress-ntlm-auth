@@ -54,6 +54,8 @@ export class NtlmManager implements INtlmManager {
       try {
         type2msg = ntlm.decodeType2Message(res.headers['www-authenticate']);
         this._debug.log('Received NTLM message type 2, using NTLMv' + type2msg.version);
+        this.debugHeader(res.headers['www-authenticate'], true);
+        this.debugHeader(type2msg, false);
       } catch (err) {
         this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
         this._debug.log(err);
@@ -63,6 +65,7 @@ export class NtlmManager implements INtlmManager {
       let type3msg = ntlm.createType3Message(type2msg, config.username, config.password, config.workstation, config.domain);
       ctx.proxyToServerRequestOptions.headers['authorization'] = type3msg;
       this._debug.log('Sending NTLM message type 3 with initial client request');
+      this.debugHeader(type3msg, true);
       context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
       return callback();
     });
@@ -72,6 +75,7 @@ export class NtlmManager implements INtlmManager {
       return callback(err);
     });
     this._debug.log('Sending  NTLM message type 1');
+    this.debugHeader(type1msg, true);
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     type1req.end();
   }
@@ -108,5 +112,15 @@ export class NtlmManager implements INtlmManager {
       }
     }
     return false;
+  }
+
+  private debugHeader(obj: any, brackets: boolean) {
+    if (process.env.DEBUG_NTLM_HEADERS && process.env.DEBUG_NTLM_HEADERS === '1') {
+      if (brackets) {
+        this._debug.log('[' + obj + ']');
+      } else {
+        this._debug.log(obj);
+      }
+    }
   }
 }

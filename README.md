@@ -278,6 +278,35 @@ cy.ntlmReset();
 cy.visit('https://ntlm.acme.com'); // This fails (401)
 ```
 
+## Debugging
+
+When reporting issues with this plugin, please collect debug logs for your scenario as described below and add them to the issue.
+
+### Running ntlm-proxy independently
+
+If the recommended startup scripts from above are used, the ntlm-proxy will be terminated when the cypress tests are finished. For troubleshooting it is often easier if the ntlm-proxy is running independently so the debug logs can be read or copied also after the cypress tests are finished. To run ntlm-proxy independently with debugging, follow these steps:
+
+#### Mac or Linux
+
+1. Open a terminal and go to your project root directory.
+2. `DEBUG=cypress:plugin:ntlm-auth node_modules\.bin\ntlm-proxy`
+3. Open another terminal and go to your project root directory
+4. `node_modules\.bin\cypress-ntlm open``
+5. Run your cypress tests and view the logs in the first terminal.
+
+#### Windows
+
+1. Open a cmd window and go to your project root directory.
+2. `set DEBUG=cypress:plugin:ntlm-auth`
+3. `node_modules\.bin\ntlm-proxy`
+4. Open another cmd window and go to your project root directory
+5. `node_modules\.bin\cypress-ntlm open`
+6. Run your cypress tests and view the logs in the first cmd window.
+
+### Debug logging of NTLM headers
+
+To write also the NTLM headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM headers is an attack vector for the account password.
+
 ## Notes
 
 ### ntlm-proxy process

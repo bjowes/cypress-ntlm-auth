@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 - released 2019-06-22
+
+* Improved documentation of debug logging
+* Added more verbose logging of NTLM headers with environment variable `DEBUG_NTLM_HEADERS=1`
+* Removed duplicate agent removal
+
 ## 1.1.0 - released 2019-06-13
 
 * Fixed #50: Support for NTLMv1 and NTLMv2 through new NTLM library
