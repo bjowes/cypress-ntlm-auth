@@ -55,7 +55,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
     context.agent = agent;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
-    clientSocket.on('end', () => this.removeAgent('end', clientAddress));
     this._debug.log('Created ' + (useNtlm ? 'NTLM ready' : 'non-NTLM') +
       ' agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
