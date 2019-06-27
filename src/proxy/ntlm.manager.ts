@@ -10,7 +10,7 @@ import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
-const ntlm = require('ntlm-client');
+const ntlm = require('../ntlm/ntlm');
 
 @injectable()
 export class NtlmManager implements INtlmManager {
