@@ -75,13 +75,13 @@ function createNTLMResponse(challenge, ntlmhash) {
 
 function createNTLMHash(password) {
 	let md4sum = crypto.createHash('md4');
-	md4sum.update(Buffer.from(password, 'ucs2'));
+	md4sum.update(Buffer.from(password, 'ucs2')); // lgtm[js/insufficient-password-hash]
 	return md4sum.digest();
 }
 
 function createNTLMv2Hash(ntlmhash, username, authTargetName) {
 	let hmac = crypto.createHmac('md5', ntlmhash);
-	hmac.update(Buffer.from(username.toUpperCase() + authTargetName, 'ucs2'));
+	hmac.update(Buffer.from(username.toUpperCase() + authTargetName, 'ucs2')); // lgtm[js/weak-cryptographic-algorithm]
 	return hmac.digest();
 }
 

@@ -89,7 +89,7 @@ function createType1Message(workstation, target) {
     dataPos += buf.write(workstation, dataPos, 'ascii');
   }
 
-  pos = addVersionStruct(buf, pos);
+  addVersionStruct(buf, pos);
 
 	return 'NTLM ' + buf.toString('base64', 0, dataPos);
 }
