@@ -8,7 +8,7 @@
     "launch": "src/launchers/cypress.ntlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
-    "build": "tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js && cp -r src/ntlm dist/ntlm",
+    "build": "tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js && shx cp -r src/ntlm dist/ntlm",
     "prepare": "npm run build",
     "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test",
     "lint": "tslint --project ."
