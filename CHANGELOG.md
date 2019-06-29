@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 - released 2019-06-29
+
+* Implemented internal NTLM library based on node-ntlm-client
+* Unit tests of NTLM headers
+* Fixed #55: Authentication of users from another domain than the NTLM target
+
 ## 1.1.1 - released 2019-06-22
 
 * Improved documentation of debug logging

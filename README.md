@@ -289,9 +289,9 @@ If the recommended startup scripts from above are used, the ntlm-proxy will be t
 #### Mac or Linux
 
 1. Open a terminal and go to your project root directory.
-2. `DEBUG=cypress:plugin:ntlm-auth node_modules\.bin\ntlm-proxy`
+2. `DEBUG=cypress:plugin:ntlm-auth node_modules/.bin/ntlm-proxy`
 3. Open another terminal and go to your project root directory
-4. `node_modules\.bin\cypress-ntlm open``
+4. `node_modules/.bin/cypress-ntlm open`
 5. Run your cypress tests and view the logs in the first terminal.
 
 #### Windows
