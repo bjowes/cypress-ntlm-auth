@@ -86,15 +86,15 @@ function createNTLMv2Hash(ntlmhash, username, authTargetName) {
 }
 
 function createLMv2Response(type2message, username, authTargetName, ntlmhash, nonce) {
-	let buf = Buffer.alloc(24),
-		ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName),
-		hmac = crypto.createHmac('md5', ntlm2hash);
+	let buf = Buffer.alloc(24);
+	let ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName);
+	let hmac = crypto.createHmac('md5', ntlm2hash);
 
 	//server challenge
 	type2message.challenge.copy(buf, 8);
 
 	//client nonce
-	buf.write(nonce || createPseudoRandomValue(16), 16, 'hex');
+	buf.write(nonce, 16, 'hex');
 
 	//create hash
 	hmac.update(buf.slice(8));
@@ -105,7 +105,7 @@ function createLMv2Response(type2message, username, authTargetName, ntlmhash, no
 	return buf;
 }
 
-function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce) {
+function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce, timestamp) {
 	let buf = Buffer.alloc(48 + type2message.targetInfo.buffer.length),
 		ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName),
 		hmac = crypto.createHmac('md5', ntlm2hash);
@@ -121,11 +121,7 @@ function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, 
 	//reserved
 	buf.writeUInt32LE(0, 20);
 
-	//timestamp
-	//TODO: we are loosing precision here since js is not able to handle those large integers
-	// maybe think about a different solution here
-	// 11644473600000 = diff between 1970 and 1601
-	let timestamp = ((Date.now() + 11644473600000) * 10000).toString(16);
+  //timestamp
 	let timestampLow = Number('0x' + timestamp.substring(Math.max(0, timestamp.length - 8)));
 	let timestampHigh = Number('0x' + timestamp.substring(0, Math.max(0, timestamp.length - 8)));
 
@@ -133,7 +129,7 @@ function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, 
 	buf.writeUInt32LE(timestampHigh, 28, false);
 
 	//random client nonce
-	buf.write(nonce || createPseudoRandomValue(16), 32, 'hex');
+	buf.write(nonce, 32, 'hex');
 
 	//zero
 	buf.writeUInt32LE(0, 40);
@@ -160,6 +156,13 @@ function createPseudoRandomValue(length) {
 	return str;
 }
 
+function createTimestamp() {
+	//TODO: we are loosing precision here since js is not able to handle those large integers
+	// maybe think about a different solution here
+	// 11644473600000 = diff between 1970 and 1601
+	return ((Date.now() + 11644473600000) * 10000).toString(16);
+}
+
 module.exports = {
 	createLMHash,
 	createNTLMHash,
@@ -167,5 +170,6 @@ module.exports = {
 	createNTLMResponse,
 	createLMv2Response,
 	createNTLMv2Response,
-	createPseudoRandomValue
+  createPseudoRandomValue,
+  createTimestamp
 };

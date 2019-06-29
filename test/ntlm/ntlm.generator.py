@@ -1,23 +1,9 @@
 #!/usr/bin/env python
 
-## Decodes NTLM "Authenticate" HTTP-Header blobs.
-## Reads the raw blob from stdin; prints out the contained metadata.
-## Supports (auto-detects) Type 1, Type 2, and Type 3 messages.
-## Based on the excellent protocol description from:
-##  <http://davenport.sourceforge.net/ntlm.html>
-## with additional detail subsequently added from the official protocol spec:
-##  <http://msdn.microsoft.com/en-us/library/cc236621.aspx>
+## Generates NTLM "Authenticate" HTTP-Header blobs.
+## Uses the ntlm-auth library for generation and makes some adaptions to the flags and version block
 ##
-## For example:
-##
-##   $ echo "TlRMTVNTUAABAAAABYIIAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAA" | ./ntlmdecoder.py
-##   Found NTLMSSP header
-##   Msg Type: 1 (Request)
-##   Domain: '' [] (0b @0)
-##   Workstation: '' [] (0b @0)
-##   OS Ver: '????0???'
-##   Flags: 0x88205 ["Negotiate Unicode", "Request Target", "Negotiate NTLM", "Negotiate Always Sign", "Negotiate NTLM2 Key"]
-##
+## This script is used to generate the validation data for the ntlm.spec.ts test.
 
 import sys
 import base64
@@ -121,9 +107,6 @@ def generate_type2(username, password, auth_domain, target_domain, workstation, 
   challenge_raw += target_domain.upper()
   challenge_raw += target_info
 
-  #challenge_b64 = "TlRMTVNTUAACAAAAAAAAACgAAAABggAAU3J2Tm9uY2UAAAAAAAAAAA=="
-  #challenge_message = base64.b64decode(challenge_b64)
-
   print "Challenge (Type 2)"
   print base64.b64encode(challenge_raw)
   print hexdump.hexdump(challenge_raw)
@@ -133,7 +116,7 @@ def generate_type2(username, password, auth_domain, target_domain, workstation, 
   unpacked = struct.unpack('<I', response_message[60:64])
   flags = unpacked[0]
   if ucs:
-    # Fix bug in the python lib
+    # Fix bug in the ntlm-auth lib
     flags &= ~NTLMSSP_NEGOTIATE_OEM
     flags |= NTLMSSP_REQUEST_TARGET
 

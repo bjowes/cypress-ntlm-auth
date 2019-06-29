@@ -1,4 +1,4 @@
-// All code in this folder is heavily based on the npm project ntlm-client.
+// All code in this folder is heavily based on the node project ntlm-client.
 // https://github.com/clncln1/node-ntlm-client
 // ----------------------------------------------------------------------------
 // Original license statement:
@@ -241,7 +241,7 @@ function decodeType2Message(str) {
 	return obj;
 }
 
-function createType3Message(type2Message, username, password, workstation, target) {
+function createType3Message(type2Message, username, password, workstation, target, client_nonce, timestamp) {
 	let dataPos = 72;
   let buf = Buffer.alloc(1024);
 
@@ -266,10 +266,11 @@ function createType3Message(type2Message, username, password, workstation, targe
   let hashDataPos = dataPos + dataPosOffset;
 
 	if (type2Message.version === 2) {
-		let ntlmHash = hash.createNTLMHash(password),
-			nonce = hash.createPseudoRandomValue(16),
-			lmv2 = hash.createLMv2Response(type2Message, username, target, ntlmHash, nonce),
-			ntlmv2 = hash.createNTLMv2Response(type2Message, username, target, ntlmHash, nonce);
+		let ntlmHash = hash.createNTLMHash(password);
+    client_nonce = client_nonce || hash.createPseudoRandomValue(16);
+    timestamp = timestamp || hash.createTimestamp();
+		let	lmv2 = hash.createLMv2Response(type2Message, username, target, ntlmHash, client_nonce);
+		let	ntlmv2 = hash.createNTLMv2Response(type2Message, username, target, ntlmHash, client_nonce, timestamp);
 
 		//lmv2 security buffer
 		buf.writeUInt16LE(lmv2.length, 12);
