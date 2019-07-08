@@ -105,8 +105,12 @@ function createLMv2Response(type2message, username, authTargetName, ntlmhash, no
 	return buf;
 }
 
-function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce, timestamp) {
-	let buf = Buffer.alloc(48 + type2message.targetInfo.buffer.length),
+function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce, timestamp, withMic) {
+  let bufferSize = 48 + type2message.targetInfo.buffer.length;
+  if (withMic) {
+    bufferSize += 8;
+  }
+	let buf = Buffer.alloc(bufferSize),
 		ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName),
 		hmac = crypto.createHmac('md5', ntlm2hash);
 
@@ -135,10 +139,21 @@ function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, 
 	buf.writeUInt32LE(0, 40);
 
 	//complete target information block from type 2 message
-	type2message.targetInfo.buffer.copy(buf, 44);
+  type2message.targetInfo.buffer.copy(buf, 44);
+
+  let bufferPos = 44 + type2message.targetInfo.buffer.length;
+  if (withMic) {
+    // Should include MIC in response, indicate it in AV_FLAGS
+    buf.writeUInt16LE(0x06, bufferPos - 4);
+    buf.writeUInt16LE(0x04, bufferPos - 2);
+    buf.writeUInt32LE(0x02, bufferPos);
+    // Write new endblock
+    buf.writeUInt32LE(0, bufferPos + 4);
+    bufferPos += 8;
+  }
 
 	//zero
-	buf.writeUInt32LE(0, 44 + type2message.targetInfo.buffer.length);
+	buf.writeUInt32LE(0, bufferPos);
 
 	hmac.update(buf.slice(8));
 	let hashedBuffer = hmac.digest();
@@ -146,6 +161,21 @@ function createNTLMv2Response(type2message, username, authTargetName, ntlmhash, 
 	hashedBuffer.copy(buf);
 
 	return buf;
+}
+
+function createMIC(type1message, type2message, type3message, username, authTargetName, ntlmhash, nonce, timestamp) {
+  let ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName);
+  let ntlm2response = createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce, timestamp, true);
+	let hmac = crypto.createHmac('md5', ntlm2hash);
+  let session_base_key = hmac.update(ntlm2response.slice(0,16)).digest();
+  let key_exchange_key = session_base_key;
+	//create MIC hash
+  hmac = crypto.createHmac('md5', key_exchange_key);
+	hmac.update(type1message);
+	hmac.update(type2message.raw);
+	hmac.update(type3message);
+  let hashedBuffer = hmac.digest();
+  return hashedBuffer;
 }
 
 function createPseudoRandomValue(length) {
@@ -169,7 +199,8 @@ module.exports = {
 	createLMResponse,
 	createNTLMResponse,
 	createLMv2Response,
-	createNTLMv2Response,
+  createNTLMv2Response,
+  createMIC,
   createPseudoRandomValue,
   createTimestamp
 };

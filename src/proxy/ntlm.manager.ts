@@ -28,7 +28,7 @@ export class NtlmManager implements INtlmManager {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config = this._configStore.get(ntlmHostUrl);
-    let type1msg = ntlm.createType1Message(config.workstation, config.domain);
+    let type1msg = ntlm.createType1Message(2, config.workstation, config.domain);
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,

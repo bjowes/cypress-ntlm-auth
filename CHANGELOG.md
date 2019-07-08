@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0-beta.0 - released 2019-07-07
+
+* Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
+* Improved unit tests for NTLM headers
+
 ## 1.2.0 - released 2019-06-29
 
 * Implemented internal NTLM library based on node-ntlm-client

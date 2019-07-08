@@ -70,7 +70,7 @@ def clean_str(st):
     return ''.join((s if s in VALID_CHRS else '?') for s in st)
 
 class StrStruct(object):
-    def __init__(self, pos_tup, raw):
+    def __init__(self, pos_tup, raw, decode = True):
         length, alloc, offset = pos_tup
         self.length = length
         self.alloc = alloc
@@ -78,7 +78,7 @@ class StrStruct(object):
         self.raw = raw[offset:offset+length]
         self.utf16 = False
 
-        if len(self.raw) >= 2 and self.raw[1] == '\0':
+        if decode and len(self.raw) >= 2 and self.raw[1] == '\0':
             self.string = self.raw.decode('utf-16')
             self.utf16 = True
         else:
@@ -177,7 +177,7 @@ def pretty_print_challenge(st):
     nxt = st[40:48]
     if len(nxt) == 8:
         hdr_tup = struct.unpack("<hhi", nxt)
-        tgt = StrStruct(hdr_tup, st)
+        tgt = StrStruct(hdr_tup, st, False)
 
         output = "Target: [block] (%db @%d)" % (tgt.length, tgt.offset)
         if tgt.alloc != tgt.length:

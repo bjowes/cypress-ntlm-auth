@@ -83,11 +83,15 @@ module.exports.NTLMFLAG_REQUEST_NONNT_SESSION_KEY = 1<<22;
 /* unknown purpose */
 
 module.exports.NTLMFLAG_NEGOTIATE_TARGET_INFO = 1<<23;
-/* Sent by the server in the Type 2 message to indicate that it is including a
+/* Sent by the client in the Type 1 message to request Target info block from server.
+   Sent by the server in the Type 2 message to indicate that it is including a
    Target Information block in the message. */
 
 /* unknown (1<24) */
-/* unknown (1<25) */
+
+module.exports.NTLMFLAG_NEGOTIATE_VERSION = 1<<25;
+/* Indicates that the version info block is included in the message */
+
 /* unknown (1<26) */
 /* unknown (1<27) */
 /* unknown (1<28) */
