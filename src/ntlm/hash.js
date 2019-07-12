@@ -178,6 +178,20 @@ function createMIC(type1message, type2message, type3message, username, authTarge
   return hashedBuffer;
 }
 
+function createRandomSessionKey(type2message, username, authTargetName, ntlmhash, nonce, timestamp, withMic) {
+  let ntlm2hash = createNTLMv2Hash(ntlmhash, username, authTargetName);
+  let ntlm2response = createNTLMv2Response(type2message, username, authTargetName, ntlmhash, nonce, timestamp, withMic);
+  let hmac = crypto.createHmac('md5', ntlm2hash);
+  let session_base_key = hmac.update(ntlm2response.slice(0,16)).digest();
+  let key_exchange_key = session_base_key;
+
+  let exported_session_key_hex = createPseudoRandomValue(32);
+  let exported_session_key = Buffer.from(exported_session_key_hex, 'hex');
+  let rc4 = crypto.createCipheriv('rc4', key_exchange_key, '');
+  let encrypted_random_session_key = rc4.update(exported_session_key);
+  return encrypted_random_session_key;
+}
+
 function createPseudoRandomValue(length) {
 	let str = '';
 	while (str.length < length) {
@@ -200,6 +214,7 @@ module.exports = {
 	createNTLMResponse,
 	createLMv2Response,
   createNTLMv2Response,
+  createRandomSessionKey,
   createMIC,
   createPseudoRandomValue,
   createTimestamp

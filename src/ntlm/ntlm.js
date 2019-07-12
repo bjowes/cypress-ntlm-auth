@@ -37,8 +37,13 @@ function createType1MessageRaw(ntlm_version, workstation, target) {
 	let pos = 0;
 	let buf = Buffer.alloc(256);
 
-  target = target === undefined ? '' : target;
-  workstation = workstation === undefined ? '' : workstation;
+  if (target === undefined) {
+    target = '';
+  }
+
+  if (workstation === undefined) {
+    workstation = os.hostname().toUpperCase();
+  }
 
 	//signature
 	buf.write(NTLMSIGNATURE, pos, NTLMSIGNATURE.length, 'ascii');
@@ -51,7 +56,7 @@ function createType1MessageRaw(ntlm_version, workstation, target) {
   //flags
   let messageFlags = flags.NTLMFLAG_NEGOTIATE_OEM |
     flags.NTLMFLAG_NEGOTIATE_ALWAYS_SIGN |
-    flags.NTLMFLAG_NEGOTIATE_TARGET_INFO |
+//    flags.NTLMFLAG_NEGOTIATE_KEY_EXCHANGE |
     flags.NTLMFLAG_NEGOTIATE_VERSION;
 
   if (ntlm_version == 1) {
@@ -68,7 +73,8 @@ function createType1MessageRaw(ntlm_version, workstation, target) {
     messageFlags |= flags.NTLMFLAG_NEGOTIATE_WORKSTATION_SUPPLIED;
   }
 
-	buf.writeUInt32LE(messageFlags, pos);
+  // special operator to force conversion to unsigned
+	buf.writeUInt32LE(messageFlags >>> 0, pos);
 	pos += 4;
 
   //domain security buffer
@@ -282,7 +288,7 @@ function createType3Message(type2Message, username, password, workstation, targe
   let buf = Buffer.alloc(1024);
 
 	if (workstation === undefined) {
-		workstation = os.hostname();
+		workstation = os.hostname().toUpperCase();
 	}
 
 	if (target === undefined) {
@@ -387,9 +393,15 @@ function createType3Message(type2Message, username, password, workstation, targe
 	dataPos += buf.write(workstation, dataPos, type2Message.encoding);
 
   //session key security buffer
-  buf.writeUInt16LE(0, 52);
-  buf.writeUInt16LE(0, 54);
+  let session_key = Buffer.alloc(0);
+  // if (type2Message.flags & flags.NTLMFLAG_NEGOTIATE_KEY_EXCHANGE) {
+  //   session_key = hash.createRandomSessionKey(type2Message, username, target, ntlmHash, client_nonce, timestamp, withMic);
+  // }
+  buf.writeUInt16LE(session_key.length, 52);
+  buf.writeUInt16LE(session_key.length, 54);
   buf.writeUInt32LE(hashDataPos, 56);
+  session_key.copy(buf, hashDataPos);
+  hashDataPos += session_key.length;
 
   //flags
   buf.writeUInt32LE(type2Message.flags, 60);

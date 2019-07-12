@@ -105,6 +105,7 @@ target_field_types[2] = "AD domain name"
 target_field_types[3] = "FQDN"
 target_field_types[4] = "DNS domain name"
 target_field_types[5] = "Parent DNS domain"
+target_field_types[6] = "AV Flags"
 target_field_types[7] = "Server Timestamp"
 
 def main():
@@ -168,14 +169,14 @@ def pretty_print_request(st):
 
     opt_version(st, 32)
 
-    print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
+    print "Flags: 0x%08x [%s]" % (flags, flags_str(flags))
 
 
 def pretty_print_challenge(st):
     hdr_tup = struct.unpack("<hhIIQ", st[12:32])
 
     print "Target Name: %s" % StrStruct(hdr_tup[0:3], st)
-    print "Challenge: 0x%x" % hdr_tup[4]
+    print "Challenge: 0x%016x" % hdr_tup[4]
 
     flags = hdr_tup[3]
 
@@ -201,7 +202,10 @@ def pretty_print_challenge(st):
             rec_sz = rec_hdr[1]
             if rec_type_id == 7:
               value = struct.unpack(">Q", raw[pos+4 : pos+4+rec_sz])
-              print "    %s (%d): 0x%x" % (rec_type, rec_type_id, value[0])
+              print "    %s (%d): 0x%016x" % (rec_type, rec_type_id, value[0])
+            elif rec_type_id == 6:
+              value = struct.unpack(">I", raw[pos+4 : pos+4+rec_sz])
+              print "    %s (%d): 0x%08x" % (rec_type, rec_type_id, value[0])
             else:
               subst = raw[pos+4 : pos+4+rec_sz]
               print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
@@ -209,14 +213,52 @@ def pretty_print_challenge(st):
 
     opt_version(st, 48)
 
-    print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
+    print "Flags: 0x%08x [%s]" % (flags, flags_str(flags))
 
+def pretty_print_ntlm_resp(st):
+    nt_proof = struct.unpack(">QQ", st[0:16])
+    print "  NT Proof: 0x%x%x" % (nt_proof[0], nt_proof[1])
+    # validate
+    reserved_val = struct.unpack("<BBHI", st[16:24])
+    assert reserved_val[0] == 0x01
+    assert reserved_val[1] == 0x01
+    assert reserved_val[2] == 0x0000
+    assert reserved_val[3] == 0x00000000
+    timestamp = struct.unpack(">Q", st[24:32])
+    print "  Timestamp: 0x%016x" % (timestamp[0])
+    client_challenge = struct.unpack(">Q", st[32:40])
+    print "  Client challenge: 0x%016x" % (client_challenge[0])
+
+    reserved_val = struct.unpack("<I", st[40:44])
+    assert reserved_val[0] == 0x00000000
+
+    print "  Target Info:"
+    pos = 44
+    while pos+4 < len(st):
+            rec_hdr = struct.unpack("<hh", st[pos : pos+4])
+            rec_type_id = rec_hdr[0]
+            rec_type = target_field_types[rec_type_id]
+            rec_sz = rec_hdr[1]
+            if rec_type_id == 7:
+              value = struct.unpack(">Q", st[pos+4 : pos+4+rec_sz])
+              print "    %s (%d): 0x%016x" % (rec_type, rec_type_id, value[0])
+            elif rec_type_id == 6:
+              value = struct.unpack(">I", st[pos+4 : pos+4+rec_sz])
+              print "    %s (%d): 0x%08x" % (rec_type, rec_type_id, value[0])
+            else:
+              subst = st[pos+4 : pos+4+rec_sz]
+              print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
+            pos += 4 + rec_sz
+
+    reserved_val = struct.unpack("<I", st[pos:pos+4])
+    assert reserved_val[0] == 0x00000000
 
 def pretty_print_response(st):
     hdr_tup = struct.unpack("<hhihhihhihhihhi", st[12:52])
 
     print "LM Resp: %s" % StrStruct(hdr_tup[0:3], st)
-    print "NTLM Resp: %s" % StrStruct(hdr_tup[3:6], st)
+    print "NTLM Resp:"
+    pretty_print_ntlm_resp(st[hdr_tup[5]:hdr_tup[5]+hdr_tup[3]]) # StrStruct(hdr_tup[3:6], st)
     print "Target Name: %s" % StrStruct(hdr_tup[6:9], st)
     print "User Name: %s" % StrStruct(hdr_tup[9:12], st)
     print "Host Name: %s" % StrStruct(hdr_tup[12:15], st)
@@ -228,14 +270,14 @@ def pretty_print_response(st):
     if len(nxt) == 4:
         flg_tup = struct.unpack("<I", nxt)
         flags = flg_tup[0]
-        print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
+        print "Flags: 0x%08x [%s]" % (flags, flags_str(flags))
     else:
         print "Flags: [omitted]"
 
     payload_offset = min(hdr_tup[2], hdr_tup[5], hdr_tup[8], hdr_tup[11], hdr_tup[14])
     if payload_offset == (72+16):
         value = struct.unpack(">QQ", st[72:88])
-        print "MIC: 0x%x%x" % (value[0], value[1])
+        print "MIC: 0x%016x%016x" % (value[0], value[1])
 
 if __name__ == "__main__":
     main()

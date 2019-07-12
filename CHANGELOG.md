@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.3.0-beta.0 - released 2019-07-07
+## 1.3.0-beta.2 - released 2019-07-13
+
+* Consistent use of workstation field in NTLM headers
+
+## 1.3.0-beta.1 - released 2019-07-07
 
 * Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
 * Improved unit tests for NTLM headers
