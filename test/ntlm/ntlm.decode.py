@@ -152,6 +152,13 @@ def opt_inline_str(name, st, offset, sz):
     else:
         print "%s: [omitted]" % name
 
+def opt_version(st, offset):
+    major = struct.unpack("<B", st[offset])
+    minor = struct.unpack("<B", st[offset+1])
+    build = struct.unpack("<H", st[offset+2:offset+4])
+    version = struct.unpack("<B", st[offset+7])
+    print "OS Ver: Major %d, Minor %d, build %d, NTLM version %d" % (major[0], minor[0], build[0], version[0])
+
 def pretty_print_request(st):
     hdr_tup = struct.unpack("<I", st[12:16])
     flags = hdr_tup[0]
@@ -159,7 +166,7 @@ def pretty_print_request(st):
     opt_str_struct("Domain", st, 16)
     opt_str_struct("Workstation", st, 24)
 
-    opt_inline_str("OS Ver", st, 32, 8)
+    opt_version(st, 32)
 
     print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
 
@@ -192,11 +199,15 @@ def pretty_print_challenge(st):
             rec_type_id = rec_hdr[0]
             rec_type = target_field_types[rec_type_id]
             rec_sz = rec_hdr[1]
-            subst = raw[pos+4 : pos+4+rec_sz]
-            print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
+            if rec_type_id == 7:
+              value = struct.unpack(">Q", raw[pos+4 : pos+4+rec_sz])
+              print "    %s (%d): 0x%x" % (rec_type, rec_type_id, value[0])
+            else:
+              subst = raw[pos+4 : pos+4+rec_sz]
+              print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
             pos += 4 + rec_sz
 
-    opt_inline_str("OS Ver", st, 48, 8)
+    opt_version(st, 48)
 
     print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
 
@@ -211,7 +222,7 @@ def pretty_print_response(st):
     print "Host Name: %s" % StrStruct(hdr_tup[12:15], st)
 
     opt_str_struct("Session Key", st, 52)
-    opt_inline_str("OS Ver", st, 64, 8)
+    opt_version(st, 64)
 
     nxt = st[60:64]
     if len(nxt) == 4:
@@ -220,6 +231,11 @@ def pretty_print_response(st):
         print "Flags: 0x%x [%s]" % (flags, flags_str(flags))
     else:
         print "Flags: [omitted]"
+
+    payload_offset = min(hdr_tup[2], hdr_tup[5], hdr_tup[8], hdr_tup[11], hdr_tup[14])
+    if payload_offset == (72+16):
+        value = struct.unpack(">QQ", st[72:88])
+        print "MIC: 0x%x%x" % (value[0], value[1])
 
 if __name__ == "__main__":
     main()
