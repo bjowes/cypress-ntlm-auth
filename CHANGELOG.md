@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 - released 2019-07-13
+
+* Made workstation field more consistent in NTLM messages. Fixes authentication issues with some NTLMv2 hosts.
+
 ## 1.2.0 - released 2019-06-29
 
 * Implemented internal NTLM library based on node-ntlm-client
