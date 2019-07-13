@@ -23,7 +23,7 @@ describe('NTLM hashes', function () {
   const NTLMv2ucsType3 = 'NTLM TlRMTVNTUAADAAAAGAAYAHoAAABMAEwAkgAAABQAFABIAAAADAAMAFwAAAASABIAaAAAAAAAAADeAAAABQKJAAoAukcAAAAPVQBSAFMAQQAtAE0ASQBOAE8AUgBaAGEAcABoAG8AZABMAEkARwBIAFQAQwBJAFQAWQBK511LvqRN9pu4nqXtMq/rCzjt4dTrB70dBfQgyj7flereVlW0w1LiAQEAAAAAAAAARfwTDW5gEAs47eHU6we9AAAAAAIAFABVAFIAUwBBAC0ATQBJAE4ATwBSAAAAAAAAAAAA';
 
   it('should create expected Type 1 message. NTLMv1 or NTLMv2 ASCII', function () {
-    const type1 = ntlm.createType1Message();
+    const type1 = ntlm.createType1Message('', '');
     expect(type1).to.be.equal(NTLMv1and2asciiType1);
   });
 

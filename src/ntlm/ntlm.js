@@ -39,8 +39,13 @@ function createType1Message(workstation, target) {
 	let pos = 0;
 	let buf = Buffer.alloc(256);
 
-  target = target === undefined ? '' : target;
-  workstation = workstation === undefined ? '' : workstation;
+  if (target === undefined) {
+    target = '';
+  }
+
+  if (workstation === undefined) {
+    workstation = os.hostname().toUpperCase();
+  }
 
 	//signature
 	buf.write(NTLMSIGNATURE, pos, NTLMSIGNATURE.length, 'ascii');
@@ -246,7 +251,7 @@ function createType3Message(type2Message, username, password, workstation, targe
   let buf = Buffer.alloc(1024);
 
 	if (workstation === undefined) {
-		workstation = os.hostname();
+		workstation = os.hostname().toUpperCase();
 	}
 
 	if (target === undefined) {
