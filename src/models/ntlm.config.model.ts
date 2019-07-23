@@ -4,4 +4,5 @@ export interface NtlmConfig {
   password: string;
   domain?: string;
   workstation?: string;
+  ntlmVersion: number;
 }

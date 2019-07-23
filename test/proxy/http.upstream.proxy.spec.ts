@@ -50,7 +50,8 @@ describe('Proxy for HTTP host with NTLM and upstream proxy', function() {
       ntlmHost: httpUrl,
       username: 'nisse',
       password: 'manpower',
-      domain: 'mptst'
+      domain: 'mptst',
+      ntlmVersion: 2
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, upstreamProxyUrl, undefined, undefined);

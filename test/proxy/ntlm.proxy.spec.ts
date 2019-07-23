@@ -119,6 +119,7 @@ describe('NTLM Proxy authentication', function () {
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
+      ntlmVersion: 2
     };
     remoteHostResponseWwwAuthHeader = 'test';
 
@@ -142,6 +143,7 @@ describe('NTLM Proxy authentication', function () {
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
+      ntlmVersion: 2
     };
 
     // Act
@@ -164,6 +166,7 @@ describe('NTLM Proxy authentication', function () {
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
+      ntlmVersion: 2
     };
 
     // Act
@@ -187,6 +190,7 @@ describe('NTLM Proxy authentication', function () {
       username: 'nisse',
       password: 'manpower',
       domain: 'mnpwr',
+      ntlmVersion: 2
     };
     let ports = await coreServer.start(false, undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;

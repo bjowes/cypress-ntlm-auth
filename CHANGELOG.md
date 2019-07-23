@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0-beta.3 - released 2019-07-23
+
+* Fix #60: NTLM version can now be set in the cy.ntlm call. Defaults to NTLMv2.
+
+## 1.2.1 - released 2019-07-13
+
+* Made workstation field more consistent in NTLM messages. Fixes authentication issues with some NTLMv2 hosts.
+
 ## 1.3.0-beta.2 - released 2019-07-13
 
 * Consistent use of workstation field in NTLM headers

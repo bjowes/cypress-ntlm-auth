@@ -11,7 +11,7 @@ declare namespace Cypress {
   cy.ntlm('https://ntlm.acme.com', 'TheUser', 'ThePassword', 'TheDomain');
  ```
     */
-    ntlm(ntlmHost: string, username: string, password: string, domain?: string, workstation?: string): Chainable<any>
+    ntlm(ntlmHost: string, username: string, password: string, domain?: string, workstation?: string, ntlmVersion?: number): Chainable<any>
 
     /**
      * Reset NTLM authentication for all configured hosts. Recommended before/after tests.

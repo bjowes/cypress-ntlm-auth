@@ -13,7 +13,7 @@ const ConfigValidator = require('../util/config.validator').ConfigValidator;
   cy.ntlm('https://ntlm.acme.com', 'TheUser', 'ThePassword', 'TheDomain');
  ```
  */
-const ntlm = (ntlmHost, username, password, domain, workstation) => {
+const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) => {
   const log = {
     name: 'ntlm',
     message: { ntlmHost, username }
@@ -30,7 +30,8 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
     username: username,
     password: password,
     domain: domain,
-    workstation: workstation
+    workstation: workstation,
+    ntlmVersion: ntlmVersion || 2
   };
   let validationResult = ConfigValidator.validate(ntlmConfig);
   if (!validationResult.ok) {
@@ -58,6 +59,7 @@ const ntlm = (ntlmHost, username, password, domain, workstation) => {
       username: username,
       domain: domain,
       workstation: workstation,
+      ntlmVersion: ntlmVersion || 2,
       result: result
     };
   };
