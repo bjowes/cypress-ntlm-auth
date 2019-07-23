@@ -9,8 +9,9 @@ export class ConfigValidator {
 
     if (!config.ntlmHost ||
         !config.username ||
-        !config.password) {
-      result.message = 'Incomplete configuration. ntlmHost, username and password are required fields.';
+        !config.password ||
+        !config.ntlmVersion) {
+      result.message = 'Incomplete configuration. ntlmHost, username, password and ntlmVersion are required fields.';
       return result;
     }
 
@@ -37,6 +38,11 @@ export class ConfigValidator {
     if (config.workstation &&
         !this.validateDomainOrWorkstation(config.workstation)) {
       result.message = 'Workstation contains invalid characters or is too long.';
+      return result;
+    }
+
+    if (config.ntlmVersion !== 1 && config.ntlmVersion !== 2) {
+      result.message = 'Invalid ntlmVersion. Must be 1 or 2.';
       return result;
     }
 

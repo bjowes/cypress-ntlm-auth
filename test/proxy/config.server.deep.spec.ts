@@ -9,12 +9,14 @@ import { DependencyInjection } from '../../src/proxy/dependency.injection';
 import { TYPES } from '../../src/proxy/dependency.injection.types';
 import { IConfigServer } from '../../src/proxy/interfaces/i.config.server';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
+import { NtlmConfig } from '../../src/models/ntlm.config.model';
 
 describe('Config API (ConfigServer deep tests)', () => {
   let configApiUrl: string;
   let dependencyInjection = new DependencyInjection();
   let configServer: IConfigServer;
   let configStore: IConfigStore;
+  let hostConfig: NtlmConfig;
 
   before(async function () {
     configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
@@ -33,11 +35,12 @@ describe('Config API (ConfigServer deep tests)', () => {
 
   it('ntlm-config should return bad request if the username contains backslash', async function () {
     // Arrange
-    let hostConfig = {
+    hostConfig = {
       ntlmHost: 'http://localhost:5000',
       username: 'nisse\\nisse',
       password: 'dummy',
-      domain: 'mptest'
+      domain: 'mptest',
+      ntlmVersion: 2
     };
 
     // Act
@@ -49,11 +52,12 @@ describe('Config API (ConfigServer deep tests)', () => {
 
   it('ntlm-config should return bad request if the domain contains backslash', async function () {
     // Arrange
-    let hostConfig = {
+    hostConfig = {
       ntlmHost: 'http://localhost:5000',
       username: 'nisse',
       password: 'dummy',
-      domain: 'mptest\\mptest'
+      domain: 'mptest\\mptest',
+      ntlmVersion: 2
     };
 
     // Act
@@ -65,11 +69,12 @@ describe('Config API (ConfigServer deep tests)', () => {
 
   it('ntlm-config should return bad request if the ntlmHost includes a path', async function () {
     // Arrange
-    let hostConfig = {
+    hostConfig = {
       ntlmHost: 'http://localhost:5000/search',
       username: 'nisse',
       password: 'dummy',
-      domain: 'mptest'
+      domain: 'mptest',
+      ntlmVersion: 2
     };
 
     // Act
@@ -81,11 +86,12 @@ describe('Config API (ConfigServer deep tests)', () => {
 
   it('ntlm-config should return ok if the config is ok', async function () {
     // Arrange
-    let hostConfig = {
+    hostConfig = {
       ntlmHost: 'http://localhost:5000/',
       username: 'nisse',
       password: 'dummy',
-      domain: 'mptest'
+      domain: 'mptest',
+      ntlmVersion: 2
     };
 
     // Act
@@ -97,11 +103,12 @@ describe('Config API (ConfigServer deep tests)', () => {
 
   it('ntlm-config should allow reconfiguration', async function () {
     // Arrange
-    let hostConfig = {
+    hostConfig = {
       ntlmHost: 'http://localhost:5000/',
       username: 'nisse',
       password: 'dummy',
-      domain: 'mptest'
+      domain: 'mptest',
+      ntlmVersion: 2
     };
     let completeUrl = toCompleteUrl('http://localhost:5000', false);
 
