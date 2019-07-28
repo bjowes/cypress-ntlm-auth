@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import http from 'http';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
 import { IContext } from '@bjowes/http-mitm-proxy';
-import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';
 import { NtlmManager } from '../../src/proxy/ntlm.manager';
@@ -42,42 +41,36 @@ describe('NtlmManager NTLM errors', () => {
   });
 
   it('Invalid credentials shall be logged and clear auth state', async function () {
-    const message = Substitute.for<IncomingMessage>();
-    const ctx = Substitute.for<IContext>();
-    ctx.serverToProxyResponse.returns(message);
+    const message = Substitute.for<http.IncomingMessage>();
     message.statusCode.returns(401);
     const ntlmHostUrl = toCompleteUrl('http://www.google.com:8081', false);
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
+    ntlmManager.ntlmHandshakeResponse(message, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     debugMock.received(1).log('NTLM authentication failed, invalid credentials.');
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
   });
 
   it('Valid credentials shall set authenticated state', async function () {
-    const message = Substitute.for<IncomingMessage>();
-    const ctx = Substitute.for<IContext>();
-    ctx.serverToProxyResponse.returns(message);
+    const message = Substitute.for<http.IncomingMessage>();
     message.statusCode.returns(200);
     const ntlmHostUrl = toCompleteUrl('http://www.google.com:8081', false);
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
+    ntlmManager.ntlmHandshakeResponse(message, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.Authenticated);
   });
 
   it('Unexpected NTLM message shall be logged and clear auth state', async function () {
-    const message = Substitute.for<IncomingMessage>();
-    const ctx = Substitute.for<IContext>();
-    ctx.serverToProxyResponse.returns(message);
+    const message = Substitute.for<http.IncomingMessage>();
     message.statusCode.returns(200);
     const ntlmHostUrl = toCompleteUrl('http://www.google.com:8081', false);
     const connectionContext = new ConnectionContext();
     connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
 
-    ntlmManager.ntlmHandshakeResponse(ctx, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
+    ntlmManager.ntlmHandshakeResponse(message, ntlmHostUrl, connectionContext, (err) => { if (err) throw err; });
     debugMock.received(1).log('Response from server in unexpected NTLM state ' + NtlmStateEnum.Type1Sent + ', resetting NTLM auth.');
     expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
   });

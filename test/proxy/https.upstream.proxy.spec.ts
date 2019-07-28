@@ -79,7 +79,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, proxyFacade.mitmCaCert);
-    expect(upstreamProxyReqCount, 'should be two requests due to handshake').to.be.equal(2);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal('Expecting larger payload on GET');
@@ -100,7 +100,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, proxyFacade.mitmCaCert);
-    expect(upstreamProxyReqCount, 'should be two requests due to handshake').to.be.equal(2);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -124,7 +124,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'PUT', '/put', body, proxyFacade.mitmCaCert);
-    expect(upstreamProxyReqCount, 'should be two requests due to handshake').to.be.equal(2);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -148,7 +148,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, proxyFacade.mitmCaCert);
-    expect(upstreamProxyReqCount, 'should be two requests due to handshake').to.be.equal(2);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
