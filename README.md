@@ -191,7 +191,8 @@ If the host you are testing is located on the internet (not your intranet) the N
 
 ### cy.ntlm(ntlmHost, username, password, [domain, [workstation]])
 
-The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host will be initiated with a NTLM login handshake with the specified user. This includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
+The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
+Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
 #### Syntax
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0-beta.4 - released 2019-07-29
+
+* Fix #62, #64 and #65: Implemented full NTLM handshake. Authentication is only initiated when the server sends a 401 challenge response which indicates that NTLM authentication is supported. This should resolve the issues seen by some users for:
+  * CORS preflight messages
+  * when the server repeats the challenge after first authentication
+  * subsites within a host that does not use NTLM authentication.
+
 ## 1.3.0-beta.3 - released 2019-07-23
 
 * Fix #60: NTLM version can now be set in the cy.ntlm call. Defaults to NTLMv2.
