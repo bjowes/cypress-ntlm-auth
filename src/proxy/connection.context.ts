@@ -8,6 +8,7 @@ export class ConnectionContext implements IConnectionContext {
   private _agent: any;
   private _ntlmHost?: CompleteUrl;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
+  private _requestBody = Buffer.alloc(0);
 
   get agent(): any {
     return this._agent;
@@ -20,6 +21,14 @@ export class ConnectionContext implements IConnectionContext {
     let auth = (this._ntlmHost !== undefined &&
       this._ntlmHost.href === ntlmHostUrl.href &&
       this._ntlmState === NtlmStateEnum.Authenticated);
+    return auth;
+  }
+
+  isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
+    let auth = this._ntlmHost === undefined ||
+      (this._ntlmHost !== undefined &&
+       this._ntlmHost.href === ntlmHostUrl.href &&
+       this._ntlmState === NtlmStateEnum.Authenticated);
     return auth;
   }
 
@@ -39,5 +48,17 @@ export class ConnectionContext implements IConnectionContext {
     if (this._ntlmHost !== undefined && this._ntlmHost.href === ntlmHostUrl.href) {
       this._ntlmState = NtlmStateEnum.NotAuthenticated;
     }
+  }
+
+  clearRequestBody() {
+    this._requestBody = Buffer.alloc(0);
+  }
+
+  addToRequestBody(chunk: Buffer) {
+    this._requestBody = Buffer.concat([this._requestBody, chunk]);
+  }
+
+  getRequestBody(): Buffer {
+    return this._requestBody;
   }
 }

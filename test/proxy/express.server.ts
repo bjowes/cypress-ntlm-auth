@@ -30,6 +30,7 @@ export class ExpressServer {
 
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
+  private sendWwwAuthHeader: string = null;
 
   constructor() {
     this.initExpress(this.appNoAuth, false);
@@ -70,6 +71,10 @@ export class ExpressServer {
       if (this.sendNtlmType2Header !== null) {
         res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
         res.sendStatus(401);
+      } else if (this.sendWwwAuthHeader != null) {
+        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
+        res.sendStatus(401);
+        this.sendWwwAuthHeader = null;
       } else {
         res.status(200).send(JSON.stringify(body));
       }
@@ -86,6 +91,10 @@ export class ExpressServer {
       if (this.sendNtlmType2Header !== null) {
         res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
         res.sendStatus(401);
+      } else if (this.sendWwwAuthHeader != null) {
+        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
+        res.sendStatus(401);
+        this.sendWwwAuthHeader = null;
       } else {
         res.status(200).send(JSON.stringify(req.body));
       }
@@ -102,6 +111,10 @@ export class ExpressServer {
       if (this.sendNtlmType2Header !== null) {
         res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
         res.sendStatus(401);
+      } else if (this.sendWwwAuthHeader != null) {
+        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
+        res.sendStatus(401);
+        this.sendWwwAuthHeader = null;
       } else {
         res.status(200).send(req.body);
       }
@@ -118,6 +131,10 @@ export class ExpressServer {
       if (this.sendNtlmType2Header !== null) {
         res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
         res.sendStatus(401);
+      } else if (this.sendWwwAuthHeader != null) {
+        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
+        res.sendStatus(401);
+        this.sendWwwAuthHeader = null;
       } else {
         res.status(200).send(req.body);
       }
@@ -330,6 +347,14 @@ export class ExpressServer {
 
   sendNtlmType2(fakeHeader: string) {
     this.sendNtlmType2Header = fakeHeader;
+  }
+
+  sendWwwAuthOnce(fakeHeader: string) {
+    this.sendWwwAuthHeader = fakeHeader;
+  }
+
+  restartNtlm() {
+    this.appNtlmAuth.use(ntlm({}));
   }
 }
 
