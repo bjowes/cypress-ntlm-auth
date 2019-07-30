@@ -1,8 +1,40 @@
 # Changelog
 
+## 1.3.0 - released 2019-07-30
+
+* Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
+* Improved unit tests for NTLM headers
+* Bumped dependencies
+* Fix #60: NTLM version can now be set in the cy.ntlm call. Defaults to NTLMv2.
+* Fix #62, #64 and #65: Implemented full NTLM handshake. Authentication is only initiated when the server sends a 401 challenge response which indicates that NTLM authentication is supported (previous versions started the handshake proactively). This should resolve the issues seen by some users for:
+  * CORS preflight messages (#65)
+  * when the server repeats the challenge after first authentication (#64)
+  * subsites within a host that does not use NTLM authentication (#62)
+
+## 1.3.0-beta.4 - released 2019-07-29
+
+* Fix #62, #64 and #65: Implemented full NTLM handshake. Authentication is only initiated when the server sends a 401 challenge response which indicates that NTLM authentication is supported. This should resolve the issues seen by some users for:
+  * CORS preflight messages
+  * when the server repeats the challenge after first authentication
+  * subsites within a host that does not use NTLM authentication.
+
+## 1.3.0-beta.3 - released 2019-07-23
+
+* Fix #60: NTLM version can now be set in the cy.ntlm call. Defaults to NTLMv2.
+
 ## 1.2.1 - released 2019-07-13
 
 * Made workstation field more consistent in NTLM messages. Fixes authentication issues with some NTLMv2 hosts.
+
+## 1.3.0-beta.2 - released 2019-07-13
+
+* Consistent use of workstation field in NTLM headers
+
+## 1.3.0-beta.1 - released 2019-07-07
+
+* Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
+* Improved unit tests for NTLM headers
+* Bumped dependencies
 
 ## 1.2.0 - released 2019-06-29
 

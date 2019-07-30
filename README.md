@@ -191,12 +191,13 @@ If the host you are testing is located on the internet (not your intranet) the N
 
 ### cy.ntlm(ntlmHost, username, password, [domain, [workstation]])
 
-The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host will be initiated with a NTLM login handshake with the specified user. This includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
+The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
+Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
 #### Syntax
 
 ```javascript
-cy.ntlm(ntlmHost, username, password, [domain, [workstation]]);
+cy.ntlm(ntlmHost, username, password, [domain, [workstation, [ntlmVersion]]]);
 ```
 
 * ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
@@ -204,6 +205,7 @@ cy.ntlm(ntlmHost, username, password, [domain, [workstation]]);
 * password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
 * domain (optional): the domain for the account to authenticate with (for AD account authentication)
 * workstation (optional): the workstation name of the client
+* ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Defaults to 2 if not set. This can be useful for legacy hosts that don't support NTLMv2, or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost.
 
@@ -222,6 +224,11 @@ cy.visit('https://ntlm.acme.com');
 cy.ntlm('https://ntlm.acme.com', 'admin', 'secret', 'acme');
 // Access the ntlm site with user admin
 cy.visit('https://ntlm.acme.com');
+// Test actions and asserts here
+
+cy.ntlm('https://ntlm-legacy.acme.com', 'admin', 'secret', 'acme', undefined, 1);
+// Access the ntlm-legacy site with user admin using NTLMv1
+cy.visit('https://ntlm-legacy.acme.com');
 // Test actions and asserts here
 ```
 
@@ -365,5 +372,6 @@ npm test
 
 * [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
 * [ntlm-client](https://github.com/clncln1/node-ntlm-client) - the NTLM methods from this library is used to generate and parse the NTLM messages. Support both NTLMv1 and NTLMv2.
+* [ntlm-auth](https://github.com/jborean93/ntlm-auth) - Python library for NTLM authentication. Used as a reference implementation to generate NTLM headers for unit tests.
 * [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
 * [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.

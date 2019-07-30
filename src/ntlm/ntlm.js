@@ -32,9 +32,7 @@ const os = require('os'),
 
 const NTLMSIGNATURE = "NTLMSSP\0";
 
-// workstation and target aren't used by the plugin for this message type,
-// just left them in for completeness
-function createType1Message(workstation, target) {
+function createType1MessageRaw(ntlm_version, workstation, target) {
   let dataPos = 40;
 	let pos = 0;
 	let buf = Buffer.alloc(256);
@@ -57,9 +55,17 @@ function createType1Message(workstation, target) {
 
   //flags
   let messageFlags = flags.NTLMFLAG_NEGOTIATE_OEM |
-    flags.NTLMFLAG_NEGOTIATE_NTLM_KEY |
-    flags.NTLMFLAG_NEGOTIATE_NTLM2_KEY |
-    flags.NTLMFLAG_NEGOTIATE_ALWAYS_SIGN;
+    flags.NTLMFLAG_NEGOTIATE_ALWAYS_SIGN |
+//    flags.NTLMFLAG_NEGOTIATE_KEY_EXCHANGE |
+    flags.NTLMFLAG_NEGOTIATE_VERSION;
+
+  if (ntlm_version == 1) {
+    messageFlags |= flags.NTLMFLAG_NEGOTIATE_NTLM_KEY |
+      flags.NTLMFLAG_NEGOTIATE_LM_KEY;
+  } else {
+    messageFlags |= flags.NTLMFLAG_NEGOTIATE_NTLM2_KEY;
+  }
+
   if (target.length > 0) {
     messageFlags |= flags.NTLMFLAG_NEGOTIATE_DOMAIN_SUPPLIED;
   }
@@ -67,7 +73,8 @@ function createType1Message(workstation, target) {
     messageFlags |= flags.NTLMFLAG_NEGOTIATE_WORKSTATION_SUPPLIED;
   }
 
-	buf.writeUInt32LE(messageFlags, pos);
+  // special operator to force conversion to unsigned
+	buf.writeUInt32LE(messageFlags >>> 0, pos);
 	pos += 4;
 
   //domain security buffer
@@ -95,14 +102,18 @@ function createType1Message(workstation, target) {
   }
 
   addVersionStruct(buf, pos);
+  return buf.slice(0, dataPos);
+}
 
-	return 'NTLM ' + buf.toString('base64', 0, dataPos);
+function createType1Message(ntlm_version, workstation, target) {
+  let buf = createType1MessageRaw(ntlm_version, workstation, target);
+	return 'NTLM ' + buf.toString('base64');
 }
 
   // Version - hard-coded to
   // Major version 10, minor version 0 (Windows 10)
   // build number 18362 (1903 update), NTLM revision 15
-  function addVersionStruct(buf, pos) {
+function addVersionStruct(buf, pos) {
   buf.writeUInt8(10, pos);
   pos++;
   buf.writeUInt8(0, pos);
@@ -135,7 +146,8 @@ function decodeType2Message(str) {
 	}
 
 	let buf = Buffer.from(str, 'base64');
-	let obj = {};
+  let obj = {};
+  obj.raw = buf;
 
 	//check signature
 	if (buf.toString('ascii', 0, NTLMSIGNATURE.length) !== NTLMSIGNATURE) {
@@ -206,31 +218,56 @@ function decodeType2Message(str) {
 					break;
 				}
 
-				let blockTypeStr;
+        let blockTypeStr;
+        let blockTypeOutput = 'string';
 
 				switch (blockType) {
-					case 1:
+					case 0x01:
 						blockTypeStr = 'SERVER';
 						break;
-					case 2:
+					case 0x02:
 						blockTypeStr = 'DOMAIN';
 						break;
-					case 3:
+					case 0x03:
 						blockTypeStr = 'FQDN';
 						break;
-					case 4:
+					case 0x04:
 						blockTypeStr = 'DNS';
 						break;
-					case 5:
+					case 0x05:
 						blockTypeStr = 'PARENT_DNS';
 						break;
-					default:
+          case 0x06:
+            blockTypeStr = 'FLAGS';
+            blockTypeOutput = 'hex';
+            break;
+          case 0x07:
+            blockTypeStr = 'SERVER_TIMESTAMP';
+            blockTypeOutput = 'hex';
+            break;
+          case 0x08:
+            blockTypeStr = 'SINGLE_HOST';
+            blockTypeOutput = 'hex';
+            break;
+          case 0x09:
+            blockTypeStr = 'TARGET_NAME';
+            break;
+          case 0x0A:
+            blockTypeStr = 'CHANNEL_BINDING';
+            blockTypeOutput = 'hex';
+            break;
+          default:
 						blockTypeStr = '';
 						break;
 				}
 
 				if (blockTypeStr) {
-					info[blockTypeStr] = buf.toString('ucs2', pos, pos + blockLength);
+          if (blockTypeOutput === 'string') {
+            info[blockTypeStr] = buf.toString('ucs2', pos, pos + blockLength);
+          } else {
+            // Output as hex in little endian order
+            info[blockTypeStr] = buf.toString('hex', pos, pos + blockLength).match(/.{2}/g).reverse().join("");
+          }
 				}
 
 				pos += blockLength;
@@ -268,14 +305,32 @@ function createType3Message(type2Message, username, password, workstation, targe
   let usernameLen = type2Message.encoding === 'ascii' ? username.length : username.length * 2;
   let workstationLen = type2Message.encoding === 'ascii' ? workstation.length : workstation.length * 2;
   let dataPosOffset = targetLen + usernameLen + workstationLen;
+  let withMic = false;
+  let withServerTimestamp = false;
+  if (type2Message.version === 2 &&
+      type2Message.targetInfo &&
+      type2Message.targetInfo.parsed['SERVER_TIMESTAMP']) { // Must include MIC, add room for it
+    withServerTimestamp = true;
+    withMic = true;
+    dataPos += 16;
+  }
   let hashDataPos = dataPos + dataPosOffset;
+  let ntlmHash = hash.createNTLMHash(password);
 
 	if (type2Message.version === 2) {
-		let ntlmHash = hash.createNTLMHash(password);
     client_nonce = client_nonce || hash.createPseudoRandomValue(16);
-    timestamp = timestamp || hash.createTimestamp();
-		let	lmv2 = hash.createLMv2Response(type2Message, username, target, ntlmHash, client_nonce);
-		let	ntlmv2 = hash.createNTLMv2Response(type2Message, username, target, ntlmHash, client_nonce, timestamp);
+    if (withServerTimestamp) { // Use server timestamp if provided
+      timestamp = type2Message.targetInfo.parsed['SERVER_TIMESTAMP'];
+    } else {
+      timestamp = timestamp || hash.createTimestamp();
+    }
+
+    let	lmv2;
+    if (withServerTimestamp) {
+      lmv2 = Buffer.alloc(24); // zero-filled
+    } else {
+      lmv2 = hash.createLMv2Response(type2Message, username, target, ntlmHash, client_nonce);
+    }
 
 		//lmv2 security buffer
 		buf.writeUInt16LE(lmv2.length, 12);
@@ -285,7 +340,9 @@ function createType3Message(type2Message, username, password, workstation, targe
 		lmv2.copy(buf, hashDataPos);
 		hashDataPos += lmv2.length;
 
-		//ntlmv2 security buffer
+		let	ntlmv2 = hash.createNTLMv2Response(type2Message, username, target, ntlmHash, client_nonce, timestamp, withMic);
+
+    //ntlmv2 security buffer
 		buf.writeUInt16LE(ntlmv2.length, 20);
 		buf.writeUInt16LE(ntlmv2.length, 22);
 		buf.writeUInt32LE(hashDataPos, 24);
@@ -293,10 +350,9 @@ function createType3Message(type2Message, username, password, workstation, targe
 		ntlmv2.copy(buf, hashDataPos);
 		hashDataPos += ntlmv2.length;
 	} else {
-		let lmHash = hash.createLMHash(password),
-			ntlmHash = hash.createNTLMHash(password),
-			lm = hash.createLMResponse(type2Message.challenge, lmHash),
-			ntlm = hash.createNTLMResponse(type2Message.challenge, ntlmHash);
+		let lmHash = hash.createLMHash(password);
+		let	lm = hash.createLMResponse(type2Message.challenge, lmHash);
+		let	ntlm = hash.createNTLMResponse(type2Message.challenge, ntlmHash);
 
 		//lm security buffer
 		buf.writeUInt16LE(lm.length, 12);
@@ -337,14 +393,27 @@ function createType3Message(type2Message, username, password, workstation, targe
 	dataPos += buf.write(workstation, dataPos, type2Message.encoding);
 
   //session key security buffer
-  buf.writeUInt16LE(0, 52);
-  buf.writeUInt16LE(0, 54);
+  let session_key = Buffer.alloc(0);
+  // if (type2Message.flags & flags.NTLMFLAG_NEGOTIATE_KEY_EXCHANGE) {
+  //   session_key = hash.createRandomSessionKey(type2Message, username, target, ntlmHash, client_nonce, timestamp, withMic);
+  // }
+  buf.writeUInt16LE(session_key.length, 52);
+  buf.writeUInt16LE(session_key.length, 54);
   buf.writeUInt32LE(hashDataPos, 56);
+  session_key.copy(buf, hashDataPos);
+  hashDataPos += session_key.length;
 
   //flags
   buf.writeUInt32LE(type2Message.flags, 60);
 
   addVersionStruct(buf, 64);
+
+  if (withMic) {
+    // Calculate and add MIC
+    let t1 = createType1MessageRaw(type2Message.version, workstation, target);
+    let mic = hash.createMIC(t1, type2Message, buf.slice(0, hashDataPos), username, target, ntlmHash, client_nonce, timestamp);
+    mic.copy(buf, 72);
+  }
 
 	return 'NTLM ' + buf.toString('base64', 0, hashDataPos);
 }

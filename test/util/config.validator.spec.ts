@@ -13,6 +13,7 @@ describe('ConfigValidator', function() {
         ntlmHost: 'http://localhost:5000',
         username: 'nisse',
         password: 'manpwr',
+        ntlmVersion: 2
       };
     });
 
@@ -56,7 +57,8 @@ describe('ConfigValidator', function() {
       config = {
         ntlmHost: 'http://localhost:5000',
         username: 'nisse',
-        password: 'manpwr'
+        password: 'manpwr',
+        ntlmVersion: 2
       };
     });
 
@@ -100,7 +102,8 @@ describe('ConfigValidator', function() {
       config = {
         ntlmHost: 'http://localhost:5000',
         username: 'nisse',
-        password: 'manpwr'
+        password: 'manpwr',
+        ntlmVersion: 2
       };
     });
 
@@ -147,7 +150,8 @@ describe('ConfigValidator', function() {
       config = {
         ntlmHost: 'http://localhost:5000',
         username: 'nisse',
-        password: 'manpwr'
+        password: 'manpwr',
+        ntlmVersion: 2
       };
     });
 
@@ -187,6 +191,66 @@ describe('ConfigValidator', function() {
       chai.expect(result.ok).to.be.false;
       chai.expect(result.message).to.be.equal('Workstation contains invalid characters or is too long.');
     });
+  });
+
+  describe('ntlmVersion', function() {
+    let config: NtlmConfig;
+
+    beforeEach(function () {
+      config = {
+        ntlmHost: 'http://localhost:5000',
+        username: 'nisse',
+        password: 'manpwr',
+        ntlmVersion: 2
+      };
+    });
+
+    it('ntlmVersion 1 succeeds', function() {
+      // Arrange
+      config.ntlmVersion = 1;
+
+      // Act
+      let result = ConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.true;
+    });
+
+    it('ntlmVersion 2 succeeds', function() {
+      // Arrange
+      config.ntlmVersion = 2;
+
+      // Act
+      let result = ConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.true;
+    });
+
+
+    it('ntlmVersion -1 fails', function () {
+      // Arrange
+      config.ntlmVersion = -1;
+
+      // Act
+      let result = ConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.false;
+      chai.expect(result.message).to.be.equal('Invalid ntlmVersion. Must be 1 or 2.');
+    });
+
+    it('ntlmVersion 200 fails', function () {
+      // Arrange
+      config.ntlmVersion = 200;
+
+      // Act
+      let result = ConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.false;
+      chai.expect(result.message).to.be.equal('Invalid ntlmVersion. Must be 1 or 2.');
+    });
 
   });
 
@@ -197,7 +261,8 @@ describe('ConfigValidator', function() {
       config = {
         ntlmHost: 'http://localhost:5000',
         username: 'nisse',
-        password: 'manpwr'
+        password: 'manpwr',
+        ntlmVersion: 2
       };
     });
 
@@ -210,7 +275,7 @@ describe('ConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username and password are required fields.');
+      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username, password and ntlmVersion are required fields.');
     });
 
     it('Does return error if username is missing', function () {
@@ -222,7 +287,7 @@ describe('ConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username and password are required fields.');
+      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username, password and ntlmVersion are required fields.');
     });
 
 
@@ -235,7 +300,19 @@ describe('ConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username and password are required fields.');
+      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username, password and ntlmVersion are required fields.');
+    });
+
+    it('Does return error if ntlmVersion is missing', function () {
+      // Arrange
+      delete config.ntlmVersion;
+
+      // Act
+      let result = ConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.false;
+      chai.expect(result.message).to.be.equal('Incomplete configuration. ntlmHost, username, password and ntlmVersion are required fields.');
     });
   });
 });

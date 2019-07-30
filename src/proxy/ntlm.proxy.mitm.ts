@@ -14,6 +14,8 @@ import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 
+const nodeCommon = require('_http_common');
+
 let self: NtlmProxyMitm;
 
 @injectable()
@@ -96,16 +98,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         let context = self._connectionContextManager
           .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
         ctx.proxyToServerRequestOptions.agent = context.agent;
-        if (context.isAuthenticated(targetHost)) {
-          return callback();
-        }
-
-        self._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException) => {
-          if (err) {
-            self._debug.log('Cannot perform NTLM handshake. Let original message pass through');
-          }
-          return callback();
+        context.clearRequestBody();
+        ctx.onRequestData(function(ctx, chunk, callback) {
+          context.addToRequestBody(chunk);
+          return callback(undefined, chunk);
         });
+        return callback();
       } else {
         if (self.isConfigApiRequest(targetHost)) {
           self._debug.log('Request to config API');
@@ -152,11 +150,46 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     let context = self._connectionContextManager
       .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
 
-    if (context.isAuthenticated(targetHost)) {
+    if (context.isNewOrAuthenticated(targetHost)) {
+      if (ctx.serverToProxyResponse.statusCode === 401 &&
+          self._ntlmManager.acceptsNtlmAuthentication(ctx.serverToProxyResponse)) {
+
+        self._debug.log('Received 401 with NTLM in www-authenticate header. Starting handshake.');
+        // Ignore response body
+        ctx.onResponseData((ctx, chunk, callback) => { return; });
+        ctx.onResponseEnd((ctx, callback) =>  { return; });
+        ctx.serverToProxyResponse.resume();
+
+        self._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => {
+          if (err) {
+            self._debug.log('Cannot perform NTLM handshake.');
+          }
+          if (res) {
+            if (ctx.clientToProxyRequest.headers['proxy-connection']) {
+              res.headers['proxy-connection'] = 'keep-alive';
+              res.headers['connection'] = 'keep-alive';
+            }
+            ctx.proxyToClientResponse.writeHead(res.statusCode || 401, self.filterAndCanonizeHeaders(res.headers));
+            res.on('data', chunk => ctx.proxyToClientResponse.write(chunk));
+            res.on('end', () => ctx.proxyToClientResponse.end());
+            res.resume();
+          } else {
+            // No response available, send empty 401 with headers from initial response
+            let headers = ctx.serverToProxyResponse.headers;
+            if (headers['proxy-connection']) {
+              headers['proxy-connection'] = 'keep-alive';
+              headers['connection'] = 'keep-alive';
+            }
+            ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(headers));
+            ctx.proxyToClientResponse.end();
+          }
+        });
+      } else {
+        return callback();
+      }
+    } else {
       return callback();
     }
-
-    self._ntlmManager.ntlmHandshakeResponse(ctx, targetHost, context, callback);
   }
 
   onConnect(req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -213,4 +246,21 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       }
     }
   }
+
+  private filterAndCanonizeHeaders(originalHeaders: http.IncomingHttpHeaders) {
+    let headers: http.IncomingHttpHeaders = {};
+    for (let key in originalHeaders) {
+      let canonizedKey = key.trim();
+      if (/^public\-key\-pins/i.test(canonizedKey)) {
+        // HPKP header => filter
+        continue;
+      }
+
+      if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
+        headers[canonizedKey] = originalHeaders[key];
+      }
+    }
+
+    return headers;
+  };
 }
