@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 - released 2019-08-02
+
+* Package bump due to security issue
+
 ## 1.3.0 - released 2019-07-30
 
 * Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
