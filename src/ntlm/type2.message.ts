@@ -6,12 +6,12 @@ interface TargetInfoHash {
 }
 
 export class Type2Message {
-  raw: Buffer = Buffer.alloc(0);
-  flags: number = 0;
-  encoding: 'ascii' | 'ucs2' = 'ascii';
-  version: number = 0;
-  challenge: Buffer = Buffer.alloc(0);
-  targetName: string = '';
+  raw: Buffer;
+  flags: number;
+  encoding: 'ascii' | 'ucs2';
+  version: number;
+  challenge: Buffer;
+  targetName: string;
   targetInfo: any;
 
   constructor(buf: Buffer) {

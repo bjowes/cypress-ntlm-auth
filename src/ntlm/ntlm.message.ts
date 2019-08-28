@@ -1,5 +1,5 @@
 export class NtlmMessage {
-  raw: Buffer = Buffer.alloc(0);
+  raw: Buffer;
 
   constructor(buf: Buffer) {
     this.raw = buf;
