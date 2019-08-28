@@ -9,6 +9,7 @@ export let TYPES = {
   IExpressServerFacade: Symbol.for('IExpressServerFacade'),
   IHttpMitmProxyFacade: Symbol.for('IHttpMitmProxyFacade'),
   IMain: Symbol.for('IMain'),
+  INtlm: Symbol.for('INtlm'),
   INtlmManager: Symbol.for('INtlmManager'),
   INtlmProxyExit: Symbol.for('INtlmProxyExit'),
   INtlmProxyMitm: Symbol.for('INtlmProxyMitm'),

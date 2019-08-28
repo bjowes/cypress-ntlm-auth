@@ -194,6 +194,8 @@ If the host you are testing is located on the internet (not your intranet) the N
 The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
 Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
+If domain and workstation are not set, the ntlm-proxy will use the domain of the ntlmHost, 
+
 #### Syntax
 
 ```javascript
@@ -203,9 +205,9 @@ cy.ntlm(ntlmHost, username, password, [domain, [workstation, [ntlmVersion]]]);
 * ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
 * username: the username for the account to authenticate with
 * password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
-* domain (optional): the domain for the account to authenticate with (for AD account authentication)
-* workstation (optional): the workstation name of the client
-* ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Defaults to 2 if not set. This can be useful for legacy hosts that don't support NTLMv2, or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
+* domain (optional): the domain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
+* workstation (optional): the workstation name of the client. Default value: `os.hostname()`;
+* ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Default value: 2. This can be useful for legacy hosts that don't support NTLMv2, or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 - released 2019-08-28
+
+* Fix #58: Refactored NTLM library to typescript
+* Fix #71: Reuse actual NTLM type 1 message when calculating MIC
+* Package bump
+
 ## 1.3.1 - released 2019-08-02
 
 * Package bump due to security issue
