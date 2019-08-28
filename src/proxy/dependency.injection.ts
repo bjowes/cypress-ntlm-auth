@@ -27,6 +27,9 @@ import { CypressNtlm } from '../util/cypress.ntlm';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { UpstreamProxyManager } from './upstream.proxy.manager';
 
+import { INtlm } from '../ntlm/interfaces/i.ntlm';
+import { Ntlm } from '../ntlm/ntlm';
+
 import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { NtlmManager } from './ntlm.manager';
 
@@ -69,6 +72,7 @@ export class DependencyInjection {
     this._container.bind<IExpressServerFacade>(TYPES.IExpressServerFacade).to(ExpressServerFacade);
     this._container.bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade).to(HttpMitmProxyFacade);
     this._container.bind<IMain>(TYPES.IMain).to(Main);
+    this._container.bind<INtlm>(TYPES.INtlm).to(Ntlm);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container.bind<INtlmProxyExit>(TYPES.INtlmProxyExit).to(NtlmProxyExit);
     this._container.bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm).to(NtlmProxyMitm);

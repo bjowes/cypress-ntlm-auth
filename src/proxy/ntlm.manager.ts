@@ -9,18 +9,22 @@ import { IConnectionContext } from './interfaces/i.connection.context';
 import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
-
-const ntlm = require('../ntlm/ntlm');
+import { INtlm } from '../ntlm/interfaces/i.ntlm';
+import { Type2Message } from '../ntlm/type2.message';
+//const ntlm = require('../ntlm/ntlm');
 
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
+  private _ntlm: INtlm;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.INtlm) ntlm: INtlm,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
+    this._ntlm = ntlm;
     this._debug = debug;
   }
 
@@ -28,7 +32,7 @@ export class NtlmManager implements INtlmManager {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config = this._configStore.get(ntlmHostUrl);
-    let type1msg = ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
+    let type1msg = this._ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
@@ -37,7 +41,7 @@ export class NtlmManager implements INtlmManager {
       agent: ctx.proxyToServerRequestOptions.agent,
     };
     requestOptions.headers = {};
-    requestOptions.headers['authorization'] = type1msg;
+    requestOptions.headers['authorization'] = type1msg.header();
     requestOptions.headers['connection'] = 'keep-alive';
     let proto = ctx.isSSL ? https : http;
     let type1req = proto.request(requestOptions, (res) => {
@@ -50,9 +54,9 @@ export class NtlmManager implements INtlmManager {
       }
 
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
-      let type2msg: any;
+      let type2msg: Type2Message;
       try {
-        type2msg = ntlm.decodeType2Message(res.headers['www-authenticate']);
+        type2msg = this._ntlm.decodeType2Message(res.headers['www-authenticate']);
         this._debug.log('Received NTLM message type 2, using NTLMv' + type2msg.version);
         this.debugHeader(res.headers['www-authenticate'], true);
         this.debugHeader(type2msg, false);
@@ -62,7 +66,7 @@ export class NtlmManager implements INtlmManager {
         context.resetState(ntlmHostUrl);
         return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
       }
-      let type3msg = ntlm.createType3Message(type2msg, config.username, config.password, config.workstation, config.domain);
+      let type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
       let type3requestOptions: https.RequestOptions = {
         method: ctx.proxyToServerRequestOptions.method,
         path: ctx.proxyToServerRequestOptions.path,
@@ -72,7 +76,7 @@ export class NtlmManager implements INtlmManager {
         headers: ctx.proxyToServerRequestOptions.headers
       };
       if (type3requestOptions.headers) { // Always true, silent the compiler
-        type3requestOptions.headers['authorization'] = type3msg;
+        type3requestOptions.headers['authorization'] = type3msg.header();
       }
       let type3req = proto.request(type3requestOptions, (res) => {
         res.pause(); // Finalize the response so we can reuse the socket

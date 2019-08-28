@@ -15,10 +15,13 @@ import { ConnectionContext } from '../../src/proxy/connection.context';
 import { NtlmStateEnum } from '../../src/models/ntlm.state.enum';
 import { ExpressServer } from './express.server';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
+import { INtlm } from '../../src/ntlm/interfaces/i.ntlm';
+import { NtlmMessage } from '../../src/ntlm/ntlm.message';
 
 describe('NtlmManager NTLM errors', () => {
   let ntlmManager: NtlmManager;
   let configStoreMock: SubstituteOf<IConfigStore>;
+  let ntlmMock: SubstituteOf<INtlm>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
@@ -30,10 +33,13 @@ describe('NtlmManager NTLM errors', () => {
 
   beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
+    ntlmMock = Substitute.for<INtlm>();
+    ntlmMock.createType1Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock.createType3Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     expressServer.sendNtlmType2(null);
-    ntlmManager = new NtlmManager(configStoreMock, debugMock);
+    ntlmManager = new NtlmManager(configStoreMock, ntlmMock, debugMock);
   });
 
   after(async function() {
