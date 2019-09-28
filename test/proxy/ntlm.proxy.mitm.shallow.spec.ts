@@ -196,7 +196,7 @@ describe('NtlmProxyMitm CONNECT', () => {
     });
 
     configStoreMock = Substitute.for<IConfigStore>();
-    configStoreMock.exists(Arg.any()).returns(false);
+    configStoreMock.existsOrUseSso(Arg.any()).returns(false);
 
     configServerMock = Substitute.for<IConfigServer>();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();

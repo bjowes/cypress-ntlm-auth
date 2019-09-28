@@ -14,9 +14,7 @@ import { Type2Message } from '../ntlm/type2.message';
 import { NtlmMessage } from '../ntlm/ntlm.message';
 import { NtlmConfig } from '../models/ntlm.config.model';
 import { PeerCertificate, TLSSocket } from 'tls';
-import { IWinSsoFacade } from './interfaces/i.winsso.facade';
-import { WinSsoFacade } from './winsso.facade';
-//const ntlm = require('../ntlm/ntlm');
+import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 @injectable()
 export class NtlmManager implements INtlmManager {

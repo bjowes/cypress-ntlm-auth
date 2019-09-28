@@ -17,7 +17,7 @@ import { ExpressServer } from './express.server';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { INtlm } from '../../src/ntlm/interfaces/i.ntlm';
 import { NtlmMessage } from '../../src/ntlm/ntlm.message';
-import { IWinSsoFacade } from '../../src/proxy/interfaces/i.winsso.facade';
+import { IWinSsoFacade } from '../../src/proxy/interfaces/i.win-sso.facade';
 
 describe('NtlmManager NTLM errors', () => {
   let ntlmManager: NtlmManager;

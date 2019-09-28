@@ -27,8 +27,8 @@ import { CypressNtlm } from '../util/cypress.ntlm';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { UpstreamProxyManager } from './upstream.proxy.manager';
 
-import { IWinSsoFacade } from './interfaces/i.winsso.facade';
-import { WinSsoFacade } from './winsso.facade';
+import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
+import { WinSsoFacade } from './win-sso.facade';
 
 import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Ntlm } from '../ntlm/ntlm';
