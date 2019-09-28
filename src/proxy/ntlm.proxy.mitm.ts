@@ -93,29 +93,33 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let targetHost = self.getTargetHost(ctx);
     if (targetHost) {
-      if (self._configStore.exists(targetHost)) {
-        self._debug.log('Request to ' + targetHost.href + ' in registered NTLM Hosts');
-        let context = self._connectionContextManager
-          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
+      let context = self._connectionContextManager
+          .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket);
+      let useSso = self._configStore.useSso(targetHost);
+      let useNtlm = useSso || self._configStore.exists(targetHost);
+      if (!context) {
+        context = self._connectionContextManager
+            .createConnectionContext(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, useNtlm, useSso);
+      }
+
+      if (useNtlm) {
+        self._debug.log('Request to ' + targetHost.href + ' in registered NTLM Hosts' + (useSso ? ' (using SSO)' : ''));
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
         ctx.onRequestData(function(ctx, chunk, callback) {
-          context.addToRequestBody(chunk);
+          context!.addToRequestBody(chunk);
           return callback(undefined, chunk);
         });
-        return callback();
       } else {
         if (self.isConfigApiRequest(targetHost)) {
           self._debug.log('Request to config API');
           ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(targetHost);
         } else {
           self._debug.log('Request to ' + targetHost.href + ' - pass on');
-          let context = self._connectionContextManager
-            .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, false);
           ctx.proxyToServerRequestOptions.agent = context.agent;
         }
-        return callback();
       }
+      return callback();
     } else {
       // The http-mitm-proxy cannot handle this scenario, if no target host header
       // is set it will get stuck in an infinite loop
@@ -143,14 +147,14 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let targetHost = self.getTargetHost(ctx);
-    if (!targetHost || !(self._configStore.exists(targetHost))) {
+    if (!targetHost || !(self._configStore.existsOrUseSso(targetHost))) {
       return callback();
     }
 
     let context = self._connectionContextManager
-      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, true);
+      .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket);
 
-    if (context.isNewOrAuthenticated(targetHost)) {
+    if (context && context.isNewOrAuthenticated(targetHost)) {
       if (ctx.serverToProxyResponse.statusCode === 401 &&
           self._ntlmManager.acceptsNtlmAuthentication(ctx.serverToProxyResponse)) {
 
@@ -199,7 +203,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
 
     let targetHost = toCompleteUrl(req.url, true, true);
-    if (self._configStore.exists(targetHost)) {
+    if (self._configStore.existsOrUseSso(targetHost)) {
       return callback();
     }
 

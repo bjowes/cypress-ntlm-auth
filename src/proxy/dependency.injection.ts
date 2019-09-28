@@ -27,6 +27,9 @@ import { CypressNtlm } from '../util/cypress.ntlm';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { UpstreamProxyManager } from './upstream.proxy.manager';
 
+import { IWinSsoFacade } from './interfaces/i.winsso.facade';
+import { WinSsoFacade } from './winsso.facade';
+
 import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Ntlm } from '../ntlm/ntlm';
 
@@ -79,6 +82,7 @@ export class DependencyInjection {
     this._container.bind<INtlmProxyServer>(TYPES.INtlmProxyServer).to(NtlmProxyServer);
     this._container.bind<IPortsFileService>(TYPES.IPortsFileService).to(PortsFileService);
     this._container.bind<IUpstreamProxyManager>(TYPES.IUpstreamProxyManager).to(UpstreamProxyManager);
+    this._container.bind<IWinSsoFacade>(TYPES.IWinSsoFacade).to(WinSsoFacade);
 
     this._container.bind<interfaces.Newable<IConnectionContext>>(TYPES.NewableIConnectionContext).toConstructor<IConnectionContext>(ConnectionContext);
   }

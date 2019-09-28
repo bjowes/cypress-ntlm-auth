@@ -3,6 +3,7 @@ import { CompleteUrl } from '../../models/complete.url.model';
 
 export interface IConnectionContext {
   agent: any;
+  useSso: boolean;
 
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean;
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean;

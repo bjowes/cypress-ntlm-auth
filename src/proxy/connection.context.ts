@@ -9,12 +9,20 @@ export class ConnectionContext implements IConnectionContext {
   private _ntlmHost?: CompleteUrl;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
+  private _useSso = false;
 
   get agent(): any {
     return this._agent;
   }
   set agent(agent: any) {
     this._agent = agent;
+  }
+
+  get useSso(): boolean {
+    return this._useSso;
+  }
+  set useSso(useSso: boolean) {
+    this._useSso = useSso;
   }
 
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean {

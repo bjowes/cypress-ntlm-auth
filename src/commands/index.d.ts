@@ -14,6 +14,17 @@ declare namespace Cypress {
     ntlm(ntlmHost: string, username: string, password: string, domain?: string, workstation?: string, ntlmVersion?: number): Chainable<any>
 
     /**
+     * Adds NTLM Single-sign-on authentication support to Cypress for
+     * specific hosts. Wildcards can be used to specify a range of hosts.
+     * Calling this mulitple times replaces previous SSO configuration.
+     * @example
+ ```js
+  cy.ntlmSso(['ntlm.acme.com', '*.internal.acme.com');
+ ```
+     */
+   ntlmSso(ntlmHosts: string[]): Chainable<any>
+
+    /**
      * Reset NTLM authentication for all configured hosts. Recommended before/after tests.
      * @example
  ```js

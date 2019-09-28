@@ -68,13 +68,56 @@ const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) =>
 };
 
 /**
+ * Adds NTLM Single-sign-on authentication support to Cypress for
+ * specific hosts. Wildcards can be used to specify a range of hosts.
+ * Calling this mulitple times replaces previous SSO configuration.
+ * @example
+ ```js
+  cy.ntlmSso(['ntlm.acme.com', '*.internal.acme.com');
+ ```
+ */
+const ntlmSso = (ntlmHosts) => {
+  const log = {
+      name: 'ntlmSso',
+      message: { ntlmHosts }
+  };
+  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
+  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  if (!ntlmProxy || !ntlmConfigApi) {
+      throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
+  }
+  // TODO - validate that input is an array, min length 1, with only strings
+  let result;
+  cy.request({
+      method: 'POST',
+      url: ntlmConfigApi + '/ntlm-sso',
+      body: ntlmHosts,
+      log: false // This isn't communication with the test object, so don't show it in the test log
+  }).then((resp) => {
+      if (resp.status === 200) {
+          result = 'Enabled NTLM SSO authentication for hosts';
+      }
+      else {
+          result = 'failed';
+          throw new Error('Could not configure cypress-ntlm-auth plugin. Error returned: "' + resp.body + '"');
+      }
+  });
+  log.consoleProps = () => {
+      return {
+          ntlmHosts: ntlmHosts,
+          result: result
+      };
+  };
+  Cypress.log(log);
+};
+
+/**
  * Reset NTLM authentication for all configured hosts. Recommended before/after tests.
  * @example
  ```js
   cy.ntlmReset();
  ```
  */
-
 const ntlmReset = () => {
   const log = {
     name: 'ntlmReset',
@@ -113,4 +156,5 @@ const ntlmReset = () => {
 };
 
 Cypress.Commands.add('ntlm', { prevSubject: false }, ntlm);
+Cypress.Commands.add('ntlmSso', { prevSubject: false }, ntlmSso);
 Cypress.Commands.add('ntlmReset', { prevSubject: false }, ntlmReset);
