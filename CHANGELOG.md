@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-beta.1 - released 2019-09-28
+
+* BETA for #73 - Single-sign-on on Windows hosts! Use `cy.ntlmSso(['ntlm-host.company.com', 'ntlm-host2.company.com'])` to register target hosts that should be accessed using the credentials of the user running Cypress. No calls to `cy.ntlm()` are required for hosts using SSO.
+* NTLM source files are no longer copied to the dist folder
+
 ## 1.3.2 - released 2019-08-28
 
 * Fix #58: Refactored NTLM library to typescript
