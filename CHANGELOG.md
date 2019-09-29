@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta.3 - released 2019-09-29
+
+* Updated to latest win-sso to include prebuilt native modules.
+
 ## 2.0.0-beta.2 - released 2019-09-28
 
 * Updated to latest win-sso to fix odd npm packaging

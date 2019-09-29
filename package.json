@@ -53,7 +53,7 @@
     "mkdirp": "^0.5.1",
     "node-cleanup": "^2.1.2",
     "reflect-metadata": "^0.1.13",
-    "win-sso": "^0.2.7"
+    "win-sso": "^0.2.13"
   },
   "devDependencies": {
     "@fluffy-spoon/substitute": "^1.89.0",
