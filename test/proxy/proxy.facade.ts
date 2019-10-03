@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
+import { NtlmSsoConfig } from '../../src/models/ntlm.sso.config.model';
 
 export class ProxyFacade {
   // The MITM proxy takes a significant time to start the first time
@@ -97,6 +98,16 @@ export class ProxyFacade {
   static async sendNtlmConfig(configApiUrl: string, hostConfig: NtlmConfig, timeout?: number): Promise<AxiosResponse<string>> {
     let res = await axios.post(configApiUrl + '/ntlm-config',
       hostConfig,
+      {
+        timeout: timeout,
+        validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
+      });
+    return res;
+  }
+
+  static async sendNtlmSsoConfig(configApiUrl: string, ssoConfig: NtlmSsoConfig, timeout?: number): Promise<AxiosResponse<string>> {
+    let res = await axios.post(configApiUrl + '/ntlm-sso',
+      ssoConfig,
       {
         timeout: timeout,
         validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation

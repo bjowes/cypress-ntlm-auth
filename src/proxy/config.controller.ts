@@ -8,6 +8,8 @@ import { IConfigController } from './interfaces/i.config.controller';
 import { IConfigStore } from './interfaces/i.config.store';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { SsoConfigValidator } from '../util/sso.config.validator';
+import { NtlmSsoConfig } from '../models/ntlm.sso.config.model';
 
 @injectable()
 export class ConfigController implements IConfigController {
@@ -49,16 +51,15 @@ export class ConfigController implements IConfigController {
   }
 
   private ntlmSso(req: Request, res: Response) {
-    // TODO - validation
-    //let validateResult = ConfigValidator.validate(req.body);
-      //if (!validateResult.ok) {
-        //res.status(400).send('Config parse error. ' + validateResult.message);
-      //} else {
-        this._debug.log('Received valid NTLM SSO config');
-        let config = req.body as string[];
-        this._configStore.setSsoConfig(config);
-        res.sendStatus(200);
-      //}
+    let validateResult = SsoConfigValidator.validate(req.body);
+    if (!validateResult.ok) {
+      res.status(400).send('SSO config parse error. ' + validateResult.message);
+    } else {
+      this._debug.log('Received valid NTLM SSO config');
+      let config = req.body as NtlmSsoConfig;
+      this._configStore.setSsoConfig(config);
+      res.sendStatus(200);
+    }
   }
 
   private reset(req: Request, res: Response) {

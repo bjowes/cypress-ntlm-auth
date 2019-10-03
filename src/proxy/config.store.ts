@@ -3,6 +3,7 @@ import { toCompleteUrl } from '../util/url.converter';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
 import { IConfigStore } from './interfaces/i.config.store';
+import { NtlmSsoConfig } from '../models/ntlm.sso.config.model';
 
 interface NtlmHostConfigHash {
   [ntlmHost: string]: NtlmConfig;
@@ -35,8 +36,8 @@ export class ConfigStore implements IConfigStore {
     return this.ntlmHosts[ntlmHostUrl.href];
   }
 
-  setSsoConfig(ntlmSsoHosts: string[]) {
-    this.ntlmSsoHosts = ntlmSsoHosts;
+  setSsoConfig(ntlmSsoConfig: NtlmSsoConfig) {
+    this.ntlmSsoHosts = ntlmSsoConfig.ntlmHosts;
   }
 
   useSso(ntlmHostUrl: CompleteUrl): boolean {

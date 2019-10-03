@@ -86,12 +86,20 @@ const ntlmSso = (ntlmHosts) => {
   if (!ntlmProxy || !ntlmConfigApi) {
       throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
   }
-  // TODO - validate that input is an array, min length 1, with only strings
+
+  let ntlmSsoConfig = {
+    ntlmHosts: ntlmHosts
+  };
+  let validationResult = SsoConfigValidator.validate(ntlmSsoConfig);
+  if (!validationResult.ok) {
+    throw new Error(validationResult.message);
+  }
+
   let result;
   cy.request({
       method: 'POST',
       url: ntlmConfigApi + '/ntlm-sso',
-      body: ntlmHosts,
+      body: ntlmSsoConfig,
       log: false // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
       if (resp.status === 200) {
@@ -104,7 +112,7 @@ const ntlmSso = (ntlmHosts) => {
   });
   log.consoleProps = () => {
       return {
-          ntlmHosts: ntlmHosts,
+          ntlmSsoConfig: ntlmSsoConfig,
           result: result
       };
   };

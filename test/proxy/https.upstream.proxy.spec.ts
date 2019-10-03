@@ -16,6 +16,8 @@ import { PortsFile } from '../../src/models/ports.file.model';
 import { DependencyInjection } from '../../src/proxy/dependency.injection';
 import { TYPES } from '../../src/proxy/dependency.injection.types';
 import { ICoreServer } from '../../src/proxy/interfaces/i.core.server';
+import { osSupported } from 'win-sso';
+import { NtlmSsoConfig } from '../../src/models/ntlm.sso.config.model';
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -163,6 +165,93 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, 'should be one requests').to.be.equal(1);
     expect(res.status, 'remote request should return 401').to.be.equal(401);
+  });
+});
+
+describe('Proxy for HTTPS host with NTLM using SSO and upstream proxy', function() {
+  let ntlmSsoConfig: NtlmSsoConfig;
+  let proxyFacade = new ProxyFacade();
+  let expressServer = new ExpressServer();
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
+
+  before('Start HTTPS server and proxy', async function () {
+    // Check SSO support
+    if (osSupported() === false) {
+      this.skip();
+      return;
+    }
+
+    savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
+    portsFileExistsStub = sinon.stub(PortsFileService.prototype, 'exists');
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.returns(Promise.resolve());
+
+    this.timeout(15000);
+    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
+      upstreamProxyReqCount++;
+      return callback();
+    });
+    httpsUrl = await expressServer.startHttpsServer(true, undefined);
+    ntlmSsoConfig = {
+      ntlmHosts: ['localhost']
+    };
+
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    let ports = await coreServer.start(false, undefined, upstreamProxyUrl, undefined);
+    configApiUrl = ports.configApiUrl;
+    ntlmProxyUrl = ports.ntlmProxyUrl;
+  });
+
+  after('Stop HTTPS server and proxy', async function() {
+    if (savePortsFileStub) {
+      savePortsFileStub.restore();
+    }
+    if (portsFileExistsStub) {
+      portsFileExistsStub.restore();
+    }
+    if (coreServer) {
+      await coreServer.stop(true);
+      proxyFacade.stopMitmProxy();
+      await expressServer.stopHttpsServer();
+    }
+  });
+
+  beforeEach('Reset NTLM config', async function() {
+    await ProxyFacade.sendNtlmReset(configApiUrl);
+    upstreamProxyReqCount = 0;
+  });
+
+  it('should handle authentication for GET requests', async function() {
+    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    expect(res.status, 'ntlm-sso-config should return 200').to.be.equal(200);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.message).to.be.equal('Expecting larger payload on GET');
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+  });
+
+  it('should return 401 for unconfigured host on GET requests', async function() {
+    // Cert is for upstream mitm, not for express server
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, 'should be one requests').to.be.equal(1);
+    expect(res.status, 'remote request should return 401').to.be.equal(401);
+  });
+
+  it('should handle authentication for POST requests', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    expect(res.status, 'ntlm-sso-config should return 200').to.be.equal(200);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, 'should be three requests due to handshake').to.be.equal(3);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
   });
 });
 
