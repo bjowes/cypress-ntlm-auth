@@ -3,6 +3,7 @@
 /// <reference types="cypress" />
 
 const ConfigValidator = require('../util/config.validator').ConfigValidator;
+const SsoConfigValidator = require('../util/sso.config.validator').SsoConfigValidator;
 
 /**
  * Adds NTLM authentication support to Cypress for a specific host.
