@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta.6 - released 2019-10-11
+
+* Fix: Disable OS validation in browser context
+
 ## 2.0.0-beta.5 - released 2019-10-11
 
 * Fix: Missing require for ntlmSso command
