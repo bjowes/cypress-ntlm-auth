@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-beta.4 - released 2019-10-11
+
+* Validation of SSO configuration
+* Updated to latest win-sso to handle empty targetHost
+* Grab PeerCertificate for channel binding on first response
+* Unit tests in place for SSO
+
 ## 2.0.0-beta.3 - released 2019-09-29
 
 * Updated to latest win-sso to include prebuilt native modules.
