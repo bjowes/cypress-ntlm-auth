@@ -189,7 +189,7 @@ describe('Proxy for HTTPS host with NTLM using SSO', function() {
     }
     if (coreServer) {
       await coreServer.stop(true);
-      await expressServer.stopHttpServer();
+      await expressServer.stopHttpsServer();
     }
   });
 
