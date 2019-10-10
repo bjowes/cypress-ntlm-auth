@@ -3,10 +3,18 @@
 import chai from 'chai';
 import { SsoConfigValidator } from '../../src/util/sso.config.validator';
 import { NtlmSsoConfig } from '../../src/models/ntlm.sso.config.model';
+import { osSupported } from 'win-sso';
 
 describe('SsoConfigValidator', function() {
   describe('ntlmHosts', function () {
     let config: NtlmSsoConfig;
+
+    before('Check SSO support', function () {
+      if (osSupported() === false) {
+        this.skip();
+        return;
+      }
+    });
 
     beforeEach(function () {
       config = {

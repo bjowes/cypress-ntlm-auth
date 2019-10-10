@@ -2,10 +2,16 @@ import url from 'url';
 
 import { NtlmSsoConfig } from '../models/ntlm.sso.config.model';
 import { NtlmConfigValidateResult } from '../models/ntlm.config.validate.result';
+import { osSupported } from 'win-sso';
 
 export class SsoConfigValidator {
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {
     let result = { ok: false } as NtlmConfigValidateResult;
+
+    if (!osSupported()) {
+      result.message = 'SSO is not supported on this platform. Only Windows OSs are supported.';
+      return result;
+    }
 
     if (!config.ntlmHosts) {
       result.message = 'Incomplete configuration. ntlmHosts is an required field.';
