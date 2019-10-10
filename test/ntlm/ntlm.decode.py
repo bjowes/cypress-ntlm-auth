@@ -214,7 +214,8 @@ def pretty_print_challenge(st):
               print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
             pos += 4 + rec_sz
 
-    opt_version(st, 48)
+    if (len(st) > 48):
+      opt_version(st, 48)
 
     print "Flags: 0x%08x [%s]" % (flags, flags_str(flags))
 
