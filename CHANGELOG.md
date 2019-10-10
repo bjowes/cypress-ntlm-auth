@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta.5 - released 2019-10-11
+
+* Fix: Missing require for ntlmSso command
+
 ## 2.0.0-beta.4 - released 2019-10-11
 
 * Validation of SSO configuration
