@@ -3,7 +3,8 @@
 import http from 'http';
 import https from 'https';
 import express from 'express';
-import ntlm from 'express-ntlm';
+//import ntlm from 'express-ntlm';
+const ntlm = require('@bjowes/express-ntlm');
 import net from 'net';
 import bodyParser from 'body-parser';
 import { pki } from 'node-forge';
