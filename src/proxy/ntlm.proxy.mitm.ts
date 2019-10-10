@@ -13,6 +13,7 @@ import { INtlmManager } from './interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { TLSSocket } from 'tls';
 
 const nodeCommon = require('_http_common');
 
@@ -159,6 +160,19 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           self._ntlmManager.acceptsNtlmAuthentication(ctx.serverToProxyResponse)) {
 
         self._debug.log('Received 401 with NTLM in www-authenticate header. Starting handshake.');
+
+        // Grab PeerCertificate for NTLM channel binding
+        if (ctx.isSSL) {
+          let tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
+          let peerCert = tlsSocket.getPeerCertificate();
+          // getPeerCertificate may return an empty object, validate it
+          if (peerCert.fingerprint) {
+            context.peerCert = peerCert;
+          } else {
+            this._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
+          }
+        }
+
         // Ignore response body
         ctx.onResponseData((ctx, chunk, callback) => { return; });
         ctx.onResponseEnd((ctx, callback) =>  { return; });

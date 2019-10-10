@@ -13,7 +13,6 @@ import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Type2Message } from '../ntlm/type2.message';
 import { NtlmMessage } from '../ntlm/ntlm.message';
 import { NtlmConfig } from '../models/ntlm.config.model';
-import { PeerCertificate, TLSSocket } from 'tls';
 import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 @injectable()
@@ -81,13 +80,11 @@ export class NtlmManager implements INtlmManager {
 
       let type3msg: NtlmMessage;
       if (context.useSso) {
-        let targetFqdn = type2msg.targetInfo.parsed['FQDN'];
-        let peerCert: PeerCertificate | undefined = undefined;
-        if (ctx.isSSL) {
-          let tlsSocket = res.connection as TLSSocket;
-          peerCert = tlsSocket.getPeerCertificate();
+        let targetFqdn = undefined;
+        if (type2msg.targetInfo && type2msg.targetInfo.parsed['FQDN']) {
+          targetFqdn = type2msg.targetInfo.parsed['FQDN'];
         }
-        type3msg = this._winSsoFacade.createAuthResponse(res.headers['www-authenticate'], targetFqdn, peerCert);
+        type3msg = this._winSsoFacade.createAuthResponse(res.headers['www-authenticate'], targetFqdn, context.peerCert);
       } else {
         type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
       }

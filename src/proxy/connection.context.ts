@@ -2,6 +2,7 @@ import { NtlmStateEnum } from '../models/ntlm.state.enum';
 import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
 import { IConnectionContext } from './interfaces/i.connection.context';
+import { PeerCertificate } from 'tls';
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
@@ -10,6 +11,7 @@ export class ConnectionContext implements IConnectionContext {
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _useSso = false;
+  private _peerCert?: PeerCertificate;
 
   get agent(): any {
     return this._agent;
@@ -23,6 +25,13 @@ export class ConnectionContext implements IConnectionContext {
   }
   set useSso(useSso: boolean) {
     this._useSso = useSso;
+  }
+
+  get peerCert(): PeerCertificate | undefined {
+    return this._peerCert;
+  }
+  set peerCert(peerCert: PeerCertificate | undefined) {
+    this._peerCert = peerCert;
   }
 
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
