@@ -9,7 +9,7 @@ const container = new DependencyInjection();
 let cypressNtlm = container.get<ICypressNtlm>(TYPES.ICypressNtlm);
 let proxyMain = container.get<IMain>(TYPES.IMain);
 
-export async function run(options): Promise<any> {
+export async function run(options: any): Promise<any> {
   return new Promise((resolve, reject) => {
     if (cypressNtlm.checkCypressIsInstalled() === false) {
       throw new Error('cypress-ntlm-auth requires Cypress to be installed.\n');
@@ -24,10 +24,10 @@ export async function run(options): Promise<any> {
 
         // Start up Cypress and let it parse any options
         cypress.run(options)
-        .then(result => {
+        .then((result: any) => {
           proxyMain.stop().then(() => resolve(result));
         })
-        .catch(err => {
+        .catch((err: any) => {
           proxyMain.stop().then(() => reject(err));
         });
       });
