@@ -170,7 +170,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           if ((peerCert as any).fingerprint256) {
             context.peerCert = peerCert;
           } else {
-            this._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
+            self._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
           }
         }
 
