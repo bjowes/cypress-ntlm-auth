@@ -22,12 +22,11 @@ Read the intro at [their site](https://www.cypress.io/) and find out if it is th
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
-## *BREAKING CHANGE* from release 1.0.0
+## *BREAKING CHANGE* from release 2.0.0
 
-The import files for cypress plugin and cypress command have been relocated due to the TypeScript rewrite.
+Not really a breaking change, but if your test client runs on Windows you should consider using the new single sign on feature instead of the old way to configure hosts. It offers fully featured NTLM authentication with all the security features provided natively by Windows. Secondly, the configuration is much simpler since you only need to specify hosts, no credentials. User credentials from the user running the test client are used automatically.
 
-* Update your import path in `cypress/plugins/index.js`: change `import 'cypress-ntlm-auth/src/plugin'` to `import 'cypress-ntlm-auth/dist/plugin'`
-* Update your import path in `cypress/support/index.js`: change `import 'cypress-ntlm-auth/src/commands'` to `import 'cypress-ntlm-auth/dist/commands'`
+Check out the new `cy.ntlmSso` command below and give it a try!
 
 ## Install
 
@@ -194,7 +193,7 @@ If the host you are testing is located on the internet (not your intranet) the N
 The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
 Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
-If domain and workstation are not set, the ntlm-proxy will use the domain of the ntlmHost, 
+If domain and workstation are not set, the ntlm-proxy will use the domain of the ntlmHost.
 
 #### Syntax
 
@@ -265,6 +264,43 @@ Cypress.env.baseUrl = ntlmHost;
 ```
 
 This will persist until the current spec file is finished.
+
+### cy.ntlmSso(ntlmHosts)
+
+The ntlmSso command is used to configure host for single sign on authentication. After this command, all network communication from cypress to the specified hosts is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the credentials of the user running the test client.
+Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
+
+#### Syntax
+
+```javascript
+cy.ntlmSso(ntlmHosts);
+```
+
+* ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication with single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url (path and query) - only host level authentication is supported. Example: `['localhost', 'ntlm.acme.com']`
+
+The ntlmSso command may be called multiple times, each call will overwrite the previous ntlmSso configuration.
+
+The NTLM protocol version cannot be specified, it is negotiated automatically. The client will follow the settings in Windows (LMCompatibilityLevel), which could mean that a legacy host with NTLMv1 only cannot be accessed if the client settings don't allow NTLMv1.
+
+Configuration set with the ntlmSso command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current spec file is finished*.
+
+#### Example
+
+You want to test a IIS website on your intranet `https://ntlm.acme.com` that requires Windows Authentication and allows NTLM.
+
+```javascript
+// Enable single sign on for ntlm.acme.com
+cy.ntlmSso(['ntlm.acme.com']);
+// Access the ntlm site with the user running the test client
+cy.visit('https://ntlm.acme.com');
+// Test actions and asserts here
+
+// Enable single sign on for both ntlm-legacy.acme.com and ntlm.acme.com
+cy.ntlmSso(['ntlm-legacy.acme.com', 'ntlm.acme.com']);
+// Access the ntlm-legacy site with the user running the test client
+cy.visit('https://ntlm-legacy.acme.com');
+// Test actions and asserts here
+```
 
 ### cy.ntlmReset()
 
@@ -373,7 +409,7 @@ npm test
 ## Credits
 
 * [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
-* [ntlm-client](https://github.com/clncln1/node-ntlm-client) - the NTLM methods from this library is used to generate and parse the NTLM messages. Support both NTLMv1 and NTLMv2.
+* [ntlm-client](https://github.com/clncln1/node-ntlm-client) - Strong inspiration for the NTLM methods in this library.
 * [ntlm-auth](https://github.com/jborean93/ntlm-auth) - Python library for NTLM authentication. Used as a reference implementation to generate NTLM headers for unit tests.
 * [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
 * [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.

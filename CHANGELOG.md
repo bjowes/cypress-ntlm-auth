@@ -1,14 +1,18 @@
 # Changelog
 
-## 2.0.0-beta.6 - released 2019-10-11
+## 2.0.0 - released 2019-10-11
+
+* Fixed #73: Single sign on is here! This is a big improvement in usability and security (no password required) for use cases where authentication only needs a single user, and that user is the same as the account running the tests. Naturally this only works on Windows OSs test clients.
+
+## 2.0.0-beta.6 - released 2019-10-10
 
 * Fix: Disable OS validation in browser context
 
-## 2.0.0-beta.5 - released 2019-10-11
+## 2.0.0-beta.5 - released 2019-10-10
 
 * Fix: Missing require for ntlmSso command
 
-## 2.0.0-beta.4 - released 2019-10-11
+## 2.0.0-beta.4 - released 2019-10-10
 
 * Validation of SSO configuration
 * Updated to latest win-sso to handle empty targetHost
