@@ -17,11 +17,13 @@ import { ExpressServer } from './express.server';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { INtlm } from '../../src/ntlm/interfaces/i.ntlm';
 import { NtlmMessage } from '../../src/ntlm/ntlm.message';
+import { IWinSsoFacade } from '../../src/proxy/interfaces/i.win-sso.facade';
 
 describe('NtlmManager NTLM errors', () => {
   let ntlmManager: NtlmManager;
   let configStoreMock: SubstituteOf<IConfigStore>;
   let ntlmMock: SubstituteOf<INtlm>;
+  let winSsoFacadeMock: SubstituteOf<IWinSsoFacade>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
@@ -33,13 +35,14 @@ describe('NtlmManager NTLM errors', () => {
 
   beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
+    winSsoFacadeMock = Substitute.for<IWinSsoFacade>();
     ntlmMock = Substitute.for<INtlm>();
     ntlmMock.createType1Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
     ntlmMock.createType3Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     expressServer.sendNtlmType2(null);
-    ntlmManager = new NtlmManager(configStoreMock, ntlmMock, debugMock);
+    ntlmManager = new NtlmManager(configStoreMock, ntlmMock, winSsoFacadeMock, debugMock);
   });
 
   after(async function() {

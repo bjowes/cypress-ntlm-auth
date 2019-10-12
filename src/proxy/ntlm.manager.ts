@@ -11,28 +11,39 @@ import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Type2Message } from '../ntlm/type2.message';
-//const ntlm = require('../ntlm/ntlm');
+import { NtlmMessage } from '../ntlm/ntlm.message';
+import { NtlmConfig } from '../models/ntlm.config.model';
+import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
   private _ntlm: INtlm;
+  private _winSsoFacade: IWinSsoFacade;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.INtlm) ntlm: INtlm,
+    @inject(TYPES.IWinSsoFacade) winSsoFacade: IWinSsoFacade,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
     this._ntlm = ntlm;
+    this._winSsoFacade = winSsoFacade;
     this._debug = debug;
   }
 
   ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-    let config = this._configStore.get(ntlmHostUrl);
-    let type1msg = this._ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
+    let config: NtlmConfig;
+    let type1msg: NtlmMessage;
+    if (context.useSso) {
+      type1msg = this._winSsoFacade.createAuthRequest();
+    } else {
+      config = this._configStore.get(ntlmHostUrl);
+      type1msg = this._ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
+    }
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
@@ -66,7 +77,17 @@ export class NtlmManager implements INtlmManager {
         context.resetState(ntlmHostUrl);
         return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
       }
-      let type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
+
+      let type3msg: NtlmMessage;
+      if (context.useSso) {
+        let targetFqdn = undefined;
+        if (type2msg.targetInfo && type2msg.targetInfo.parsed['FQDN']) {
+          targetFqdn = type2msg.targetInfo.parsed['FQDN'];
+        }
+        type3msg = this._winSsoFacade.createAuthResponse(res.headers['www-authenticate'], targetFqdn, context.peerCert);
+      } else {
+        type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
+      }
       let type3requestOptions: https.RequestOptions = {
         method: ctx.proxyToServerRequestOptions.method,
         path: ctx.proxyToServerRequestOptions.path,
@@ -90,7 +111,7 @@ export class NtlmManager implements INtlmManager {
         return callback(err);
       });
       this._debug.log('Sending NTLM message type 3 with initial client request');
-      this.debugHeader(type3msg, true);
+      this.debugHeader(type3msg.header(), true);
       context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
       type3req.write(context.getRequestBody());
       type3req.end();
@@ -101,7 +122,7 @@ export class NtlmManager implements INtlmManager {
       return callback(err);
     });
     this._debug.log('Sending  NTLM message type 1');
-    this.debugHeader(type1msg, true);
+    this.debugHeader(type1msg.header(), true);
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     type1req.end();
   }

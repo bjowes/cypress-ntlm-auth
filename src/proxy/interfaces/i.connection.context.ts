@@ -1,8 +1,11 @@
 import { NtlmStateEnum } from '../../models/ntlm.state.enum';
 import { CompleteUrl } from '../../models/complete.url.model';
+import { PeerCertificate } from 'tls';
 
 export interface IConnectionContext {
   agent: any;
+  useSso: boolean;
+  peerCert: PeerCertificate | undefined;
 
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean;
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean;

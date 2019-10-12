@@ -43,7 +43,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
   }
 
-  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean): IConnectionContext {
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean, useSso: boolean): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
@@ -53,11 +53,20 @@ export class ConnectionContextManager implements IConnectionContextManager {
     agent._cyAgentId = this._agentCount++;
     let context = new this.ConnectionContext();
     context.agent = agent;
+    context.useSso = useSso;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
     this._debug.log('Created ' + (useNtlm ? 'NTLM ready' : 'non-NTLM') +
       ' agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
+  }
+
+  getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined {
+    let clientAddress = this.getClientAddress(clientSocket);
+    if (clientAddress in this._connectionContexts) {
+      return this._connectionContexts[clientAddress];
+    }
+    return undefined;
   }
 
   private nodeTlsRejectUnauthorized(): boolean {
@@ -126,7 +135,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
       if (this._connectionContexts[clientAddress].agent.destroy) {
         this._connectionContexts[clientAddress].agent.destroy(); // Destroys any sockets to servers
       }
-      delete this._connectionContexts[clientAddress];
+    delete this._connectionContexts[clientAddress];
       this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
     } else {
       this._debug.log('RemoveAgent called for ' + clientAddress + ' due to socket.' + event + ', but agent does not exist');

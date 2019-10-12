@@ -10,6 +10,8 @@ import { TYPES } from '../../src/proxy/dependency.injection.types';
 import { IConfigServer } from '../../src/proxy/interfaces/i.config.server';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
+import { NtlmSsoConfig } from '../../src/models/ntlm.sso.config.model';
+import { osSupported } from 'win-sso';
 
 describe('Config API (ConfigServer deep tests)', () => {
   let configApiUrl: string;
@@ -33,104 +35,199 @@ describe('Config API (ConfigServer deep tests)', () => {
     await configServer.stop();
   });
 
-  it('ntlm-config should return bad request if the username contains backslash', async function () {
-    // Arrange
-    hostConfig = {
-      ntlmHost: 'http://localhost:5000',
-      username: 'nisse\\nisse',
-      password: 'dummy',
-      domain: 'mptest',
-      ntlmVersion: 2
-    };
+  describe('ntlm-config', function() {
+    it('should return bad request if the username contains backslash', async function () {
+      // Arrange
+      hostConfig = {
+        ntlmHost: 'http://localhost:5000',
+        username: 'nisse\\nisse',
+        password: 'dummy',
+        domain: 'mptest',
+        ntlmVersion: 2
+      };
 
-    // Act
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(400);
-    expect(res.data).to.equal('Config parse error. Username contains invalid characters or is too long.');
-    expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+      // Act
+      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('Config parse error. Username contains invalid characters or is too long.');
+      expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
+
+    it('should return bad request if the domain contains backslash', async function () {
+      // Arrange
+      hostConfig = {
+        ntlmHost: 'http://localhost:5000',
+        username: 'nisse',
+        password: 'dummy',
+        domain: 'mptest\\mptest',
+        ntlmVersion: 2
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('Config parse error. Domain contains invalid characters or is too long.');
+      expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
+
+    it('should return bad request if the ntlmHost includes a path', async function () {
+      // Arrange
+      hostConfig = {
+        ntlmHost: 'http://localhost:5000/search',
+        username: 'nisse',
+        password: 'dummy',
+        domain: 'mptest',
+        ntlmVersion: 2
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('Config parse error. Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)');
+      expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
+
+    it('should return ok if the config is ok', async function () {
+      // Arrange
+      hostConfig = {
+        ntlmHost: 'http://localhost:5000/',
+        username: 'nisse',
+        password: 'dummy',
+        domain: 'mptest',
+        ntlmVersion: 2
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.true;
+    });
+
+    it('should allow reconfiguration', async function () {
+      // Arrange
+      hostConfig = {
+        ntlmHost: 'http://localhost:5000/',
+        username: 'nisse',
+        password: 'dummy',
+        domain: 'mptest',
+        ntlmVersion: 2
+      };
+      let completeUrl = toCompleteUrl('http://localhost:5000', false);
+
+      // Act
+      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.exists(completeUrl)).to.be.true;
+      expect(configStore.get(completeUrl).username).to.be.equal('nisse');
+
+      hostConfig.username = 'dummy';
+      res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.exists(completeUrl)).to.be.true;
+      expect(configStore.get(completeUrl).username).to.be.equal('dummy');
+    });
   });
 
-  it('ntlm-config should return bad request if the domain contains backslash', async function () {
-    // Arrange
-    hostConfig = {
-      ntlmHost: 'http://localhost:5000',
-      username: 'nisse',
-      password: 'dummy',
-      domain: 'mptest\\mptest',
-      ntlmVersion: 2
-    };
+  describe('ntlm-sso on Window', function() {
+    before('Check SSO support', function () {
+      // Check SSO support
+      if (osSupported() === false) {
+        this.skip();
+        return;
+      }
+    });
 
-    // Act
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(400);
-    expect(res.data).to.equal('Config parse error. Domain contains invalid characters or is too long.');
-    expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    it('should return ok if the config is ok', async function () {
+      // Arrange
+      let ssoConfig: NtlmSsoConfig = {
+        ntlmHosts: ['localhost']
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.true;
+    });
+
+    it('should return bad request if the ntlmHosts includes anything else than hostnames / FQDNs', async function () {
+      // Arrange
+      let ssoConfig: NtlmSsoConfig = {
+        ntlmHosts: ['localhost', 'https://google.com']
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('SSO config parse error. Invalid host [https://google.com] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+      expect(configStore.useSso(toCompleteUrl('https://google.com', false))).to.be.false;
+    });
+
+    it('should allow reconfiguration', async function () {
+      // Arrange
+      let ssoConfig: NtlmSsoConfig = {
+        ntlmHosts: ['localhost']
+      };
+      let ssoConfig2: NtlmSsoConfig = {
+        ntlmHosts: ['nisse.com', 'assa.com']
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.true;
+
+      res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig2);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+      expect(configStore.useSso(toCompleteUrl('http://assa.com:5000', false))).to.be.true;
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
   });
 
-  it('ntlm-config should return bad request if the ntlmHost includes a path', async function () {
-    // Arrange
-    hostConfig = {
-      ntlmHost: 'http://localhost:5000/search',
-      username: 'nisse',
-      password: 'dummy',
-      domain: 'mptest',
-      ntlmVersion: 2
-    };
+  describe('ntlm-sso on non-Window', function() {
+    before('Check SSO support', function () {
+      // Check SSO support
+      if (osSupported() === true) {
+        this.skip();
+        return;
+      }
+    });
 
-    // Act
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(400);
-    expect(res.data).to.equal('Config parse error. Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)');
-    expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    it('should return fail even if the config is ok', async function () {
+      // Arrange
+      let ssoConfig: NtlmSsoConfig = {
+        ntlmHosts: ['localhost']
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('SSO config parse error. SSO is not supported on this platform. Only Windows OSs are supported.');
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
   });
 
-  it('ntlm-config should return ok if the config is ok', async function () {
-    // Arrange
-    hostConfig = {
-      ntlmHost: 'http://localhost:5000/',
-      username: 'nisse',
-      password: 'dummy',
-      domain: 'mptest',
-      ntlmVersion: 2
-    };
-
-    // Act
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(200);
-    expect(res.data).to.equal('OK');
-    expect(configStore.exists(toCompleteUrl('http://localhost:5000', false))).to.be.true;
+  describe('reset', function() {
+    it('should return response', async function () {
+      // Act
+      let res = await ProxyFacade.sendNtlmReset(configApiUrl);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+    });
   });
 
-  it('ntlm-config should allow reconfiguration', async function () {
-    // Arrange
-    hostConfig = {
-      ntlmHost: 'http://localhost:5000/',
-      username: 'nisse',
-      password: 'dummy',
-      domain: 'mptest',
-      ntlmVersion: 2
-    };
-    let completeUrl = toCompleteUrl('http://localhost:5000', false);
-
-    // Act
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(200);
-    expect(res.data).to.equal('OK');
-    expect(configStore.exists(completeUrl)).to.be.true;
-    expect(configStore.get(completeUrl).username).to.be.equal('nisse');
-
-    hostConfig.username = 'dummy';
-    res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-    expect(res.status).to.equal(200);
-    expect(res.data).to.equal('OK');
-    expect(configStore.exists(completeUrl)).to.be.true;
-    expect(configStore.get(completeUrl).username).to.be.equal('dummy');
-  });
-
-  it('alive should return response', async function () {
-    // Act
-    let res = await ProxyFacade.sendAliveRequest(configApiUrl);
-    expect(res.status).to.equal(200);
-    expect(res.data).to.equal('OK');
+  describe('alive', function() {
+    it('should return response', async function () {
+      // Act
+      let res = await ProxyFacade.sendAliveRequest(configApiUrl);
+      expect(res.status).to.equal(200);
+      expect(res.data).to.equal('OK');
+    });
   });
 });

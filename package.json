@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "1.3.1",
+  "version": "2.0.0-beta.5",
   "description": "NTLM authentication plugin for Cypress",
   "main": "dist/proxy/main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "launch": "src/launchers/cypress.ntlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "mocha --require ./test/ts.hooks.js --require source-map-support/register test/**/*.spec.ts",
-    "build": "shx rm -rf dist && tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js && shx cp -r src/ntlm dist/ntlm",
+    "build": "shx rm -rf dist && tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js",
     "prepare": "npm run build",
     "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test",
     "lint": "tslint --project ."
@@ -52,9 +52,11 @@
     "inversify": "^5.0.1",
     "mkdirp": "^0.5.1",
     "node-cleanup": "^2.1.2",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "win-sso": "^0.3.1"
   },
   "devDependencies": {
+    "@bjowes/express-ntlm": "^2.4.2",
     "@fluffy-spoon/substitute": "^1.89.0",
     "@types/chai": "^4.2.0",
     "@types/chai-as-promised": "^7.1.2",
@@ -70,7 +72,6 @@
     "@types/tunnel": "0.0.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "express-ntlm": "^2.3.0",
     "is-port-reachable": "^2.0.1",
     "mocha": "^6.2.0",
     "node-forge": "^0.8.5",

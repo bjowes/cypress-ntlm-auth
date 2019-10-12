@@ -3,7 +3,8 @@ import { CompleteUrl } from '../../models/complete.url.model';
 import { IConnectionContext } from './i.connection.context';
 
 export interface IConnectionContextManager {
-  getConnectionContextFromClientSocket(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean): IConnectionContext;
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean, useSso: boolean): IConnectionContext;
+  getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined;
   getAgent(isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean): any;
   getUntrackedAgent(targetHost: CompleteUrl): any;
   clearAuthentication(ntlmHostUrl: CompleteUrl): void;

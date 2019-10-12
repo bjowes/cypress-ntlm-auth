@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.0.0 - released 2019-10-11
+
+* Fixed #73: Single sign on is here! This is a big improvement in usability and security (no password required) for use cases where authentication only needs a single user, and that user is the same as the account running the tests. Naturally this only works on Windows OSs test clients.
+
+## 2.0.0-beta.6 - released 2019-10-10
+
+* Fix: Disable OS validation in browser context
+
+## 2.0.0-beta.5 - released 2019-10-10
+
+* Fix: Missing require for ntlmSso command
+
+## 2.0.0-beta.4 - released 2019-10-10
+
+* Validation of SSO configuration
+* Updated to latest win-sso to handle empty targetHost
+* Grab PeerCertificate for channel binding on first response
+* Unit tests in place for SSO
+
+## 2.0.0-beta.3 - released 2019-09-29
+
+* Updated to latest win-sso to include prebuilt native modules.
+
+## 2.0.0-beta.2 - released 2019-09-28
+
+* Updated to latest win-sso to fix odd npm packaging
+
+## 2.0.0-beta.1 - released 2019-09-28
+
+* BETA for #73 - Single-sign-on on Windows hosts! Use `cy.ntlmSso(['ntlm-host.company.com', 'ntlm-host2.company.com'])` to register target hosts that should be accessed using the credentials of the user running Cypress. No calls to `cy.ntlm()` are required for hosts using SSO.
+* NTLM source files are no longer copied to the dist folder
+
 ## 1.3.2 - released 2019-08-28
 
 * Fix #58: Refactored NTLM library to typescript

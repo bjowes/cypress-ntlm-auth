@@ -107,6 +107,9 @@ target_field_types[4] = "DNS domain name"
 target_field_types[5] = "Parent DNS domain"
 target_field_types[6] = "AV Flags"
 target_field_types[7] = "Server Timestamp"
+target_field_types[8] = "Single Host"
+target_field_types[9] = "Target Name"
+target_field_types[10] = "Channel Bindings"
 
 def main():
     st_raw = sys.stdin.read()
@@ -211,7 +214,8 @@ def pretty_print_challenge(st):
               print "    %s (%d): %s" % (rec_type, rec_type_id, subst)
             pos += 4 + rec_sz
 
-    opt_version(st, 48)
+    if (len(st) > 48):
+      opt_version(st, 48)
 
     print "Flags: 0x%08x [%s]" % (flags, flags_str(flags))
 
@@ -242,6 +246,15 @@ def pretty_print_ntlm_resp(st):
             if rec_type_id == 7:
               value = struct.unpack(">Q", st[pos+4 : pos+4+rec_sz])
               print "    %s (%d): 0x%016x" % (rec_type, rec_type_id, value[0])
+            elif rec_type_id == 10:
+              value = struct.unpack(">QQ", st[pos+4 : pos+4+rec_sz])
+              print "    %s (%d): 0x%016x%016x" % (rec_type, rec_type_id, value[0], value[1])
+            elif rec_type_id == 8:
+              shd_len = rec_sz
+              if rec_sz > 48: # We should ignore anything above 48 bytes
+                shd_len = 48
+              value = struct.unpack(">IIQQQQQ", st[pos+4 : pos+4+shd_len])
+              print "    %s (%d): Size: %d CustomData: 0x%08x MachineID: 0x%016x%016x%016x%016x" % (rec_type, rec_type_id, value[0], value[2], value[3], value[4], value[5], value[6])
             elif rec_type_id == 6:
               value = struct.unpack(">I", st[pos+4 : pos+4+rec_sz])
               print "    %s (%d): 0x%08x" % (rec_type, rec_type_id, value[0])
