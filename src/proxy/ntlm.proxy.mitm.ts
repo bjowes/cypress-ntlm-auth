@@ -165,11 +165,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         if (ctx.isSSL) {
           let tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
           let peerCert = tlsSocket.getPeerCertificate();
-          // getPeerCertificate may return an empty object, validate it
-          if (peerCert.fingerprint) {
+          // getPeerCertificate may return an empty object.
+          // Validate that it has fingerprint256 attribute (added in Node 9.8.0)
+          if ((peerCert as any).fingerprint256) {
             context.peerCert = peerCert;
           } else {
-            this._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
+            self._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
           }
         }
 

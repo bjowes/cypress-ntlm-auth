@@ -11,6 +11,7 @@ import { IConfigServer } from '../../src/proxy/interfaces/i.config.server';
 import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { NtlmSsoConfig } from '../../src/models/ntlm.sso.config.model';
+import { osSupported } from 'win-sso';
 
 describe('Config API (ConfigServer deep tests)', () => {
   let configApiUrl: string;
@@ -130,7 +131,15 @@ describe('Config API (ConfigServer deep tests)', () => {
     });
   });
 
-  describe('ntlm-sso', function() {
+  describe('ntlm-sso on Window', function() {
+    before('Check SSO support', function () {
+      // Check SSO support
+      if (osSupported() === false) {
+        this.skip();
+        return;
+      }
+    });
+
     it('should return ok if the config is ok', async function () {
       // Arrange
       let ssoConfig: NtlmSsoConfig = {
@@ -177,6 +186,29 @@ describe('Config API (ConfigServer deep tests)', () => {
       expect(res.status).to.equal(200);
       expect(res.data).to.equal('OK');
       expect(configStore.useSso(toCompleteUrl('http://assa.com:5000', false))).to.be.true;
+      expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
+    });
+  });
+
+  describe('ntlm-sso on non-Window', function() {
+    before('Check SSO support', function () {
+      // Check SSO support
+      if (osSupported() === true) {
+        this.skip();
+        return;
+      }
+    });
+
+    it('should return fail even if the config is ok', async function () {
+      // Arrange
+      let ssoConfig: NtlmSsoConfig = {
+        ntlmHosts: ['localhost']
+      };
+
+      // Act
+      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      expect(res.status).to.equal(400);
+      expect(res.data).to.equal('SSO config parse error. SSO is not supported on this platform. Only Windows OSs are supported.');
       expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
     });
   });
