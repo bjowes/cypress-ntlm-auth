@@ -352,6 +352,21 @@ If the recommended startup scripts from above are used, the ntlm-proxy will be t
 
 To write also the NTLM headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM headers is an attack vector for the account, especially if you are using NTLMv1.
 
+## Node module API
+
+This plugin can also be called as a Node module. It mimics the behavior of the [run method in Cypress module API](https://docs.cypress.io/guides/guides/module-api.html#cypress-run) - accepting the same arguments, passing them on to Cypress and returning the same value. It will automatically start the ntlm-proxy before calling `cypress.run()`, and it will shut down the ntlm-proxy after the tests have finished.
+
+### Example
+
+```javascript
+const cypressNtlmAuth = require('cypress-ntlm-auth');
+cypressNtlmAuth.run({
+  spec: './cypress/integration/test.spec.js'
+})
+.then(result => console.log(result))
+.catch(err => console.log(err));
+```
+
 ## Notes
 
 ### ntlm-proxy process
@@ -382,7 +397,6 @@ If you are unable to resolve the certificate issues you can use the standard Nod
 
 ## Planned work
 
-* More real-world testing against Windows servers
 * Support custom http.Agent / https.Agent configuration
 * Configuration option to disable self-signed certificates even for localhost
 

@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.0.0 - released 2019-10-11
+## 2.0.1 - released 2019-10-14
+
+* Fixed #75: Node module API available. The ntlm-proxy and cypress can now be started as a function call in node, see the README for example code.
+
+## 2.0.0 - released 2019-10-12
 
 * Fixed #73: Single sign on is here! This is a big improvement in usability and security (no password required) for use cases where authentication only needs a single user, and that user is the same as the account running the tests. Naturally this only works on Windows OSs test clients.
 
