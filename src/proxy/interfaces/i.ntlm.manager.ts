@@ -1,4 +1,4 @@
-import { IContext } from '@bjowes/http-mitm-proxy';
+import { IContext } from 'http-mitm-proxy';
 import { CompleteUrl } from '../../models/complete.url.model';
 import { IConnectionContext } from './i.connection.context';
 import http from 'http';

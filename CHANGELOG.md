@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.2 - released 2019-10-16
+
+* Moved back to original http-mitm-proxy since the required changes are now in the official release.
+* Package bumps
+
 ## 2.0.1 - released 2019-10-14
 
 * Fixed #75: Node module API available. The ntlm-proxy and cypress can now be started as a function call in node, see the README for example code.

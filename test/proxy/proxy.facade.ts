@@ -2,7 +2,7 @@ import http from 'http';
 import https from 'https';
 
 import url from 'url';
-import httpMitmProxy from '@bjowes/http-mitm-proxy';
+import httpMitmProxy from 'http-mitm-proxy';
 const getPort = require('get-port');
 import axios, { AxiosResponse, Method } from 'axios';
 import tunnel from 'tunnel';
