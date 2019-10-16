@@ -148,7 +148,7 @@ export class ProxyFacade {
         host: proxyUrl.hostname,
         port: +proxyUrl.port
       },
-      timeout: 3000,
+      timeout: 5000,
       data: body,
       validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
     });
@@ -183,7 +183,7 @@ export class ProxyFacade {
       url: path,
       httpsAgent: tun,
       proxy: false,
-      timeout: 3000,
+      timeout: 5000,
       data: body,
 
       validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
