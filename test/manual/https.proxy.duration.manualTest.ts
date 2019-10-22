@@ -45,7 +45,7 @@ describe('Duration test: Proxy for HTTPS host with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, null);
     ntlmHostConfig = {
@@ -259,7 +259,7 @@ describe('Duration test: Proxy for HTTPS host without NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, null);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);

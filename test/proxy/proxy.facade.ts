@@ -3,6 +3,8 @@ import https from 'https';
 
 import url from 'url';
 import httpMitmProxy from 'http-mitm-proxy';
+const CA = require('http-mitm-proxy/lib/ca');
+
 const getPort = require('get-port');
 import axios, { AxiosResponse, Method } from 'axios';
 import tunnel from 'tunnel';
@@ -69,7 +71,28 @@ export class ProxyFacade {
 
     await this.startMitmProxy(false);
     this.stopMitmProxy();
+
+    // This generates the localhost cert and key before starting the tests,
+    // since this step is fairly slow on Node 8 the runtime of the actual tests are
+    // more predictable this way.
+    await this.preGenerateCertificate('localhost');
+
     this._mitmProxyInit = true;
+  }
+
+  private preGenerateCertificate(host: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const sslCaDir = path.resolve(process.cwd(), '.http-mitm-proxy');
+      CA.create(sslCaDir, function(err: NodeJS.ErrnoException, ca: any) {
+        if (err) {
+          return reject(err);
+        }
+        ca.generateServerCertificateKeys([host], function(key: string, cert: string) {
+          return resolve();
+
+        });
+      });
+    });
   }
 
   get mitmCaCert(): Buffer {

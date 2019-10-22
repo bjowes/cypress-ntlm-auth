@@ -38,7 +38,7 @@ describe('Proxy for HTTPS host with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
     ntlmHostConfig = {
@@ -70,10 +70,6 @@ describe('Proxy for HTTPS host with NTLM', function() {
   });
 
   it('should handle authentication for GET requests', async function() {
-    // This test is too slow on node 8.9.3, likely due to certificate generation on the first https request
-    if (parseInt(process.versions.node.split('.')[0]) <= 8) {
-      this.timeout(5000);
-    }
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'GET', '/get', null, proxyFacade.mitmCaCert);
@@ -171,7 +167,7 @@ describe('Proxy for HTTPS host with NTLM using SSO', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
 
@@ -231,7 +227,6 @@ describe('Proxy for HTTPS host with NTLM using SSO', function() {
 });
 
 describe('Proxy for HTTPS host without NTLM', function() {
-  let ntlmHostConfig: NtlmConfig;
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
@@ -243,7 +238,7 @@ describe('Proxy for HTTPS host without NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     ntlmHostConfig = {

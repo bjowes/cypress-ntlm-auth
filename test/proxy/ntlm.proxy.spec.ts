@@ -66,7 +66,7 @@ describe('NTLM Proxy authentication', function () {
   let dependencyInjection = new DependencyInjection();
 
   before(async function () {
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     await initRemoteHost();
     savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');

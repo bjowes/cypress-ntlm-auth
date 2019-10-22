@@ -37,7 +37,7 @@ describe('Proxy for HTTP host on port 80 with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, 80);
     ntlmHostConfig = {
@@ -104,7 +104,7 @@ describe('Proxy for HTTPS host on port 443 with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, 443);
     ntlmHostConfig = {
