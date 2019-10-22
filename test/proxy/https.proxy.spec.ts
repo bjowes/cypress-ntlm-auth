@@ -241,13 +241,6 @@ describe('Proxy for HTTPS host without NTLM', function() {
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    ntlmHostConfig = {
-      ntlmHost: httpsUrl,
-      username: 'nisse',
-      password: 'manpower',
-      domain: 'mptst',
-      ntlmVersion: 2
-    };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
