@@ -22,7 +22,7 @@ export async function run(options: any): Promise<any> {
       cypressNtlm.checkProxyIsRunning(5000, 200)
       .then((portsFile) => {
         process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
-        process.env.NO_PROXY = '';
+        process.env.NO_PROXY = '<-loopback>';
 
         debug.log('ntlm-proxy started, running tests through Cypress...');
         // Start up Cypress and let it parse any options

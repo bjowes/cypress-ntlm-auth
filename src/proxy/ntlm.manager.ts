@@ -55,27 +55,27 @@ export class NtlmManager implements INtlmManager {
     requestOptions.headers['authorization'] = type1msg.header();
     requestOptions.headers['connection'] = 'keep-alive';
     let proto = ctx.isSSL ? https : http;
-    let type1req = proto.request(requestOptions, (res) => {
-      res.resume(); // Finalize the response so we can reuse the socket
+    let type1req = proto.request(requestOptions, (type1res) => {
+      type1res.pause();
 
-      if (this.canHandleNtlmAuthentication(res) === false) {
+      if (this.canHandleNtlmAuthentication(type1res) === false) {
         this._debug.log('www-authenticate not found on response of second request during NTLM handshake with host', fullUrl);
         context.resetState(ntlmHostUrl);
-        return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl));
+        return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl), type1res);
       }
 
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
       let type2msg: Type2Message;
       try {
-        type2msg = this._ntlm.decodeType2Message(res.headers['www-authenticate']);
+        type2msg = this._ntlm.decodeType2Message(type1res.headers['www-authenticate']);
         this._debug.log('Received NTLM message type 2, using NTLMv' + type2msg.version);
-        this.debugHeader(res.headers['www-authenticate'], true);
+        this.debugHeader(type1res.headers['www-authenticate'], true);
         this.debugHeader(type2msg, false);
       } catch (err) {
         this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
         this._debug.log(err);
         context.resetState(ntlmHostUrl);
-        return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl));
+        return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl), type1res);
       }
 
       let type3msg: NtlmMessage;
@@ -84,7 +84,7 @@ export class NtlmManager implements INtlmManager {
         if (type2msg.targetInfo && type2msg.targetInfo.parsed['FQDN']) {
           targetFqdn = type2msg.targetInfo.parsed['FQDN'];
         }
-        type3msg = this._winSsoFacade.createAuthResponse(res.headers['www-authenticate'], targetFqdn, context.peerCert);
+        type3msg = this._winSsoFacade.createAuthResponse(type1res.headers['www-authenticate'], targetFqdn, context.peerCert);
       } else {
         type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
       }
@@ -99,22 +99,25 @@ export class NtlmManager implements INtlmManager {
       if (type3requestOptions.headers) { // Always true, silent the compiler
         type3requestOptions.headers['authorization'] = type3msg.header();
       }
-      let type3req = proto.request(type3requestOptions, (res) => {
-        res.pause(); // Finalize the response so we can reuse the socket
-        this.ntlmHandshakeResponse(res, ntlmHostUrl, context, (err) => {
-          return callback(err, res);
+      type1res.on('end', () => {
+        let type3req = proto.request(type3requestOptions, (type3res) => {
+          type3res.pause();
+          this.ntlmHandshakeResponse(type3res, ntlmHostUrl, context, (err) => {
+            return callback(err, type3res);
+          });
         });
+        type3req.on('error', (err) => {
+          this._debug.log('Error while sending NTLM message type 3:', err);
+          context.resetState(ntlmHostUrl);
+          return callback(err);
+        });
+        this._debug.log('Sending NTLM message type 3 with initial client request');
+        this.debugHeader(type3msg.header(), true);
+        context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
+        type3req.write(context.getRequestBody());
+        type3req.end();
       });
-      type3req.on('error', (err) => {
-        this._debug.log('Error while sending NTLM message type 3:', err);
-        context.resetState(ntlmHostUrl);
-        return callback(err);
-      });
-      this._debug.log('Sending NTLM message type 3 with initial client request');
-      this.debugHeader(type3msg.header(), true);
-      context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
-      type3req.write(context.getRequestBody());
-      type3req.end();
+      type1res.resume(); // complete message to reuse socket
     });
     type1req.on('error', (err) => {
       this._debug.log('Error while sending NTLM message type 1:', err);

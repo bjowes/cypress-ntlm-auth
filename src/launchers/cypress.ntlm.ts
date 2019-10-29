@@ -15,7 +15,7 @@ if (cypressNtlm.checkCypressIsInstalled() === false) {
 cypressNtlm.checkProxyIsRunning(5000, 200)
 .then((portsFile) => {
   process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
-  process.env.NO_PROXY = '';
+  process.env.NO_PROXY = '<-loopback>';
 
   // Start up Cypress and let it parse any command line arguments
   require('cypress/lib/cli').init();
