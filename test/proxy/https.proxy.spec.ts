@@ -3,12 +3,15 @@ import 'mocha';
 
 import { ExpressServer } from './express.server';
 import { ProxyFacade } from './proxy.facade';
-
+import net from 'net';
+import http from 'http';
 import sinon from 'sinon';
 import { expect } from 'chai';
 import chai  from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
+import url from 'url';
+import tunnel from 'tunnel';
 
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
@@ -298,4 +301,107 @@ describe('Proxy for HTTPS host without NTLM', function() {
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
   });
+
+  it.only('should close SSL tunnels on reset', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    // TODO use tunnel agent instead
+    let agent1 = tunnel.httpsOverHttp({
+      proxy: {
+          host: proxyUrl.hostname,
+          port: +proxyUrl.port,
+          headers: {
+            'User-Agent': 'Node',
+            'proxy-connection': 'keep-alive'
+          }
+      },
+      ca: [expressServer.caCert]
+    });
+    let agent2 = tunnel.httpsOverHttp({
+      proxy: {
+          host: proxyUrl.hostname,
+          port: +proxyUrl.port,
+          headers: {
+            'User-Agent': 'Node',
+            'proxy-connection': 'keep-alive'
+          }
+      },
+      ca: [expressServer.caCert]
+    });
+    //let agent1 = new https.Agent({ keepAlive: true });
+    //let agent2 = new https.Agent({ keepAlive: true });
+
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, expressServer.caCert, agent1);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, expressServer.caCert, agent2);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    console.log(agent1.sockets);
+    console.log(agent2.sockets);
+    destroySockets(agent1);
+
+    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await waitForAgentSocketClose(agent2);
+    // TODO should not need to close agent2
+    //agent2.destroy();
+  });
+
+  function destroySockets(agent: http.Agent) {
+    let sockets = agent.sockets as any as net.Socket[];
+    sockets.forEach(socket => {
+      socket.destroy();
+    });
+    /*
+    for (let property in agent.sockets) {
+      if (agent.sockets.hasOwnProperty(property)) {
+        agent.sockets[property].forEach(socket => {
+          socket.destroy();
+        });
+      }
+    }
+    */
+  }
+
+  function waitForAgentSocketClose(agent: http.Agent): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let socketCount = 0;
+      let socketProperty;
+      let sockets = agent.sockets as any as net.Socket[];
+      socketCount = sockets.length;
+      /*
+      for (let property in agent.sockets) {
+        if (agent.sockets.hasOwnProperty(property)) {
+          socketCount++;
+          socketProperty = property;
+        }
+      }*/
+      console.log(sockets);
+      console.log(sockets[0]);
+
+      if (socketCount > 1) {
+        return reject(new Error('too many sockets'));
+      }
+      if (socketCount < 1) {
+        return reject(new Error('no sockets'));
+      }
+
+      sockets[0].on('finish', () => {
+        return resolve();
+      });
+/*
+      agent.sockets[socketProperty][0].on('finish', () => {
+        return resolve();
+      });
+      */
+    });
+  }
 });

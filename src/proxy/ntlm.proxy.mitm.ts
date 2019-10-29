@@ -235,6 +235,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       allowHalfOpen: true
     }, function () {
       conn.on('finish', () => {
+        self._connectionContextManager.removeTunnel(socket);
         socket.destroy();
       });
       socket.on('close', () => {
@@ -246,6 +247,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         conn.write(head);
         conn.pipe(socket);
         socket.pipe(conn);
+        self._connectionContextManager.addTunnel(socket, conn);
       });
     });
 

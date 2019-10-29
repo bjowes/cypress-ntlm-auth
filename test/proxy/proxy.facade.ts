@@ -152,7 +152,7 @@ export class ProxyFacade {
     if (remoteHostUrl.protocol === 'http:') {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
-      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, caCert);
+      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent, caCert);
     }
   }
 
@@ -178,7 +178,7 @@ export class ProxyFacade {
     return res;
   }
 
-  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, caCert?: Buffer) {
+  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, agent?: http.Agent, caCert?: Buffer) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
@@ -189,7 +189,7 @@ export class ProxyFacade {
       ca = [caCert];
     }
 
-    const tun = tunnel.httpsOverHttp({
+    const tun = agent || tunnel.httpsOverHttp({
       proxy: {
           host: proxyUrl.hostname,
           port: +proxyUrl.port,
