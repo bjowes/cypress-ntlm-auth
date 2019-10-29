@@ -1,9 +1,15 @@
 # Changelog
 
-## 2.0.2 - released 2019-10-16
+## 2.0.3 - released 2019-10-29
 
 * Moved back to original http-mitm-proxy since the required changes are now in the official release.
 * Package bumps
+
+## 2.0.2 - released 2019-10-29
+
+* Fixed #81: Cypress 3.5.0 now supported also for localhost sites.
+* Improved responses on failed handshakes
+* Minor improvements for NodeJS 13 compatibility
 
 ## 2.0.1 - released 2019-10-14
 

@@ -49,21 +49,20 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
   }
 
-  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean, useSso: boolean): IConnectionContext {
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl,  useSso: boolean): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
     }
 
-    let agent = this.getAgent(isSSL, targetHost, useNtlm);
+    let agent = this.getAgent(isSSL, targetHost);
     agent._cyAgentId = this._agentCount++;
     let context = new this.ConnectionContext();
     context.agent = agent;
     context.useSso = useSso;
     this._connectionContexts[clientAddress] = context;
     clientSocket.on('close', () => this.removeAgent('close', clientAddress));
-    this._debug.log('Created ' + (useNtlm ? 'NTLM ready' : 'non-NTLM') +
-      ' agent for client ' + clientAddress + ' to target ' + targetHost.href);
+    this._debug.log('Created agent for client ' + clientAddress + ' to target ' + targetHost.href);
     return context;
   }
 
@@ -82,15 +81,12 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return true;
   }
 
-  getAgent(isSSL: boolean, targetHost: CompleteUrl, useNtlm: boolean) {
+  getAgent(isSSL: boolean, targetHost: CompleteUrl) {
     let agentOptions: https.AgentOptions = {
-      keepAlive: useNtlm,
+      keepAlive: true,
+      maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
       rejectUnauthorized: this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
     };
-    if (useNtlm) {
-      // Only one connection per peer -> 1:1 match between inbound and outbound socket
-      agentOptions.maxSockets = 1;
-    }
     let useUpstreamProxy = this._upstreamProxyManager
       .setUpstreamProxyConfig(targetHost, isSSL, agentOptions);
     let agent;
