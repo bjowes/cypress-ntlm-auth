@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2 - released 2019-10-29
+
+* Fixed #81: Cypress 3.5.0 now supported also for localhost sites.
+* Improved responses on failed handshakes
+* Minor improvements for NodeJS 13 compatibility
+
 ## 2.0.1 - released 2019-10-14
 
 * Fixed #75: Node module API available. The ntlm-proxy and cypress can now be started as a function call in node, see the README for example code.
