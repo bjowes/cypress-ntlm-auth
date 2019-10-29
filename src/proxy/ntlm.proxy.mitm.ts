@@ -100,7 +100,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       let useNtlm = useSso || self._configStore.exists(targetHost);
       if (!context) {
         context = self._connectionContextManager
-            .createConnectionContext(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, useNtlm, useSso);
+            .createConnectionContext(ctx.clientToProxyRequest.socket, ctx.isSSL, targetHost, useSso);
       }
 
       if (useNtlm) {
@@ -186,7 +186,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           if (res) {
             if (ctx.clientToProxyRequest.headers['proxy-connection']) {
               res.headers['proxy-connection'] = 'keep-alive';
-              res.headers['connection'] = 'keep-alive';
+              if (res.statusCode && res.statusCode !== 401) {
+                res.headers['connection'] = 'keep-alive';
+              } else {
+                res.headers['connection'] = 'close';
+              }
             }
             ctx.proxyToClientResponse.writeHead(res.statusCode || 401, self.filterAndCanonizeHeaders(res.headers));
             res.on('data', chunk => ctx.proxyToClientResponse.write(chunk));
@@ -197,7 +201,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
             let headers = ctx.serverToProxyResponse.headers;
             if (headers['proxy-connection']) {
               headers['proxy-connection'] = 'keep-alive';
-              headers['connection'] = 'keep-alive';
+              headers['connection'] = 'close';
             }
             ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(headers));
             ctx.proxyToClientResponse.end();
