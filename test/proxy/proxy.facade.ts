@@ -7,7 +7,7 @@ const CA = require('http-mitm-proxy/lib/ca');
 
 const getPort = require('get-port');
 import axios, { AxiosResponse, Method } from 'axios';
-import tunnel from 'tunnel';
+const kapAgent = require('@bjowes/keepalive-proxy-agent');
 import fs from 'fs';
 import path from 'path';
 
@@ -164,7 +164,7 @@ export class ProxyFacade {
 
     let res = await axios.request({
       method: method,
-      httpAgent: agent || new http.Agent(),
+      httpAgent: agent || new http.Agent({ keepAlive: false }),
       baseURL: remoteHostWithPort,
       url: path,
       proxy: {
@@ -189,22 +189,23 @@ export class ProxyFacade {
       ca = [caCert];
     }
 
-    const tun = agent || tunnel.httpsOverHttp({
+    const tunnelAgent = agent || new kapAgent({
       proxy: {
-          host: proxyUrl.hostname,
-          port: +proxyUrl.port,
-          headers: {
-            'User-Agent': 'Node'
-          }
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: {
+          'User-Agent': 'Node'
+       }
       },
-      ca: ca
+      ca: ca,
+      keepAlive: false
     });
 
     let res = await axios.request({
       method: method,
       baseURL: remoteHostWithPort,
       url: path,
-      httpsAgent: tun,
+      httpsAgent: tunnelAgent,
       proxy: false,
       timeout: 5000,
       data: body,

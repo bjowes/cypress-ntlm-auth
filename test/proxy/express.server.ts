@@ -250,6 +250,10 @@ export class ExpressServer {
     } else {
       this.httpServer = http.createServer(this.appNoAuth);
     }
+    // Increase TCP keep-alive timeout to 61 secs to detect issues with hanging connections
+    this.httpsServer.keepAliveTimeout = 61 * 1000;
+    this.httpsServer.headersTimeout = 65 * 1000;
+
     this.httpServer.on('connection', socket => {
       this.httpServerSockets.add(socket);
       socket.on('close', () => {
@@ -260,6 +264,7 @@ export class ExpressServer {
       this.httpServer.on('listening', () => {
         let addressInfo = this.httpServer.address() as AddressInfo;
         const url = 'http://localhost:' + addressInfo.port;
+        this.httpServer.removeListener('error', reject);
         resolve(url);
       });
       this.httpServer.on('error', reject);
@@ -300,6 +305,9 @@ export class ExpressServer {
         cert: this.certPem
       }, this.appNoAuth);
     }
+    // Increase TCP keep-alive timeout to 61 secs to detect issues with hanging connections
+    this.httpsServer.keepAliveTimeout = 61 * 1000;
+    this.httpsServer.headersTimeout = 65 * 1000;
 
     this.httpsServer.on('connection', socket => {
       this.httpsServerSockets.add(socket);
@@ -312,6 +320,7 @@ export class ExpressServer {
       this.httpsServer.on('listening', () => {
         let addressInfo = this.httpsServer.address() as AddressInfo;
         const url = 'https://localhost:' + addressInfo.port;
+        this.httpsServer.removeListener('error', reject);
         resolve(url);
       });
       this.httpsServer.on('error', reject);

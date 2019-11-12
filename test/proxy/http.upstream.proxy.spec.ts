@@ -74,6 +74,7 @@ describe('Proxy for HTTP host with NTLM and upstream proxy', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
@@ -215,6 +216,7 @@ describe('Proxy for HTTP host with NTLM using SSO and upstream proxy', function(
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
@@ -288,6 +290,7 @@ describe('Proxy for HTTP host without NTLM and upstream proxy', function() {
   });
 
   beforeEach('Reset upstream req count', function() {
+    this.timeout(2000);
     upstreamProxyReqCount = 0;
   });
 
@@ -376,6 +379,7 @@ describe('Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY', function
   });
 
   beforeEach('Reset upstream req count', function() {
+    this.timeout(2000);
     upstreamProxyReqCount = 0;
   });
 

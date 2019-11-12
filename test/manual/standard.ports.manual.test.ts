@@ -44,7 +44,8 @@ describe('Proxy for HTTP host on port 80 with NTLM', function() {
       ntlmHost: httpUrl,
       username: 'nisse',
       password: 'manpower',
-      domain: 'mptst'
+      domain: 'mptst',
+      ntlmVersion: 2
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
@@ -65,6 +66,7 @@ describe('Proxy for HTTP host on port 80 with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(5000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHost = httpUrl;
   });
@@ -111,7 +113,8 @@ describe('Proxy for HTTPS host on port 443 with NTLM', function() {
       ntlmHost: httpsUrl,
       username: 'nisse',
       password: 'manpower',
-      domain: 'mptst'
+      domain: 'mptst',
+      ntlmVersion: 2
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
@@ -132,6 +135,7 @@ describe('Proxy for HTTPS host on port 443 with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(5000);
     ProxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHost = httpsUrl;
   });

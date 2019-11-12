@@ -3,7 +3,6 @@ import 'mocha';
 
 import { ExpressServer } from './express.server';
 import { ProxyFacade } from './proxy.facade';
-import net from 'net';
 import http from 'http';
 import sinon from 'sinon';
 import { expect } from 'chai';
@@ -11,7 +10,7 @@ import chai  from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 import url from 'url';
-import tunnel from 'tunnel';
+const kapAgent = require('@bjowes/keepalive-proxy-agent');
 
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
@@ -69,6 +68,7 @@ describe('Proxy for HTTPS host with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -149,6 +149,53 @@ describe('Proxy for HTTPS host with NTLM', function() {
     let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'DELETE', '/delete', body, expressServer.caCert);
     expect(res.status, 'remote request should return 401').to.be.equal(401);
   });
+
+  // This test will requires an adapted version of http-mitm-proxy, to be implemented later
+  xit('should close SSL tunnels on quit', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let proxyUrl = url.parse(ntlmProxyUrl);
+
+    let agent1 = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
+      },
+      ca: [expressServer.caCert, proxyFacade.mitmCaCert]
+    });
+
+    let agent2 = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
+      },
+      ca: [expressServer.caCert, proxyFacade.mitmCaCert]
+    });
+
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, undefined, agent1);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, undefined, agent2);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    agent1.destroy();
+
+    await ProxyFacade.sendQuitCommand(configApiUrl, true);
+    await waitForAgentSocketClose(agent2);
+  });
+
 });
 
 describe('Proxy for HTTPS host with NTLM using SSO', function() {
@@ -197,6 +244,7 @@ describe('Proxy for HTTPS host with NTLM using SSO', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -248,6 +296,10 @@ describe('Proxy for HTTPS host without NTLM', function() {
     let ports = await coreServer.start(false, undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
+  });
+
+  beforeEach('Restore timeout', function() {
+    this.timeout(2000);
   });
 
   after('Stop HTTPS server and proxy', async function() {
@@ -302,36 +354,29 @@ describe('Proxy for HTTPS host without NTLM', function() {
     expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
   });
 
-  it.only('should close SSL tunnels on reset', async function() {
+  it('should close SSL tunnels on reset', async function() {
     let body = {
       ntlmHost: 'https://my.test.host/'
     };
     let proxyUrl = url.parse(ntlmProxyUrl);
-    // TODO use tunnel agent instead
-    let agent1 = tunnel.httpsOverHttp({
+
+    let agent1 = new kapAgent({
       proxy: {
-          host: proxyUrl.hostname,
-          port: +proxyUrl.port,
-          headers: {
-            'User-Agent': 'Node',
-            'proxy-connection': 'keep-alive'
-          }
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
       },
       ca: [expressServer.caCert]
     });
-    let agent2 = tunnel.httpsOverHttp({
+
+    let agent2 = new kapAgent({
       proxy: {
-          host: proxyUrl.hostname,
-          port: +proxyUrl.port,
-          headers: {
-            'User-Agent': 'Node',
-            'proxy-connection': 'keep-alive'
-          }
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
       },
       ca: [expressServer.caCert]
     });
-    //let agent1 = new https.Agent({ keepAlive: true });
-    //let agent2 = new https.Agent({ keepAlive: true });
 
     let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, expressServer.caCert, agent1);
     expect(res.status, 'remote request should return 200').to.be.equal(200);
@@ -345,63 +390,84 @@ describe('Proxy for HTTPS host without NTLM', function() {
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
 
-    console.log(agent1.sockets);
-    console.log(agent2.sockets);
-    destroySockets(agent1);
+    agent1.destroy();
 
     await ProxyFacade.sendNtlmReset(configApiUrl);
     await waitForAgentSocketClose(agent2);
-    // TODO should not need to close agent2
-    //agent2.destroy();
   });
 
-  function destroySockets(agent: http.Agent) {
-    let sockets = agent.sockets as any as net.Socket[];
-    sockets.forEach(socket => {
-      socket.destroy();
+  it('should close SSL tunnels on quit', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let proxyUrl = url.parse(ntlmProxyUrl);
+
+    let agent1 = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
+      },
+      ca: [expressServer.caCert]
     });
-    /*
-    for (let property in agent.sockets) {
-      if (agent.sockets.hasOwnProperty(property)) {
-        agent.sockets[property].forEach(socket => {
-          socket.destroy();
-        });
+
+    let agent2 = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { 'User-Agent': 'Node' }
+      },
+      ca: [expressServer.caCert]
+    });
+
+
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, expressServer.caCert, agent1);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, 'POST', '/post', body, expressServer.caCert, agent2);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    agent1.destroy();
+
+    await ProxyFacade.sendQuitCommand(configApiUrl, true);
+    await waitForAgentSocketClose(agent2);
+  });
+});
+
+function waitForAgentSocketClose(agent: http.Agent): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let socketCount = 0;
+    let socketProperty;
+    let sockets = agent.sockets as any;
+    let freeSockets = (agent as any)['freeSockets'] as any;
+
+    for (let s in sockets) {
+      if (sockets.hasOwnProperty(s)) {
+        socketCount += sockets[s].length;
+        socketProperty = sockets[s];
       }
     }
-    */
-  }
-
-  function waitForAgentSocketClose(agent: http.Agent): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let socketCount = 0;
-      let socketProperty;
-      let sockets = agent.sockets as any as net.Socket[];
-      socketCount = sockets.length;
-      /*
-      for (let property in agent.sockets) {
-        if (agent.sockets.hasOwnProperty(property)) {
-          socketCount++;
-          socketProperty = property;
-        }
-      }*/
-      console.log(sockets);
-      console.log(sockets[0]);
-
-      if (socketCount > 1) {
-        return reject(new Error('too many sockets'));
+    for (let s in freeSockets) {
+      if (freeSockets.hasOwnProperty(s)) {
+        socketCount += freeSockets[s].length;
+        socketProperty = freeSockets[s];
       }
-      if (socketCount < 1) {
-        return reject(new Error('no sockets'));
-      }
+    }
 
-      sockets[0].on('finish', () => {
-        return resolve();
-      });
-/*
-      agent.sockets[socketProperty][0].on('finish', () => {
-        return resolve();
-      });
-      */
+    if (socketCount > 1) {
+      return reject(new Error('too many sockets'));
+    }
+    if (socketCount < 1) {
+      return reject(new Error('no sockets'));
+    }
+    socketProperty[0].on('close', () => {
+      return resolve();
     });
-  }
-});
+  });
+}

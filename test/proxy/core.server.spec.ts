@@ -51,6 +51,7 @@ describe('Core server startup and shutdown', () => {
   });
 
   beforeEach(function () {
+    this.timeout(2000);
     if (savePortsFileStub) {
       savePortsFileStub.restore();
     }

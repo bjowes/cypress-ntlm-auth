@@ -68,6 +68,7 @@ describe('Proxy for HTTP host with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -334,6 +335,7 @@ describe('Proxy for HTTP host with NTLM using SSO', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -542,6 +544,10 @@ describe('Proxy for HTTP host without NTLM', function() {
     }
     await coreServer.stop(true);
     await expressServer.stopHttpServer();
+  });
+
+  beforeEach('Restore timeout', () => {
+    this.timeout(2000);
   });
 
   it('should pass through GET requests for non NTLM host', async function() {
