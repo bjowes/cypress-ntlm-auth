@@ -2,10 +2,12 @@ import http from 'http';
 import https from 'https';
 
 import url from 'url';
-import httpMitmProxy from '@bjowes/http-mitm-proxy';
+import httpMitmProxy from 'http-mitm-proxy';
+const CA = require('http-mitm-proxy/lib/ca');
+
 const getPort = require('get-port');
 import axios, { AxiosResponse, Method } from 'axios';
-import tunnel from 'tunnel';
+const kapAgent = require('keepalive-proxy-agent');
 import fs from 'fs';
 import path from 'path';
 
@@ -69,7 +71,28 @@ export class ProxyFacade {
 
     await this.startMitmProxy(false);
     this.stopMitmProxy();
+
+    // This generates the localhost cert and key before starting the tests,
+    // since this step is fairly slow on Node 8 the runtime of the actual tests are
+    // more predictable this way.
+    await this.preGenerateCertificate('localhost');
+
     this._mitmProxyInit = true;
+  }
+
+  private preGenerateCertificate(host: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const sslCaDir = path.resolve(process.cwd(), '.http-mitm-proxy');
+      CA.create(sslCaDir, function(err: NodeJS.ErrnoException, ca: any) {
+        if (err) {
+          return reject(err);
+        }
+        ca.generateServerCertificateKeys([host], function(key: string, cert: string) {
+          return resolve();
+
+        });
+      });
+    });
   }
 
   get mitmCaCert(): Buffer {
@@ -129,7 +152,7 @@ export class ProxyFacade {
     if (remoteHostUrl.protocol === 'http:') {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
-      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, caCert);
+      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent, caCert);
     }
   }
 
@@ -141,21 +164,21 @@ export class ProxyFacade {
 
     let res = await axios.request({
       method: method,
-      httpAgent: agent || new http.Agent(),
+      httpAgent: agent || new http.Agent({ keepAlive: false }),
       baseURL: remoteHostWithPort,
       url: path,
       proxy: {
         host: proxyUrl.hostname,
         port: +proxyUrl.port
       },
-      timeout: 3000,
+      timeout: 5000,
       data: body,
       validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation
     });
     return res;
   }
 
-  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, caCert?: Buffer) {
+  private static async sendProxiedHttpsRequest(ntlmProxyUrl: string, remoteHostWithPort: string, method: Method, path: string, body: any, agent?: http.Agent, caCert?: Buffer) {
     const proxyUrl = url.parse(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error('Invalid proxy url');
@@ -166,24 +189,25 @@ export class ProxyFacade {
       ca = [caCert];
     }
 
-    const tun = tunnel.httpsOverHttp({
+    const tunnelAgent = agent || new kapAgent({
       proxy: {
-          host: proxyUrl.hostname,
-          port: +proxyUrl.port,
-          headers: {
-            'User-Agent': 'Node'
-          }
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: {
+          'User-Agent': 'Node'
+       }
       },
-      ca: ca
+      ca: ca,
+      keepAlive: false
     });
 
     let res = await axios.request({
       method: method,
       baseURL: remoteHostWithPort,
       url: path,
-      httpsAgent: tun,
+      httpsAgent: tunnelAgent,
       proxy: false,
-      timeout: 3000,
+      timeout: 5000,
       data: body,
 
       validateStatus: (status: number) => (status > 0) // Allow errors to pass through for test validation

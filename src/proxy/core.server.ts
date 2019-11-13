@@ -42,7 +42,7 @@ export class CoreServer implements ICoreServer {
     this._configController = configController;
     this._debug = debug;
 
-    this._configController.configApiEvent.addListener('reset', () => this.ntlmConfigReset());
+    this._configController.configApiEvent.addListener('reset', () => this.ntlmConfigReset('reset'));
     this._configController.configApiEvent.addListener('quit',
       async (keepPortsFile: boolean) => await this.stop(keepPortsFile));
   }
@@ -78,7 +78,7 @@ export class CoreServer implements ICoreServer {
       await this._portsFileService.delete();
       this._debug.log('ports file deleted');
     }
-    this.ntlmConfigReset();
+    this.ntlmConfigReset('stop');
     await this._configServer.stop();
     this._ntlmProxyServer.stop();
     this._upstreamProxyManager.reset();
@@ -104,9 +104,10 @@ export class CoreServer implements ICoreServer {
     }
   }
 
-  private ntlmConfigReset() {
+  private ntlmConfigReset(event: string) {
     this._configStore.clear();
-    this._connectionContextManager.removeAllConnectionContexts('reset');
+    this._connectionContextManager.removeAllConnectionContexts(event);
+    this._connectionContextManager.removeAndCloseAllTunnels(event);
   }
 
 }

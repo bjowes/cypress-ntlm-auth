@@ -66,7 +66,7 @@ describe('NTLM Proxy authentication', function () {
   let dependencyInjection = new DependencyInjection();
 
   before(async function () {
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     await initRemoteHost();
     savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
@@ -76,6 +76,7 @@ describe('NTLM Proxy authentication', function () {
   });
 
   beforeEach(function () {
+    this.timeout(2000);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     _configApiUrl = undefined;
     remoteHostRequestHeaders = [];

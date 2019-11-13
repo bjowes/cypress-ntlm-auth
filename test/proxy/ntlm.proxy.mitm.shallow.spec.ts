@@ -11,7 +11,7 @@ import { IConnectionContextManager } from '../../src/proxy/interfaces/i.connecti
 import { INtlmManager } from '../../src/proxy/interfaces/i.ntlm.manager';
 import { IUpstreamProxyManager } from '../../src/proxy/interfaces/i.upstream.proxy.manager';
 import { NtlmProxyMitm } from '../../src/proxy/ntlm.proxy.mitm';
-import { IContext } from '@bjowes/http-mitm-proxy';
+import { IContext } from 'http-mitm-proxy';
 import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';

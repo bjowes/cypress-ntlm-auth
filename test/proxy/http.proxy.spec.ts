@@ -40,7 +40,7 @@ describe('Proxy for HTTP host with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(true, undefined);
     ntlmHostConfig = {
@@ -68,6 +68,7 @@ describe('Proxy for HTTP host with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -307,7 +308,7 @@ describe('Proxy for HTTP host with NTLM using SSO', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(true, undefined);
 
@@ -334,6 +335,7 @@ describe('Proxy for HTTP host with NTLM using SSO', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -517,7 +519,7 @@ describe('Proxy for HTTP host without NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, undefined);
     ntlmHostConfig = {
@@ -542,6 +544,10 @@ describe('Proxy for HTTP host without NTLM', function() {
     }
     await coreServer.stop(true);
     await expressServer.stopHttpServer();
+  });
+
+  beforeEach('Restore timeout', () => {
+    this.timeout(2000);
   });
 
   it('should pass through GET requests for non NTLM host', async function() {

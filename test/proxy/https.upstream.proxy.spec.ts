@@ -40,7 +40,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
       upstreamProxyReqCount++;
       return callback();
@@ -72,6 +72,7 @@ describe('Proxy for HTTPS host with NTLM and upstream proxy', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
@@ -218,6 +219,7 @@ describe('Proxy for HTTPS host with NTLM using SSO and upstream proxy', function
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
@@ -292,6 +294,7 @@ describe('Proxy for HTTPS host without NTLM and upstream proxy', function() {
   });
 
   beforeEach('Reset upstream req count', function() {
+    this.timeout(2000);
     upstreamProxyReqCount = 0;
   });
 
@@ -380,6 +383,7 @@ describe('Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY', functio
   });
 
   beforeEach('Reset upstream req count', function() {
+    this.timeout(2000);
     upstreamProxyReqCount = 0;
   });
 

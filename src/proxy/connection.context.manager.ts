@@ -9,11 +9,16 @@ import { IConnectionContext } from './interfaces/i.connection.context';
 import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { SslTunnel } from '../models/ssl.tunnel.model';
 const HttpProxyAgent = require('http-proxy-agent');
 const HttpsProxyAgent = require('https-proxy-agent');
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
+}
+
+interface SslTunnelHash {
+  [ntlmHostUrl: string]: SslTunnel;
 }
 
 @injectable()
@@ -24,6 +29,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   private _configController: IConfigController;
   private ConnectionContext: interfaces.Newable<IConnectionContext>;
   private _debug: IDebugLogger;
+  private _tunnels: SslTunnelHash = {};
 
   constructor(
     @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
@@ -136,5 +142,28 @@ export class ConnectionContextManager implements IConnectionContextManager {
     } else {
       this._debug.log('RemoveAgent called for ' + clientAddress + ' due to socket.' + event + ', but agent does not exist');
     }
+  }
+
+  addTunnel(client: Socket, target: Socket) {
+    this._tunnels[this.getClientAddress(client)] = { client: client, target: target };
+  }
+
+  removeTunnel(client: Socket) {
+    const clientAddress = this.getClientAddress(client);
+    if (clientAddress in this._tunnels) {
+      delete this._tunnels[clientAddress];
+    }
+  }
+
+  removeAndCloseAllTunnels(event: string) {
+    for (let property in this._tunnels) {
+      if (this._tunnels.hasOwnProperty(property)) {
+        if (this._tunnels[property].target.end) {
+          this._tunnels[property].target.end();
+        }
+      }
+    }
+    this._tunnels = {};
+    this._debug.log('Removed and closed all tunnels due to ' + event);
   }
 }

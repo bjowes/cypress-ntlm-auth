@@ -37,14 +37,15 @@ describe('Proxy for HTTP host on port 80 with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, 80);
     ntlmHostConfig = {
       ntlmHost: httpUrl,
       username: 'nisse',
       password: 'manpower',
-      domain: 'mptst'
+      domain: 'mptst',
+      ntlmVersion: 2
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
@@ -65,6 +66,7 @@ describe('Proxy for HTTP host on port 80 with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(5000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHost = httpUrl;
   });
@@ -104,14 +106,15 @@ describe('Proxy for HTTPS host on port 443 with NTLM', function() {
     portsFileExistsStub.returns(false);
     savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, 443);
     ntlmHostConfig = {
       ntlmHost: httpsUrl,
       username: 'nisse',
       password: 'manpower',
-      domain: 'mptst'
+      domain: 'mptst',
+      ntlmVersion: 2
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(false, undefined, undefined, undefined);
@@ -132,6 +135,7 @@ describe('Proxy for HTTPS host on port 443 with NTLM', function() {
   });
 
   beforeEach('Reset NTLM config', async function() {
+    this.timeout(5000);
     ProxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHost = httpsUrl;
   });

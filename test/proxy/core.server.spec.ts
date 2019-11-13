@@ -46,11 +46,12 @@ describe('Core server startup and shutdown', () => {
   let _configApiUrl: string | undefined;
 
   before(async function () {
-    this.timeout(15000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
   });
 
   beforeEach(function () {
+    this.timeout(2000);
     if (savePortsFileStub) {
       savePortsFileStub.restore();
     }
