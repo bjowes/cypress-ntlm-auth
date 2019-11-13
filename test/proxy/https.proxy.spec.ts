@@ -10,7 +10,7 @@ import chai  from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 import url from 'url';
-const kapAgent = require('@bjowes/keepalive-proxy-agent');
+const kapAgent = require('keepalive-proxy-agent');
 
 import { PortsFileService } from '../../src/util/ports.file.service';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';

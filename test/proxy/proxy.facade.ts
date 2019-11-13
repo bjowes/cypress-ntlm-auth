@@ -7,7 +7,7 @@ const CA = require('http-mitm-proxy/lib/ca');
 
 const getPort = require('get-port');
 import axios, { AxiosResponse, Method } from 'axios';
-const kapAgent = require('@bjowes/keepalive-proxy-agent');
+const kapAgent = require('keepalive-proxy-agent');
 import fs from 'fs';
 import path from 'path';
 
