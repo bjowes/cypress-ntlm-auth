@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.3 - released 2019-11-12
+## 2.0.3 - released 2019-11-13
 
 * Attempt to fix #80 without a forced quit. All tunnels established for HTTPS passthrough are now indexed and closed on reset or quit.
 * Moved back to original http-mitm-proxy since the required changes are now in the official release.
