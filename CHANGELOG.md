@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0 - released 2019-11-23
+
+* Integrated launcher is here! cypress-ntlm will now launch both the ntlm-proxy and cypress from the same process, simplifying both setup and debugging. Note that launch scripts using ntlm-proxy and ntlm-proxy-exit must be rewritten - see the README.
+
 ## 2.0.3 - released 2019-11-13
 
 * Attempt to fix #80 without a forced quit. All tunnels established for HTTPS passthrough are now indexed and closed on reset or quit.

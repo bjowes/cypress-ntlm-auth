@@ -27,8 +27,7 @@
   ],
   "bin": {
     "cypress-ntlm": "./dist/launchers/cypress.ntlm.js",
-    "ntlm-proxy": "./dist/launchers/ntlm.proxy.main.js",
-    "ntlm-proxy-exit": "./dist/launchers/ntlm.proxy.exit.main.js"
+    "ntlm-proxy": "./dist/launchers/ntlm.proxy.update-notice.js"
   },
   "files": [
     "dist/"
@@ -50,6 +49,7 @@
     "http-proxy-agent": "^2.1.0",
     "https-proxy-agent": "^3.0.0",
     "inversify": "^5.0.1",
+    "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "node-cleanup": "^2.1.2",
     "reflect-metadata": "^0.1.13",

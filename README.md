@@ -22,6 +22,12 @@ Read the intro at [their site](https://www.cypress.io/) and find out if it is th
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
+## *BREAKING CHANGE* from release 2.1.0
+
+The launcher for cypress with the plugin has been modified to launch both the ntlm-proxy and cypress from the same process. This approach simplifies setup and debugging. To migrate from previous versions, update your package.json according to the [launcher section](#launcher).
+
+Still want to use to old launcher? See the notes section.
+
 ## *BREAKING CHANGE* from release 2.0.0
 
 Not really a breaking change, but if your test client runs on Windows you should consider using the new single sign on feature instead of the old way to configure hosts. It offers fully featured NTLM authentication with all the security features provided natively by Windows. Secondly, the configuration is much simpler since you only need to specify hosts, no credentials. User credentials from the user running the test client are used automatically.
@@ -66,114 +72,32 @@ In the file `cypress/support/index.js` add this line
 import 'cypress-ntlm-auth/dist/commands';
 ```
 
-### 3. package.json
+### <a name="Launcher"></a> 3. cypress-ntlm launcher
+
+The `cypress-ntlm` binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. The command starts the ntlm-proxy and then cypress. If the ntlm-proxy fails to start, the command fails. If an older instance of ntlm-proxy is still running, cypress-ntlm will terminate it and start a new one. The command will also validate that cypress is installed.
+
+The examples below show how to start Cypress in interactive mode. Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner. Just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress. All command line parameters supported by Cypress are supported by the launcher.
+
+#### Example 1: package.json
 
 Add this to the scripts section:
 
-#### Mac and Linux
-
 ```json
-    "ntlm-proxy": "ntlm-proxy &",
-    "cypress-ntlm": "npm run ntlm-proxy && (cypress-ntlm open ; ntlm-proxy-exit)"
+    "cypress-ntlm": "cypress-ntlm open"
 ```
 
-#### Windows
-
-```json
-    "ntlm-proxy": "start /min \"ntlm-proxy\" cmd /c node_modules\\.bin\\ntlm-proxy",
-    "cypress-ntlm": "npm run ntlm-proxy && (cypress-ntlm open & ntlm-proxy-exit)"
-```
-
-Whatever other variants for starting Cypress you may need (headless for CI for instance) can easily be added in a similar manner. Just replace 'open' with the arguments you need - any arguments that follow cypress-ntlm will be passed on to Cypress.
-
-## Startup
-
-### npm run cypress-ntlm
-
-When the additions to package.json are done as described above, the most convenient way to start Cypress with NTLM authentication is
+Then launch cypress-ntlm using:
 
 ```shell
 npm run cypress-ntlm
 ```
 
-This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). After Cypress exits, the ntlm-proxy process is  terminated.
+#### Example 2: npx
 
-### ntlm-proxy
-
-This binary is available in the `node_modules/.bin` folder. Use it to start the ntlm-proxy manually.
-
-#### Example - Mac and Linux
+Launch cypress-ntlm using: (no package.json modification required)
 
 ```shell
-# Start NTLM proxy
-$(npm bin)/ntlm-proxy
-
-# Start NTLM proxy as a background process
-$(npm bin)/ntlm-proxy &
-
-# Start NTLM proxy with debug logging to console
-DEBUG=cypress:plugin:ntlm-auth $(npm bin)/ntlm-proxy
-```
-
-#### Example - Windows
-
-```shell
-# Start NTLM proxy
-node_modules\\.bin\\ntlm-proxy
-
-# Start NTLM proxy as a background process, close window when ntlm-proxy terminates
-start /min \"ntlm-proxy\" cmd /c node_modules\\.bin\\ntlm-proxy
-
-# Start NTLM proxy with debug logging to console
-set DEBUG=cypress:plugin:ntlm-auth
-node_modules\\.bin\\ntlm-proxy
-```
-
-### ntlm-proxy-exit
-
-This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background.
-
-#### Example - Mac and Linux
-
-```shell
-# Terminate NTLM proxy
-$(npm bin)/ntlm-proxy-exit
-
-# Stop NTLM proxy with debug logging to console
-DEBUG=cypress:plugin:ntlm-auth $(npm bin)/ntlm-proxy-exit
-```
-
-#### Example - Windows
-
-```shell
-# Terminate NTLM proxy
-node_modules\\.bin\\ntlm-proxy-exit
-
-# Stop NTLM proxy with debug logging to console
-set DEBUG=cypress:plugin:ntlm-auth
-node_modules\\.bin\\ntlm-proxy-exit
-```
-
-### cypress-ntlm
-
-This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. This command expects the ntlm-proxy to be running. If it isn't, cypress-ntlm will wait up to 5 seconds for ntlm-proxy to start. If ntlm-proxy still hasn't started, the cypress-ntlm command will fail.
-
-If an older instance of ntlm-proxy is still running, cypress-ntlm will pause for a few seconds to allow it to terminate before polling for the new instance.
-
-It will also validate that cypress is installed.
-
-#### Example - Mac and Linux
-
-```shell
-# Start Cypress with NTLM authentication
-$(npm bin)/cypress-ntlm
-```
-
-#### Example - Windows
-
-```shell
-# Start Cypress with NTLM authentication
-node_modules\\.bin\\cypress-ntlm
+npx cypress-ntlm open
 ```
 
 ## Upstream proxy
@@ -327,26 +251,18 @@ cy.visit('https://ntlm.acme.com'); // This fails (401)
 
 When reporting issues with this plugin, please collect debug logs for your scenario as described below and add them to the issue.
 
-### Running ntlm-proxy independently
-
-If the recommended startup scripts from above are used, the ntlm-proxy will be terminated when the cypress tests are finished. For troubleshooting it is often easier if the ntlm-proxy is running independently so the debug logs can be read or copied also after the cypress tests are finished. To run ntlm-proxy independently with debugging, follow these steps:
-
-#### Mac or Linux
+### Mac or Linux
 
 1. Open a terminal and go to your project root directory.
-2. `DEBUG=cypress:plugin:ntlm-auth node_modules/.bin/ntlm-proxy`
-3. Open another terminal and go to your project root directory
-4. `node_modules/.bin/cypress-ntlm open`
-5. Run your cypress tests and view the logs in the first terminal.
+2. `DEBUG=cypress:plugin:ntlm-auth npx cypress-ntlm open`
+3. Run your cypress tests and view the logs in the terminal.
 
-#### Windows
+### Windows
 
 1. Open a cmd window and go to your project root directory.
 2. `set DEBUG=cypress:plugin:ntlm-auth`
-3. `node_modules\.bin\ntlm-proxy`
-4. Open another cmd window and go to your project root directory
-5. `node_modules\.bin\cypress-ntlm open`
-6. Run your cypress tests and view the logs in the first cmd window.
+3. `npx cypress-ntlm open`
+4. Run your cypress tests and view the logs in the cmd window.
 
 ### Debug logging of NTLM headers
 
@@ -367,13 +283,33 @@ cypressNtlmAuth.run({
 .catch(err => console.log(err));
 ```
 
+A similar implementation is also available for `cypress.open()`.
+
 ## Notes
 
-### ntlm-proxy process
+### Legacy usage of standalone ntlm-proxy process
 
-The ntlm-proxy process is intended to be used only by Cypress, and should be terminated after Cypress exits. This requires that the ntlm-proxy-exit launcher is executed, as in the examples above. Otherwise it will stay in the background indefinitely (or until a new ntlm-proxy is started).
+Since version 2.1.0 the launcher starts both ntlm-proxy and Cypress from the same process. This should be simpler and better for everyone, but if your use case requires the ntlm-proxy to run in its own process, you can still use the plugin in "legacy mode".
 
-In versions 0.4.0 and earlier, the proxy was terminated automatically on signals when Cypress exited. However, this approach has no support on Windows (no decent signal handling) - hence it was removed for consistent behavior across platforms.
+To start the ntlm-proxy in legacy mode:
+
+```script
+node dist/launchers/ntlm.proxy.legacy.js
+```
+
+To launch cypress-ntlm in legacy mode (where it will assume a ntlm-proxy is already running instead of starting its own):
+
+```script
+node dist/launchers/cypress.ntlm.legacy.js
+```
+
+To stop the ntlm-proxy in legacy mode:
+
+```script
+node dist/launchers/ntlm.proxy.exit.main.js
+```
+
+These methods will be removed in future versions. If you require this method, please notify the maintainer.
 
 ### .http-mitm-proxy
 

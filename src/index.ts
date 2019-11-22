@@ -11,6 +11,14 @@ let proxyMain = container.get<IMain>(TYPES.IMain);
 let debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
 
 export async function run(options: any): Promise<any> {
+  return startProxyAndCypress('run', options);
+}
+
+export async function open(options: any): Promise<any> {
+  return startProxyAndCypress('open', options);
+}
+
+async function startProxyAndCypress(cypressMethod: string, options: any): Promise<any>  {
   return new Promise((resolve, reject) => {
     if (cypressNtlm.checkCypressIsInstalled() === false) {
       throw new Error('cypress-ntlm-auth requires Cypress to be installed.');
@@ -19,21 +27,22 @@ export async function run(options: any): Promise<any> {
     debug.log('Starting ntlm-proxy...');
     proxyMain.run(false, process.env.HTTP_PROXY, process.env.HTTPS_PROXY, process.env.NO_PROXY)
     .then(() => {
-      cypressNtlm.checkProxyIsRunning(5000, 200)
+      cypressNtlm.checkProxyIsRunning(15000, 200)
       .then((portsFile) => {
         process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
+        delete process.env.HTTPS_PROXY;
         process.env.NO_PROXY = '<-loopback>';
 
         debug.log('ntlm-proxy started, running tests through Cypress...');
         // Start up Cypress and let it parse any options
         const cypress = require('cypress');
-        cypress.run(options)
+        cypress[cypressMethod](options)
         .then((result: any) => {
-          debug.log('Tests finished, stopping ntlm-proxy...');
+          debug.log('Cypress finished, stopping ntlm-proxy...');
           proxyMain.stop().then(() => resolve(result));
         })
         .catch((err: any) => {
-          debug.log('Test exception, stopping ntlm-proxy...');
+          debug.log('Cypress exception, stopping ntlm-proxy...');
           proxyMain.stop().then(() => reject(err));
         });
       });
