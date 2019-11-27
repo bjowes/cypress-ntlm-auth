@@ -7,7 +7,6 @@ export interface IConnectionContextManager {
   getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined;
   getAgent(isSSL: boolean, targetHost: CompleteUrl): any;
   getUntrackedAgent(targetHost: CompleteUrl): any;
-  clearAuthentication(ntlmHostUrl: CompleteUrl): void;
   removeAllConnectionContexts(event: string): void;
   removeAgent(event: string, clientAddress: string): void;
   addTunnel(client: Socket, target: Socket): void;

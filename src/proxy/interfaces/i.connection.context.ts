@@ -6,12 +6,12 @@ export interface IConnectionContext {
   agent: any;
   useSso: boolean;
   peerCert: PeerCertificate | undefined;
+  clientAddress: string;
 
-  isAuthenticated(ntlmHostUrl: CompleteUrl): boolean;
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean;
+  matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean;
   getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum;
   setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum): void;
-  resetState(ntlmHostUrl: CompleteUrl): void;
 
   clearRequestBody(): void;
   addToRequestBody(chunk: Buffer): void;

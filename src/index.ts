@@ -19,7 +19,7 @@ export async function run(options: any): Promise<any> {
     debug.log('Starting ntlm-proxy...');
     proxyMain.run(false, process.env.HTTP_PROXY, process.env.HTTPS_PROXY, process.env.NO_PROXY)
     .then(() => {
-      cypressNtlm.checkProxyIsRunning(5000, 200)
+      cypressNtlm.checkProxyIsRunning(15000, 200)
       .then((portsFile) => {
         process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
         process.env.NO_PROXY = '<-loopback>';

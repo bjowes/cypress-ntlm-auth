@@ -287,6 +287,42 @@ describe('Proxy for HTTP host with NTLM', function() {
 
     agent.destroy();
   });
+
+  it('should re-authentication after reconfiguration when required by server', async function() {
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let agent = new http.Agent({ keepAlive: true });
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+    expect(expressServer.lastRequestContainedAuthHeader(), 'should authenticate on first request').to.be.true;
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+    expect(expressServer.lastRequestContainedAuthHeader(), 'should not authenticate on additional request on same socket').to.be.false;
+
+    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+    expressServer.sendWwwAuthOnce('NTLM');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+    expect(expressServer.lastRequestContainedAuthHeader(), 'should authenticate when server sends 401').to.be.true;
+
+    agent.destroy();
+  });
 });
 
 describe('Proxy for HTTP host with NTLM using SSO', function() {
@@ -589,5 +625,113 @@ describe('Proxy for HTTP host without NTLM', function() {
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+  });
+});
+
+describe('Proxy for multiple HTTP hosts with NTLM', function() {
+  let ntlmHostConfig1: NtlmConfig;
+  let ntlmHostConfig2: NtlmConfig;
+  let proxyFacade = new ProxyFacade();
+  let expressServer1 = new ExpressServer();
+  let expressServer2 = new ExpressServer();
+  let coreServer: ICoreServer;
+  let dependencyInjection = new DependencyInjection();
+  let httpUrl1: string;
+  let httpUrl2: string;
+
+  before('Start HTTP server and proxy', async function () {
+    savePortsFileStub = sinon.stub(PortsFileService.prototype, 'save');
+    portsFileExistsStub = sinon.stub(PortsFileService.prototype, 'exists');
+    portsFileExistsStub.returns(false);
+    savePortsFileStub.returns(Promise.resolve());
+
+    this.timeout(30000);
+    await proxyFacade.initMitmProxy();
+    httpUrl1 = await expressServer1.startHttpServer(true, undefined);
+    httpUrl2 = await expressServer2.startHttpServer(true, undefined);
+    ntlmHostConfig1 = {
+      ntlmHost: httpUrl1,
+      username: 'nisse',
+      password: 'manpower',
+      domain: 'mptst',
+      ntlmVersion: 2
+    };
+    ntlmHostConfig2 = {
+      ntlmHost: httpUrl2,
+      username: 'nisse',
+      password: 'manpower',
+      domain: 'mptst',
+      ntlmVersion: 2
+    };
+    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    configApiUrl = ports.configApiUrl;
+    ntlmProxyUrl = ports.ntlmProxyUrl;
+  });
+
+  after('Stop HTTP server and proxy', async function() {
+    if (savePortsFileStub) {
+      savePortsFileStub.restore();
+    }
+    if (portsFileExistsStub) {
+      portsFileExistsStub.restore();
+    }
+    await coreServer.stop(true);
+    await expressServer1.stopHttpServer();
+    await expressServer2.stopHttpServer();
+  });
+
+  beforeEach('Reset NTLM config', async function() {
+    this.timeout(2000);
+    await ProxyFacade.sendNtlmReset(configApiUrl);
+  });
+
+  it('should handle authentication for POST requests to two hosts', async function() {
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl1, 'POST', '/post', body);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl2, 'POST', '/post', body);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+  });
+
+  it('should handle authentication for POST requests to two hosts from one socket', async function() {
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
+    expect(res.status, 'ntlm-config should return 200').to.be.equal(200);
+
+    let body = {
+      ntlmHost: 'https://my.test.host/'
+    };
+    let agent = new http.Agent({ keepAlive: true });
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl1, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl2, 'POST', '/post', body, undefined, agent);
+    expect(res.status, 'remote request should return 200').to.be.equal(200);
+    resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal('OK ÅÄÖéß');
+
+    agent.destroy();
   });
 });
