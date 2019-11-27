@@ -42,13 +42,6 @@ export class ConnectionContext implements IConnectionContext {
     this._clientAddress = clientAddress;
   }
 
-  isAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
-    let auth = (this._ntlmHost !== undefined &&
-      this._ntlmHost.href === ntlmHostUrl.href &&
-      this._ntlmState === NtlmStateEnum.Authenticated);
-    return auth;
-  }
-
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
     let auth = this._ntlmHost === undefined ||
       (this._ntlmHost !== undefined &&
@@ -71,12 +64,6 @@ export class ConnectionContext implements IConnectionContext {
   setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
-  }
-
-  resetState(ntlmHostUrl: CompleteUrl) {
-    if (this._ntlmHost !== undefined && this._ntlmHost.href === ntlmHostUrl.href) {
-      this._ntlmState = NtlmStateEnum.NotAuthenticated;
-    }
   }
 
   clearRequestBody() {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.4 - released 2019-11-28
+
+* Unit tests for fix of #88
+* Handled the case when server prompts for reauthentication after a host reconfiguration
+* Fixed #86: Increased startup wait time for ntlm-proxy to 15 seconds
+
 ## 2.0.4-beta.1 - released 2019-11-27
 
 * Handle reuse of client sockets for new targets to fix #88.

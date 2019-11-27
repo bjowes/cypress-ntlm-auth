@@ -40,9 +40,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
     this._configController = configController;
     this.ConnectionContext = connectionContext;
     this._debug = debug;
-
-    this._configController.configApiEvent.addListener('configUpdate',
-      (ntlmHostUrl: CompleteUrl) => this.clearAuthentication(ntlmHostUrl));
   }
 
   private getClientAddress(clientSocket: Socket): string {
@@ -113,14 +110,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return agent;
   }
 
-  clearAuthentication(ntlmHostUrl: CompleteUrl) {
-    for (let property in this._connectionContexts) {
-      if (this._connectionContexts.hasOwnProperty(property)) {
-        this._connectionContexts[property].resetState(ntlmHostUrl);
-      }
-    }
-  }
-
   removeAllConnectionContexts(event: string) {
     for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
@@ -138,10 +127,8 @@ export class ConnectionContextManager implements IConnectionContextManager {
       if (this._connectionContexts[clientAddress].agent.destroy) {
         this._connectionContexts[clientAddress].agent.destroy(); // Destroys any sockets to servers
       }
-    delete this._connectionContexts[clientAddress];
+      delete this._connectionContexts[clientAddress];
       this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
-    } else {
-      this._debug.log('RemoveAgent called for ' + clientAddress + ' due to socket.' + event + ', but agent does not exist');
     }
   }
 
