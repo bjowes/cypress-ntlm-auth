@@ -12,6 +12,7 @@ export class ConnectionContext implements IConnectionContext {
   private _requestBody = Buffer.alloc(0);
   private _useSso = false;
   private _peerCert?: PeerCertificate;
+  private _clientAddress = '';
 
   get agent(): any {
     return this._agent;
@@ -34,6 +35,13 @@ export class ConnectionContext implements IConnectionContext {
     this._peerCert = peerCert;
   }
 
+  get clientAddress(): string {
+    return this._clientAddress;
+  }
+  set clientAddress(clientAddress: string) {
+    this._clientAddress = clientAddress;
+  }
+
   isAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
     let auth = (this._ntlmHost !== undefined &&
       this._ntlmHost.href === ntlmHostUrl.href &&
@@ -47,6 +55,10 @@ export class ConnectionContext implements IConnectionContext {
        this._ntlmHost.href === ntlmHostUrl.href &&
        this._ntlmState === NtlmStateEnum.Authenticated);
     return auth;
+  }
+
+  matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean {
+    return (this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href);
   }
 
   getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum {

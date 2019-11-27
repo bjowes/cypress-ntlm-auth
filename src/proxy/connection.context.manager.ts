@@ -58,6 +58,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let agent = this.getAgent(isSSL, targetHost);
     agent._cyAgentId = this._agentCount++;
     let context = new this.ConnectionContext();
+    context.clientAddress = clientAddress;
     context.agent = agent;
     context.useSso = useSso;
     this._connectionContexts[clientAddress] = context;
