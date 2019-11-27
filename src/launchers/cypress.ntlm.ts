@@ -12,7 +12,7 @@ if (cypressNtlm.checkCypressIsInstalled() === false) {
   process.exit(1);
 }
 
-cypressNtlm.checkProxyIsRunning(5000, 200)
+cypressNtlm.checkProxyIsRunning(15000, 200)
 .then((portsFile) => {
   process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
   process.env.NO_PROXY = '<-loopback>';
