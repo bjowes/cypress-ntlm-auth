@@ -26,7 +26,7 @@ export class SsoConfigValidator {
     let allValid = true;
     config.ntlmHosts.forEach((ntlmHost) => {
       if (!this.validHostnameOrFqdn(ntlmHost)) {
-        result.message = 'Invalid host [' + ntlmHost + '] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)';
+        result.message = 'Invalid host [' + ntlmHost + '] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.';
         allValid = false;
         return result;
       }
@@ -40,8 +40,10 @@ export class SsoConfigValidator {
     if (host.indexOf('\n') !== -1) {
       return false;
     }
+    // Replace all wildcards with a character to pass hostname/FQDN test
+    const hostNoWildcard = host.replace(/\*/g, 'a');
     const validatorRegex = new RegExp(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/);
-    return validatorRegex.test(host);
+    return validatorRegex.test(hostNoWildcard);
   }
 }
 

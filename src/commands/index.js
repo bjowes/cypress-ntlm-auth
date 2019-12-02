@@ -70,11 +70,11 @@ const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) =>
 
 /**
  * Adds NTLM Single-sign-on authentication support to Cypress for
- * specific hosts. Wildcards are not supported.
+ * specific hosts. Wildcards are supported.
  * Calling this multiple times replaces previous SSO configuration.
  * @example
  ```js
-  cy.ntlmSso(['ntlm.acme.com', 'api.internal.acme.com');
+  cy.ntlmSso(['ntlm.acme.com', '*.internal.acme.com');
  ```
  */
 const ntlmSso = (ntlmHosts) => {

@@ -52,6 +52,17 @@ describe('SsoConfigValidator', function() {
       chai.expect(result.ok).to.be.true;
     });
 
+    it.only('Mix of valid hostnames, FQDNs and wildcard FQDNs in ntlmHosts succeeds', function() {
+      // Arrange
+      config.ntlmHosts = ['localhost', 'nisse', 'bavaria', 'github.com', '*.google.com', '*.dn.*.se'];
+
+      // Act
+      let result = SsoConfigValidator.validate(config);
+
+      // Assert
+      chai.expect(result.ok).to.be.true;
+    });
+
     it('Does return error if ntlmHost contains path', function () {
       // Arrange
       config.ntlmHosts = ['http://localhost:5000/search'];
@@ -61,7 +72,7 @@ describe('SsoConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Invalid host [http://localhost:5000/search] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      chai.expect(result.message).to.be.equal('Invalid host [http://localhost:5000/search] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.');
     });
 
     it('Does return error if ntlmHosts contains protocol', function () {
@@ -73,7 +84,7 @@ describe('SsoConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Invalid host [http://localhost] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      chai.expect(result.message).to.be.equal('Invalid host [http://localhost] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.');
     });
 
 
@@ -86,7 +97,7 @@ describe('SsoConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      chai.expect(result.message).to.be.equal('Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.');
     });
 
     it('Does return error if ntlmHosts contains valid and invalid hosts', function () {
@@ -98,7 +109,7 @@ describe('SsoConfigValidator', function() {
 
       // Assert
       chai.expect(result.ok).to.be.false;
-      chai.expect(result.message).to.be.equal('Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      chai.expect(result.message).to.be.equal('Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.');
     });
 
     it('Does return error if ntlmHosts isn\'t and array', function () {
