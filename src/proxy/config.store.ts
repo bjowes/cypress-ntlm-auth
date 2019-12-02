@@ -13,6 +13,7 @@ interface NtlmHostConfigHash {
 export class ConfigStore implements IConfigStore {
   private ntlmHosts: NtlmHostConfigHash = {};
   private ntlmSsoHosts: string[] = [];
+  private ntlmSsoHostWildcards: RegExp[] = [];
 
   updateConfig(config: NtlmConfig) {
     let ntlmHostUrl = toCompleteUrl(config.ntlmHost, false);
@@ -37,22 +38,33 @@ export class ConfigStore implements IConfigStore {
   }
 
   setSsoConfig(ntlmSsoConfig: NtlmSsoConfig) {
-    this.ntlmSsoHosts = ntlmSsoConfig.ntlmHosts;
+    const nonWildcards = ntlmSsoConfig.ntlmHosts.filter(s => s.indexOf('*') === -1);
+    const wildcards = ntlmSsoConfig.ntlmHosts.filter(s => s.indexOf('*') !== -1);
+    this.ntlmSsoHosts = nonWildcards;
+    this.ntlmSsoHostWildcards = wildcards.map(s => new RegExp(`^${s.replace(/\*/g, '.*')}$`, 'i'));
   }
 
   useSso(ntlmHostUrl: CompleteUrl): boolean {
-    if (this.ntlmSsoHosts.includes(ntlmHostUrl.hostname) && this.exists(ntlmHostUrl) === false) {
+    if (this.matchNtlmSsoHosts(ntlmHostUrl.hostname) && this.exists(ntlmHostUrl) === false) {
       return true;
     }
     return false;
   }
 
   existsOrUseSso(ntlmHostUrl: CompleteUrl): boolean {
-    return this.exists(ntlmHostUrl) || this.ntlmSsoHosts.includes(ntlmHostUrl.hostname);
+    return this.exists(ntlmHostUrl) || this.matchNtlmSsoHosts(ntlmHostUrl.hostname);
+  }
+
+  private matchNtlmSsoHosts(hostname: string): boolean {
+    if (this.ntlmSsoHosts.includes(hostname)) {
+      return true;
+    }
+    return this.ntlmSsoHostWildcards.findIndex(re => re.test(hostname)) !== -1;
   }
 
   clear() {
     this.ntlmHosts = {};
     this.ntlmSsoHosts = [];
+    this.ntlmSsoHostWildcards = [];
   }
 }
