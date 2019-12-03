@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.5 - released 2019-12-02
+
+* Fix #76 - SSO hosts can now be specified using wildcards.
+
 ## 2.0.4 - released 2019-11-28
 
 * Unit tests for fix of #88

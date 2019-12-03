@@ -276,7 +276,7 @@ Note that "all network communication" includes calls to `cy.visit(host)`, `cy.re
 cy.ntlmSso(ntlmHosts);
 ```
 
-* ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication with single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url (path and query) - only host level authentication is supported. Example: `['localhost', 'ntlm.acme.com']`
+* ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication with single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url (path and query) - only host level authentication is supported. In addition, wildcards are allowed to simplify specifying SSO for a whole intranet. Example: `['localhost', '*.acme.com']`
 
 The ntlmSso command may be called multiple times, each call will overwrite the previous ntlmSso configuration.
 
@@ -289,16 +289,16 @@ Configuration set with the ntlmSso command persists until it is reset (see ntlmR
 You want to test a IIS website on your intranet `https://ntlm.acme.com` that requires Windows Authentication and allows NTLM.
 
 ```javascript
-// Enable single sign on for ntlm.acme.com
-cy.ntlmSso(['ntlm.acme.com']);
+// Enable single sign on all hosts within *.acme.com
+cy.ntlmSso(['*.acme.com']);
 // Access the ntlm site with the user running the test client
 cy.visit('https://ntlm.acme.com');
 // Test actions and asserts here
 
-// Enable single sign on for both ntlm-legacy.acme.com and ntlm.acme.com
-cy.ntlmSso(['ntlm-legacy.acme.com', 'ntlm.acme.com']);
-// Access the ntlm-legacy site with the user running the test client
-cy.visit('https://ntlm-legacy.acme.com');
+// Enable single sign on for both ntlm.acme-legacy.com and all hosts within *.acme.com
+cy.ntlmSso(['ntlm.acme-legacy.com', '*.acme.com']);
+// Access the legacy site with the user running the test client
+cy.visit('https://ntlm.acme-legacy.com');
 // Test actions and asserts here
 ```
 
@@ -394,11 +394,6 @@ Many corporate intranets utilize SSL inspection, which means that your HTTPS tra
 #### Disable TLS validation
 
 If you are unable to resolve the certificate issues you can use the standard Node workaround by setting the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0` before starting ntlm-proxy. If you are running Node 11 or later, you will (rightfully) get a warning when doing this, since disabling the certificate validation makes your machine more vulnerable to MITM attacks. When used only in a development environment and only for testing an internal site, the risk is significantly reduced - but I would still strongly recommend resolving the certificate issues instead of relying on the workaround.
-
-## Planned work
-
-* Support custom http.Agent / https.Agent configuration
-* Configuration option to disable self-signed certificates even for localhost
 
 ## Build instructions
 
