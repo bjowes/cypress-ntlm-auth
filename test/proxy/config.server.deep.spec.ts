@@ -162,7 +162,7 @@ describe('Config API (ConfigServer deep tests)', () => {
       // Act
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       expect(res.status).to.equal(400);
-      expect(res.data).to.equal('SSO config parse error. Invalid host [https://google.com] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok)');
+      expect(res.data).to.equal('SSO config parse error. Invalid host [https://google.com] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted.');
       expect(configStore.useSso(toCompleteUrl('http://localhost:5000', false))).to.be.false;
       expect(configStore.useSso(toCompleteUrl('https://google.com', false))).to.be.false;
     });
