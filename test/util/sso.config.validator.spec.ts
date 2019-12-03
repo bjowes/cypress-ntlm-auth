@@ -52,7 +52,7 @@ describe('SsoConfigValidator', function() {
       chai.expect(result.ok).to.be.true;
     });
 
-    it.only('Mix of valid hostnames, FQDNs and wildcard FQDNs in ntlmHosts succeeds', function() {
+    it('Mix of valid hostnames, FQDNs and wildcard FQDNs in ntlmHosts succeeds', function() {
       // Arrange
       config.ntlmHosts = ['localhost', 'nisse', 'bavaria', 'github.com', '*.google.com', '*.dn.*.se'];
 
