@@ -113,9 +113,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   removeAllConnectionContexts(event: string) {
     for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
-        if (this._connectionContexts[property].agent.destroy) {
-          this._connectionContexts[property].agent.destroy(); // Destroys any sockets to servers
-        }
+        this._connectionContexts[property].destroy();
       }
     }
     this._connectionContexts = {};
@@ -124,9 +122,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   removeAgent(event: string, clientAddress: string) {
     if (clientAddress in this._connectionContexts) {
-      if (this._connectionContexts[clientAddress].agent.destroy) {
-        this._connectionContexts[clientAddress].agent.destroy(); // Destroys any sockets to servers
-      }
+      this._connectionContexts[clientAddress].destroy();
       delete this._connectionContexts[clientAddress];
       this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
     }

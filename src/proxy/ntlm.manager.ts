@@ -13,36 +13,34 @@ import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Type2Message } from '../ntlm/type2.message';
 import { NtlmMessage } from '../ntlm/ntlm.message';
 import { NtlmConfig } from '../models/ntlm.config.model';
-import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
   private _ntlm: INtlm;
-  private _winSsoFacade: IWinSsoFacade;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.INtlm) ntlm: INtlm,
-    @inject(TYPES.IWinSsoFacade) winSsoFacade: IWinSsoFacade,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
     this._ntlm = ntlm;
-    this._winSsoFacade = winSsoFacade;
     this._debug = debug;
   }
 
-  ntlmHandshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
+  handshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
     let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config: NtlmConfig;
     let type1msg: NtlmMessage;
+    let type1header: string;
     if (context.useSso) {
-      type1msg = this._winSsoFacade.createAuthRequest();
+      type1header = context.winSso.createAuthRequestHeader();
     } else {
       config = this._configStore.get(ntlmHostUrl);
       type1msg = this._ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
+      type1header = type1msg.header();
     }
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
@@ -52,7 +50,7 @@ export class NtlmManager implements INtlmManager {
       agent: ctx.proxyToServerRequestOptions.agent,
     };
     requestOptions.headers = {};
-    requestOptions.headers['authorization'] = type1msg.header();
+    requestOptions.headers['authorization'] = type1header;
     requestOptions.headers['connection'] = 'keep-alive';
     let proto = ctx.isSSL ? https : http;
     let type1req = proto.request(requestOptions, (type1res) => {
@@ -79,14 +77,12 @@ export class NtlmManager implements INtlmManager {
       }
 
       let type3msg: NtlmMessage;
+      let type3header: string;
       if (context.useSso) {
-        let targetFqdn = undefined;
-        if (type2msg.targetInfo && type2msg.targetInfo.parsed['FQDN']) {
-          targetFqdn = type2msg.targetInfo.parsed['FQDN'];
-        }
-        type3msg = this._winSsoFacade.createAuthResponse(type1res.headers['www-authenticate'], targetFqdn, context.peerCert);
+        type3header = context.winSso.createAuthResponseHeader(type1res.headers['www-authenticate'] || '');
       } else {
         type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
+        type3header = type3msg.header();
       }
       let type3requestOptions: https.RequestOptions = {
         method: ctx.proxyToServerRequestOptions.method,
@@ -97,13 +93,13 @@ export class NtlmManager implements INtlmManager {
         headers: ctx.proxyToServerRequestOptions.headers
       };
       if (type3requestOptions.headers) { // Always true, silent the compiler
-        type3requestOptions.headers['authorization'] = type3msg.header();
+        type3requestOptions.headers['authorization'] = type3header;
       }
       type1res.on('end', () => {
         let type3req = proto.request(type3requestOptions, (type3res) => {
           type3res.pause();
-          this.ntlmHandshakeResponse(type3res, ntlmHostUrl, context, (err) => {
-            return callback(err, type3res);
+          this.handshakeResponse(type3res, ntlmHostUrl, context, () => {
+            return callback(undefined, type3res);
           });
         });
         type3req.on('error', (err) => {
@@ -112,7 +108,7 @@ export class NtlmManager implements INtlmManager {
           return callback(err);
         });
         this._debug.log('Sending NTLM message type 3 with initial client request');
-        this.debugHeader(type3msg.header(), true);
+        this.debugHeader(type3header, true);
         context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
         type3req.write(context.getRequestBody());
         type3req.end();
@@ -125,12 +121,12 @@ export class NtlmManager implements INtlmManager {
       return callback(err);
     });
     this._debug.log('Sending  NTLM message type 1');
-    this.debugHeader(type1msg.header(), true);
+    this.debugHeader(type1header, true);
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     type1req.end();
   }
 
-  ntlmHandshakeResponse(res: http.IncomingMessage, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException) => void) {
+  private handshakeResponse(res: http.IncomingMessage, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: () => void) {
     let authState = context.getState(ntlmHostUrl);
     if (authState === NtlmStateEnum.Type3Sent) {
       if (res.statusCode === 401) {
@@ -150,18 +146,16 @@ export class NtlmManager implements INtlmManager {
   }
 
   acceptsNtlmAuthentication(res: http.IncomingMessage): boolean {
-    if (res && res.statusCode === 401) {
-      // Ensure that we're talking NTLM here
-      const wwwAuthenticate = res.headers['www-authenticate'];
-      if (wwwAuthenticate &&
-          wwwAuthenticate.toUpperCase().split(', ').indexOf('NTLM') !== -1) {
-        return true;
-      }
+    // Ensure that we're talking NTLM here
+    const wwwAuthenticate = res.headers['www-authenticate'];
+    if (wwwAuthenticate &&
+        wwwAuthenticate.toUpperCase().split(', ').indexOf('NTLM') !== -1) {
+      return true;
     }
     return false;
   }
 
-  canHandleNtlmAuthentication(res: http.IncomingMessage): boolean {
+  private canHandleNtlmAuthentication(res: http.IncomingMessage): boolean {
     if (res && res.statusCode === 401) {
       // Ensure that we're talking NTLM here
       const wwwAuthenticate = res.headers['www-authenticate'];

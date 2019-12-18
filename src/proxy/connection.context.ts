@@ -3,6 +3,7 @@ import { CompleteUrl } from '../models/complete.url.model';
 import { injectable } from 'inversify';
 import { IConnectionContext } from './interfaces/i.connection.context';
 import { PeerCertificate } from 'tls';
+import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
@@ -11,6 +12,7 @@ export class ConnectionContext implements IConnectionContext {
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _useSso = false;
+  private _winSso?: IWinSsoFacade;
   private _peerCert?: PeerCertificate;
   private _clientAddress = '';
 
@@ -26,6 +28,16 @@ export class ConnectionContext implements IConnectionContext {
   }
   set useSso(useSso: boolean) {
     this._useSso = useSso;
+  }
+
+  get winSso(): IWinSsoFacade {
+    if (!this._winSso) {
+      throw new Error('WinSso not initialized for context');
+    }
+    return this._winSso;
+  }
+  set winSso(winSso: IWinSsoFacade) {
+    this._winSso = winSso;
   }
 
   get peerCert(): PeerCertificate | undefined {
@@ -76,5 +88,14 @@ export class ConnectionContext implements IConnectionContext {
 
   getRequestBody(): Buffer {
     return this._requestBody;
+  }
+
+  destroy() {
+    if (this._agent.destroy) {
+      this._agent.destroy(); // Destroys any sockets to servers
+    }
+    if (this._winSso) {
+      this._winSso.freeAuthContext();
+    }
   }
 }

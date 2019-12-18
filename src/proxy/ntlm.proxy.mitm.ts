@@ -4,7 +4,7 @@ import net from 'net';
 import http from 'http';
 import { toCompleteUrl } from '../util/url.converter';
 import { CompleteUrl } from '../models/complete.url.model';
-import { injectable, inject } from 'inversify';
+import { injectable, inject, interfaces } from 'inversify';
 import { IConfigServer } from './interfaces/i.config.server';
 import { IConfigStore } from './interfaces/i.config.store';
 import { IConnectionContextManager } from './interfaces/i.connection.context.manager';
@@ -14,6 +14,10 @@ import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
 import { TYPES } from './dependency.injection.types';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 import { TLSSocket } from 'tls';
+import { AuthModeEnum } from '../models/auth.mode.enum';
+import { INegotiateManager } from './interfaces/i.negotiate.manager';
+import { WinSso } from 'win-sso';
+import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 const nodeCommon = require('_http_common');
 
@@ -24,6 +28,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
   private _configServer: IConfigServer;
   private _connectionContextManager: IConnectionContextManager;
+  private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
+  private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
   private _debug: IDebugLogger;
@@ -33,12 +39,16 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.IConfigServer) configServer: IConfigServer,
     @inject(TYPES.IConnectionContextManager) connectionContextManager: IConnectionContextManager,
+    @inject(TYPES.NewableIWinSsoFacade) winSsoFacade: interfaces.Newable<IWinSsoFacade>,
+    @inject(TYPES.INegotiateManager) negotiateManager: INegotiateManager,
     @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
     @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._configStore = configStore;
     this._configServer = configServer;
     this._connectionContextManager = connectionContextManager;
+    this.WinSsoFacade = winSsoFacade;
+    this._negotiateManager = negotiateManager;
     this._ntlmManager = ntlmManager;
     this._upstreamProxyManager = upstreamProxyManager;
     this._debug = debug;
@@ -151,6 +161,20 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return hostUrl;
   }
 
+  private getAuthMode(serverToProxyResponse: http.IncomingMessage, useSso: boolean): AuthModeEnum {
+    if (serverToProxyResponse.statusCode !== 401 || !(serverToProxyResponse.headers['www-authenticate'])) {
+      return AuthModeEnum.NotApplicable;
+    }
+    if (useSso && self._negotiateManager.acceptsNegotiateAuthentication(serverToProxyResponse)) {
+      return AuthModeEnum.Negotiate;
+    }
+    if (self._ntlmManager.acceptsNtlmAuthentication(serverToProxyResponse)) {
+      return AuthModeEnum.NTLM;
+    }
+    // TODO Basic auth
+    return AuthModeEnum.NotSupported;
+  }
+
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let targetHost = self.getTargetHost(ctx);
     if (!targetHost || !(self._configStore.existsOrUseSso(targetHost))) {
@@ -161,62 +185,81 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       .getConnectionContextFromClientSocket(ctx.clientToProxyRequest.socket);
 
     if (context && context.isNewOrAuthenticated(targetHost)) {
-      if (ctx.serverToProxyResponse.statusCode === 401 &&
-          self._ntlmManager.acceptsNtlmAuthentication(ctx.serverToProxyResponse)) {
-
-        self._debug.log('Received 401 with NTLM in www-authenticate header. Starting handshake.');
-
-        // Grab PeerCertificate for NTLM channel binding
-        if (ctx.isSSL) {
-          let tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
-          let peerCert = tlsSocket.getPeerCertificate();
-          // getPeerCertificate may return an empty object.
-          // Validate that it has fingerprint256 attribute (added in Node 9.8.0)
-          if ((peerCert as any).fingerprint256) {
-            context.peerCert = peerCert;
-          } else {
-            self._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
-          }
-        }
-
-        // Ignore response body
-        ctx.onResponseData((ctx, chunk, callback) => { return; });
-        ctx.onResponseEnd((ctx, callback) =>  { return; });
-        ctx.serverToProxyResponse.resume();
-
-        self._ntlmManager.ntlmHandshake(ctx, targetHost, context, (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => {
-          if (err) {
-            self._debug.log('Cannot perform NTLM handshake.');
-          }
-          if (res) {
-            if (ctx.clientToProxyRequest.headers['proxy-connection']) {
-              res.headers['proxy-connection'] = 'keep-alive';
-              if (res.statusCode && res.statusCode !== 401) {
-                res.headers['connection'] = 'keep-alive';
-              } else {
-                res.headers['connection'] = 'close';
-              }
-            }
-            ctx.proxyToClientResponse.writeHead(res.statusCode || 401, self.filterAndCanonizeHeaders(res.headers));
-            res.on('data', chunk => ctx.proxyToClientResponse.write(chunk));
-            res.on('end', () => ctx.proxyToClientResponse.end());
-            res.resume();
-          } else {
-            // No response available, send empty 401 with headers from initial response
-            let headers = ctx.serverToProxyResponse.headers;
-            if (headers['proxy-connection']) {
-              headers['proxy-connection'] = 'keep-alive';
-              headers['connection'] = 'close';
-            }
-            ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(headers));
-            ctx.proxyToClientResponse.end();
-          }
-        });
-      } else {
+      const authMode = self.getAuthMode(ctx.serverToProxyResponse, context.useSso);
+      if (authMode === AuthModeEnum.NotApplicable) {
         return callback();
+      }
+      if (authMode === AuthModeEnum.NotSupported) {
+        self._debug.log('Received 401 with unsupported protocol in www-authenticate header.',
+          ctx.serverToProxyResponse.headers['www-authenticate'], 'Ignoring.');
+        return callback();
+      }
+
+      // Grab PeerCertificate for NTLM channel binding
+      if (ctx.isSSL) {
+        let tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
+        let peerCert = tlsSocket.getPeerCertificate();
+        // getPeerCertificate may return an empty object.
+        // Validate that it has fingerprint256 attribute (added in Node 9.8.0)
+        if ((peerCert as any).fingerprint256) {
+          context.peerCert = peerCert;
+        } else {
+          self._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
+        }
+      }
+
+      // Ignore response body
+      ctx.onResponseData((ctx, chunk, callback) => { return; });
+      ctx.onResponseEnd((ctx, callback) =>  { return; });
+      ctx.serverToProxyResponse.resume();
+
+      if (authMode === AuthModeEnum.Negotiate) {
+        self._debug.log('Received 401 with Negotiate in www-authenticate header. Starting handshake.');
+        if (context.useSso) {
+          context.winSso = new this.WinSsoFacade('Negotiate', ctx.proxyToServerRequestOptions.host, context.peerCert)
+        }
+        self._negotiateManager.handshake(ctx, targetHost, context,
+          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res));
+      }
+      if (authMode === AuthModeEnum.NTLM) {
+        self._debug.log('Received 401 with NTLM in www-authenticate header. Starting handshake.');
+        if (context.useSso) {
+          context.winSso = new this.WinSsoFacade('NTLM', ctx.proxyToServerRequestOptions.host, context.peerCert)
+        }
+        self._ntlmManager.handshake(ctx, targetHost, context,
+          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res));
       }
     } else {
       return callback();
+    }
+  }
+
+  private handshakeCallback(ctx: IContext, err?: NodeJS.ErrnoException, res?: http.IncomingMessage) {
+    if (err) {
+      self._debug.log('Cannot perform handshake.');
+    }
+    if (res) {
+      if (ctx.clientToProxyRequest.headers['proxy-connection']) {
+        res.headers['proxy-connection'] = 'keep-alive';
+        if (res.statusCode && res.statusCode !== 401) {
+          res.headers['connection'] = 'keep-alive';
+        } else {
+          res.headers['connection'] = 'close';
+        }
+      }
+      ctx.proxyToClientResponse.writeHead(res.statusCode || 401, self.filterAndCanonizeHeaders(res.headers));
+      res.on('data', chunk => ctx.proxyToClientResponse.write(chunk));
+      res.on('end', () => ctx.proxyToClientResponse.end());
+      res.resume();
+    } else {
+      // No response available, send empty 401 with headers from initial response
+      let headers = ctx.serverToProxyResponse.headers;
+      if (headers['proxy-connection']) {
+        headers['proxy-connection'] = 'keep-alive';
+        headers['connection'] = 'close';
+      }
+      ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(headers));
+      ctx.proxyToClientResponse.end();
     }
   }
 
