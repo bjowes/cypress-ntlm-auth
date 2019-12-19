@@ -106,7 +106,7 @@ export class NegotiateManager implements INegotiateManager {
     // Ensure that we're talking Negotiate here
     const wwwAuthenticate = res.headers['www-authenticate'];
     if (wwwAuthenticate &&
-        wwwAuthenticate.toUpperCase().split(', ').indexOf('Negotiate') !== -1) {
+        wwwAuthenticate.split(', ').indexOf('Negotiate') !== -1) {
       return true;
     }
     return false;

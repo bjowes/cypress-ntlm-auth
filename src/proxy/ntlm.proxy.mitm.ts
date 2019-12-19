@@ -216,7 +216,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (authMode === AuthModeEnum.Negotiate) {
         self._debug.log('Received 401 with Negotiate in www-authenticate header. Starting handshake.');
         if (context.useSso) {
-          context.winSso = new this.WinSsoFacade('Negotiate', ctx.proxyToServerRequestOptions.host, context.peerCert)
+          context.winSso = new self.WinSsoFacade('Negotiate', ctx.proxyToServerRequestOptions.host, context.peerCert);
         }
         self._negotiateManager.handshake(ctx, targetHost, context,
           (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res));
@@ -224,7 +224,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (authMode === AuthModeEnum.NTLM) {
         self._debug.log('Received 401 with NTLM in www-authenticate header. Starting handshake.');
         if (context.useSso) {
-          context.winSso = new this.WinSsoFacade('NTLM', ctx.proxyToServerRequestOptions.host, context.peerCert)
+          context.winSso = new self.WinSsoFacade('NTLM', ctx.proxyToServerRequestOptions.host, context.peerCert);
         }
         self._ntlmManager.handshake(ctx, targetHost, context,
           (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res));
