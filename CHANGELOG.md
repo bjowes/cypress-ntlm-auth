@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0-beta.1 - released 2019-12-19
+
+* Fix #91 - Support for Negotiate (Kerberos)! Only available on Windows and with SSO.
+
 ## 2.0.5 - released 2019-12-03
 
 * Fix #76 - SSO hosts can now be specified using wildcards.
