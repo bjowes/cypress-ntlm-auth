@@ -16,12 +16,17 @@ import { IncomingMessage } from 'http';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';
 import { ExpressServer } from './express.server';
+import { INegotiateManager } from '../../src/proxy/interfaces/i.negotiate.manager';
+import { interfaces } from 'inversify';
+import { IWinSsoFacade } from '../../src/proxy/interfaces/i.win-sso.facade';
 
 describe('NtlmProxyMitm error logging', () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
   let configServerMock: SubstituteOf<IConfigServer>;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
+  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
   let debugMock: SubstituteOf<IDebugLogger>;
@@ -31,13 +36,15 @@ describe('NtlmProxyMitm error logging', () => {
     configStoreMock = Substitute.for<IConfigStore>();
     configServerMock = Substitute.for<IConfigServer>();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
+    negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
-      configServerMock, connectionContextManagerMock, ntlmManagerMock,
-      upstreamProxyManagerMock, debugMock);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock, configServerMock,
+      connectionContextManagerMock, winSsoFacadeMock, negotiateManagerMock,
+      ntlmManagerMock, upstreamProxyManagerMock, debugMock);
   });
 
   it('connection errors should not throw when no context', async function () {
@@ -118,6 +125,8 @@ describe('NtlmProxyMitm REQUEST', () => {
   let configStoreMock: SubstituteOf<IConfigStore>;
   let configServerMock: SubstituteOf<IConfigServer>;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
+  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
   let debugMock: SubstituteOf<IDebugLogger>;
@@ -127,14 +136,16 @@ describe('NtlmProxyMitm REQUEST', () => {
     configStoreMock = Substitute.for<IConfigStore>();
     configServerMock = Substitute.for<IConfigServer>();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
+    negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
-      configServerMock, connectionContextManagerMock, ntlmManagerMock,
-      upstreamProxyManagerMock, debugMock);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock, configServerMock,
+      connectionContextManagerMock, winSsoFacadeMock, negotiateManagerMock,
+      ntlmManagerMock, upstreamProxyManagerMock, debugMock);
   });
 
   it('invalid url should throw', async function() {
@@ -157,6 +168,8 @@ describe('NtlmProxyMitm CONNECT', () => {
   let configStoreMock: SubstituteOf<IConfigStore>;
   let configServerMock: SubstituteOf<IConfigServer>;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
+  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
   let debugMock: SubstituteOf<IDebugLogger>;
@@ -200,15 +213,17 @@ describe('NtlmProxyMitm CONNECT', () => {
 
     configServerMock = Substitute.for<IConfigServer>();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
+    negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
-      configServerMock, connectionContextManagerMock, ntlmManagerMock,
-      upstreamProxyManagerMock, debugMock);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock, configServerMock,
+      connectionContextManagerMock, winSsoFacadeMock, negotiateManagerMock,
+      ntlmManagerMock, upstreamProxyManagerMock, debugMock);
   });
 
   after(async function() {
@@ -310,6 +325,8 @@ describe('NtlmProxyMitm NtlmProxyPort', () => {
   let configStoreMock: SubstituteOf<IConfigStore>;
   let configServerMock: SubstituteOf<IConfigServer>;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
+  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
   let debugMock: SubstituteOf<IDebugLogger>;
@@ -319,14 +336,16 @@ describe('NtlmProxyMitm NtlmProxyPort', () => {
     configStoreMock = Substitute.for<IConfigStore>();
     configServerMock = Substitute.for<IConfigServer>();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
+    negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock,
-      configServerMock, connectionContextManagerMock, ntlmManagerMock,
-      upstreamProxyManagerMock, debugMock);
+    ntlmProxyMitm = new NtlmProxyMitm(configStoreMock, configServerMock,
+      connectionContextManagerMock, winSsoFacadeMock, negotiateManagerMock,
+      ntlmManagerMock, upstreamProxyManagerMock, debugMock);
   });
 
   it('NtlmProxyPort should throw if not initialized', async function() {

@@ -56,7 +56,7 @@ export class NegotiateManager implements INegotiateManager {
     if (this.canHandleNegotiateAuthentication(res) === false) {
       this._debug.log('www-authenticate not found on response during Negotiate handshake with host', fullUrl);
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-      return callback(new Error('www-authenticate not found on response of second request during Negotiate handshake with host ' + fullUrl), res);
+      return callback(new Error('www-authenticate not found on response of request during Negotiate handshake with host ' + fullUrl), res);
     }
 
     context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
