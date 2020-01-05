@@ -6,6 +6,10 @@ export function toCompleteUrl(host: string, addProtocol: boolean, useSSL?: boole
   let hostUrl: url.UrlWithStringQuery;
   let isSSL: boolean;
 
+  if (!host) {
+    throw new Error('Could not parse empty host');
+  }
+
   if (addProtocol) {
     if (useSSL === true) {
       host = 'https://' + host;
@@ -40,7 +44,7 @@ export function toCompleteUrl(host: string, addProtocol: boolean, useSSL?: boole
 
   if (!hostUrl.port) {
     let port = isSSL ? '443' : '80';
-    hostUrl = url.parse(hostUrl.protocol + '//' + hostUrl.hostname + ':' + port + '/');
+    hostUrl = url.parse(hostUrl.protocol + '//' + hostUrl.hostname + ':' + port + hostUrl.path);
   }
 
   if (!hostUrl.hostname || !hostUrl.port || !hostUrl.protocol || !hostUrl.href || !hostUrl.path) {

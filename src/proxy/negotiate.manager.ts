@@ -20,7 +20,13 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-    let requestToken = context.winSso.createAuthRequestHeader();
+    let requestToken: string;
+    try {
+      requestToken = context.winSso.createAuthRequestHeader();
+    } catch (err) {
+      return callback(err, ctx.serverToProxyResponse);
+    }
+    this.dropOriginalResponse(ctx);
     let originalRequestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
@@ -50,17 +56,21 @@ export class NegotiateManager implements INegotiateManager {
   private handshakeResponse(res: http.IncomingMessage, ntlmHostUrl: CompleteUrl, context: IConnectionContext,
       originalRequestOptions: https.RequestOptions, isSSL: boolean,
       callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
-    const fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     res.pause();
 
     if (this.canHandleNegotiateAuthentication(res) === false) {
-      this._debug.log('www-authenticate not found on response during Negotiate handshake with host', fullUrl);
+      this._debug.log('www-authenticate not found on response during Negotiate handshake with host', ntlmHostUrl.href);
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-      return callback(new Error('www-authenticate not found on response of request during Negotiate handshake with host ' + fullUrl), res);
+      return callback(new Error('www-authenticate not found on response of request during Negotiate handshake with host ' + ntlmHostUrl.href), res);
     }
 
     context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
-    let responseToken = context.winSso.createAuthResponseHeader(res.headers['www-authenticate'] || '');
+    let responseToken: string;
+    try {
+      responseToken = context.winSso.createAuthResponseHeader(res.headers['www-authenticate'] || '');
+    } catch (err) {
+      return callback(err, res);
+    }
 
     if (!responseToken && res.statusCode !== 401) {
       this._debug.log('Negotiate authentication successful for host', ntlmHostUrl.href);
@@ -100,6 +110,12 @@ export class NegotiateManager implements INegotiateManager {
       req.end();
     });
     res.resume();
+  }
+
+  private dropOriginalResponse(ctx: IContext) {
+    ctx.onResponseData((ctx, chunk, callback) => { return; });
+    ctx.onResponseEnd((ctx, callback) =>  { return; });
+    ctx.serverToProxyResponse.resume();
   }
 
   acceptsNegotiateAuthentication(res: http.IncomingMessage): boolean {

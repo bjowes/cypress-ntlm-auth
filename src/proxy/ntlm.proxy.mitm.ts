@@ -16,7 +16,6 @@ import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 import { TLSSocket } from 'tls';
 import { AuthModeEnum } from '../models/auth.mode.enum';
 import { INegotiateManager } from './interfaces/i.negotiate.manager';
-import { WinSso } from 'win-sso';
 import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 
 const nodeCommon = require('_http_common');
@@ -207,11 +206,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           self._debug.log('Could not retrieve PeerCertificate for NTLM channel binding.');
         }
       }
-
-      // Ignore response body
-      ctx.onResponseData((ctx, chunk, callback) => { return; });
-      ctx.onResponseEnd((ctx, callback) =>  { return; });
-      ctx.serverToProxyResponse.resume();
 
       if (authMode === AuthModeEnum.Negotiate) {
         self._debug.log('Received 401 with Negotiate in www-authenticate header. Starting handshake.');

@@ -17,6 +17,7 @@ import { ExpressServer } from './express.server';
 import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { NegotiateManager } from '../../src/proxy/negotiate.manager';
 import { IWinSsoFacade } from '../../src/proxy/interfaces/i.win-sso.facade';
+import { ResetServer } from './reset.server';
 
 describe('NegotiateManager', () => {
   let negotiateManager: NegotiateManager;
@@ -24,10 +25,14 @@ describe('NegotiateManager', () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
+  let resetServer = new ResetServer();
   let httpUrl: string;
+  let resetUrl: string;
 
   before(async function() {
     httpUrl = await expressServer.startHttpServer(false, undefined);
+    resetServer.start();
+    resetUrl = resetServer.url();
   });
 
   beforeEach(async function () {
@@ -40,6 +45,88 @@ describe('NegotiateManager', () => {
 
   after(async function() {
     await expressServer.stopHttpServer();
+    resetServer.stop();
+  });
+
+  describe('Negotiate', () => {
+
+    it('Successful auth with 1 roundtrip', (done) => {
+      const ntlmHostUrl = toCompleteUrl(httpUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthRequestHeader().returns('Negotiate TEST');
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns('');
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns({ protocol: 'http:', host: '127.0.0.1', port: ntlmHostUrl.port, method: 'GET', path: '/get' } as any);
+      ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
+      expressServer.sendWwwAuth([
+        { header: 'Negotiate TestResponse1', status: 200 }
+      ]);
+
+      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext,
+        (err, res) => {
+          expect(err).to.be.undefined;
+          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.Authenticated);
+          expect(res.statusCode).to.not.equal(401);
+          res.resume();
+          return done();
+        });
+    });
+
+    it('Successful auth with 2 roundtrips', (done) => {
+      const ntlmHostUrl = toCompleteUrl(httpUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthRequestHeader().returns('Negotiate TEST');
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns('Negotiate TEST', '');
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns({ protocol: 'http:', host: '127.0.0.1', port: ntlmHostUrl.port, method: 'GET', path: '/get' } as any);
+      ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
+      expressServer.sendWwwAuth([
+        { header: 'Negotiate TestResponse1', status: 401 },
+        { header: 'Negotiate TestResponse2', status: 200 }
+      ]);
+
+      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext,
+        (err, res) => {
+          expect(err).to.be.undefined;
+          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.Authenticated);
+          expect(res.statusCode).to.not.equal(401);
+          res.resume();
+          return done();
+        });
+    });
+
+    it('Successful auth with 3 roundtrips', (done) => {
+      const ntlmHostUrl = toCompleteUrl(httpUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthRequestHeader().returns('Negotiate TEST');
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns('Negotiate TEST', 'Negotiate TEST2', '');
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns({ protocol: 'http:', host: '127.0.0.1', port: ntlmHostUrl.port, method: 'GET', path: '/get' } as any);
+      ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
+      expressServer.sendWwwAuth([
+        { header: 'Negotiate TestResponse1', status: 401 },
+        { header: 'Negotiate TestResponse2', status: 401 },
+        { header: 'Negotiate TestResponse3', status: 200 }
+      ]);
+
+      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext,
+        (err, res) => {
+          expect(err).to.be.undefined;
+          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.Authenticated);
+          expect(res.statusCode).to.not.equal(401);
+          res.resume();
+          return done();
+        });
+    });
   });
 
   describe('Negotiate errors', () => {
@@ -114,58 +201,101 @@ describe('NegotiateManager', () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
-      winSsoFacadeMock.createAuthRequestHeader().mimicks(() => { throw new Error('test'); });
+      winSsoFacadeMock.createAuthRequestHeader().mimicks(() => { throw new Error('Negotiate test'); });
       const ctx = Substitute.for<IContext>();
       ctx.proxyToServerRequestOptions.returns({} as any);
       ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999 } as any);
 
       negotiateManager.handshake(ctx, toCompleteUrl(httpUrl, false), connectionContext,
         (err, res) => {
-          expect(err.message).to.be.equal('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href + ntlmHostUrl.path);
+          expect(err.message).to.be.equal('Negotiate test');
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
+          expect(res.statusCode).to.be.equal(999);
           return done();
         });
     });
 
-    it.skip('Error sending Negotiate message', function (done) {
+    it('Error sending Negotiate request message', function (done) {
+      const ntlmHostUrl = toCompleteUrl(resetUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthRequestHeader().returns('Negotiate TEST');
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns({ protocol: 'http:', host: '127.0.0.1', port: resetServer.port(), method: 'GET' } as any);
+      ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
+
+      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext,
+        (err, res) => {
+          expect(err.message).to.be.equal('read ECONNRESET');
+          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
+          expect(res).to.be.undefined;
+          return done();
+        });
     });
 
-    describe('Negotiate detection', () => {
-      it('should not detect lowercase Negotiate in header', function() {
-        let res = Substitute.for<http.IncomingMessage>();
-        res.headers.returns({ 'www-authenticate': 'negotiate' });
-        let result = negotiateManager.acceptsNegotiateAuthentication(res);
-        expect(result).to.be.false;
-      });
+    it('Error sending Negotiate response message', function (done) {
+      const message = Substitute.for<http.IncomingMessage>();
+      message.statusCode.returns(200);
+      message.headers.returns({ 'www-authenticate': 'Negotiate TestServerResponse'});
+      let messageEndCb: any;
+      message.on(Arg.any()).mimicks((event, listener) => { messageEndCb = listener; return message; });
+      const ntlmHostUrl = toCompleteUrl(resetUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns('Negotiate TestResponse');
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns({ protocol: 'http:', host: '127.0.0.1', port: resetServer.port(), method: 'GET' } as any);
+      ctx.isSSL.returns(false);
+      ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
 
-      it('should not detect uppercase Negotiate in header', function() {
-        let res = Substitute.for<http.IncomingMessage>();
-        res.headers.returns({ 'www-authenticate': 'NEGOTIATE' });
-        let result = negotiateManager.acceptsNegotiateAuthentication(res);
-        expect(result).to.be.false;
+      negotiateManager['handshakeResponse'](message, ntlmHostUrl, connectionContext, ctx.proxyToServerRequestOptions, false, (err, res) => {
+        expect(err.message).to.be.equal('read ECONNRESET');
+        expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
+        expect(res).to.be.undefined;
+        return done();
       });
-
-      it('should detect proper case Negotiate in header', function() {
-        let res = Substitute.for<http.IncomingMessage>();
-        res.headers.returns({ 'www-authenticate': 'Negotiate' });
-        let result = negotiateManager.acceptsNegotiateAuthentication(res);
-        expect(result).to.be.true;
-      });
-
-      it('should detect Negotiate in mixed header', function() {
-        let res = Substitute.for<http.IncomingMessage>();
-        res.headers.returns({ 'www-authenticate': 'NTLM, Negotiate' });
-        let result = negotiateManager.acceptsNegotiateAuthentication(res);
-        expect(result).to.be.true;
-      });
-
-      it('should not detect missing Negotiate', function() {
-        let res = Substitute.for<http.IncomingMessage>();
-        res.headers.returns({ 'www-authenticate': 'NTLM, Digest' });
-        let result = negotiateManager.acceptsNegotiateAuthentication(res);
-        expect(result).to.be.false;
-      });
+      messageEndCb();
     });
   });
 
+  describe('Negotiate detection', () => {
+    it('should not detect lowercase Negotiate in header', function() {
+      let res = Substitute.for<http.IncomingMessage>();
+      res.headers.returns({ 'www-authenticate': 'negotiate' });
+      let result = negotiateManager.acceptsNegotiateAuthentication(res);
+      expect(result).to.be.false;
+    });
+
+    it('should not detect uppercase Negotiate in header', function() {
+      let res = Substitute.for<http.IncomingMessage>();
+      res.headers.returns({ 'www-authenticate': 'NEGOTIATE' });
+      let result = negotiateManager.acceptsNegotiateAuthentication(res);
+      expect(result).to.be.false;
+    });
+
+    it('should detect proper case Negotiate in header', function() {
+      let res = Substitute.for<http.IncomingMessage>();
+      res.headers.returns({ 'www-authenticate': 'Negotiate' });
+      let result = negotiateManager.acceptsNegotiateAuthentication(res);
+      expect(result).to.be.true;
+    });
+
+    it('should detect Negotiate in mixed header', function() {
+      let res = Substitute.for<http.IncomingMessage>();
+      res.headers.returns({ 'www-authenticate': 'NTLM, Negotiate' });
+      let result = negotiateManager.acceptsNegotiateAuthentication(res);
+      expect(result).to.be.true;
+    });
+
+    it('should not detect missing Negotiate', function() {
+      let res = Substitute.for<http.IncomingMessage>();
+      res.headers.returns({ 'www-authenticate': 'NTLM, Digest' });
+      let result = negotiateManager.acceptsNegotiateAuthentication(res);
+      expect(result).to.be.false;
+    });
+  });
 });

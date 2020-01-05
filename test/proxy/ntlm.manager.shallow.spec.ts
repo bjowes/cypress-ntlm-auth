@@ -109,7 +109,7 @@ describe('NtlmManager', () => {
 
       ntlmManager.handshake(ctx, toCompleteUrl(httpUrl, false), connectionContext,
         (err) => {
-          expect(err.message).to.be.equal('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href + ntlmHostUrl.path);
+          expect(err.message).to.be.equal('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href);
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
           agent.destroy();
           return done();
@@ -143,7 +143,7 @@ describe('NtlmManager', () => {
 
       ntlmManager.handshake(ctx, toCompleteUrl(httpUrl, false), connectionContext,
         (err) => {
-          expect(err.message).to.be.equal('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href + ntlmHostUrl.path);
+          expect(err.message).to.be.equal('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href);
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
           agent.destroy();
           return done();

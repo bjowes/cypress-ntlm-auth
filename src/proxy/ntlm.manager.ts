@@ -30,18 +30,22 @@ export class NtlmManager implements INtlmManager {
   }
 
   handshake(ctx: IContext, ntlmHostUrl: CompleteUrl, context: IConnectionContext, callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void) {
-    let fullUrl = ntlmHostUrl.href + ntlmHostUrl.path;
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let config: NtlmConfig;
     let type1msg: NtlmMessage;
     let type1header: string;
     if (context.useSso) {
-      type1header = context.winSso.createAuthRequestHeader();
+      try {
+        type1header = context.winSso.createAuthRequestHeader();
+      } catch (err) {
+        return callback(err, ctx.serverToProxyResponse);
+      }
     } else {
       config = this._configStore.get(ntlmHostUrl);
       type1msg = this._ntlm.createType1Message(config.ntlmVersion, config.workstation, config.domain);
       type1header = type1msg.header();
     }
+    this.dropOriginalResponse(ctx);
     let requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
@@ -57,9 +61,9 @@ export class NtlmManager implements INtlmManager {
       type1res.pause();
 
       if (this.canHandleNtlmAuthentication(type1res) === false) {
-        this._debug.log('www-authenticate not found on response of second request during NTLM handshake with host', fullUrl);
+        this._debug.log('www-authenticate not found on response of second request during NTLM handshake with host', ntlmHostUrl.href);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-        return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + fullUrl), type1res);
+        return callback(new Error('www-authenticate not found on response of second request during NTLM handshake with host ' + ntlmHostUrl.href), type1res);
       }
 
       context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
@@ -70,16 +74,20 @@ export class NtlmManager implements INtlmManager {
         this.debugHeader(type1res.headers['www-authenticate'], true);
         this.debugHeader(type2msg, false);
       } catch (err) {
-        this._debug.log('Cannot parse NTLM message type 2 from host', fullUrl);
+        this._debug.log('Cannot parse NTLM message type 2 from host', ntlmHostUrl.href);
         this._debug.log(err);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-        return callback(new Error('Cannot parse NTLM message type 2 from host ' + fullUrl), type1res);
+        return callback(new Error('Cannot parse NTLM message type 2 from host ' + ntlmHostUrl.href), type1res);
       }
 
       let type3msg: NtlmMessage;
       let type3header: string;
       if (context.useSso) {
-        type3header = context.winSso.createAuthResponseHeader(type1res.headers['www-authenticate'] || '');
+        try {
+          type3header = context.winSso.createAuthResponseHeader(type1res.headers['www-authenticate'] || '');
+        } catch (err) {
+          return callback(err, type1res);
+        }
       } else {
         type3msg = this._ntlm.createType3Message(type1msg, type2msg, config.username, config.password, config.workstation, config.domain, undefined, undefined);
         type3header = type3msg.header();
@@ -143,6 +151,12 @@ export class NtlmManager implements INtlmManager {
     this._debug.log('Response from server in unexpected NTLM state ' + authState + ', resetting NTLM auth.');
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     return callback();
+  }
+
+  private dropOriginalResponse(ctx: IContext) {
+    ctx.onResponseData((ctx, chunk, callback) => { return; });
+    ctx.onResponseEnd((ctx, callback) =>  { return; });
+    ctx.serverToProxyResponse.resume();
   }
 
   acceptsNtlmAuthentication(res: http.IncomingMessage): boolean {
