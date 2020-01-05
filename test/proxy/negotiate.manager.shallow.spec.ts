@@ -5,16 +5,13 @@ import { Substitute, SubstituteOf, Arg } from '@fluffy-spoon/substitute';
 
 import { expect } from 'chai';
 import http from 'http';
-import { IConfigStore } from '../../src/proxy/interfaces/i.config.store';
 import { IContext } from 'http-mitm-proxy';
 import { IDebugLogger } from '../../src/util/interfaces/i.debug.logger';
 import { DebugLogger } from '../../src/util/debug.logger';
-import { NtlmManager } from '../../src/proxy/ntlm.manager';
 import { toCompleteUrl } from '../../src/util/url.converter';
 import { ConnectionContext } from '../../src/proxy/connection.context';
 import { NtlmStateEnum } from '../../src/models/ntlm.state.enum';
 import { ExpressServer } from './express.server';
-import { NtlmConfig } from '../../src/models/ntlm.config.model';
 import { NegotiateManager } from '../../src/proxy/negotiate.manager';
 import { IWinSsoFacade } from '../../src/proxy/interfaces/i.win-sso.facade';
 import { ResetServer } from './reset.server';
