@@ -226,7 +226,10 @@ describe('NegotiateManager', () => {
 
       negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext,
         (err, res) => {
-          expect(err.message).to.be.equal('read ECONNRESET');
+          const linuxErrorExpect = 'read ECONNRESET';
+          const winMacErrorExpect = 'socket hang up';
+          const errorMatch = (err.message === linuxErrorExpect || err.message === winMacErrorExpect);
+          expect(errorMatch).to.be.true;
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
           expect(res).to.be.undefined;
           return done();
@@ -250,8 +253,11 @@ describe('NegotiateManager', () => {
       ctx.serverToProxyResponse.returns({ statusCode: 999, resume: () => { return; } } as any);
 
       negotiateManager['handshakeResponse'](message, ntlmHostUrl, connectionContext, ctx.proxyToServerRequestOptions, false, (err, res) => {
-        expect(err.message).to.be.equal('read ECONNRESET');
-        expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
+        const linuxErrorExpect = 'read ECONNRESET';
+        const winMacErrorExpect = 'socket hang up';
+        const errorMatch = (err.message === linuxErrorExpect || err.message === winMacErrorExpect);
+        expect(errorMatch).to.be.true;
+      expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(NtlmStateEnum.NotAuthenticated);
         expect(res).to.be.undefined;
         return done();
       });
