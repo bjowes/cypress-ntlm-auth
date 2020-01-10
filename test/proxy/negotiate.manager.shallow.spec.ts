@@ -380,6 +380,37 @@ describe("NegotiateManager", () => {
       );
     });
 
+    it("Cannot create Negotiate response message", function(done) {
+      const message = Substitute.for<http.IncomingMessage>();
+      message.statusCode.returns(999);
+      message.headers.returns({
+        "www-authenticate": "Negotiate TestServerResponse"
+      });
+      const ntlmHostUrl = toCompleteUrl(resetUrl, false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).mimicks(() => {
+        throw new Error("Negotiate test");
+      });
+
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        undefined,
+        false,
+        (err, res) => {
+          expect(err.message).to.be.equal("Negotiate test");
+          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
+            NtlmStateEnum.NotAuthenticated
+          );
+          expect(res.statusCode).to.be.equal(999);
+          return done();
+        }
+      );
+    });
+
     it("Error sending Negotiate response message", function(done) {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
