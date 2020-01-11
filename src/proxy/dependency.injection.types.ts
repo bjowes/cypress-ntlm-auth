@@ -9,6 +9,7 @@ export let TYPES = {
   IExpressServerFacade: Symbol.for('IExpressServerFacade'),
   IHttpMitmProxyFacade: Symbol.for('IHttpMitmProxyFacade'),
   IMain: Symbol.for('IMain'),
+  INegotiateManager: Symbol.for('INegotiateManager'),
   INtlm: Symbol.for('INtlm'),
   INtlmManager: Symbol.for('INtlmManager'),
   INtlmProxyExit: Symbol.for('INtlmProxyExit'),
@@ -16,6 +17,6 @@ export let TYPES = {
   INtlmProxyServer: Symbol.for('INtlmProxyServer'),
   IPortsFileService: Symbol.for('IPortsFileService'),
   IUpstreamProxyManager: Symbol.for('IUpstreamProxyManager'),
-  NewableIConnectionContext: Symbol.for('Newable<IConnectionContext>'),
-  IWinSsoFacade: Symbol.for('IWinSsoFacade')
+  NewableIWinSsoFacade: Symbol.for('Newable<IWinSsoFacade>'),
+  NewableIConnectionContext: Symbol.for('Newable<IConnectionContext>')
 };

@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "2.0.5",
+  "version": "2.1.0-beta.1",
   "description": "NTLM authentication plugin for Cypress",
   "main": "dist/index.js",
   "scripts": {
@@ -53,7 +53,7 @@
     "mkdirp": "^0.5.1",
     "node-cleanup": "^2.1.2",
     "reflect-metadata": "^0.1.13",
-    "win-sso": "^0.3.1"
+    "win-sso": "^1.0.1"
   },
   "devDependencies": {
     "@bjowes/express-ntlm": "^2.4.2",

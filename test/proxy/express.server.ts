@@ -15,6 +15,11 @@ interface ExpressError extends Error {
   status?: number;
 }
 
+export interface AuthResponeHeader {
+  header: string;
+  status: number;
+}
+
 export class ExpressServer {
   private appNoAuth = express();
   private appNtlmAuth = express();
@@ -31,7 +36,7 @@ export class ExpressServer {
 
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
-  private sendWwwAuthHeader: string = null;
+  private sendWwwAuthHeader: AuthResponeHeader[] = [];
 
   constructor() {
     this.initExpress(this.appNoAuth, false);
@@ -42,6 +47,20 @@ export class ExpressServer {
       key: this.privateKeyPem,
       cert: this.certPem
     }, this.appNtlmAuth);
+  }
+
+  private createResponse(res: express.Response, body: any) {
+    res.setHeader('Content-Type', 'application/json');
+    if (this.sendNtlmType2Header !== null) {
+      res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
+      res.sendStatus(401);
+    } else if (this.sendWwwAuthHeader.length > 0) {
+      const auth = this.sendWwwAuthHeader.shift();
+        res.setHeader('www-authenticate', auth.header);
+        res.sendStatus(auth.status);
+    } else {
+      res.status(200).send(JSON.stringify(body));
+    }
   }
 
   private initExpress(app: express.Application, useNtlm: boolean) {
@@ -68,17 +87,7 @@ export class ExpressServer {
         message: 'Expecting larger payload on GET',
         reply: 'OK ÅÄÖéß'
       };
-      res.setHeader('Content-Type', 'application/json');
-      if (this.sendNtlmType2Header !== null) {
-        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
-        res.sendStatus(401);
-      } else if (this.sendWwwAuthHeader != null) {
-        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
-        res.sendStatus(401);
-        this.sendWwwAuthHeader = null;
-      } else {
-        res.status(200).send(JSON.stringify(body));
-      }
+      this.createResponse(res, body);
     });
 
     app.post('/post', (req, res) => {
@@ -88,17 +97,7 @@ export class ExpressServer {
       }
 
       req.body.reply = 'OK ÅÄÖéß';
-      res.setHeader('Content-Type', 'application/json');
-      if (this.sendNtlmType2Header !== null) {
-        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
-        res.sendStatus(401);
-      } else if (this.sendWwwAuthHeader != null) {
-        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
-        res.sendStatus(401);
-        this.sendWwwAuthHeader = null;
-      } else {
-        res.status(200).send(JSON.stringify(req.body));
-      }
+      this.createResponse(res, req.body);
     });
 
     app.put('/put', (req, res) => {
@@ -108,17 +107,7 @@ export class ExpressServer {
       }
 
       req.body.reply = 'OK ÅÄÖéß';
-      res.setHeader('Content-Type', 'application/json');
-      if (this.sendNtlmType2Header !== null) {
-        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
-        res.sendStatus(401);
-      } else if (this.sendWwwAuthHeader != null) {
-        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
-        res.sendStatus(401);
-        this.sendWwwAuthHeader = null;
-      } else {
-        res.status(200).send(req.body);
-      }
+      this.createResponse(res, req.body);
     });
 
     app.delete('/delete', (req, res) => {
@@ -128,17 +117,7 @@ export class ExpressServer {
       }
 
       req.body.reply = 'OK ÅÄÖéß';
-      res.setHeader('Content-Type', 'application/json');
-      if (this.sendNtlmType2Header !== null) {
-        res.setHeader('www-authenticate', 'NTLM ' + this.sendNtlmType2Header );
-        res.sendStatus(401);
-      } else if (this.sendWwwAuthHeader != null) {
-        res.setHeader('www-authenticate', this.sendWwwAuthHeader);
-        res.sendStatus(401);
-        this.sendWwwAuthHeader = null;
-      } else {
-        res.status(200).send(req.body);
-      }
+      this.createResponse(res, req.body);
     });
   }
 
@@ -360,7 +339,11 @@ export class ExpressServer {
   }
 
   sendWwwAuthOnce(fakeHeader: string) {
-    this.sendWwwAuthHeader = fakeHeader;
+    this.sendWwwAuthHeader = [ { header: fakeHeader, status: 401 } ];
+  }
+
+  sendWwwAuth(fakeHeaders: AuthResponeHeader[]) {
+    this.sendWwwAuthHeader = fakeHeaders;
   }
 
   restartNtlm() {

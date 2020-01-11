@@ -5,7 +5,7 @@
 
 NTLM authentication plugin for [Cypress](https://www.cypress.io/)
 
-If you want to perform end-to-end testing against deployed sites that require Windows Authentication, and you want to use [Cypress](https://www.cypress.io/), you will find that Cypress does not support NTLM (or Kerberos) authentication. Windows Authentication is quite widely used in corporate intranets. This plugin bridges the gap by providing NTLM authentication for Cypress in a streamlined manner.
+If you want to perform end-to-end testing against deployed sites that require Windows Authentication, and you want to use [Cypress](https://www.cypress.io/), you will find that Cypress does not support Windows Authentication. Windows Authentication is quite widely used in corporate intranets. This plugin bridges the gap by providing NTLM authentication (and Negotiate when using SSO) for Cypress in a streamlined manner.
 
 [![version](https://img.shields.io/npm/v/cypress-ntlm-auth.svg)](https://www.npmjs.com/package/cypress-ntlm-auth)
 [![downloads](https://img.shields.io/npm/dt/cypress-ntlm-auth.svg)](https://www.npmjs.com/package/cypress-ntlm-auth)
@@ -14,17 +14,17 @@ If you want to perform end-to-end testing against deployed sites that require Wi
 
 [Changelog](https://github.com/bjowes/cypress-ntlm-auth/blob/master/CHANGELOG.md)
 
-*Never heard of Cypress?*
+_Never heard of Cypress?_
 
-Read the intro at [their site](https://www.cypress.io/) and find out if it is the thing for you. (*spoiler - it is!*)
+Read the intro at [their site](https://www.cypress.io/) and find out if it is the thing for you. (_spoiler - it is!_)
 
-*Want to use NTLM authentication for something else?*
+_Want to use NTLM or Negotiate authentication for something else?_
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
-## *BREAKING CHANGE* from release 2.0.0
+## _BREAKING CHANGE_ from release 2.0.0
 
-Not really a breaking change, but if your test client runs on Windows you should consider using the new single sign on feature instead of the old way to configure hosts. It offers fully featured NTLM authentication with all the security features provided natively by Windows. Secondly, the configuration is much simpler since you only need to specify hosts, no credentials. User credentials from the user running the test client are used automatically.
+Not really a breaking change, but if your test client runs on Windows you should consider using the new single sign on feature instead of the old way to configure hosts. It offers fully featured NTLM authentication and Negotiate authentication with all the security features provided natively by Windows. Secondly, the configuration is much simpler since you only need to specify hosts, no credentials. User credentials from the user running the test client are used automatically.
 
 Check out the new `cy.ntlmSso` command below and give it a try!
 
@@ -45,11 +45,11 @@ Follow these steps to configure Cypress to utilize this plugin:
 Modify the file `cypress/plugins/index.js` so it contains:
 
 ```javascript
-const ntlmAuth = require('cypress-ntlm-auth/dist/plugin');
+const ntlmAuth = require("cypress-ntlm-auth/dist/plugin");
 module.exports = (on, config) => {
   config = ntlmAuth.initNtlmAuth(config);
   return config;
-}
+};
 ```
 
 (if you are using other plugins I trust you can merge this with your current file)
@@ -63,7 +63,7 @@ cypress without the launcher, the plugin must be disabled (commenting out the ca
 In the file `cypress/support/index.js` add this line
 
 ```javascript
-import 'cypress-ntlm-auth/dist/commands';
+import "cypress-ntlm-auth/dist/commands";
 ```
 
 ### 3. package.json
@@ -96,7 +96,7 @@ When the additions to package.json are done as described above, the most conveni
 npm run cypress-ntlm
 ```
 
-This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). After Cypress exits, the ntlm-proxy process is  terminated.
+This starts the ntlm-proxy as a separate process and runs cypress in headed mode (`cypress open`). After Cypress exits, the ntlm-proxy process is terminated.
 
 ### ntlm-proxy
 
@@ -180,9 +180,9 @@ node_modules\\.bin\\cypress-ntlm
 
 If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
 
-* `HTTP_PROXY` - The URL to the proxy for accessing external HTTP/HTTPS resources. Example: `http://proxy.acme.com:8080`
-* `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
-* `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Normally you want to include `localhost` and the host you are testing, and likely other local network resources used from the browser when accessing the host you are testing. Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: localhost,*.acme.com
+- `HTTP_PROXY` - The URL to the proxy for accessing external HTTP/HTTPS resources. Example: `http://proxy.acme.com:8080`
+- `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
+- `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Normally you want to include `localhost` and the host you are testing, and likely other local network resources used from the browser when accessing the host you are testing. Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: localhost,\*.acme.com
 
 If the host you are testing is located on the internet (not your intranet) the NTLM authentication is able to pass through also the internet proxy. In this case `NO_PROXY` only needs to include `localhost`.
 
@@ -201,35 +201,42 @@ If domain and workstation are not set, the ntlm-proxy will use the domain of the
 cy.ntlm(ntlmHost, username, password, [domain, [workstation, [ntlmVersion]]]);
 ```
 
-* ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
-* username: the username for the account to authenticate with
-* password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
-* domain (optional): the domain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
-* workstation (optional): the workstation name of the client. Default value: `os.hostname()`;
-* ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Default value: 2. This can be useful for legacy hosts that don't support NTLMv2, or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
+- ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
+- username: the username for the account to authenticate with
+- password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
+- domain (optional): the domain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
+- workstation (optional): the workstation name of the client. Default value: `os.hostname()`;
+- ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Default value: 2. This can be useful for legacy hosts that don't support NTLMv2, or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost. Existing connections are not terminated, but if the server requests reauthentication the new credentials will be used.
 
-Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current spec file is finished*.
+Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it _is not cleared when the current spec file is finished_.
 
 #### Example
 
 You want to test a IIS website on your intranet `https://ntlm.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
 
 ```javascript
-cy.ntlm('https://ntlm.acme.com', 'bobby', 'brown', 'acme');
+cy.ntlm("https://ntlm.acme.com", "bobby", "brown", "acme");
 // Access the ntlm site with user bobby
-cy.visit('https://ntlm.acme.com');
+cy.visit("https://ntlm.acme.com");
 // Test actions and asserts here
 
-cy.ntlm('https://ntlm.acme.com', 'admin', 'secret', 'acme');
+cy.ntlm("https://ntlm.acme.com", "admin", "secret", "acme");
 // Access the ntlm site with user admin
-cy.visit('https://ntlm.acme.com');
+cy.visit("https://ntlm.acme.com");
 // Test actions and asserts here
 
-cy.ntlm('https://ntlm-legacy.acme.com', 'admin', 'secret', 'acme', undefined, 1);
+cy.ntlm(
+  "https://ntlm-legacy.acme.com",
+  "admin",
+  "secret",
+  "acme",
+  undefined,
+  1
+);
 // Access the ntlm-legacy site with user admin using NTLMv1
-cy.visit('https://ntlm-legacy.acme.com');
+cy.visit("https://ntlm-legacy.acme.com");
 // Test actions and asserts here
 ```
 
@@ -241,17 +248,21 @@ You can then combine this with setting up multiple accounts to test your applica
 
 ```javascript
 // Read-only user access
-cy.ntlm('https://ntlm.acme.com',
-    Cypress.env.NTLM_READONLY_USERNAME,
-    Cypress.env.NTLM_READONLY_PASSWORD,
-    Cypress.env.NTLM_READONLY_DOMAIN);
+cy.ntlm(
+  "https://ntlm.acme.com",
+  Cypress.env.NTLM_READONLY_USERNAME,
+  Cypress.env.NTLM_READONLY_PASSWORD,
+  Cypress.env.NTLM_READONLY_DOMAIN
+);
 // tests ...
 
 // Admin user access
-cy.ntlm('https://ntlm.intranet.acme.com',
-    Cypress.env.NTLM_ADMIN_USERNAME,
-    Cypress.env.NTLM_ADMIN_PASSWORD,
-    Cypress.env.NTLM_ADMIN_DOMAIN);
+cy.ntlm(
+  "https://ntlm.intranet.acme.com",
+  Cypress.env.NTLM_ADMIN_USERNAME,
+  Cypress.env.NTLM_ADMIN_PASSWORD,
+  Cypress.env.NTLM_ADMIN_DOMAIN
+);
 // tests ...
 ```
 
@@ -267,7 +278,7 @@ This will persist until the current spec file is finished.
 
 ### cy.ntlmSso(ntlmHosts)
 
-The ntlmSso command is used to configure host for single sign on authentication. After this command, all network communication from cypress to the specified hosts is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the credentials of the user running the test client.
+The ntlmSso command is used to configure host for single sign on authentication. After this command, all network communication from cypress to the specified hosts is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM or Negotiate login handshake with the credentials of the user running the test client.
 Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
 #### Syntax
@@ -276,13 +287,13 @@ Note that "all network communication" includes calls to `cy.visit(host)`, `cy.re
 cy.ntlmSso(ntlmHosts);
 ```
 
-* ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication with single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url (path and query) - only host level authentication is supported. In addition, wildcards are allowed to simplify specifying SSO for a whole intranet. Example: `['localhost', '*.acme.com']`
+- ntlmHosts: array of FQDNs or hostnames of the servers where NTLM or Negotiate authentication with single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url (path and query) - only host level authentication is supported. In addition, wildcards are allowed to simplify specifying SSO for a whole intranet. Example: `['localhost', '*.acme.com']`
 
 The ntlmSso command may be called multiple times, each call will overwrite the previous ntlmSso configuration.
 
 The NTLM protocol version cannot be specified, it is negotiated automatically. The client will follow the settings in Windows (LMCompatibilityLevel), which could mean that a legacy host with NTLMv1 only cannot be accessed if the client settings don't allow NTLMv1.
 
-Configuration set with the ntlmSso command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it *is not cleared when the current spec file is finished*.
+Configuration set with the ntlmSso command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it _is not cleared when the current spec file is finished_.
 
 #### Example
 
@@ -290,15 +301,15 @@ You want to test a IIS website on your intranet `https://ntlm.acme.com` that req
 
 ```javascript
 // Enable single sign on all hosts within *.acme.com
-cy.ntlmSso(['*.acme.com']);
+cy.ntlmSso(["*.acme.com"]);
 // Access the ntlm site with the user running the test client
-cy.visit('https://ntlm.acme.com');
+cy.visit("https://ntlm.acme.com");
 // Test actions and asserts here
 
 // Enable single sign on for both ntlm.acme-legacy.com and all hosts within *.acme.com
-cy.ntlmSso(['ntlm.acme-legacy.com', '*.acme.com']);
+cy.ntlmSso(["ntlm.acme-legacy.com", "*.acme.com"]);
 // Access the legacy site with the user running the test client
-cy.visit('https://ntlm.acme-legacy.com');
+cy.visit("https://ntlm.acme-legacy.com");
 // Test actions and asserts here
 ```
 
@@ -317,10 +328,10 @@ cy.ntlmReset();
 Using ntlmReset to clear configuration.
 
 ```javascript
-cy.ntlm('https://ntlm.acme.com', 'bobby', 'brown', 'acme');
-cy.visit('https://ntlm.acme.com'); // This succeeds
+cy.ntlm("https://ntlm.acme.com", "bobby", "brown", "acme");
+cy.visit("https://ntlm.acme.com"); // This succeeds
 cy.ntlmReset();
-cy.visit('https://ntlm.acme.com'); // This fails (401)
+cy.visit("https://ntlm.acme.com"); // This fails (401)
 ```
 
 ## Debugging
@@ -348,9 +359,9 @@ If the recommended startup scripts from above are used, the ntlm-proxy will be t
 5. `node_modules\.bin\cypress-ntlm open`
 6. Run your cypress tests and view the logs in the first cmd window.
 
-### Debug logging of NTLM headers
+### Debug logging of NTLM and Negotiate headers
 
-To write also the NTLM headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM headers is an attack vector for the account, especially if you are using NTLMv1.
+To write also the NTLM and Negotiate headers sent and received by ntlm-proxy, set the environment variable `DEBUG_NTLM_HEADERS=1`. If you use this, take some care with the logs since access to the NTLM and Negotiate headers are an attack vector for the account, especially if you are using NTLMv1.
 
 ## Node module API
 
@@ -359,12 +370,13 @@ This plugin can also be called as a Node module. It mimics the behavior of the [
 ### Example
 
 ```javascript
-const cypressNtlmAuth = require('cypress-ntlm-auth');
-cypressNtlmAuth.run({
-  spec: './cypress/integration/test.spec.js'
-})
-.then(result => console.log(result))
-.catch(err => console.log(err));
+const cypressNtlmAuth = require("cypress-ntlm-auth");
+cypressNtlmAuth
+  .run({
+    spec: "./cypress/integration/test.spec.js"
+  })
+  .then(result => console.log(result))
+  .catch(err => console.log(err));
 ```
 
 ## Notes
@@ -417,8 +429,8 @@ npm test
 
 ## Credits
 
-* [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
-* [ntlm-client](https://github.com/clncln1/node-ntlm-client) - Strong inspiration for the NTLM methods in this library.
-* [ntlm-auth](https://github.com/jborean93/ntlm-auth) - Python library for NTLM authentication. Used as a reference implementation to generate NTLM headers for unit tests.
-* [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
-* [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.
+- [http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) - this proxy is used to intercept the traffic and inject the NTLM handshake. I chose this one because it includes full https support with certificate generation.
+- [ntlm-client](https://github.com/clncln1/node-ntlm-client) - Strong inspiration for the NTLM methods in this library.
+- [ntlm-auth](https://github.com/jborean93/ntlm-auth) - Python library for NTLM authentication. Used as a reference implementation to generate NTLM headers for unit tests.
+- [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
+- [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.

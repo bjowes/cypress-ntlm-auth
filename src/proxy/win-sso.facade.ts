@@ -1,40 +1,25 @@
-import { NtlmMessage } from "../ntlm/ntlm.message";
-import { injectable, inject } from 'inversify';
+import { injectable } from 'inversify';
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { WinSso, osSupported } from 'win-sso';
+import { WinSso } from 'win-sso';
 
 @injectable()
 export class WinSsoFacade implements IWinSsoFacade {
+  private _winSso: WinSso;
 
-  private _debug: IDebugLogger;
-
-  constructor(
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
-    this._debug = debug;
-
-    if (osSupported()) {
-      this._debug.log('SSO is supported');
-    } else {
-      this._debug.log('SSO is not supported');
-    }
+  constructor(securityPackage: string, targetHost: string | undefined, peerCert: PeerCertificate | undefined) {
+    this._winSso = new WinSso(securityPackage, targetHost, peerCert);
   }
 
-  createAuthRequest(): NtlmMessage {
-    if (!osSupported()) {
-      throw new Error('Invalid call to WinSso createAuthRequest, WinSso not loaded');
-    }
-    let msg = new NtlmMessage(WinSso.createAuthRequest());
-    return msg;
+  createAuthRequestHeader(): string {
+    return this._winSso.createAuthRequestHeader();
   }
 
-  createAuthResponse(challengeHeader: string | undefined, targetHost: string, peerCert: PeerCertificate | undefined): NtlmMessage {
-    if (!osSupported()) {
-      throw new Error('Invalid call to WinSso createAuthResponse, WinSso not loaded');
-    }
-    let msg = new NtlmMessage(WinSso.createAuthResponse(challengeHeader || '', targetHost, peerCert));
-    return msg;
+  createAuthResponseHeader(challengeHeader: string | undefined): string {
+    return this._winSso.createAuthResponseHeader(challengeHeader || '');
+  }
+
+  freeAuthContext(): void {
+    this._winSso.freeAuthContext();
   }
 }

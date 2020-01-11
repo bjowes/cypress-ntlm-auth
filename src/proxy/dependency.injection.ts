@@ -30,6 +30,9 @@ import { UpstreamProxyManager } from './upstream.proxy.manager';
 import { IWinSsoFacade } from './interfaces/i.win-sso.facade';
 import { WinSsoFacade } from './win-sso.facade';
 
+import { INegotiateManager } from './interfaces/i.negotiate.manager';
+import { NegotiateManager } from './negotiate.manager';
+
 import { INtlm } from '../ntlm/interfaces/i.ntlm';
 import { Ntlm } from '../ntlm/ntlm';
 
@@ -75,6 +78,7 @@ export class DependencyInjection {
     this._container.bind<IExpressServerFacade>(TYPES.IExpressServerFacade).to(ExpressServerFacade);
     this._container.bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade).to(HttpMitmProxyFacade);
     this._container.bind<IMain>(TYPES.IMain).to(Main);
+    this._container.bind<INegotiateManager>(TYPES.INegotiateManager).to(NegotiateManager);
     this._container.bind<INtlm>(TYPES.INtlm).to(Ntlm);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container.bind<INtlmProxyExit>(TYPES.INtlmProxyExit).to(NtlmProxyExit);
@@ -82,9 +86,9 @@ export class DependencyInjection {
     this._container.bind<INtlmProxyServer>(TYPES.INtlmProxyServer).to(NtlmProxyServer);
     this._container.bind<IPortsFileService>(TYPES.IPortsFileService).to(PortsFileService);
     this._container.bind<IUpstreamProxyManager>(TYPES.IUpstreamProxyManager).to(UpstreamProxyManager);
-    this._container.bind<IWinSsoFacade>(TYPES.IWinSsoFacade).to(WinSsoFacade);
 
     this._container.bind<interfaces.Newable<IConnectionContext>>(TYPES.NewableIConnectionContext).toConstructor<IConnectionContext>(ConnectionContext);
+    this._container.bind<interfaces.Newable<IWinSsoFacade>>(TYPES.NewableIWinSsoFacade).toConstructor<IWinSsoFacade>(WinSsoFacade);
   }
 
   get<T>(typename: symbol): T {
