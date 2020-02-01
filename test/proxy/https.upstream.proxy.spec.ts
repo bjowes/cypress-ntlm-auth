@@ -302,7 +302,7 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
   });
 
   beforeEach("Reset NTLM config", async function() {
-    this.timeout(2000);
+    this.timeout(3000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
@@ -412,7 +412,7 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function() {
   });
 
   beforeEach("Reset upstream req count", function() {
-    this.timeout(2000);
+    this.timeout(3000);
     upstreamProxyReqCount = 0;
   });
 
@@ -532,7 +532,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   beforeEach("Reset upstream req count", function() {
-    this.timeout(2000);
+    this.timeout(3000);
     upstreamProxyReqCount = 0;
   });
 
