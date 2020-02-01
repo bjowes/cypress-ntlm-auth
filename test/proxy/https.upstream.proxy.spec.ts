@@ -80,7 +80,7 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function() {
   });
 
   beforeEach("Reset NTLM config", async function() {
-    this.timeout(2000);
+    this.timeout(3000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
