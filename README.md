@@ -181,10 +181,12 @@ node_modules\\.bin\\cypress-ntlm
 If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
 
 - `HTTP_PROXY` - The URL to the proxy for accessing external HTTP/HTTPS resources. Example: `http://proxy.acme.com:8080`
-- `HTTPS_PROXY` - The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
-- `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Normally you want to include `localhost` and the host you are testing, and likely other local network resources used from the browser when accessing the host you are testing. Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: localhost,\*.acme.com
+- `HTTPS_PROXY` - (optional) The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
+- `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Add the host you are testing, and other local network resources used from the browser when accessing the host you are testing. Note that hosts that are located on the internet (not your intranet) must not be added, they should pass through the upstream proxy.
 
-If the host you are testing is located on the internet (not your intranet) the NTLM authentication is able to pass through also the internet proxy. In this case `NO_PROXY` only needs to include `localhost`.
+  Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: \*.acme.com
+
+  Since the plugin requires traffic to localhost to be excluded from the corporate proxy, the plugin adds `localhost` and `127.0.0.1` to the `NO_PROXY` setting automatically unless they are already there. To disable this behavior (if you require an additional custom proxy), add `<-loopback>` to `NO_PROXY`.
 
 ## Usage
 
