@@ -4,6 +4,7 @@
 
 - Fix #95 - Add 127.0.01 to NO_PROXY for axios compatibility
 - Better usability with corporate proxies - NO_PROXY now includes localhost and 127.0.0.1 by default to simplify configuration
+- Package bumps
 
 ## 2.1.0 - released 2020-01-11
 
