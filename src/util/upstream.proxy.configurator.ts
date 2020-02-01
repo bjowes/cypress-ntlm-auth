@@ -32,7 +32,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
     if (no_proxy) {
       no_proxy_parts = no_proxy.split(",").map(s => s.trim());
     }
-    if (no_proxy_parts.indexOf(this._noProxyLocalhost) !== -1) {
+    if (no_proxy_parts.indexOf(this._noProxyLocalhost) === -1) {
       this._debug.log(
         "Adding " +
           this._noProxyLocalhost +
@@ -40,7 +40,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       );
       no_proxy_parts.push(this._noProxyLocalhost);
     }
-    if (no_proxy_parts.indexOf(this._noProxyLoopback) !== -1) {
+    if (no_proxy_parts.indexOf(this._noProxyLoopback) === -1) {
       this._debug.log(
         "Adding " +
           this._noProxyLoopback +
