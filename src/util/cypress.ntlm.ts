@@ -40,7 +40,7 @@ export class CypressNtlm implements ICypressNtlm {
 
       function handleTimeout() {
         clearTimeout(intervalTimerId);
-        const error = new Error("ntlm-proxy not found before timed out");
+        const error = new Error("ntlm-proxy not found before time out");
         error.name = "PATH_CHECK_TIMED_OUT";
         reject(error);
       }
