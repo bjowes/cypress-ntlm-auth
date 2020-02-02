@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.2.0 - released 2020-02-01
+## 2.2.0 - released 2020-02-02
 
 - Fix #95 - Add 127.0.01 to NO_PROXY for axios compatibility
 - Better usability with corporate proxies - NO_PROXY now includes localhost and 127.0.0.1 by default to simplify configuration
