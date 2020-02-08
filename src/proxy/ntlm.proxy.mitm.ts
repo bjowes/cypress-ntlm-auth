@@ -124,17 +124,20 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       );
       let useSso = self._configStore.useSso(targetHost);
       let useNtlm = useSso || self._configStore.exists(targetHost);
-      if (context && context.matchHostOrNew(targetHost) === false) {
-        self._debug.log(
-          "Existing client socket " +
-            context.clientAddress +
-            " received request to a different target, remove existing context"
-        );
-        self._connectionContextManager.removeAgent(
-          "reuse",
-          context.clientAddress
-        );
-        context = undefined;
+      if (context) {
+        context.useSso = useSso;
+        if (context.matchHostOrNew(targetHost) === false) {
+          self._debug.log(
+            "Existing client socket " +
+              context.clientAddress +
+              " received request to a different target, remove existing context"
+          );
+          self._connectionContextManager.removeAgent(
+            "reuse",
+            context.clientAddress
+          );
+          context = undefined;
+        }
       }
       if (!context) {
         context = self._connectionContextManager.createConnectionContext(
