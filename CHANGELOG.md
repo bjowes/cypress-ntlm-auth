@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1 - released 2020-02-08
+
+- Fix #99 - Update useSso property on each request to improve stability after ntlmReset
+
 ## 2.2.0 - released 2020-02-02
 
 - Fix #95 - Add 127.0.01 to NO_PROXY for axios compatibility
