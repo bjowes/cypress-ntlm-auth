@@ -2,6 +2,10 @@
 
 ## 2.2.1 - released 2020-02-08
 
+- Fix #101 - Override unused proxy environment variables before launching cypress to avoid conflicting configurations.
+
+## 2.2.1 - released 2020-02-08
+
 - Fix #99 - Update useSso property on each request to improve stability after ntlmReset
 
 ## 2.2.0 - released 2020-02-02
