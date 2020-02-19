@@ -135,26 +135,30 @@ describe("UpstreamProxyConfigurator", () => {
   describe("removeUnusedProxyEnv", function() {
     it("should not modify HTTP_PROXY or NO_PROXY", function() {
       process.env.HTTP_PROXY = "test";
+      process.env.HTTPS_PROXY = "test2";
       process.env.NO_PROXY = "ello.com";
       upstreamProxyConfigurator.removeUnusedProxyEnv();
       expect(process.env.HTTP_PROXY).to.equal("test");
+      expect(process.env.HTTPS_PROXY).to.equal("test2");
       expect(process.env.NO_PROXY).to.equal("ello.com");
     });
 
-    it("should remove lowercase proxy settings and HTTPS_PROXY", function() {
-      process.env.HTTPS_PROXY = "test";
+    it("should remove lowercase proxy settings", function() {
       process.env.http_proxy = "test";
       process.env.https_proxy = "test";
       process.env.no_proxy = "test";
       process.env.npm_config_proxy = "test";
       process.env.npm_config_https_proxy = "test";
+      process.env.NPM_CONFIG_PROXY = "test";
+      process.env.NPM_CONFIG_HTTPS_PROXY = "test";
       upstreamProxyConfigurator.removeUnusedProxyEnv();
-      expect(process.env.HTTPS_PROXY).to.be.undefined;
       expect(process.env.http_proxy).to.be.undefined;
       expect(process.env.https_proxy).to.be.undefined;
       expect(process.env.no_proxy).to.be.undefined;
       expect(process.env.npm_config_proxy).to.be.undefined;
       expect(process.env.npm_config_https_proxy).to.be.undefined;
+      expect(process.env.NPM_CONFIG_PROXY).to.be.undefined;
+      expect(process.env.NPM_CONFIG_HTTPS_PROXY).to.be.undefined;
     });
   });
 });

@@ -24,6 +24,7 @@ cypressNtlm
   .checkProxyIsRunning(15000, 200)
   .then(portsFile => {
     process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
+    process.env.HTTPS_PROXY = portsFile.ntlmProxyUrl;
     process.env.NO_PROXY = "<-loopback>";
     upstreamProxyConfigurator.removeUnusedProxyEnv();
 

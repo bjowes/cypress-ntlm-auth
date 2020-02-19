@@ -16,12 +16,13 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
 
   removeUnusedProxyEnv() {
     // Clear potentially existing proxy settings to avoid conflicts in cypress proxy config
-    delete process.env.HTTPS_PROXY;
     delete process.env.http_proxy;
     delete process.env.https_proxy;
     delete process.env.no_proxy;
     delete process.env.npm_config_proxy;
     delete process.env.npm_config_https_proxy;
+    delete process.env.NPM_CONFIG_PROXY;
+    delete process.env.NPM_CONFIG_HTTPS_PROXY;
   }
 
   processNoProxyLoopback() {
