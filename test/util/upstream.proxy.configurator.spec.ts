@@ -4,6 +4,7 @@ import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 
 import { expect } from "chai";
+import os from "os";
 
 import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../src/util/debug.logger";
@@ -152,9 +153,15 @@ describe("UpstreamProxyConfigurator", () => {
       process.env.NPM_CONFIG_PROXY = "test";
       process.env.NPM_CONFIG_HTTPS_PROXY = "test";
       upstreamProxyConfigurator.removeUnusedProxyEnv();
-      expect(process.env.http_proxy).to.be.undefined;
-      expect(process.env.https_proxy).to.be.undefined;
-      expect(process.env.no_proxy).to.be.undefined;
+      if (os.platform() !== "win32") {
+        expect(process.env.http_proxy).to.be.undefined;
+        expect(process.env.https_proxy).to.be.undefined;
+        expect(process.env.no_proxy).to.be.undefined;
+      } else {
+        expect(process.env.http_proxy).not.to.be.undefined;
+        expect(process.env.https_proxy).not.to.be.undefined;
+        expect(process.env.no_proxy).not.to.be.undefined;
+      }
       expect(process.env.npm_config_proxy).to.be.undefined;
       expect(process.env.npm_config_https_proxy).to.be.undefined;
       expect(process.env.NPM_CONFIG_PROXY).to.be.undefined;
