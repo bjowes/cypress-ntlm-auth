@@ -2,6 +2,7 @@ import { TYPES } from "../proxy/dependency.injection.types";
 import { inject, injectable } from "inversify";
 import { IDebugLogger } from "./interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
+import os from "os";
 
 @injectable()
 export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
@@ -13,7 +14,20 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._debug = debug;
   }
-  // TODO only add if required
+
+  removeUnusedProxyEnv() {
+    // Clear potentially existing proxy settings to avoid conflicts in cypress proxy config
+    if (os.platform() !== "win32") {
+      delete process.env.http_proxy;
+      delete process.env.https_proxy;
+      delete process.env.no_proxy;
+    }
+    delete process.env.npm_config_proxy;
+    delete process.env.npm_config_https_proxy;
+    delete process.env.NPM_CONFIG_PROXY;
+    delete process.env.NPM_CONFIG_HTTPS_PROXY;
+  }
+
   processNoProxyLoopback() {
     if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
       const env_no_proxy = process.env.NO_PROXY?.trim();
