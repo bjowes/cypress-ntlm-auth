@@ -32,6 +32,11 @@ export async function run(options: any): Promise<any> {
         cypressNtlm.checkProxyIsRunning(15000, 200).then(portsFile => {
           process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
           process.env.NO_PROXY = "<-loopback>";
+          // Clear other potentially existing proxy settings to avoid conflicts with ntlm-proxy
+          delete process.env.HTTPS_PROXY;
+          delete process.env.http_proxy;
+          delete process.env.https_proxy;
+          delete process.env.no_proxy;
 
           debug.log("ntlm-proxy started, running tests through Cypress...");
           // Start up Cypress and let it parse any options
