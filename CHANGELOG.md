@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.2.1 - released 2020-02-08
+## 2.2.2 - released 2020-02-19
 
 - Fix #101 - Override unused proxy environment variables before launching cypress to avoid conflicting configurations.
 
