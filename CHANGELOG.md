@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.4 - released 2020-02-29
+
+- Improved detection of SSO usage after reset
+
 ## 2.2.3 - released 2020-02-19
 
 - Updated fix #101 - Override additional unused proxy environment variables before launching cypress to avoid conflicting configurations.
