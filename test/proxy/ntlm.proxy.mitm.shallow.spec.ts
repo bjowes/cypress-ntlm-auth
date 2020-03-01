@@ -196,26 +196,6 @@ describe("NtlmProxyMitm REQUEST", () => {
     expect(callbackCount).to.equal(1);
     expect(callbackWithErrorCount).to.equal(1);
   });
-
-  it("should update useSso state on request", async function() {
-    const message = Substitute.for<IncomingMessage>();
-    const ctx = Substitute.for<IContext>();
-    ctx.isSSL.returns(false);
-    ctx.clientToProxyRequest.returns(message);
-    message.headers.returns({ host: "google.com" });
-    let context = new ConnectionContext();
-    connectionContextManagerMock
-      .getConnectionContextFromClientSocket(Arg.any())
-      .returns(context);
-    configStoreMock.useSso(Arg.any()).returns(true);
-    configStoreMock.exists(Arg.any()).returns(true);
-    ntlmProxyMitm.onRequest(ctx, (err: Error) => {
-      if (err) {
-        throw err;
-      }
-    });
-    expect(context.useSso).to.be.true;
-  });
 });
 
 describe("NtlmProxyMitm CONNECT", () => {

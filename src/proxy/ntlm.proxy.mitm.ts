@@ -125,7 +125,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       let useSso = self._configStore.useSso(targetHost);
       let useNtlm = useSso || self._configStore.exists(targetHost);
       if (context) {
-        context.useSso = useSso;
         if (context.matchHostOrNew(targetHost) === false) {
           self._debug.log(
             "Existing client socket " +
@@ -143,8 +142,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         context = self._connectionContextManager.createConnectionContext(
           ctx.clientToProxyRequest.socket,
           ctx.isSSL,
-          targetHost,
-          useSso
+          targetHost
         );
       }
 
@@ -231,7 +229,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     let targetHost = self.getTargetHost(ctx);
-    if (!targetHost || !self._configStore.existsOrUseSso(targetHost)) {
+    if (!targetHost) {
+      return callback();
+    }
+    let useSso = self._configStore.useSso(targetHost);
+    let useNtlm = useSso || self._configStore.exists(targetHost);
+    if (!useNtlm) {
       return callback();
     }
 
@@ -240,10 +243,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     );
 
     if (context && context.isNewOrAuthenticated(targetHost)) {
-      const authMode = self.getAuthMode(
-        ctx.serverToProxyResponse,
-        context.useSso
-      );
+      const authMode = self.getAuthMode(ctx.serverToProxyResponse, useSso);
       if (authMode === AuthModeEnum.NotApplicable) {
         return callback();
       }
@@ -275,7 +275,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         self._debug.log(
           "Received 401 with Negotiate in www-authenticate header. Starting handshake."
         );
-        if (context.useSso) {
+        if (useSso) {
           context.winSso = new self.WinSsoFacade(
             "Negotiate",
             ctx.proxyToServerRequestOptions.host,
@@ -294,7 +294,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         self._debug.log(
           "Received 401 with NTLM in www-authenticate header. Starting handshake."
         );
-        if (context.useSso) {
+        if (useSso) {
           context.winSso = new self.WinSsoFacade(
             "NTLM",
             ctx.proxyToServerRequestOptions.host,
@@ -305,6 +305,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           ctx,
           targetHost,
           context,
+          useSso,
           (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) =>
             self.handshakeCallback(ctx, err, res)
         );

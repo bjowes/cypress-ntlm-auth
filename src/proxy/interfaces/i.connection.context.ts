@@ -1,11 +1,10 @@
-import { NtlmStateEnum } from '../../models/ntlm.state.enum';
-import { CompleteUrl } from '../../models/complete.url.model';
-import { PeerCertificate } from 'tls';
-import { IWinSsoFacade } from './i.win-sso.facade';
+import { NtlmStateEnum } from "../../models/ntlm.state.enum";
+import { CompleteUrl } from "../../models/complete.url.model";
+import { PeerCertificate } from "tls";
+import { IWinSsoFacade } from "./i.win-sso.facade";
 
 export interface IConnectionContext {
   agent: any;
-  useSso: boolean;
   winSso: IWinSsoFacade;
   peerCert: PeerCertificate | undefined;
   clientAddress: string;
