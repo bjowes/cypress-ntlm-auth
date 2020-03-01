@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.2.4 - released 2020-02-29
+## 2.2.4 - released 2020-03-02
 
 - Improved detection of SSO usage after reset
 
