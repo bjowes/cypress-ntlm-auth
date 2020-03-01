@@ -1,17 +1,17 @@
-import { Socket } from 'net';
-import { CompleteUrl } from '../models/complete.url.model';
-import { injectable, interfaces, inject } from 'inversify';
-import http from 'http';
-import https from 'https';
-import { IConfigController } from './interfaces/i.config.controller';
-import { IConnectionContextManager } from './interfaces/i.connection.context.manager';
-import { IConnectionContext } from './interfaces/i.connection.context';
-import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
-import { TYPES } from './dependency.injection.types';
-import { IDebugLogger } from '../util/interfaces/i.debug.logger';
-import { SslTunnel } from '../models/ssl.tunnel.model';
-const HttpProxyAgent = require('http-proxy-agent');
-const HttpsProxyAgent = require('https-proxy-agent');
+import { Socket } from "net";
+import { CompleteUrl } from "../models/complete.url.model";
+import { injectable, interfaces, inject } from "inversify";
+import http from "http";
+import https from "https";
+import { IConfigController } from "./interfaces/i.config.controller";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
+import { IConnectionContext } from "./interfaces/i.connection.context";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { SslTunnel } from "../models/ssl.tunnel.model";
+const HttpProxyAgent = require("http-proxy-agent");
+const HttpsProxyAgent = require("https-proxy-agent");
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -32,10 +32,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
   private _tunnels: SslTunnelHash = {};
 
   constructor(
-    @inject(TYPES.IUpstreamProxyManager) upstreamProxyManager: IUpstreamProxyManager,
+    @inject(TYPES.IUpstreamProxyManager)
+    upstreamProxyManager: IUpstreamProxyManager,
     @inject(TYPES.IConfigController) configController: IConfigController,
-    @inject(TYPES.NewableIConnectionContext) connectionContext: interfaces.Newable<IConnectionContext>,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+    @inject(TYPES.NewableIConnectionContext)
+    connectionContext: interfaces.Newable<IConnectionContext>,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+  ) {
     this._upstreamProxyManager = upstreamProxyManager;
     this._configController = configController;
     this.ConnectionContext = connectionContext;
@@ -43,10 +46,14 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   private getClientAddress(clientSocket: Socket): string {
-    return clientSocket.remoteAddress + ':' + clientSocket.remotePort;
+    return clientSocket.remoteAddress + ":" + clientSocket.remotePort;
   }
 
-  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl,  useSso: boolean): IConnectionContext {
+  createConnectionContext(
+    clientSocket: Socket,
+    isSSL: boolean,
+    targetHost: CompleteUrl
+  ): IConnectionContext {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
@@ -57,14 +64,20 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let context = new this.ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
-    context.useSso = useSso;
     this._connectionContexts[clientAddress] = context;
-    clientSocket.on('close', () => this.removeAgent('close', clientAddress));
-    this._debug.log('Created agent for client ' + clientAddress + ' to target ' + targetHost.href);
+    clientSocket.on("close", () => this.removeAgent("close", clientAddress));
+    this._debug.log(
+      "Created agent for client " +
+        clientAddress +
+        " to target " +
+        targetHost.href
+    );
     return context;
   }
 
-  getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined {
+  getConnectionContextFromClientSocket(
+    clientSocket: Socket
+  ): IConnectionContext | undefined {
     let clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
@@ -74,7 +87,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   private nodeTlsRejectUnauthorized(): boolean {
     if (process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
-      return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0';
+      return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== "0";
     }
     return true;
   }
@@ -83,19 +96,23 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
-      rejectUnauthorized: this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
+      rejectUnauthorized:
+        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
     };
-    let useUpstreamProxy = this._upstreamProxyManager
-      .setUpstreamProxyConfig(targetHost, isSSL, agentOptions);
+    let useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
+      targetHost,
+      isSSL,
+      agentOptions
+    );
     let agent;
     if (useUpstreamProxy) {
-      agent = isSSL ?
-        new HttpsProxyAgent(agentOptions) :
-        new HttpProxyAgent(agentOptions);
+      agent = isSSL
+        ? new HttpsProxyAgent(agentOptions)
+        : new HttpProxyAgent(agentOptions);
     } else {
-      agent = isSSL ?
-        new https.Agent(agentOptions) :
-        new http.Agent(agentOptions);
+      agent = isSSL
+        ? new https.Agent(agentOptions)
+        : new http.Agent(agentOptions);
     }
     return agent;
   }
@@ -106,7 +123,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let agent: any;
     agent = new http.Agent();
     agent._cyAgentId = this._agentCount++;
-    this._debug.log('Created untracked agent for target ' + targetHost.href);
+    this._debug.log("Created untracked agent for target " + targetHost.href);
     return agent;
   }
 
@@ -117,19 +134,24 @@ export class ConnectionContextManager implements IConnectionContextManager {
       }
     }
     this._connectionContexts = {};
-    this._debug.log('Removed all agents due to ' + event);
+    this._debug.log("Removed all agents due to " + event);
   }
 
   removeAgent(event: string, clientAddress: string) {
     if (clientAddress in this._connectionContexts) {
       this._connectionContexts[clientAddress].destroy();
       delete this._connectionContexts[clientAddress];
-      this._debug.log('Removed agent for ' + clientAddress + ' due to socket.' + event);
+      this._debug.log(
+        "Removed agent for " + clientAddress + " due to socket." + event
+      );
     }
   }
 
   addTunnel(client: Socket, target: Socket) {
-    this._tunnels[this.getClientAddress(client)] = { client: client, target: target };
+    this._tunnels[this.getClientAddress(client)] = {
+      client: client,
+      target: target
+    };
   }
 
   removeTunnel(client: Socket) {
@@ -148,6 +170,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
       }
     }
     this._tunnels = {};
-    this._debug.log('Removed and closed all tunnels due to ' + event);
+    this._debug.log("Removed and closed all tunnels due to " + event);
   }
 }
