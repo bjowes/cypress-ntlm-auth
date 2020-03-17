@@ -76,13 +76,13 @@ export class NtlmManager implements INtlmManager {
 
       if (this.canHandleNtlmAuthentication(type1res) === false) {
         this._debug.log(
-          "www-authenticate not found on response of second request during NTLM handshake with host",
-          ntlmHostUrl.href
+          "NTLM authentication failed (www-authenticate with NTLM not found in server response) with host " +
+            ntlmHostUrl.href
         );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(
           new Error(
-            "www-authenticate not found on response of second request during NTLM handshake with host " +
+            "NTLM authentication failed (www-authenticate with NTLM not found in server response) with host " +
               ntlmHostUrl.href
           ),
           type1res
@@ -192,13 +192,16 @@ export class NtlmManager implements INtlmManager {
     let authState = context.getState(ntlmHostUrl);
     if (authState === NtlmStateEnum.Type3Sent) {
       if (res.statusCode === 401) {
-        this._debug.log("NTLM authentication failed, invalid credentials.");
+        this._debug.log(
+          "NTLM authentication failed (invalid credentials) with host",
+          ntlmHostUrl.href
+        );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback();
       }
       // According to NTLM spec, all other responses than 401 shall be treated as authentication successful
       this._debug.log(
-        "NTLM authentication successful for host",
+        "NTLM authentication successful with host",
         ntlmHostUrl.href
       );
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
@@ -208,7 +211,8 @@ export class NtlmManager implements INtlmManager {
     this._debug.log(
       "Response from server in unexpected NTLM state " +
         authState +
-        ", resetting NTLM auth."
+        ", resetting NTLM auth. Host",
+      ntlmHostUrl.href
     );
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     return callback();

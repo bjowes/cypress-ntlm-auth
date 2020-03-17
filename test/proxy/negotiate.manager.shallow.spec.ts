@@ -204,7 +204,7 @@ describe("NegotiateManager", () => {
       debugMock
         .received(1)
         .log(
-          "Negotiate authentication failed for host, invalid credentials",
+          "Negotiate authentication failed (invalid credentials) with host",
           "http://www.google.com:8081/"
         );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
@@ -235,11 +235,42 @@ describe("NegotiateManager", () => {
       debugMock
         .received(1)
         .log(
-          "Negotiate authentication successful for host",
+          "Negotiate authentication successful with host",
           "http://www.google.com:8081/"
         );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
         NtlmStateEnum.Authenticated
+      );
+    });
+
+    it("Response with empty Negotiate token shall be logged and clear auth state", async function() {
+      const message = Substitute.for<http.IncomingMessage>();
+      message.statusCode.returns(200);
+      message.headers.returns({ "www-authenticate": "Negotiate" });
+      const ntlmHostUrl = toCompleteUrl("http://www.google.com:8081", false);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns(null);
+
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        () => {
+          return;
+        }
+      );
+      debugMock
+        .received(1)
+        .log(
+          "Negotiate authentication failed (server responded without token) with host",
+          "http://www.google.com:8081/"
+        );
+      expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
+        NtlmStateEnum.NotAuthenticated
       );
     });
 
@@ -262,14 +293,14 @@ describe("NegotiateManager", () => {
         (err, res) => {
           expect(err).to.not.be.null;
           expect(err.message).to.be.equal(
-            "www-authenticate not found on response of request during Negotiate handshake with host http://www.google.com:8081/"
+            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
           );
         }
       );
       debugMock
         .received(1)
         .log(
-          "www-authenticate not found on response during Negotiate handshake with host",
+          "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
           "http://www.google.com:8081/"
         );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
@@ -296,14 +327,14 @@ describe("NegotiateManager", () => {
         (err, res) => {
           expect(err).to.not.be.null;
           expect(err.message).to.be.equal(
-            "www-authenticate not found on response of request during Negotiate handshake with host http://www.google.com:8081/"
+            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
           );
         }
       );
       debugMock
         .received(1)
         .log(
-          "www-authenticate not found on response during Negotiate handshake with host",
+          "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
           "http://www.google.com:8081/"
         );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
@@ -418,8 +449,10 @@ describe("NegotiateManager", () => {
         "www-authenticate": "Negotiate TestServerResponse"
       });
       let messageEndCb: any;
-      message.on(Arg.any()).mimicks((event, listener) => {
-        messageEndCb = listener;
+      message.on(Arg.all()).mimicks((event, listener) => {
+        if (event === "end") {
+          messageEndCb = listener;
+        }
         return message;
       });
       const ntlmHostUrl = toCompleteUrl(resetUrl, false);

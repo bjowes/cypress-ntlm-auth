@@ -65,7 +65,7 @@ export class NegotiateManager implements INegotiateManager {
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err);
     });
-    this._debug.log("Sending  Negotiate message token request");
+    this._debug.log("Sending Negotiate message token request");
     this.debugHeader(requestToken, true);
     context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
     req.end();
@@ -84,19 +84,35 @@ export class NegotiateManager implements INegotiateManager {
   ) {
     res.pause();
 
-    if (this.canHandleNegotiateAuthentication(res) === false) {
-      this._debug.log(
-        "www-authenticate not found on response during Negotiate handshake with host",
-        ntlmHostUrl.href
-      );
-      context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-      return callback(
-        new Error(
-          "www-authenticate not found on response of request during Negotiate handshake with host " +
-            ntlmHostUrl.href
-        ),
-        res
-      );
+    if (this.containsNegotiateToken(res) === false) {
+      if (this.acceptsNegotiateAuthentication(res) === false) {
+        this._debug.log(
+          "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
+          ntlmHostUrl.href
+        );
+        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        return callback(
+          new Error(
+            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host " +
+              ntlmHostUrl.href
+          ),
+          res
+        );
+      } else if (res.statusCode === 401) {
+        this._debug.log(
+          "Negotiate authentication failed (invalid credentials) with host",
+          ntlmHostUrl.href
+        );
+        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        return callback(undefined, res);
+      } else {
+        this._debug.log(
+          "Negotiate authentication failed (server responded without token) with host",
+          ntlmHostUrl.href
+        );
+        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        return callback(undefined, res);
+      }
     }
 
     context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
@@ -112,7 +128,7 @@ export class NegotiateManager implements INegotiateManager {
 
     if (!responseToken && res.statusCode !== 401) {
       this._debug.log(
-        "Negotiate authentication successful for host",
+        "Negotiate authentication successful with host",
         ntlmHostUrl.href
       );
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
@@ -120,7 +136,7 @@ export class NegotiateManager implements INegotiateManager {
     }
     if (!responseToken && res.statusCode === 401) {
       this._debug.log(
-        "Negotiate authentication failed for host, invalid credentials",
+        "Negotiate authentication failed (invalid credentials) with host",
         ntlmHostUrl.href
       );
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -193,8 +209,7 @@ export class NegotiateManager implements INegotiateManager {
     return false;
   }
 
-  private canHandleNegotiateAuthentication(res: http.IncomingMessage): boolean {
-    // Ensure that we're talking Negotiate here
+  private containsNegotiateToken(res: http.IncomingMessage): boolean {
     const wwwAuthenticate = res.headers["www-authenticate"];
     if (wwwAuthenticate && wwwAuthenticate.startsWith("Negotiate ")) {
       return true;
