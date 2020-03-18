@@ -234,8 +234,8 @@ describe("NtlmProxyMitm CONNECT", () => {
       }
       return socketMock;
     });
-    socketMock.write(Arg.all()).mimicks((data, encoding, callback) => {
-      callback();
+    socketMock.write(Arg.all()).mimicks((str, encoding, cb) => {
+      cb();
       return true;
     });
     socketMock.pipe(Arg.all()).mimicks(stream => {

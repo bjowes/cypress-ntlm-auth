@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.5 - released 2020-03-18
+
+- Better logging when Negotiate authentication fails
+
 ## 2.2.4 - released 2020-03-02
 
 - Improved detection of SSO usage after reset

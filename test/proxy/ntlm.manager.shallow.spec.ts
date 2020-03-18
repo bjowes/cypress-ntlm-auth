@@ -17,6 +17,7 @@ import { ExpressServer } from "./express.server";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
 import { INtlm } from "../../src/ntlm/interfaces/i.ntlm";
 import { NtlmMessage } from "../../src/ntlm/ntlm.message";
+import { Ntlm } from "../../src/ntlm/ntlm";
 
 describe("NtlmManager", () => {
   let ntlmManager: NtlmManager;
@@ -26,6 +27,7 @@ describe("NtlmManager", () => {
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
   let httpUrl: string;
+  let ntlm = new Ntlm();
 
   before(async function() {
     httpUrl = await expressServer.startHttpServer(false, undefined);
@@ -40,6 +42,7 @@ describe("NtlmManager", () => {
     ntlmMock
       .createType3Message(Arg.all())
       .mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock.decodeType2Message(Arg.all()).mimicks(ntlm.decodeType2Message);
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     expressServer.sendNtlmType2(null);
@@ -68,7 +71,10 @@ describe("NtlmManager", () => {
       );
       debugMock
         .received(1)
-        .log("NTLM authentication failed, invalid credentials.");
+        .log(
+          "NTLM authentication failed (invalid credentials) with host",
+          "http://www.google.com:8081/"
+        );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
         NtlmStateEnum.NotAuthenticated
       );
@@ -114,7 +120,8 @@ describe("NtlmManager", () => {
         .log(
           "Response from server in unexpected NTLM state " +
             NtlmStateEnum.Type1Sent +
-            ", resetting NTLM auth."
+            ", resetting NTLM auth. Host",
+          "http://www.google.com:8081/"
         );
       expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
         NtlmStateEnum.NotAuthenticated
