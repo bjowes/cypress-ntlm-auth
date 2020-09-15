@@ -73,7 +73,7 @@
     "is-port-reachable": "^3.0.0",
     "keepalive-proxy-agent": "^1.1.1",
     "mocha": "^7.1.0",
-    "node-forge": "^0.9.1",
+    "node-forge": "^0.10.0",
     "shx": "^0.3.2",
     "sinon": "^8.1.1",
     "source-map-support": "^0.5.16",
