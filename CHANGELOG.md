@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.0 - released 2020-09-18
+
+- Fix #117 - Support wildcards in cy.ntlm
+- Package bumps
+
 ## 2.2.5 - released 2020-03-18
 
 - Better logging when Negotiate authentication fails

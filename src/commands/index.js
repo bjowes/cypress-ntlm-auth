@@ -1,38 +1,58 @@
-'use strict';
+"use strict";
 
 /// <reference types="cypress" />
 
-const ConfigValidator = require('../util/config.validator').ConfigValidator;
-const SsoConfigValidator = require('../util/sso.config.validator').SsoConfigValidator;
+const ConfigValidator = require("../util/config.validator").ConfigValidator;
+const SsoConfigValidator = require("../util/sso.config.validator")
+  .SsoConfigValidator;
 
 /**
  * Adds NTLM authentication support to Cypress for a specific host.
  * You can call this multiple times to register several hosts or
  * change credentials.
+ * The first parameter should be an array of hostnames, but the legacy variant with just a string is still supported.
  * @example
  ```js
-  cy.ntlm('https://ntlm.acme.com', 'TheUser', 'ThePassword', 'TheDomain');
+  cy.ntlm(['ntlm.acme.com','api.acme.com'], 'TheUser', 'ThePassword', 'TheDomain');
  ```
  */
-const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) => {
+const ntlm = (
+  ntlmHosts,
+  username,
+  password,
+  domain,
+  workstation,
+  ntlmVersion
+) => {
   const log = {
-    name: 'ntlm',
-    message: { ntlmHost, username }
+    name: "ntlm",
+    message: { ntlmHosts, username },
   };
 
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = Cypress.env("NTLM_AUTH_PROXY");
+  const ntlmConfigApi = Cypress.env("NTLM_AUTH_API");
   if (!ntlmProxy || !ntlmConfigApi) {
-    throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
+    throw new Error(
+      "The cypress-ntlm-auth plugin must be loaded before using this method"
+    );
+  }
+
+  if (typeof ntlmHosts === "string") {
+    // Legacy style config
+    let validationResult = ConfigValidator.validateLegacy(ntlmHosts);
+    if (!validationResult.ok) {
+      throw new Error(validationResult.message);
+    }
+    ntlmHosts = ConfigValidator.convertLegacy(ntlmHosts);
   }
 
   let ntlmConfig = {
-    ntlmHost: ntlmHost,
+    ntlmHosts: ntlmHosts,
     username: username,
     password: password,
     domain: domain,
     workstation: workstation,
-    ntlmVersion: ntlmVersion || 2
+    ntlmVersion: ntlmVersion || 2,
   };
   let validationResult = ConfigValidator.validate(ntlmConfig);
   if (!validationResult.ok) {
@@ -41,27 +61,32 @@ const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) =>
 
   let result;
   cy.request({
-    method: 'POST',
-    url: ntlmConfigApi + '/ntlm-config',
+    method: "POST",
+    url: ntlmConfigApi + "/ntlm-config",
     body: ntlmConfig,
-    log: false // This isn't communication with the test object, so don't show it in the test log
+    log: false, // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
-      result = 'Enabled NTLM authentication for host ' + ntlmHost;
+      result =
+        "Enabled NTLM authentication for hosts [" + ntlmHosts.join(", ") + "]";
     } else {
-      result = 'failed';
-      throw new Error('Could not configure cypress-ntlm-auth plugin. Error returned: "' + resp.body + '"');
+      result = "failed";
+      throw new Error(
+        'Could not configure cypress-ntlm-auth plugin. Error returned: "' +
+          resp.body +
+          '"'
+      );
     }
   });
 
   log.consoleProps = () => {
     return {
-      ntlmHost: ntlmHost,
+      ntlmHosts: ntlmHosts,
       username: username,
       domain: domain,
       workstation: workstation,
       ntlmVersion: ntlmVersion || 2,
-      result: result
+      result: result,
     };
   };
 
@@ -79,17 +104,19 @@ const ntlm = (ntlmHost, username, password, domain, workstation, ntlmVersion) =>
  */
 const ntlmSso = (ntlmHosts) => {
   const log = {
-      name: 'ntlmSso',
-      message: { ntlmHosts }
+    name: "ntlmSso",
+    message: { ntlmHosts },
   };
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = Cypress.env("NTLM_AUTH_PROXY");
+  const ntlmConfigApi = Cypress.env("NTLM_AUTH_API");
   if (!ntlmProxy || !ntlmConfigApi) {
-      throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
+    throw new Error(
+      "The cypress-ntlm-auth plugin must be loaded before using this method"
+    );
   }
 
   let ntlmSsoConfig = {
-    ntlmHosts: ntlmHosts
+    ntlmHosts: ntlmHosts,
   };
   let validationResult = SsoConfigValidator.validate(ntlmSsoConfig);
   if (!validationResult.ok) {
@@ -98,24 +125,27 @@ const ntlmSso = (ntlmHosts) => {
 
   let result;
   cy.request({
-      method: 'POST',
-      url: ntlmConfigApi + '/ntlm-sso',
-      body: ntlmSsoConfig,
-      log: false // This isn't communication with the test object, so don't show it in the test log
+    method: "POST",
+    url: ntlmConfigApi + "/ntlm-sso",
+    body: ntlmSsoConfig,
+    log: false, // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
-      if (resp.status === 200) {
-          result = 'Enabled NTLM SSO authentication for hosts';
-      }
-      else {
-          result = 'failed';
-          throw new Error('Could not configure cypress-ntlm-auth plugin. Error returned: "' + resp.body + '"');
-      }
+    if (resp.status === 200) {
+      result = "Enabled NTLM SSO authentication for hosts";
+    } else {
+      result = "failed";
+      throw new Error(
+        'Could not configure cypress-ntlm-auth plugin. Error returned: "' +
+          resp.body +
+          '"'
+      );
+    }
   });
   log.consoleProps = () => {
-      return {
-          ntlmSsoConfig: ntlmSsoConfig,
-          result: result
-      };
+    return {
+      ntlmSsoConfig: ntlmSsoConfig,
+      result: result,
+    };
   };
   Cypress.log(log);
 };
@@ -129,41 +159,47 @@ const ntlmSso = (ntlmHosts) => {
  */
 const ntlmReset = () => {
   const log = {
-    name: 'ntlmReset',
-    message: {}
+    name: "ntlmReset",
+    message: {},
   };
 
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = Cypress.env("NTLM_AUTH_PROXY");
+  const ntlmConfigApi = Cypress.env("NTLM_AUTH_API");
   if (!ntlmProxy || !ntlmConfigApi) {
-    throw new Error('The cypress-ntlm-auth plugin must be loaded before using this method');
+    throw new Error(
+      "The cypress-ntlm-auth plugin must be loaded before using this method"
+    );
   }
 
   let result;
 
   cy.request({
-    method: 'POST',
-    url: ntlmConfigApi + '/reset',
+    method: "POST",
+    url: ntlmConfigApi + "/reset",
     body: {},
-    log: false // This isn't communication with the test object, so don't show it in the test log
+    log: false, // This isn't communication with the test object, so don't show it in the test log
   }).then((resp) => {
     if (resp.status === 200) {
-      result = 'NTLM authentication reset OK, no hosts configured';
+      result = "NTLM authentication reset OK, no hosts configured";
     } else {
-      result = 'failed';
-      throw new Error('Could not reset cypress-ntlm-auth plugin. Error returned: "' + resp.body + '"');
+      result = "failed";
+      throw new Error(
+        'Could not reset cypress-ntlm-auth plugin. Error returned: "' +
+          resp.body +
+          '"'
+      );
     }
   });
 
   log.consoleProps = () => {
     return {
-      result: result
+      result: result,
     };
   };
 
   Cypress.log(log);
 };
 
-Cypress.Commands.add('ntlm', { prevSubject: false }, ntlm);
-Cypress.Commands.add('ntlmSso', { prevSubject: false }, ntlmSso);
-Cypress.Commands.add('ntlmReset', { prevSubject: false }, ntlmReset);
+Cypress.Commands.add("ntlm", { prevSubject: false }, ntlm);
+Cypress.Commands.add("ntlmSso", { prevSubject: false }, ntlmSso);
+Cypress.Commands.add("ntlmReset", { prevSubject: false }, ntlmReset);
