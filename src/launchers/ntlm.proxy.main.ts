@@ -19,7 +19,6 @@ upstreamProxyConfigurator.processNoProxyLoopback();
 
 (async () => {
   await proxyMain.run(
-    false,
     process.env.HTTP_PROXY,
     process.env.HTTPS_PROXY,
     process.env.NO_PROXY

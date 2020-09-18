@@ -1,3 +1,3 @@
 export interface INtlmProxyExit {
-  quitIfRunning(): Promise<void>;
+  quitIfRunning(configApiUrl?: string): Promise<void>;
 }

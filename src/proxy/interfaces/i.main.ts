@@ -1,4 +1,6 @@
+import { PortsConfig } from "../../models/ports.config.model";
+
 export interface IMain {
-  run(allowMultipleInstances: boolean, httpProxy?: string, httpsProxy?: string, noProxy?: string): Promise<void>;
+  run(httpProxy?: string, httpsProxy?: string, noProxy?: string): Promise<PortsConfig>;
   stop(): Promise<void>;
 }

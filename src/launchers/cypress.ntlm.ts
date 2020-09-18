@@ -1,39 +1,26 @@
 #!/usr/bin/env node
 
-import { DependencyInjection } from "../proxy/dependency.injection";
-import { TYPES } from "../proxy/dependency.injection.types";
-import { ICypressNtlm } from "../util/interfaces/i.cypress.ntlm";
-import { IUpstreamProxyConfigurator } from "../util/interfaces/i.upstream.proxy.configurator";
+import { checkCypressIsInstalled, run, open, debug } from "../index";
 
-const container = new DependencyInjection();
-let cypressNtlm = container.get<ICypressNtlm>(TYPES.ICypressNtlm);
-const upstreamProxyConfigurator = container.get<IUpstreamProxyConfigurator>(
-  TYPES.IUpstreamProxyConfigurator
-);
-
-if (cypressNtlm.checkCypressIsInstalled() === false) {
-  process.stderr.write(
-    "ERROR: cypress-ntlm requires Cypress to be installed.\n"
-  );
-  process.exit(1);
+async function prepareOptions() {
+  const cypress = require("cypress");
+  let cliArguments = process.argv.slice(3);
+  cliArguments.unshift("run");
+  cliArguments.unshift("cypress");
+  return await cypress.cli.parseRunArguments(cliArguments);
 }
 
-upstreamProxyConfigurator.processNoProxyLoopback();
+async function execute() {
+  checkCypressIsInstalled();
+  if (process.argv[2] === "open") {
+    const options = await prepareOptions();
+    const results = await open(options);
+  } else if (process.argv[2] === "run") {
+    const options = await prepareOptions();
+    const results = await run(options);
+  } else {
+    throw new Error("Unsupported command");
+  }
+}
 
-cypressNtlm
-  .checkProxyIsRunning(15000, 200)
-  .then(portsFile => {
-    process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
-    process.env.HTTPS_PROXY = portsFile.ntlmProxyUrl;
-    process.env.NO_PROXY = "<-loopback>";
-    upstreamProxyConfigurator.removeUnusedProxyEnv();
-
-    // Start up Cypress and let it parse any command line arguments
-    require("cypress/lib/cli").init();
-  })
-  .catch(() => {
-    process.stderr.write(
-      "ERROR: ntlm-proxy must be started before this command\n"
-    );
-    process.exit(1);
-  });
+execute();

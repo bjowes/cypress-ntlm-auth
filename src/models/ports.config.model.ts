@@ -1,4 +1,4 @@
-export interface PortsFile {
+export interface PortsConfig {
   configApiUrl: string;
   ntlmProxyUrl: string;
 }

@@ -9,48 +9,81 @@ import nodeCleanup from "node-cleanup";
 const container = new DependencyInjection();
 let cypressNtlm = container.get<ICypressNtlm>(TYPES.ICypressNtlm);
 let proxyMain = container.get<IMain>(TYPES.IMain);
-let debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
+export let debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
 const upstreamProxyConfigurator = container.get<IUpstreamProxyConfigurator>(
   TYPES.IUpstreamProxyConfigurator
 );
 
-export async function run(options: any): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if (cypressNtlm.checkCypressIsInstalled() === false) {
-      throw new Error("cypress-ntlm-auth requires Cypress to be installed.");
-    }
-    upstreamProxyConfigurator.processNoProxyLoopback();
-    debug.log("Starting ntlm-proxy...");
-    proxyMain
-      .run(
-        false,
-        process.env.HTTP_PROXY,
-        process.env.HTTPS_PROXY,
-        process.env.NO_PROXY
-      )
-      .then(() => {
-        cypressNtlm.checkProxyIsRunning(15000, 200).then(portsFile => {
-          process.env.HTTP_PROXY = portsFile.ntlmProxyUrl;
-          process.env.HTTPS_PROXY = portsFile.ntlmProxyUrl;
-          process.env.NO_PROXY = "<-loopback>";
-          upstreamProxyConfigurator.removeUnusedProxyEnv();
+export function checkCypressIsInstalled() {
+  if (cypressNtlm.checkCypressIsInstalled() === false) {
+    throw new Error("cypress-ntlm-auth requires Cypress to be installed.");
+  }
+}
 
-          debug.log("ntlm-proxy started, running tests through Cypress...");
-          // Start up Cypress and let it parse any options
-          const cypress = require("cypress");
-          cypress
-            .run(options)
-            .then((result: any) => {
-              debug.log("Tests finished, stopping ntlm-proxy...");
-              proxyMain.stop().then(() => resolve(result));
-            })
-            .catch((err: any) => {
-              debug.log("Test exception, stopping ntlm-proxy...");
-              proxyMain.stop().then(() => reject(err));
-            });
-        });
-      });
-  });
+async function prepareProxy() {
+  checkCypressIsInstalled();
+  upstreamProxyConfigurator.processNoProxyLoopback();
+
+  if (
+    process.env.CYPRESS_NTLM_AUTH_PROXY &&
+    process.env.CYPRESS_NTLM_AUTH_API
+  ) {
+    debug.log(
+      "Detected ntlm-proxy environment variables, using existing ntlm-proxy"
+    );
+  } else {
+    debug.log("Starting ntlm-proxy...");
+    let ports = await proxyMain.run(
+      process.env.HTTP_PROXY,
+      process.env.HTTPS_PROXY,
+      process.env.NO_PROXY
+    );
+    process.env.CYPRESS_NTLM_AUTH_PROXY = ports.ntlmProxyUrl;
+    process.env.CYPRESS_NTLM_AUTH_API = ports.configApiUrl;
+  }
+
+  process.env.HTTP_PROXY = process.env.CYPRESS_NTLM_AUTH_PROXY;
+  process.env.HTTPS_PROXY = process.env.CYPRESS_NTLM_AUTH_PROXY;
+  process.env.NO_PROXY = "<-loopback>";
+  upstreamProxyConfigurator.removeUnusedProxyEnv();
+}
+
+export async function run(options: any) {
+  await prepareProxy();
+  debug.log("Running tests through Cypress...");
+  // Start up Cypress and let it parse any options
+  try {
+    const cypress = require("cypress");
+    const result = await cypress.run(options);
+    debug.log("Tests finished");
+    debug.log(result);
+    return result;
+  } catch (err) {
+    debug.log("Tests exception");
+    throw err;
+  } finally {
+    debug.log("Stopping ntlm-proxy...");
+    await proxyMain.stop();
+  }
+}
+
+export async function open(options: any) {
+  await prepareProxy();
+  debug.log("Opening Cypress...");
+  // Start up Cypress and let it parse any options
+  try {
+    const cypress = require("cypress");
+    const result = await cypress.open(options);
+    debug.log("Tests finished");
+    debug.log(result);
+    return result;
+  } catch (err) {
+    debug.log("Tests exception");
+    throw err;
+  } finally {
+    debug.log("Stopping ntlm-proxy...");
+    await proxyMain.stop();
+  }
 }
 
 // Unfortunately we can only catch these signals on Mac/Linux,

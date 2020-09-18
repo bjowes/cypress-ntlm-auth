@@ -15,9 +15,8 @@ export let TYPES = {
   INtlmProxyExit: Symbol.for("INtlmProxyExit"),
   INtlmProxyMitm: Symbol.for("INtlmProxyMitm"),
   INtlmProxyServer: Symbol.for("INtlmProxyServer"),
-  IPortsFileService: Symbol.for("IPortsFileService"),
   IUpstreamProxyConfigurator: Symbol.for("IUpstreamProxyConfigurator"),
   IUpstreamProxyManager: Symbol.for("IUpstreamProxyManager"),
   NewableIWinSsoFacade: Symbol.for("Newable<IWinSsoFacade>"),
-  NewableIConnectionContext: Symbol.for("Newable<IConnectionContext>")
+  NewableIConnectionContext: Symbol.for("Newable<IConnectionContext>"),
 };

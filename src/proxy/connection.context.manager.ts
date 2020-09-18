@@ -97,7 +97,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
       rejectUnauthorized:
-        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost // Allow self-signed certificates if target is on localhost
+        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost, // Allow self-signed certificates if target is on localhost
     };
     let useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
       targetHost,
@@ -150,7 +150,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   addTunnel(client: Socket, target: Socket) {
     this._tunnels[this.getClientAddress(client)] = {
       client: client,
-      target: target
+      target: target,
     };
   }
 
@@ -164,7 +164,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   removeAndCloseAllTunnels(event: string) {
     for (let property in this._tunnels) {
       if (this._tunnels.hasOwnProperty(property)) {
-        if (this._tunnels[property].target.end) {
+        if (this._tunnels[property].target) {
           this._tunnels[property].target.end();
         }
       }

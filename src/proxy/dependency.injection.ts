@@ -50,9 +50,6 @@ import { NtlmProxyServer } from "./ntlm.proxy.server";
 import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
 import { ExpressServerFacade } from "./express.server.facade";
 
-import { IPortsFileService } from "../util/interfaces/i.ports.file.service";
-import { PortsFileService } from "../util/ports.file.service";
-
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
 import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 
@@ -102,9 +99,6 @@ export class DependencyInjection {
     this._container
       .bind<INtlmProxyServer>(TYPES.INtlmProxyServer)
       .to(NtlmProxyServer);
-    this._container
-      .bind<IPortsFileService>(TYPES.IPortsFileService)
-      .to(PortsFileService);
     this._container
       .bind<IUpstreamProxyConfigurator>(TYPES.IUpstreamProxyConfigurator)
       .to(UpstreamProxyConfigurator);

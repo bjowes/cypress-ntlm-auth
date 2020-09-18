@@ -14,5 +14,5 @@ const upstreamProxyConfigurator = container.get<IUpstreamProxyConfigurator>(
 upstreamProxyConfigurator.processNoProxyLoopback();
 
 (async () => {
-  await ntlmProxyExit.quitIfRunning();
+  await ntlmProxyExit.quitIfRunning(process.env.CYPRESS_NTLM_AUTH_API);
 })();
