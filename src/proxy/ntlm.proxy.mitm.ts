@@ -155,7 +155,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         );
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
-        ctx.onRequestData(function(ctx, chunk, callback) {
+        ctx.onRequestData(function (ctx, chunk, callback) {
           context!.addToRequestBody(chunk);
           return callback(undefined, chunk);
         });
@@ -165,6 +165,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(
             targetHost
           );
+          context.configApiConnection = true;
         } else {
           self._debug.log("Request to " + targetHost.href + " - pass on");
           ctx.proxyToServerRequestOptions.agent = context.agent;
@@ -336,7 +337,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         res.statusCode || 401,
         self.filterAndCanonizeHeaders(res.headers)
       );
-      res.on("data", chunk => ctx.proxyToClientResponse.write(chunk));
+      res.on("data", (chunk) => ctx.proxyToClientResponse.write(chunk));
       res.on("end", () => ctx.proxyToClientResponse.end());
       res.resume();
     } else {
@@ -381,9 +382,9 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       {
         port: +targetHost.port,
         host: targetHost.hostname,
-        allowHalfOpen: true
+        allowHalfOpen: true,
       },
-      function() {
+      function () {
         conn.on("finish", () => {
           self._connectionContextManager.removeTunnel(socket);
           socket.destroy();
@@ -393,7 +394,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           conn.end();
         });
 
-        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function() {
+        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function () {
           conn.write(head);
           conn.pipe(socket);
           socket.pipe(conn);
@@ -402,10 +403,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       }
     );
 
-    conn.on("error", function(err: NodeJS.ErrnoException) {
+    conn.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "PROXY_TO_SERVER_SOCKET", req.url);
     });
-    socket.on("error", function(err: NodeJS.ErrnoException) {
+    socket.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "CLIENT_TO_PROXY_SOCKET", req.url);
     });
 
