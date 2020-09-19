@@ -12,7 +12,6 @@ import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { INtlm } from "../ntlm/interfaces/i.ntlm";
 import { Type2Message } from "../ntlm/type2.message";
 import { NtlmMessage } from "../ntlm/ntlm.message";
-import { NtlmConfig } from "../models/ntlm.config.model";
 import { NtlmHost } from "../models/ntlm.host.model";
 
 @injectable()

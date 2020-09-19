@@ -1,5 +1,4 @@
 import { NtlmConfig } from "../models/ntlm.config.model";
-import { toCompleteUrl } from "../util/url.converter";
 import { CompleteUrl } from "../models/complete.url.model";
 import { injectable } from "inversify";
 import { IConfigStore } from "./interfaces/i.config.store";
