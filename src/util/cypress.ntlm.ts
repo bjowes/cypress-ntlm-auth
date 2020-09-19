@@ -1,8 +1,6 @@
 import { injectable } from "inversify";
 import { ICypressNtlm } from "./interfaces/i.cypress.ntlm";
 
-let self: CypressNtlm;
-
 @injectable()
 export class CypressNtlm implements ICypressNtlm {
   checkCypressIsInstalled(): boolean {

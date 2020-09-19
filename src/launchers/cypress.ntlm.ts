@@ -26,10 +26,10 @@ async function execute() {
   const args = getArgsAfterCypressNtlm();
   if (args[0] === "open") {
     const options = await prepareOptions(args);
-    const results = await open(options);
+    await open(options);
   } else if (args[0] === "run") {
     const options = await prepareOptions(args);
-    const results = await run(options);
+    await run(options);
   } else {
     throw new Error(
       "Unsupported command, use cypress-ntlm open or cypress-ntlm run."

@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import { ConfigValidator } from "../util/config.validator";
-import { toCompleteUrl } from "../util/url.converter";
 import { NtlmConfig } from "../models/ntlm.config.model";
 import { injectable, inject } from "inversify";
 import { EventEmitter } from "events";
