@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.3.0 - released 2020-09-18
+## 2.3.0 - released 2020-09-20
 
 - Fix #117 - Support wildcards in cy.ntlm
 - Package bumps
