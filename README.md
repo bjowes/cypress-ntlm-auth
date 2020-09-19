@@ -22,11 +22,9 @@ _Want to use NTLM or Negotiate authentication for something else?_
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
-## _BREAKING CHANGE_ from release 2.0.0
+## Streamlined interface from 2.3.0
 
-Not really a breaking change, but if your test client runs on Windows you should consider using the new single sign on feature instead of the old way to configure hosts. It offers fully featured NTLM authentication and Negotiate authentication with all the security features provided natively by Windows. Secondly, the configuration is much simpler since you only need to specify hosts, no credentials. User credentials from the user running the test client are used automatically.
-
-Check out the new `cy.ntlmSso` command below and give it a try!
+The `cy.ntlm` command now supports specifying multiple hosts in a single command, with similar syntax as `cy.ntlmSso`. Arrays and wildcards are supported. The old method with a single host specified with protocol is still supported, but it is recommended to migrate to the new model. When migrating, note that the protocol part of the host should be removed.
 
 ## Install
 
@@ -192,9 +190,9 @@ Note that these environment variables must be specified as uppercase. Lowercase 
 
 ## Usage
 
-### cy.ntlm(ntlmHost, username, password, [domain, [workstation]])
+### cy.ntlm(ntlmHosts, username, password, [domain, [workstation]])
 
-The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified host is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
+The ntlm command is used to configure host/user mappings. After this command, all network communication from cypress to the specified hosts is monitored by the ntlm-proxy. If the server sends an authentication challenge, the ntlm-proxy will perform a NTLM login handshake with the configured user.
 Note that "all network communication" includes calls to `cy.visit(host)`, `cy.request(host)` and indirect network communication (when the browser fetches additional resources after the `cy.visit(host)` call).
 
 If domain and workstation are not set, the ntlm-proxy will use the domain of the ntlmHost.
@@ -202,10 +200,10 @@ If domain and workstation are not set, the ntlm-proxy will use the domain of the
 #### Syntax
 
 ```javascript
-cy.ntlm(ntlmHost, username, password, [domain, [workstation, [ntlmVersion]]]);
+cy.ntlm(ntlmHosts, username, password, [domain, [workstation, [ntlmVersion]]]);
 ```
 
-- ntlmHost: protocol, hostname (and port if required) of the server where NTLM authentication shall be applied. This must NOT include the rest of the url (path and query) - only host level authentication is supported. Examples: `http://localhost:4200`, `https://ntlm.acme.com`
+- ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication shall be applied. The hosts must NOT include protocol or the rest of the url (path and query) - only host:port level authentication is supported. In addition, wildcards are allowed to simplify specifying hosts for a whole intranet. Ports cannot be combined with wildcards. Example: `['localhost:4200', '*.acme.com']`
 - username: the username for the account to authenticate with
 - password: the password for the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
 - domain (optional): the domain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
@@ -214,6 +212,12 @@ cy.ntlm(ntlmHost, username, password, [domain, [workstation, [ntlmVersion]]]);
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost. Existing connections are not terminated, but if the server requests reauthentication the new credentials will be used.
 
+If multiple configurations match a hosts, the most specific configuration is applied. The order of priority is:
+
+1. Configuration with hostname and port
+2. Configuration with hostname
+3. Configuration with wildcard hostname
+
 Configuration set with the ntlm command persists until it is reset (see ntlmReset command) or when the proxy is terminated. Take note that it _is not cleared when the current spec file is finished_.
 
 #### Example
@@ -221,24 +225,17 @@ Configuration set with the ntlm command persists until it is reset (see ntlmRese
 You want to test a IIS website on your intranet `https://ntlm.acme.com` that requires Windows Authentication and allows NTLM. The test user is `acme\bobby` (meaning domain `acme` and username `bobby`), and the password is `brown`.
 
 ```javascript
-cy.ntlm("https://ntlm.acme.com", "bobby", "brown", "acme");
+cy.ntlm(["ntlm.acme.com"], "bobby", "brown", "acme");
 // Access the ntlm site with user bobby
 cy.visit("https://ntlm.acme.com");
 // Test actions and asserts here
 
-cy.ntlm("https://ntlm.acme.com", "admin", "secret", "acme");
+cy.ntlm(["ntlm.acme.com"], "admin", "secret", "acme");
 // Access the ntlm site with user admin
 cy.visit("https://ntlm.acme.com");
 // Test actions and asserts here
 
-cy.ntlm(
-  "https://ntlm-legacy.acme.com",
-  "admin",
-  "secret",
-  "acme",
-  undefined,
-  1
-);
+cy.ntlm(["ntlm-legacy.acme.com"], "admin", "secret", "acme", undefined, 1);
 // Access the ntlm-legacy site with user admin using NTLMv1
 cy.visit("https://ntlm-legacy.acme.com");
 // Test actions and asserts here
@@ -253,7 +250,7 @@ You can then combine this with setting up multiple accounts to test your applica
 ```javascript
 // Read-only user access
 cy.ntlm(
-  "https://ntlm.acme.com",
+  ["ntlm.acme.com"],
   Cypress.env.NTLM_READONLY_USERNAME,
   Cypress.env.NTLM_READONLY_PASSWORD,
   Cypress.env.NTLM_READONLY_DOMAIN
@@ -262,7 +259,7 @@ cy.ntlm(
 
 // Admin user access
 cy.ntlm(
-  "https://ntlm.intranet.acme.com",
+  ["ntlm.intranet.acme.com"],
   Cypress.env.NTLM_ADMIN_USERNAME,
   Cypress.env.NTLM_ADMIN_PASSWORD,
   Cypress.env.NTLM_ADMIN_DOMAIN
@@ -332,7 +329,7 @@ cy.ntlmReset();
 Using ntlmReset to clear configuration.
 
 ```javascript
-cy.ntlm("https://ntlm.acme.com", "bobby", "brown", "acme");
+cy.ntlm(["ntlm.acme.com"], "bobby", "brown", "acme");
 cy.visit("https://ntlm.acme.com"); // This succeeds
 cy.ntlmReset();
 cy.visit("https://ntlm.acme.com"); // This fails (401)
@@ -377,10 +374,10 @@ This plugin can also be called as a Node module. It mimics the behavior of the [
 const cypressNtlmAuth = require("cypress-ntlm-auth");
 cypressNtlmAuth
   .run({
-    spec: "./cypress/integration/test.spec.js"
+    spec: "./cypress/integration/test.spec.js",
   })
-  .then(result => console.log(result))
-  .catch(err => console.log(err));
+  .then((result) => console.log(result))
+  .catch((err) => console.log(err));
 ```
 
 ## Notes

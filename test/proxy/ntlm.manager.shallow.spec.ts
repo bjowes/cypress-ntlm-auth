@@ -18,6 +18,7 @@ import { NtlmConfig } from "../../src/models/ntlm.config.model";
 import { INtlm } from "../../src/ntlm/interfaces/i.ntlm";
 import { NtlmMessage } from "../../src/ntlm/ntlm.message";
 import { Ntlm } from "../../src/ntlm/ntlm";
+import { NtlmHost } from "../../src/models/ntlm.host.model";
 
 describe("NtlmManager", () => {
   let ntlmManager: NtlmManager;
@@ -29,11 +30,11 @@ describe("NtlmManager", () => {
   let httpUrl: string;
   let ntlm = new Ntlm();
 
-  before(async function() {
+  before(async function () {
     httpUrl = await expressServer.startHttpServer(false, undefined);
   });
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
     ntlmMock = Substitute.for<INtlm>();
     ntlmMock
@@ -49,12 +50,12 @@ describe("NtlmManager", () => {
     ntlmManager = new NtlmManager(configStoreMock, ntlmMock, debugMock);
   });
 
-  after(async function() {
+  after(async function () {
     await expressServer.stopHttpServer();
   });
 
   describe("NTLM errors", () => {
-    it("Invalid credentials shall be logged and clear auth state", async function() {
+    it("Invalid credentials shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(401);
       const ntlmHostUrl = toCompleteUrl("http://www.google.com:8081", false);
@@ -80,7 +81,7 @@ describe("NtlmManager", () => {
       );
     });
 
-    it("Valid credentials shall set authenticated state", async function() {
+    it("Valid credentials shall set authenticated state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       const ntlmHostUrl = toCompleteUrl("http://www.google.com:8081", false);
@@ -100,7 +101,7 @@ describe("NtlmManager", () => {
       );
     });
 
-    it("Unexpected NTLM message shall be logged and clear auth state", async function() {
+    it("Unexpected NTLM message shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       const ntlmHostUrl = toCompleteUrl("http://www.google.com:8081", false);
@@ -128,16 +129,16 @@ describe("NtlmManager", () => {
       );
     });
 
-    it("Non Base64 in NTLM message", function(done) {
+    it("Non Base64 in NTLM message", function (done) {
       expressServer.sendNtlmType2("ÅÄÖåäö");
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl,
+        ntlmHost: httpUrl.replace("http://", ""),
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
-        domain: ""
-      } as NtlmConfig;
+        domain: "",
+      } as NtlmHost;
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -149,7 +150,7 @@ describe("NtlmManager", () => {
         headers: {},
         path: "/get",
         port: ntlmHostUrl.port as any,
-        agent: agent
+        agent: agent,
       });
       ctx.isSSL.returns(false);
 
@@ -158,7 +159,7 @@ describe("NtlmManager", () => {
         toCompleteUrl(httpUrl, false),
         connectionContext,
         false,
-        err => {
+        (err) => {
           expect(err.message).to.be.equal(
             "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
           );
@@ -171,18 +172,18 @@ describe("NtlmManager", () => {
       );
     });
 
-    it("Not type 2 in NTLM message", function(done) {
+    it("Not type 2 in NTLM message", function (done) {
       expressServer.sendNtlmType2(
         "TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlzIHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBpcyBhIGx1c3Qgb2YgdGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVsaWdodCBpbiB0aGUgY29udGludWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24gb2Yga25vd2xlZGdlLCBleGNlZWRzIHRoZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNhcm5hbCBwbGVhc3VyZS4="
       );
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl,
+        ntlmHost: httpUrl.replace("http://", ""),
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
-        domain: ""
-      } as NtlmConfig;
+        domain: "",
+      } as NtlmHost;
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -194,7 +195,7 @@ describe("NtlmManager", () => {
         headers: {},
         path: "/get",
         port: ntlmHostUrl.port as any,
-        agent: agent
+        agent: agent,
       });
       ctx.isSSL.returns(false);
 
@@ -203,7 +204,7 @@ describe("NtlmManager", () => {
         toCompleteUrl(httpUrl, false),
         connectionContext,
         false,
-        err => {
+        (err) => {
           expect(err.message).to.be.equal(
             "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
           );
@@ -217,28 +218,28 @@ describe("NtlmManager", () => {
     });
 
     describe("NTLM detection", () => {
-      it("should detect lowercase NTLM in header", function() {
+      it("should detect lowercase NTLM in header", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "ntlm" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
         expect(result).to.be.true;
       });
 
-      it("should detect uppercase NTLM in header", function() {
+      it("should detect uppercase NTLM in header", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "NTLM" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
         expect(result).to.be.true;
       });
 
-      it("should detect NTLM in mixed header", function() {
+      it("should detect NTLM in mixed header", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "Negotiate, NTLM" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
         expect(result).to.be.true;
       });
 
-      it("should not detect missing NTLM", function() {
+      it("should not detect missing NTLM", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "Negotiate, Digest" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
