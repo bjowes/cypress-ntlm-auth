@@ -1,6 +1,18 @@
 # Changelog
 
-## 2.3.0 - released 2020-09-18
+## 3.0.0-beta.1
+
+- Improved parsing of cli arguments
+- Close client sockets on reset or quit
+- Clean up socket close listeners
+
+## 3.0.0-beta.0
+
+- Support for multiple instances
+- Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
+- Cypress plugin config no longer needed
+
+## 2.3.0 - released 2020-09-20
 
 - Fix #117 - Support wildcards in cy.ntlm
 - Package bumps
