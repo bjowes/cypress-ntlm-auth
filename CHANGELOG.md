@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0-beta.2
+
+- Improved parsing of cli arguments on Windows
+
 ## 3.0.0-beta.1
 
 - Improved parsing of cli arguments

@@ -12,7 +12,10 @@ async function prepareOptions(args: string[]) {
 
 function getArgsAfterCypressNtlm() {
   const cypressNtlmIndex = process.argv.findIndex(
-    (t) => t === "cypress-ntlm" || t.endsWith("node_modules/.bin/cypress-ntlm")
+    (t) =>
+      t === "cypress-ntlm" ||
+      t.endsWith("node_modules/.bin/cypress-ntlm") ||
+      t.endsWith("cypress-ntlm-auth\\dist\\launchers\\cypress.ntlm.js")
   );
   if (cypressNtlmIndex === -1) {
     debug.log(process.argv);
