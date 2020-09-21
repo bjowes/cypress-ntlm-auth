@@ -32,7 +32,8 @@ async function execute() {
     await open(options);
   } else if (args[0] === "run") {
     const options = await prepareOptions(args);
-    await run(options);
+    const result = await run(options);
+    process.exit(result.totalFailed); // Required on windows since Cypress hangs after the run call
   } else {
     throw new Error(
       "Unsupported command, use cypress-ntlm open or cypress-ntlm run."
