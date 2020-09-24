@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0-beta.3
+
+- Handle process termination on Windows
+
 ## 3.0.0-beta.2
 
 - Improved parsing of cli arguments on Windows
