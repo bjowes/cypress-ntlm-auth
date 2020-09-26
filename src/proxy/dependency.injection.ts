@@ -20,14 +20,14 @@ import { ConfigServer } from "./config.server";
 import { ICoreServer } from "./interfaces/i.core.server";
 import { CoreServer } from "./core.server";
 
-import { ICypressNtlm } from "../util/interfaces/i.cypress.ntlm";
-import { CypressNtlm } from "../util/cypress.ntlm";
+import { IStartup } from "../startup/interfaces/i.startup";
+import { Startup } from "../startup/startup";
 
 import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { UpstreamProxyManager } from "./upstream.proxy.manager";
 
-import { IUpstreamProxyConfigurator } from "../util/interfaces/i.upstream.proxy.configurator";
-import { UpstreamProxyConfigurator } from "../util/upstream.proxy.configurator";
+import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
+import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator";
 
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { WinSsoFacade } from "./win-sso.facade";
@@ -56,11 +56,14 @@ import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { DebugLogger } from "../util/debug.logger";
 
-import { INtlmProxyExit } from "../util/interfaces/i.ntlm.proxy.exit";
-import { NtlmProxyExit } from "../util/ntlm.proxy.exit";
+import { IExternalNtlmProxyFacade } from "../startup/interfaces/i.external.ntlm.proxy.facade";
+import { ExternalNtlmProxyFacade } from "../startup/external.ntlm.proxy.facade";
 
 import { IMain } from "./interfaces/i.main";
 import { Main } from "./main";
+
+import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
+import { CypressFacade } from "../startup/cypress.facade";
 
 export class DependencyInjection {
   private _container: Container;
@@ -76,7 +79,10 @@ export class DependencyInjection {
       .bind<IConnectionContextManager>(TYPES.IConnectionContextManager)
       .to(ConnectionContextManager);
     this._container.bind<ICoreServer>(TYPES.ICoreServer).to(CoreServer);
-    this._container.bind<ICypressNtlm>(TYPES.ICypressNtlm).to(CypressNtlm);
+    this._container
+      .bind<ICypressFacade>(TYPES.ICypressFacade)
+      .to(CypressFacade);
+    this._container.bind<IStartup>(TYPES.IStartup).to(Startup);
     this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
     this._container
       .bind<IExpressServerFacade>(TYPES.IExpressServerFacade)
@@ -91,8 +97,8 @@ export class DependencyInjection {
     this._container.bind<INtlm>(TYPES.INtlm).to(Ntlm);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container
-      .bind<INtlmProxyExit>(TYPES.INtlmProxyExit)
-      .to(NtlmProxyExit);
+      .bind<IExternalNtlmProxyFacade>(TYPES.IExternalNtlmProxyFacade)
+      .to(ExternalNtlmProxyFacade);
     this._container
       .bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm)
       .to(NtlmProxyMitm);

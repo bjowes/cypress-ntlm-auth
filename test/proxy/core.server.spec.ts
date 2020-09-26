@@ -1,13 +1,8 @@
 import "mocha";
 
-import sinon from "sinon";
 import { expect } from "chai";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-chai.use(chaiAsPromised);
 
 import url from "url";
-import axios, { AxiosRequestConfig } from "axios";
 
 const isPortReachable = require("is-port-reachable");
 
@@ -38,10 +33,6 @@ async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
 }
 
 describe("Core server startup and shutdown", () => {
-  let httpRequestStub: sinon.SinonStub<
-    [string, any?, (AxiosRequestConfig | undefined)?],
-    Promise<{}>
-  >;
   let proxyFacade = new ProxyFacade();
   let dependencyInjection = new DependencyInjection();
   let coreServer: ICoreServer;
@@ -59,9 +50,6 @@ describe("Core server startup and shutdown", () => {
   });
 
   afterEach(async function () {
-    if (httpRequestStub) {
-      httpRequestStub.restore();
-    }
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
       await coreServer.stop();

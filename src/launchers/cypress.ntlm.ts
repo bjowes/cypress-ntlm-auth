@@ -1,43 +1,32 @@
 #!/usr/bin/env node
 
-import { checkCypressIsInstalled, run, open, debug } from "../index";
-
-async function prepareOptions(args: string[]) {
-  const cypress = require("cypress");
-  let cliArguments = args.slice(1);
-  cliArguments.unshift("run");
-  cliArguments.unshift("cypress");
-  return await cypress.cli.parseRunArguments(cliArguments);
-}
-
-function getArgsAfterCypressNtlm() {
-  const cypressNtlmIndex = process.argv.findIndex(
-    (t) =>
-      t === "cypress-ntlm" ||
-      t.endsWith("node_modules/.bin/cypress-ntlm") ||
-      t.endsWith("cypress-ntlm-auth\\dist\\launchers\\cypress.ntlm.js")
-  );
-  if (cypressNtlmIndex === -1) {
-    debug.log(process.argv);
-    throw new Error("Cannot parse command line arguments");
-  }
-  return process.argv.slice(cypressNtlmIndex + 1);
-}
+import {
+  run,
+  open,
+  argumentsToCypressMode,
+  argumentsToOptions,
+} from "../index";
 
 async function execute() {
-  checkCypressIsInstalled();
-  const args = getArgsAfterCypressNtlm();
-  if (args[0] === "open") {
-    const options = await prepareOptions(args);
-    await open(options);
-  } else if (args[0] === "run") {
-    const options = await prepareOptions(args);
-    const result = await run(options);
-    process.exit(result.totalFailed); // Required on windows since Cypress hangs after the run call
-  } else {
-    throw new Error(
-      "Unsupported command, use cypress-ntlm open or cypress-ntlm run."
-    );
+  try {
+    const mode = argumentsToCypressMode(process.argv);
+    const options = argumentsToOptions(process.argv);
+    if (mode === "open") {
+      await open(options);
+    } else {
+      const result = await run(options);
+      if (result.failures) {
+        console.error("Cypress could not execute tests");
+        console.error(result.message);
+        process.exit(result.failures);
+      }
+      // Required on windows since Cypress hangs after the run call
+      process.exit(result.totalFailed);
+    }
+  } catch (err) {
+    console.error(err.message);
+    console.error(err);
+    process.exit(1);
   }
 }
 

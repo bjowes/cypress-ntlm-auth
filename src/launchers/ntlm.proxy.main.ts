@@ -3,7 +3,7 @@
 import { DependencyInjection } from "../proxy/dependency.injection";
 import { TYPES } from "../proxy/dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IUpstreamProxyConfigurator } from "../util/interfaces/i.upstream.proxy.configurator";
+import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
 import { IMain } from "../proxy/interfaces/i.main";
 
 import nodeCleanup from "node-cleanup";

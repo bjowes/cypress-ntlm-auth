@@ -4,11 +4,11 @@ import "mocha";
 import { ExpressServer } from "./express.server";
 import { ProxyFacade } from "./proxy.facade";
 
-import sinon from "sinon";
-import { expect } from "chai";
-import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import chai from "chai";
+const expect = chai.expect;
 chai.use(chaiAsPromised);
+
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
 import { DependencyInjection } from "../../src/proxy/dependency.injection";
 import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";

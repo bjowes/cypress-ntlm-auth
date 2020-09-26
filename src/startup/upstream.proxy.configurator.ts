@@ -1,6 +1,6 @@
 import { TYPES } from "../proxy/dependency.injection.types";
 import { inject, injectable } from "inversify";
-import { IDebugLogger } from "./interfaces/i.debug.logger";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import os from "os";
 
@@ -44,7 +44,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   private addLoopbackToNoProxy(no_proxy: string | undefined) {
     let no_proxy_parts: string[] = [];
     if (no_proxy) {
-      no_proxy_parts = no_proxy.split(",").map(s => s.trim());
+      no_proxy_parts = no_proxy.split(",").map((s) => s.trim());
     }
     if (no_proxy_parts.indexOf(this._noProxyLocalhost) === -1) {
       this._debug.log(

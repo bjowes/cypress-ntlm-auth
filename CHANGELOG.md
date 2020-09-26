@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- Support for multiple instances
+- Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
+- Cypress plugin config no longer needed - this means that it is now possible to launch cypress or cypress-ntlm without modifying the plugins file.
+
 ## 3.0.0-beta.3
 
 - Handle process termination on Windows
