@@ -10,7 +10,7 @@ import {
 async function execute() {
   try {
     const mode = argumentsToCypressMode(process.argv);
-    const options = argumentsToOptions(process.argv);
+    const options = await argumentsToOptions(process.argv);
     if (mode === "open") {
       await open(options);
     } else {
