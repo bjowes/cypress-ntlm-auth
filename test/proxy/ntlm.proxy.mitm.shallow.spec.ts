@@ -3,6 +3,7 @@ import "reflect-metadata";
 import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import net from "net";
+import http from "http";
 
 import { expect } from "chai";
 import { IConfigStore } from "../../src/proxy/interfaces/i.config.store";
@@ -12,7 +13,6 @@ import { INtlmManager } from "../../src/proxy/interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "../../src/proxy/interfaces/i.upstream.proxy.manager";
 import { NtlmProxyMitm } from "../../src/proxy/ntlm.proxy.mitm";
 import { IContext } from "http-mitm-proxy";
-import { IncomingMessage } from "http";
 import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../src/util/debug.logger";
 import { ExpressServer } from "./express.server";
@@ -83,7 +83,7 @@ describe("NtlmProxyMitm error logging", () => {
       name: "testname",
       code: "code",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     message.url.returns("/testurl");
@@ -97,7 +97,7 @@ describe("NtlmProxyMitm error logging", () => {
       name: "testname",
       code: "ENOTFOUND",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     const mockHost = "nctwerijlksf";
@@ -121,7 +121,7 @@ describe("NtlmProxyMitm error logging", () => {
       name: "testname",
       code: "ENOTFOUND",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     const mockHost = "nctwerijlksf:80";
@@ -176,7 +176,7 @@ describe("NtlmProxyMitm REQUEST", () => {
   });
 
   it("invalid url should throw", async function () {
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     message.headers.returns({ hostMissing: "test" });
@@ -275,7 +275,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   });
 
   it("invalid url should not throw", async function () {
-    let req = Substitute.for<IncomingMessage>();
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(null);
     let callbackCount = 0;
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -286,7 +286,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   });
 
   it("unknown socket error after connect should not throw", async function () {
-    let req = Substitute.for<IncomingMessage>();
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
@@ -311,7 +311,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   });
 
   it("ECONNRESET socket error after connect should not throw", async function () {
-    let req = Substitute.for<IncomingMessage>();
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
@@ -336,7 +336,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   });
 
   it("unknown peer socket error after connect should not throw", async function () {
-    let req = Substitute.for<IncomingMessage>();
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
@@ -361,7 +361,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   });
 
   it("ECONNRESET peer socket error after connect should not throw", async function () {
-    let req = Substitute.for<IncomingMessage>();
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
@@ -385,6 +385,19 @@ describe("NtlmProxyMitm CONNECT", () => {
     serverStream.end();
   });
 
+  it("should send 502 response if target is unreachable", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
+    let freePort = await getFreePort();
+    socketMock.end(Arg.any(), Arg.any()).mimicks((data, enc) => {
+      socketMock.received(1).end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+      return true;
+    });
+    req.url.returns("localhost:" + freePort);
+    ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
+      if (err) throw err;
+    });
+  });
+
   const sleepMs = (ms: number) => new Promise((res) => setTimeout(res, ms));
   async function sleep(ms: number): Promise<void> {
     await sleepMs(ms);
@@ -399,6 +412,21 @@ describe("NtlmProxyMitm CONNECT", () => {
         await sleep(25);
       }
       reject();
+    });
+  }
+
+  function getFreePort(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      let server = http.createServer();
+      server.listen(0);
+      server.on("listening", function () {
+        let port = (server.address() as net.AddressInfo).port;
+        server.close();
+        resolve(port);
+      });
+      server.on("error", function (err) {
+        reject(err);
+      });
     });
   }
 });

@@ -378,6 +378,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Let non-NTLM hosts tunnel through
     self._debug.log("Tunnel to", req.url);
+    let onPrematureClose = function () {
+      self._debug.log("cannot establish connection to server, CONNECT failed");
+      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+    };
     let conn = net.connect(
       {
         port: +targetHost.port,
@@ -393,6 +397,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           self._debug.log("client closed socket, closing tunnel to ", req.url);
           conn.end();
         });
+        conn.removeListener("close", onPrematureClose);
 
         socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function () {
           conn.write(head);
@@ -402,6 +407,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         });
       }
     );
+
+    conn.once("close", onPrematureClose);
 
     conn.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "PROXY_TO_SERVER_SOCKET", req.url);
