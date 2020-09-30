@@ -5,6 +5,11 @@
 - Support for multiple instances
 - Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
 - Cypress plugin config no longer needed - this means that it is now possible to launch cypress or cypress-ntlm without modifying the plugins file.
+- Return 502 if connect fails
+
+## 3.0.0-beta.4
+
+- Return 502 if connect fails
 
 ## 3.0.0-beta.3
 
