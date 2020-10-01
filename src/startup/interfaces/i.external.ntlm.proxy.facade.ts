@@ -1,4 +1,4 @@
 export interface IExternalNtlmProxyFacade {
-  isAlive(configApiUrl?: string): Promise<boolean>;
+  alive(configApiUrl?: string): Promise<any>;
   quitIfRunning(configApiUrl?: string): Promise<void>;
 }

@@ -21,10 +21,18 @@ export class Main implements IMain {
   async run(
     httpProxy?: string,
     httpsProxy?: string,
-    noProxy?: string
+    noProxy?: string,
+    configApiPort?: number,
+    ntlmProxyPort?: number
   ): Promise<PortsConfig> {
     try {
-      let ports = await this._coreServer.start(httpProxy, httpsProxy, noProxy);
+      let ports = await this._coreServer.start(
+        httpProxy,
+        httpsProxy,
+        noProxy,
+        configApiPort,
+        ntlmProxyPort
+      );
       this._debug.log("Startup done!");
       this._debug.log(ports);
       return ports;

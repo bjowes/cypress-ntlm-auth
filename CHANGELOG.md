@@ -6,6 +6,15 @@
 - Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
 - Cypress plugin config no longer needed - this means that it is now possible to launch cypress or cypress-ntlm without modifying the plugins file.
 - Return 502 if connect fails
+- It is now possible to specify ports for configApi and ntlmProxy when starting ntlm-proxy
+- Alive now returns the current ports
+- Use of external ntlm-proxy now only requires setting CYPRESS_NTLM_AUTH_API environment variable
+
+## 3.0.0-beta.5
+
+- It is now possible to specify ports for configApi and ntlmProxy when starting ntlm-proxy
+- Alive now returns the current ports
+- Use of external ntlm-proxy now only requires setting CYPRESS_NTLM_AUTH_API environment variable
 
 ## 3.0.0-beta.4
 

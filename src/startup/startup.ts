@@ -6,12 +6,15 @@ import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.config
 import { IMain } from "../proxy/interfaces/i.main";
 import { ICypressFacade } from "./interfaces/i.cypress.facade";
 import { IExternalNtlmProxyFacade } from "./interfaces/i.external.ntlm.proxy.facade";
+import { IEnvironment } from "./interfaces/i.environment";
+import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class Startup implements IStartup {
   private _upstreamProxyConfigurator: IUpstreamProxyConfigurator;
   private _proxyMain: IMain;
   private _cypressFacade: ICypressFacade;
+  private _environment: IEnvironment;
   private _externalNtlmProxyFacade: IExternalNtlmProxyFacade;
   private _debug: IDebugLogger;
   private _internalNtlmProxy = true;
@@ -21,6 +24,7 @@ export class Startup implements IStartup {
     upstreamProxyConfigurator: IUpstreamProxyConfigurator,
     @inject(TYPES.IMain) proxyMain: IMain,
     @inject(TYPES.ICypressFacade) cypressFacade: ICypressFacade,
+    @inject(TYPES.IEnvironment) environment: IEnvironment,
     @inject(TYPES.IExternalNtlmProxyFacade)
     externalNtlmProxyFacade: IExternalNtlmProxyFacade,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
@@ -28,6 +32,7 @@ export class Startup implements IStartup {
     this._upstreamProxyConfigurator = upstreamProxyConfigurator;
     this._proxyMain = proxyMain;
     this._cypressFacade = cypressFacade;
+    this._environment = environment;
     this._externalNtlmProxyFacade = externalNtlmProxyFacade;
     this._debug = debug;
   }
@@ -77,32 +82,25 @@ export class Startup implements IStartup {
   private async prepareProxy() {
     this._upstreamProxyConfigurator.processNoProxyLoopback();
 
-    if (
-      process.env.CYPRESS_NTLM_AUTH_PROXY &&
-      process.env.CYPRESS_NTLM_AUTH_API
-    ) {
+    let ports: PortsConfig;
+    if (this._environment.configApiUrl) {
       this._internalNtlmProxy = false;
       this._debug.log(
-        "Detected ntlm-proxy environment variables, using existing ntlm-proxy"
+        "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
       );
-      await this._externalNtlmProxyFacade.isAlive(
-        process.env.CYPRESS_NTLM_AUTH_API
+      ports = await this._externalNtlmProxyFacade.alive(
+        this._environment.configApiUrl
       );
     } else {
       this._internalNtlmProxy = true;
       this._debug.log("Starting ntlm-proxy...");
-      let ports = await this._proxyMain.run(
-        process.env.HTTP_PROXY,
-        process.env.HTTPS_PROXY,
-        process.env.NO_PROXY
+      ports = await this._proxyMain.run(
+        this._environment.httpProxy,
+        this._environment.httpsProxy,
+        this._environment.noProxy
       );
-      process.env.CYPRESS_NTLM_AUTH_PROXY = ports.ntlmProxyUrl;
-      process.env.CYPRESS_NTLM_AUTH_API = ports.configApiUrl;
     }
-
-    process.env.HTTP_PROXY = process.env.CYPRESS_NTLM_AUTH_PROXY;
-    process.env.HTTPS_PROXY = process.env.CYPRESS_NTLM_AUTH_PROXY;
-    process.env.NO_PROXY = "<-loopback>";
+    this._environment.configureForCypress(ports);
     this._upstreamProxyConfigurator.removeUnusedProxyEnv();
   }
 

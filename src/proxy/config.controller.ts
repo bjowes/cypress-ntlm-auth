@@ -9,19 +9,25 @@ import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { SsoConfigValidator } from "../util/sso.config.validator";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
+import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;
+  private _apiUrlStore: IApiUrlStore;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
+    @inject(TYPES.IApiUrlStore) apiUrlStore: IApiUrlStore,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
+    this._apiUrlStore = apiUrlStore;
     this._debug = debug;
     this.router.post("/ntlm-config", (req: Request, res: Response) =>
       this.ntlmConfig(req, res)
@@ -73,13 +79,20 @@ export class ConfigController implements IConfigController {
 
   private alive(req: Request, res: Response) {
     this._debug.log("Received alive");
-    res.sendStatus(200);
+    if (this._apiUrlStore.ntlmProxyUrl) {
+      const ports: PortsConfig = {
+        configApiUrl: this._apiUrlStore.configApiUrl,
+        ntlmProxyUrl: this._apiUrlStore.ntlmProxyUrl,
+      };
+      res.status(200).send(ports);
+    } else {
+      res.sendStatus(503);
+    }
   }
 
   private quit(req: Request, res: Response) {
     this._debug.log("Received quit");
     res.status(200).send("Over and out!");
-    let keepPortsFile = req.body && req.body.keepPortsFile;
-    this.configApiEvent.emit("quit", keepPortsFile);
+    this.configApiEvent.emit("quit");
   }
 }

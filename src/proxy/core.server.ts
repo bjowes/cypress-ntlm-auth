@@ -48,13 +48,15 @@ export class CoreServer implements ICoreServer {
   async start(
     httpProxy?: string,
     httpsProxy?: string,
-    noProxy?: string
+    noProxy?: string,
+    configApiPort?: number,
+    ntlmProxyPort?: number
   ): Promise<PortsConfig> {
     this._upstreamProxyManager.init(httpProxy, httpsProxy, noProxy);
-    let configApiUrl = await this._configServer.start();
+    let configApiUrl = await this._configServer.start(configApiPort);
     let ntlmProxyUrl: string;
     try {
-      ntlmProxyUrl = await this._ntlmProxyServer.start();
+      ntlmProxyUrl = await this._ntlmProxyServer.start(ntlmProxyPort);
     } catch (err) {
       await this._configServer.stop();
       throw err;

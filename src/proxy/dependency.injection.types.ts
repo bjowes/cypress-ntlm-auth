@@ -1,4 +1,5 @@
 export let TYPES = {
+  IApiUrlStore: Symbol.for("IApiUrlStore"),
   IConfigController: Symbol.for("IConfigController"),
   IConfigServer: Symbol.for("IConfigServer"),
   IConfigStore: Symbol.for("IConfigStore"),
@@ -6,6 +7,7 @@ export let TYPES = {
   ICoreServer: Symbol.for("ICoreServer"),
   ICypressFacade: Symbol.for("ICypressFacade"),
   IDebugLogger: Symbol.for("IDebugLogger"),
+  IEnvironment: Symbol.for("IEnvironment"),
   IExpressServerFacade: Symbol.for("IExpressServerFacade"),
   IHttpMitmProxyFacade: Symbol.for("IHttpMitmProxyFacade"),
   IMain: Symbol.for("IMain"),

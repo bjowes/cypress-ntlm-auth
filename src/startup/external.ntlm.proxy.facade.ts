@@ -4,6 +4,7 @@ import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import http from "http";
 import url from "url";
 import { IExternalNtlmProxyFacade } from "./interfaces/i.external.ntlm.proxy.facade";
+import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
@@ -13,9 +14,9 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
     this._debug = debug;
   }
 
-  private async sendAliveCommand(configApiUrl: string): Promise<boolean> {
+  private async sendAliveCommand(configApiUrl: string): Promise<PortsConfig> {
     return new Promise((resolve, reject) => {
-      this._debug.log("Sending alive request to NTLM proxy");
+      this._debug.log("Sending alive request to external NTLM proxy");
 
       const configApiUrlParsed = url.parse(configApiUrl);
       const options: http.RequestOptions = {
@@ -28,21 +29,26 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
       const req = http.request(options, (res) => {
         if (res.statusCode !== 200) {
           this._debug.log(
-            "Unexpected response from NTLM proxy: " + res.statusCode
+            "Unexpected response from external NTLM proxy: " + res.statusCode
           );
           this._debug.log("Alive request failed");
           return reject(
-            "Unexpected response from NTLM proxy: " + res.statusCode
+            "Unexpected response from external NTLM proxy: " + res.statusCode
           );
         }
-        this._debug.log("NTLM proxy is alive");
-        return resolve(true);
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          const ports = JSON.parse(body) as PortsConfig;
+          this._debug.log("External NTLM proxy is alive");
+          return resolve(ports);
+        });
       });
 
       req.on("error", (error) => {
         this._debug.log("Alive request failed");
         return reject(
-          "An error occured while communicating with NTLM proxy: " +
+          "An error occured while communicating with external NTLM proxy: " +
             error.message
         );
       });
@@ -52,7 +58,7 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
 
   private async sendQuitCommand(configApiUrl: string) {
     return new Promise((resolve, reject) => {
-      this._debug.log("Sending shutdown command to NTLM proxy");
+      this._debug.log("Sending shutdown command to external NTLM proxy");
 
       const configApiUrlParsed = url.parse(configApiUrl);
       const options: http.RequestOptions = {
@@ -65,11 +71,11 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
       const req = http.request(options, (res) => {
         if (res.statusCode !== 200) {
           this._debug.log(
-            "Unexpected response from NTLM proxy: " + res.statusCode
+            "Unexpected response from external NTLM proxy: " + res.statusCode
           );
           this._debug.log("Shutdown request failed");
           return reject(
-            "Unexpected response from NTLM proxy: " + res.statusCode
+            "Unexpected response from external NTLM proxy: " + res.statusCode
           );
         }
         this._debug.log("Shutdown successful");
@@ -79,7 +85,7 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
       req.on("error", (error) => {
         this._debug.log("Shutdown request failed");
         return reject(
-          "An error occured while communicating with NTLM proxy: " +
+          "An error occured while communicating with external NTLM proxy: " +
             error.message
         );
       });
@@ -87,7 +93,7 @@ export class ExternalNtlmProxyFacade implements IExternalNtlmProxyFacade {
     });
   }
 
-  async isAlive(configApiUrl: string) {
+  async alive(configApiUrl: string): Promise<PortsConfig> {
     return await this.sendAliveCommand(configApiUrl);
   }
 

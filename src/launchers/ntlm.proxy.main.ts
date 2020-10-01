@@ -5,11 +5,13 @@ import { TYPES } from "../proxy/dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
 import { IMain } from "../proxy/interfaces/i.main";
+import { IEnvironment } from "../startup/interfaces/i.environment";
 
 import nodeCleanup from "node-cleanup";
 
 const container = new DependencyInjection();
 let proxyMain = container.get<IMain>(TYPES.IMain);
+let environment = container.get<IEnvironment>(TYPES.IEnvironment);
 let debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
 const upstreamProxyConfigurator = container.get<IUpstreamProxyConfigurator>(
   TYPES.IUpstreamProxyConfigurator
@@ -19,9 +21,11 @@ upstreamProxyConfigurator.processNoProxyLoopback();
 
 (async () => {
   await proxyMain.run(
-    process.env.HTTP_PROXY,
-    process.env.HTTPS_PROXY,
-    process.env.NO_PROXY
+    environment.httpProxy,
+    environment.httpsProxy,
+    environment.noProxy,
+    environment.configApiPort,
+    environment.ntlmProxyPort
   );
 })();
 

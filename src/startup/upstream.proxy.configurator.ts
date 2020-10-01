@@ -3,40 +3,46 @@ import { inject, injectable } from "inversify";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import os from "os";
+import { IEnvironment } from "./interfaces/i.environment";
 
 @injectable()
 export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
-  private _debug: IDebugLogger;
-  private _loopbackDisable = "<-loopback>";
-  private _noProxyLocalhost = "localhost";
-  private _noProxyLoopback = "127.0.0.1";
+  private readonly _environment: IEnvironment;
+  private readonly _debug: IDebugLogger;
+  private readonly _loopbackDisable = "<-loopback>";
+  private readonly _noProxyLocalhost = "localhost";
+  private readonly _noProxyLoopback = "127.0.0.1";
 
-  constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+  constructor(
+    @inject(TYPES.IEnvironment) environment: IEnvironment,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+  ) {
+    this._environment = environment;
     this._debug = debug;
   }
 
   removeUnusedProxyEnv() {
     // Clear potentially existing proxy settings to avoid conflicts in cypress proxy config
     if (os.platform() !== "win32") {
-      delete process.env.http_proxy;
-      delete process.env.https_proxy;
-      delete process.env.no_proxy;
+      this._environment.delete("http_proxy");
+      this._environment.delete("https_proxy");
+      this._environment.delete("no_proxy");
     }
-    delete process.env.npm_config_proxy;
-    delete process.env.npm_config_https_proxy;
-    delete process.env.NPM_CONFIG_PROXY;
-    delete process.env.NPM_CONFIG_HTTPS_PROXY;
+    this._environment.delete("npm_config_proxy");
+    this._environment.delete("npm_config_https_proxy");
+    this._environment.delete("NPM_CONFIG_PROXY");
+    this._environment.delete("NPM_CONFIG_HTTPS_PROXY");
   }
 
   processNoProxyLoopback() {
-    if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
-      const env_no_proxy = process.env.NO_PROXY?.trim();
+    if (this._environment.httpProxy) {
+      const env_no_proxy = this._environment.noProxy?.trim();
       if (env_no_proxy && env_no_proxy.indexOf(this._loopbackDisable) !== -1) {
         this._debug.log(
           "NO_PROXY contains '<-loopback>', will not disable localhost proxying"
         );
       } else {
-        process.env.NO_PROXY = this.addLoopbackToNoProxy(env_no_proxy);
+        this._environment.noProxy = this.addLoopbackToNoProxy(env_no_proxy);
       }
     }
   }
@@ -58,7 +64,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       this._debug.log(
         "Adding " +
           this._noProxyLoopback +
-          " to NO_PROXY to disable localhost proxying"
+          " to NO_PROXY to disable loopback proxying"
       );
       no_proxy_parts.push(this._noProxyLoopback);
     }

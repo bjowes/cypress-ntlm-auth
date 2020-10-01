@@ -7,7 +7,6 @@ import http from "http";
 
 import { expect } from "chai";
 import { IConfigStore } from "../../src/proxy/interfaces/i.config.store";
-import { IConfigServer } from "../../src/proxy/interfaces/i.config.server";
 import { IConnectionContextManager } from "../../src/proxy/interfaces/i.connection.context.manager";
 import { INtlmManager } from "../../src/proxy/interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "../../src/proxy/interfaces/i.upstream.proxy.manager";
@@ -19,12 +18,12 @@ import { ExpressServer } from "./express.server";
 import { INegotiateManager } from "../../src/proxy/interfaces/i.negotiate.manager";
 import { interfaces } from "inversify";
 import { IWinSsoFacade } from "../../src/proxy/interfaces/i.win-sso.facade";
-import { ConnectionContext } from "../../src/proxy/connection.context";
+import { ApiUrlStoreMock } from "./api.url.store.mock";
 
 describe("NtlmProxyMitm error logging", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let apiUrlStoreMock: ApiUrlStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -35,7 +34,7 @@ describe("NtlmProxyMitm error logging", () => {
 
   beforeEach(function () {
     configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
+    apiUrlStoreMock = new ApiUrlStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -45,7 +44,7 @@ describe("NtlmProxyMitm error logging", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      apiUrlStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -143,7 +142,7 @@ describe("NtlmProxyMitm error logging", () => {
 describe("NtlmProxyMitm REQUEST", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let apiUrlStoreMock: ApiUrlStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -154,7 +153,7 @@ describe("NtlmProxyMitm REQUEST", () => {
 
   beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
+    apiUrlStoreMock = new ApiUrlStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -165,7 +164,7 @@ describe("NtlmProxyMitm REQUEST", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      apiUrlStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -201,7 +200,7 @@ describe("NtlmProxyMitm REQUEST", () => {
 describe("NtlmProxyMitm CONNECT", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let apiUrlStoreMock: ApiUrlStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -248,7 +247,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     configStoreMock = Substitute.for<IConfigStore>();
     configStoreMock.existsOrUseSso(Arg.any()).returns(false);
 
-    configServerMock = Substitute.for<IConfigServer>();
+    apiUrlStoreMock = new ApiUrlStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -260,7 +259,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      apiUrlStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -429,51 +428,4 @@ describe("NtlmProxyMitm CONNECT", () => {
       });
     });
   }
-});
-
-describe("NtlmProxyMitm NtlmProxyPort", () => {
-  let ntlmProxyMitm: NtlmProxyMitm;
-  let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
-  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
-  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
-  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
-  let ntlmManagerMock: SubstituteOf<INtlmManager>;
-  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
-  let debugMock: SubstituteOf<IDebugLogger>;
-  let debugLogger = new DebugLogger();
-
-  beforeEach(async function () {
-    configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
-    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
-    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
-    negotiateManagerMock = Substitute.for<INegotiateManager>();
-    ntlmManagerMock = Substitute.for<INtlmManager>();
-    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
-
-    debugMock = Substitute.for<IDebugLogger>();
-    debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(
-      configStoreMock,
-      configServerMock,
-      connectionContextManagerMock,
-      winSsoFacadeMock,
-      negotiateManagerMock,
-      ntlmManagerMock,
-      upstreamProxyManagerMock,
-      debugMock
-    );
-  });
-
-  it("NtlmProxyPort should throw if not initialized", async function () {
-    await expect(() => ntlmProxyMitm.NtlmProxyPort).throws(
-      "Cannot get ntlmProxyPort, port has not been set!"
-    );
-  });
-
-  it("NtlmProxyPort should not throw if initialized", async function () {
-    ntlmProxyMitm.NtlmProxyPort = "1234";
-    expect(ntlmProxyMitm.NtlmProxyPort).to.be.equal("1234");
-  });
 });

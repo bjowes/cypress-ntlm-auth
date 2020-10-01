@@ -16,6 +16,10 @@ import { ICypressFacade } from "../../src/startup/interfaces/i.cypress.facade";
 import { IMain } from "../../src/proxy/interfaces/i.main";
 import { fail } from "assert";
 import { IExternalNtlmProxyFacade } from "../../src/startup/interfaces/i.external.ntlm.proxy.facade";
+import { IEnvironment } from "../../src/startup/interfaces/i.environment";
+import { PortsConfig } from "../../src/models/ports.config.model";
+import { EnvironmentMock } from "./environment.mock";
+import { spy } from "sinon";
 
 describe("Startup shallow", () => {
   let startup: Startup;
@@ -23,6 +27,7 @@ describe("Startup shallow", () => {
   let proxyMainMock: SubstituteOf<IMain>;
   let cypressFacadeMock: SubstituteOf<ICypressFacade>;
   let externalNtlmProxyFacadeMock: SubstituteOf<IExternalNtlmProxyFacade>;
+  let environmentMock: EnvironmentMock;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -33,12 +38,14 @@ describe("Startup shallow", () => {
     proxyMainMock = Substitute.for<IMain>();
     cypressFacadeMock = Substitute.for<ICypressFacade>();
     externalNtlmProxyFacadeMock = Substitute.for<IExternalNtlmProxyFacade>();
+    environmentMock = new EnvironmentMock();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     startup = new Startup(
       upstreamProxyConfiguratorMock,
       proxyMainMock,
       cypressFacadeMock,
+      environmentMock,
       externalNtlmProxyFacadeMock,
       debugMock
     );
@@ -157,14 +164,6 @@ describe("Startup shallow", () => {
   });
 
   describe("run", function () {
-    afterEach("clean up environment", function () {
-      delete process.env.CYPRESS_NTLM_AUTH_PROXY;
-      delete process.env.CYPRESS_NTLM_AUTH_API;
-      delete process.env.HTTP_PROXY;
-      delete process.env.HTTPS_PROXY;
-      delete process.env.NO_PROXY;
-    });
-
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
       expect(startup.run({})).to.be.rejectedWith(
@@ -179,7 +178,7 @@ describe("Startup shallow", () => {
       const options = {};
       let res = await startup.run(options);
       expect(res).to.eq(fakeResult);
-      proxyMainMock.received(1).run(Arg.any());
+      proxyMainMock.received(1).run(undefined, undefined, undefined);
       cypressFacadeMock.received(1).run(options);
       proxyMainMock.received(1).stop();
     });
@@ -201,40 +200,43 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
-      proxyMainMock.run("http-proxy", "https-proxy", "no-proxy").returns(
-        Promise.resolve({
-          ntlmProxyUrl: "ntlm-proxy",
-          configApiUrl: "config-api",
-        })
-      );
-      process.env.HTTP_PROXY = "http-proxy";
-      process.env.HTTPS_PROXY = "https-proxy";
-      process.env.NO_PROXY = "no-proxy";
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("http-proxy", "https-proxy", "no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      environmentMock.httpProxy = "http-proxy";
+      environmentMock.httpsProxy = "https-proxy";
+      environmentMock.noProxy = "no-proxy";
+      let configureSpy = spy(environmentMock, "configureForCypress");
       await startup.run(options);
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();
-      expect(process.env.CYPRESS_NTLM_AUTH_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.CYPRESS_NTLM_AUTH_API).to.eq("config-api");
-      expect(process.env.HTTP_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.HTTPS_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.NO_PROXY).to.eq("<-loopback>");
+      expect(configureSpy.calledOnceWith(fakePorts)).to.be.true;
+      configureSpy.restore();
     });
 
     it("should use external proxy if available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
       const fakeResult = {};
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
+      const ports: PortsConfig = {
+        configApiUrl: "dummy",
+        ntlmProxyUrl: "dummy-proxy",
+      };
       externalNtlmProxyFacadeMock
-        .isAlive("dummy")
-        .returns(Promise.resolve(true));
+        .alive("dummy")
+        .returns(Promise.resolve(ports));
       const options = {};
-      process.env.CYPRESS_NTLM_AUTH_API = "dummy";
-      process.env.CYPRESS_NTLM_AUTH_PROXY = "dummy";
+      environmentMock.configApiUrl = "dummy";
       await startup.run(options);
       proxyMainMock.didNotReceive().run(Arg.all());
-      externalNtlmProxyFacadeMock.received(1).isAlive("dummy");
+      externalNtlmProxyFacadeMock.received(1).alive("dummy");
+      expect(environmentMock.ntlmProxyUrl).to.eq("dummy-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();
@@ -245,14 +247,13 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       externalNtlmProxyFacadeMock
-        .isAlive("dummy")
+        .alive("dummy")
         .returns(Promise.reject("FakeError"));
       const options = {};
-      process.env.CYPRESS_NTLM_AUTH_API = "dummy";
-      process.env.CYPRESS_NTLM_AUTH_PROXY = "dummy";
+      environmentMock.configApiUrl = "dummy";
       await expect(startup.run(options)).rejectedWith("FakeError");
       proxyMainMock.didNotReceive().run(Arg.all());
-      externalNtlmProxyFacadeMock.received(1).isAlive("dummy");
+      externalNtlmProxyFacadeMock.received(1).alive("dummy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.didNotReceive().removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();
@@ -260,14 +261,6 @@ describe("Startup shallow", () => {
   });
 
   describe("open", function () {
-    afterEach("clean up environment", function () {
-      delete process.env.CYPRESS_NTLM_AUTH_PROXY;
-      delete process.env.CYPRESS_NTLM_AUTH_API;
-      delete process.env.HTTP_PROXY;
-      delete process.env.HTTPS_PROXY;
-      delete process.env.NO_PROXY;
-    });
-
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
       expect(startup.open({})).to.be.rejectedWith(
@@ -304,39 +297,42 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
-      proxyMainMock.run("http-proxy", "https-proxy", "no-proxy").returns(
-        Promise.resolve({
-          ntlmProxyUrl: "ntlm-proxy",
-          configApiUrl: "config-api",
-        })
-      );
-      process.env.HTTP_PROXY = "http-proxy";
-      process.env.HTTPS_PROXY = "https-proxy";
-      process.env.NO_PROXY = "no-proxy";
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("http-proxy", "https-proxy", "no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      environmentMock.httpProxy = "http-proxy";
+      environmentMock.httpsProxy = "https-proxy";
+      environmentMock.noProxy = "no-proxy";
+      let configureSpy = spy(environmentMock, "configureForCypress");
       await startup.open(options);
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();
-      expect(process.env.CYPRESS_NTLM_AUTH_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.CYPRESS_NTLM_AUTH_API).to.eq("config-api");
-      expect(process.env.HTTP_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.HTTPS_PROXY).to.eq("ntlm-proxy");
-      expect(process.env.NO_PROXY).to.eq("<-loopback>");
+      expect(configureSpy.calledOnceWith(fakePorts)).to.be.true;
+      configureSpy.restore();
     });
 
     it("should use external proxy if available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
       const fakeResult = {};
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
+      const ports: PortsConfig = {
+        configApiUrl: "dummy",
+        ntlmProxyUrl: "dummy-proxy",
+      };
       externalNtlmProxyFacadeMock
-        .isAlive("dummy")
-        .returns(Promise.resolve(true));
+        .alive("dummy")
+        .returns(Promise.resolve(ports));
       const options = {};
-      process.env.CYPRESS_NTLM_AUTH_API = "dummy";
-      process.env.CYPRESS_NTLM_AUTH_PROXY = "dummy";
+      environmentMock.configApiUrl = "dummy";
       await startup.open(options);
       proxyMainMock.didNotReceive().run(Arg.all());
+      expect(environmentMock.ntlmProxyUrl).to.eq("dummy-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();
@@ -347,14 +343,13 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
       externalNtlmProxyFacadeMock
-        .isAlive("dummy")
+        .alive("dummy")
         .returns(Promise.reject("FakeError"));
       const options = {};
-      process.env.CYPRESS_NTLM_AUTH_API = "dummy";
-      process.env.CYPRESS_NTLM_AUTH_PROXY = "dummy";
+      environmentMock.configApiUrl = "dummy";
       await expect(startup.open(options)).rejectedWith("FakeError");
       proxyMainMock.didNotReceive().run(Arg.all());
-      externalNtlmProxyFacadeMock.received(1).isAlive("dummy");
+      externalNtlmProxyFacadeMock.received(1).alive("dummy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.didNotReceive().removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();

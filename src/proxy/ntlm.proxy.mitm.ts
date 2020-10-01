@@ -5,7 +5,6 @@ import http from "http";
 import { toCompleteUrl } from "../util/url.converter";
 import { CompleteUrl } from "../models/complete.url.model";
 import { injectable, inject, interfaces } from "inversify";
-import { IConfigServer } from "./interfaces/i.config.server";
 import { IConfigStore } from "./interfaces/i.config.store";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
 import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
@@ -17,6 +16,7 @@ import { TLSSocket } from "tls";
 import { AuthModeEnum } from "../models/auth.mode.enum";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import { IApiUrlStore } from "./interfaces/i.api.url.store";
 
 const nodeCommon = require("_http_common");
 
@@ -25,18 +25,17 @@ let self: NtlmProxyMitm;
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
-  private _configServer: IConfigServer;
+  private _apiUrlStore: IApiUrlStore;
   private _connectionContextManager: IConnectionContextManager;
   private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
   private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
   private _debug: IDebugLogger;
-  private _ntlmProxyPort: string | undefined;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IConfigServer) configServer: IConfigServer,
+    @inject(TYPES.IApiUrlStore) apiUrlStore: IApiUrlStore,
     @inject(TYPES.IConnectionContextManager)
     connectionContextManager: IConnectionContextManager,
     @inject(TYPES.NewableIWinSsoFacade)
@@ -48,7 +47,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
-    this._configServer = configServer;
+    this._apiUrlStore = apiUrlStore;
     this._connectionContextManager = connectionContextManager;
     this.WinSsoFacade = winSsoFacade;
     this._negotiateManager = negotiateManager;
@@ -59,19 +58,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
     self = this;
-  }
-
-  get NtlmProxyPort(): string {
-    if (this._ntlmProxyPort !== undefined) {
-      return this._ntlmProxyPort;
-    }
-    throw new Error("Cannot get ntlmProxyPort, port has not been set!");
-  }
-  set NtlmProxyPort(port: string) {
-    if (port === "") {
-      this._ntlmProxyPort = undefined;
-    }
-    this._ntlmProxyPort = port;
   }
 
   private filterChromeStartup(
@@ -113,7 +99,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isConfigApiRequest(targetHost: CompleteUrl) {
-    return targetHost.href.startsWith(self._configServer.configApiUrl);
+    if (!self._apiUrlStore.configApiUrl) {
+      return false;
+    }
+    return targetHost.href.startsWith(self._apiUrlStore.configApiUrl);
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -184,7 +173,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
-    return hostUrl.isLocalhost && hostUrl.port === self.NtlmProxyPort;
+    if (!self._apiUrlStore.ntlmProxyPort) {
+      return false;
+    }
+    return (
+      hostUrl.isLocalhost && hostUrl.port === self._apiUrlStore.ntlmProxyPort
+    );
   }
 
   private getTargetHost(ctx: IContext): CompleteUrl | null {

@@ -74,7 +74,7 @@ This starts the ntlm-proxy and runs cypress in headless mode (like `cypress run`
 
 ### ntlm-proxy
 
-This binary is available in the `node_modules/.bin` folder. Use it if you need to start the ntlm-proxy manually.
+This binary is available in the `node_modules/.bin` folder. Use it if you need to start the ntlm-proxy manually. To use specific ports you can set `CYPRESS_NTLM_AUTH_API` and `CYPRESS_NTLM_AUTH_PROXY` environment variables.
 
 #### Example - Mac and Linux
 
@@ -105,7 +105,7 @@ npx ntlm-proxy
 
 ### ntlm-proxy-exit
 
-This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background.
+This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background. `CYPRESS_NTLM_AUTH_API` environment variable must be set for this command.
 
 #### Example - Mac and Linux
 
@@ -130,12 +130,11 @@ npx ntlm-proxy-exit
 
 ### cypress-ntlm
 
-This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. Depending on environment variables, this command will use an existing ntlm-proxy or start its own. It is easier to just let it handle its own ntlm-proxy, but if you need to use a specific instance, you need to set two environment variables:
+This binary is available in the `node_modules/.bin` folder. Use it to start Cypress with NTLM authentication configured. Depending on environment variables, this command will use an existing ntlm-proxy or start its own. It is easier to just let it handle its own ntlm-proxy, but if you need to use a specific instance, you need to set the environment variable:
 
-- `CYPRESS_NTLM_AUTH_PROXY` - set this to the url the ntlm-proxy is listening to (example: http://localhost:54367)
 - `CYPRESS_NTLM_AUTH_API` - set this to the url the ntlm-proxy config API is listening to (example: http://localhost:54368)
 
-When these are set, cypress-ntlm will check if it can reach the proxy and see that it is alive. Otherwise the cypress-ntlm command will fail.
+When this is set, cypress-ntlm will check if it can reach the proxy and see that it is alive. Otherwise the cypress-ntlm command will fail.
 
 #### Example - Mac, Linux and Windows
 

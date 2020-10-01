@@ -64,12 +64,17 @@ import { Main } from "./main";
 
 import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
 import { CypressFacade } from "../startup/cypress.facade";
+import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { ApiUrlStore } from "./api.url.store";
+import { IEnvironment } from "../startup/interfaces/i.environment";
+import { Environment } from "../startup/environment";
 
 export class DependencyInjection {
   private _container: Container;
 
   constructor() {
     this._container = new Container({ defaultScope: "Singleton" });
+    this._container.bind<IApiUrlStore>(TYPES.IApiUrlStore).to(ApiUrlStore);
     this._container
       .bind<IConfigController>(TYPES.IConfigController)
       .to(ConfigController);
@@ -84,6 +89,7 @@ export class DependencyInjection {
       .to(CypressFacade);
     this._container.bind<IStartup>(TYPES.IStartup).to(Startup);
     this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
+    this._container.bind<IEnvironment>(TYPES.IEnvironment).to(Environment);
     this._container
       .bind<IExpressServerFacade>(TYPES.IExpressServerFacade)
       .to(ExpressServerFacade);
