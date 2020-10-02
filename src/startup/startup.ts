@@ -60,8 +60,8 @@ export class Startup implements IStartup {
   argumentsToCypressMode(args: string[]) {
     const cliArguments = this.getArgsAfterCypressNtlm(args);
     if (
-      (cliArguments.length > 0 && cliArguments[0] === "run") ||
-      cliArguments[0] === "open"
+      cliArguments.length > 0 &&
+      (cliArguments[0] === "run" || cliArguments[0] === "open")
     ) {
       return cliArguments[0];
     }
