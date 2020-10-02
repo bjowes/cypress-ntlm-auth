@@ -5,7 +5,6 @@ import http from "http";
 import { toCompleteUrl } from "../util/url.converter";
 import { CompleteUrl } from "../models/complete.url.model";
 import { injectable, inject, interfaces } from "inversify";
-import { IConfigServer } from "./interfaces/i.config.server";
 import { IConfigStore } from "./interfaces/i.config.store";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
 import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
@@ -17,6 +16,7 @@ import { TLSSocket } from "tls";
 import { AuthModeEnum } from "../models/auth.mode.enum";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 const nodeCommon = require("_http_common");
 
@@ -25,18 +25,17 @@ let self: NtlmProxyMitm;
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
-  private _configServer: IConfigServer;
+  private _portsConfigStore: IPortsConfigStore;
   private _connectionContextManager: IConnectionContextManager;
   private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
   private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
   private _debug: IDebugLogger;
-  private _ntlmProxyPort: string | undefined;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IConfigServer) configServer: IConfigServer,
+    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IConnectionContextManager)
     connectionContextManager: IConnectionContextManager,
     @inject(TYPES.NewableIWinSsoFacade)
@@ -48,7 +47,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
-    this._configServer = configServer;
+    this._portsConfigStore = portsConfigStore;
     this._connectionContextManager = connectionContextManager;
     this.WinSsoFacade = winSsoFacade;
     this._negotiateManager = negotiateManager;
@@ -59,19 +58,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
     self = this;
-  }
-
-  get NtlmProxyPort(): string {
-    if (this._ntlmProxyPort !== undefined) {
-      return this._ntlmProxyPort;
-    }
-    throw new Error("Cannot get ntlmProxyPort, port has not been set!");
-  }
-  set NtlmProxyPort(port: string) {
-    if (port === "") {
-      this._ntlmProxyPort = undefined;
-    }
-    this._ntlmProxyPort = port;
   }
 
   private filterChromeStartup(
@@ -113,7 +99,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isConfigApiRequest(targetHost: CompleteUrl) {
-    return targetHost.href.startsWith(self._configServer.configApiUrl);
+    if (!self._portsConfigStore.configApiUrl) {
+      return false;
+    }
+    return targetHost.href.startsWith(self._portsConfigStore.configApiUrl);
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -155,7 +144,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         );
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
-        ctx.onRequestData(function(ctx, chunk, callback) {
+        ctx.onRequestData(function (ctx, chunk, callback) {
           context!.addToRequestBody(chunk);
           return callback(undefined, chunk);
         });
@@ -165,6 +154,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(
             targetHost
           );
+          context.configApiConnection = true;
         } else {
           self._debug.log("Request to " + targetHost.href + " - pass on");
           ctx.proxyToServerRequestOptions.agent = context.agent;
@@ -183,7 +173,13 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
-    return hostUrl.isLocalhost && hostUrl.port === self.NtlmProxyPort;
+    if (!self._portsConfigStore.ntlmProxyPort) {
+      return false;
+    }
+    return (
+      hostUrl.isLocalhost &&
+      hostUrl.port === self._portsConfigStore.ntlmProxyPort
+    );
   }
 
   private getTargetHost(ctx: IContext): CompleteUrl | null {
@@ -336,7 +332,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         res.statusCode || 401,
         self.filterAndCanonizeHeaders(res.headers)
       );
-      res.on("data", chunk => ctx.proxyToClientResponse.write(chunk));
+      res.on("data", (chunk) => ctx.proxyToClientResponse.write(chunk));
       res.on("end", () => ctx.proxyToClientResponse.end());
       res.resume();
     } else {
@@ -377,13 +373,17 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Let non-NTLM hosts tunnel through
     self._debug.log("Tunnel to", req.url);
+    let onPrematureClose = function () {
+      self._debug.log("cannot establish connection to server, CONNECT failed");
+      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+    };
     let conn = net.connect(
       {
         port: +targetHost.port,
         host: targetHost.hostname,
-        allowHalfOpen: true
+        allowHalfOpen: true,
       },
-      function() {
+      function () {
         conn.on("finish", () => {
           self._connectionContextManager.removeTunnel(socket);
           socket.destroy();
@@ -392,8 +392,9 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           self._debug.log("client closed socket, closing tunnel to ", req.url);
           conn.end();
         });
+        conn.removeListener("close", onPrematureClose);
 
-        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function() {
+        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function () {
           conn.write(head);
           conn.pipe(socket);
           socket.pipe(conn);
@@ -402,10 +403,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       }
     );
 
-    conn.on("error", function(err: NodeJS.ErrnoException) {
+    conn.once("close", onPrematureClose);
+
+    conn.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "PROXY_TO_SERVER_SOCKET", req.url);
     });
-    socket.on("error", function(err: NodeJS.ErrnoException) {
+    socket.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "CLIENT_TO_PROXY_SOCKET", req.url);
     });
 

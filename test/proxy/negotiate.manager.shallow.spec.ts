@@ -26,13 +26,13 @@ describe("NegotiateManager", () => {
   let httpUrl: string;
   let resetUrl: string;
 
-  before(async function() {
+  before(async function () {
     httpUrl = await expressServer.startHttpServer(false, undefined);
     resetServer.start();
     resetUrl = resetServer.url();
   });
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     winSsoFacadeMock = Substitute.for<IWinSsoFacade>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -40,13 +40,13 @@ describe("NegotiateManager", () => {
     negotiateManager = new NegotiateManager(debugMock);
   });
 
-  after(async function() {
+  after(async function () {
     await expressServer.stopHttpServer();
     resetServer.stop();
   });
 
   describe("Negotiate", () => {
-    it("Successful auth with 1 roundtrip", done => {
+    it("Successful auth with 1 roundtrip", (done) => {
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -59,17 +59,17 @@ describe("NegotiateManager", () => {
         host: "127.0.0.1",
         port: ntlmHostUrl.port,
         method: "GET",
-        path: "/get"
+        path: "/get",
       } as any);
       ctx.isSSL.returns(false);
       ctx.serverToProxyResponse.returns({
         statusCode: 999,
         resume: () => {
           return;
-        }
+        },
       } as any);
       expressServer.sendWwwAuth([
-        { header: "Negotiate TestResponse1", status: 200 }
+        { header: "Negotiate TestResponse1", status: 200 },
       ]);
 
       negotiateManager.handshake(
@@ -88,7 +88,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Successful auth with 2 roundtrips", done => {
+    it("Successful auth with 2 roundtrips", (done) => {
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -103,18 +103,18 @@ describe("NegotiateManager", () => {
         host: "127.0.0.1",
         port: ntlmHostUrl.port,
         method: "GET",
-        path: "/get"
+        path: "/get",
       } as any);
       ctx.isSSL.returns(false);
       ctx.serverToProxyResponse.returns({
         statusCode: 999,
         resume: () => {
           return;
-        }
+        },
       } as any);
       expressServer.sendWwwAuth([
         { header: "Negotiate TestResponse1", status: 401 },
-        { header: "Negotiate TestResponse2", status: 200 }
+        { header: "Negotiate TestResponse2", status: 200 },
       ]);
 
       negotiateManager.handshake(
@@ -133,7 +133,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Successful auth with 3 roundtrips", done => {
+    it("Successful auth with 3 roundtrips", (done) => {
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -148,19 +148,19 @@ describe("NegotiateManager", () => {
         host: "127.0.0.1",
         port: ntlmHostUrl.port,
         method: "GET",
-        path: "/get"
+        path: "/get",
       } as any);
       ctx.isSSL.returns(false);
       ctx.serverToProxyResponse.returns({
         statusCode: 999,
         resume: () => {
           return;
-        }
+        },
       } as any);
       expressServer.sendWwwAuth([
         { header: "Negotiate TestResponse1", status: 401 },
         { header: "Negotiate TestResponse2", status: 401 },
-        { header: "Negotiate TestResponse3", status: 200 }
+        { header: "Negotiate TestResponse3", status: 200 },
       ]);
 
       negotiateManager.handshake(
@@ -181,7 +181,7 @@ describe("NegotiateManager", () => {
   });
 
   describe("Negotiate errors", () => {
-    it("Invalid credentials shall be logged and clear auth state", async function() {
+    it("Invalid credentials shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(401);
       message.headers.returns({ "www-authenticate": "Negotiate TestToken " });
@@ -212,7 +212,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Valid credentials shall set authenticated state", async function() {
+    it("Valid credentials shall set authenticated state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       message.headers.returns({ "www-authenticate": "Negotiate TestToken " });
@@ -243,7 +243,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Response with empty Negotiate token shall be logged and clear auth state", async function() {
+    it("Response with empty Negotiate token shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       message.headers.returns({ "www-authenticate": "Negotiate" });
@@ -274,7 +274,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Response without Negotiate header shall be logged and clear auth state", async function() {
+    it("Response without Negotiate header shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       message.headers.returns({ "www-authenticate": "Basic" });
@@ -308,7 +308,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Response without www-authenticate header shall be logged and clear auth state", async function() {
+    it("Response without www-authenticate header shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       message.headers.returns({});
@@ -342,7 +342,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Cannot create Negotiate request token", function(done) {
+    it("Cannot create Negotiate request token", function (done) {
       const ntlmHostUrl = toCompleteUrl(httpUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -370,7 +370,7 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Error sending Negotiate request message", function(done) {
+    it("Error sending Negotiate request message", function (done) {
       const ntlmHostUrl = toCompleteUrl(resetUrl, false);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
@@ -381,14 +381,14 @@ describe("NegotiateManager", () => {
         protocol: "http:",
         host: "127.0.0.1",
         port: resetServer.port(),
-        method: "GET"
+        method: "GET",
       } as any);
       ctx.isSSL.returns(false);
       ctx.serverToProxyResponse.returns({
         statusCode: 999,
         resume: () => {
           return;
-        }
+        },
       } as any);
 
       negotiateManager.handshake(
@@ -411,11 +411,11 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Cannot create Negotiate response message", function(done) {
+    it("Cannot create Negotiate response message", function (done) {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(999);
       message.headers.returns({
-        "www-authenticate": "Negotiate TestServerResponse"
+        "www-authenticate": "Negotiate TestServerResponse",
       });
       const ntlmHostUrl = toCompleteUrl(resetUrl, false);
       const connectionContext = new ConnectionContext();
@@ -442,15 +442,15 @@ describe("NegotiateManager", () => {
       );
     });
 
-    it("Error sending Negotiate response message", function(done) {
+    it("Error sending Negotiate response message", function (done) {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode.returns(200);
       message.headers.returns({
-        "www-authenticate": "Negotiate TestServerResponse"
+        "www-authenticate": "Negotiate TestServerResponse",
       });
       let messageEndCb: any;
       message.on(Arg.all()).mimicks((event, listener) => {
-        if (event === "end") {
+        if (((event as any) as string) === "end") {
           messageEndCb = listener;
         }
         return message;
@@ -467,14 +467,14 @@ describe("NegotiateManager", () => {
         protocol: "http:",
         host: "127.0.0.1",
         port: resetServer.port(),
-        method: "GET"
+        method: "GET",
       } as any);
       ctx.isSSL.returns(false);
       ctx.serverToProxyResponse.returns({
         statusCode: 999,
         resume: () => {
           return;
-        }
+        },
       } as any);
 
       negotiateManager["handshakeResponse"](
@@ -502,35 +502,35 @@ describe("NegotiateManager", () => {
   });
 
   describe("Negotiate detection", () => {
-    it("should not detect lowercase Negotiate in header", function() {
+    it("should not detect lowercase Negotiate in header", function () {
       let res = Substitute.for<http.IncomingMessage>();
       res.headers.returns({ "www-authenticate": "negotiate" });
       let result = negotiateManager.acceptsNegotiateAuthentication(res);
       expect(result).to.be.false;
     });
 
-    it("should not detect uppercase Negotiate in header", function() {
+    it("should not detect uppercase Negotiate in header", function () {
       let res = Substitute.for<http.IncomingMessage>();
       res.headers.returns({ "www-authenticate": "NEGOTIATE" });
       let result = negotiateManager.acceptsNegotiateAuthentication(res);
       expect(result).to.be.false;
     });
 
-    it("should detect proper case Negotiate in header", function() {
+    it("should detect proper case Negotiate in header", function () {
       let res = Substitute.for<http.IncomingMessage>();
       res.headers.returns({ "www-authenticate": "Negotiate" });
       let result = negotiateManager.acceptsNegotiateAuthentication(res);
       expect(result).to.be.true;
     });
 
-    it("should detect Negotiate in mixed header", function() {
+    it("should detect Negotiate in mixed header", function () {
       let res = Substitute.for<http.IncomingMessage>();
       res.headers.returns({ "www-authenticate": "NTLM, Negotiate" });
       let result = negotiateManager.acceptsNegotiateAuthentication(res);
       expect(result).to.be.true;
     });
 
-    it("should not detect missing Negotiate", function() {
+    it("should not detect missing Negotiate", function () {
       let res = Substitute.for<http.IncomingMessage>();
       res.headers.returns({ "www-authenticate": "NTLM, Digest" });
       let result = negotiateManager.acceptsNegotiateAuthentication(res);

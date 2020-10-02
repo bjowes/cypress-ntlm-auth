@@ -1,34 +1,32 @@
-const getPort = require('get-port');
+const getPort = require("get-port");
 
-import { injectable, inject } from 'inversify';
-import { INtlmProxyServer } from './interfaces/i.ntlm.proxy.server';
-import { INtlmProxyMitm } from './interfaces/i.ntlm.proxy.mitm';
-import { TYPES } from './dependency.injection.types';
-import { IHttpMitmProxyFacade } from './interfaces/i.http.mitm.proxy.facade';
-import { IDebugLogger } from '../util/interfaces/i.debug.logger';
+import { injectable, inject } from "inversify";
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
+import { TYPES } from "./dependency.injection.types";
+import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 @injectable()
 export class NtlmProxyServer implements INtlmProxyServer {
   private initDone: boolean = false;
-  private _ntlmProxyUrl?: string;
   private _ntlmProxyMitm: INtlmProxyMitm;
   private _httpMitmProxy: IHttpMitmProxyFacade;
+  private _portsConfigStore: IPortsConfigStore;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.INtlmProxyMitm) ntlmProxyMitm: INtlmProxyMitm,
-    @inject(TYPES.IHttpMitmProxyFacade) httpMitmProxyFacade: IHttpMitmProxyFacade,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+    @inject(TYPES.IHttpMitmProxyFacade)
+    httpMitmProxyFacade: IHttpMitmProxyFacade,
+    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+  ) {
     this._ntlmProxyMitm = ntlmProxyMitm;
     this._httpMitmProxy = httpMitmProxyFacade;
+    this._portsConfigStore = portsConfigStore;
     this._debug = debug;
-  }
-
-  get ntlmProxyUrl(): string {
-    if (this._ntlmProxyUrl) {
-      return this._ntlmProxyUrl;
-    }
-    throw new Error('Cannot get ntlmProxyUrl, NtlmProxyServer not started!');
   }
 
   init() {
@@ -46,25 +44,25 @@ export class NtlmProxyServer implements INtlmProxyServer {
       if (!port) {
         port = await getPort();
         if (port === undefined) {
-          this._debug.log('Cannot find free port');
-          throw new Error('Cannot find free port');
+          this._debug.log("Cannot find free port");
+          throw new Error("Cannot find free port");
         }
       }
-      this._ntlmProxyUrl = await this._httpMitmProxy.listen(port);
-      this._debug.log('NTLM auth proxy listening on port:', port);
-      this._ntlmProxyUrl = 'http://127.0.0.1:' + port;
-      this._ntlmProxyMitm.NtlmProxyPort = String(port);
-      return this._ntlmProxyUrl;
+      await this._httpMitmProxy.listen(port);
+      this._debug.log("NTLM auth proxy listening on port:", port);
+      this._portsConfigStore.ntlmProxyUrl = "http://127.0.0.1:" + port;
+      this._portsConfigStore.ntlmProxyPort = String(port);
+      return this._portsConfigStore.ntlmProxyUrl;
     } catch (err) {
-      this._debug.log('Cannot start NTLM auth proxy');
+      this._debug.log("Cannot start NTLM auth proxy");
       throw err;
     }
   }
 
   stop() {
-    this._debug.log('Shutting down NTLM proxy');
+    this._debug.log("Shutting down NTLM proxy");
     this._httpMitmProxy.close();
-    this._ntlmProxyUrl = undefined;
-    this._ntlmProxyMitm.NtlmProxyPort = '';
+    this._portsConfigStore.ntlmProxyUrl = "";
+    this._portsConfigStore.ntlmProxyPort = "";
   }
 }

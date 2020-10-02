@@ -2,17 +2,21 @@
 
 import { DependencyInjection } from "../proxy/dependency.injection";
 import { TYPES } from "../proxy/dependency.injection.types";
-import { INtlmProxyExit } from "../util/interfaces/i.ntlm.proxy.exit";
-import { IUpstreamProxyConfigurator } from "../util/interfaces/i.upstream.proxy.configurator";
+import { IEnvironment } from "../startup/interfaces/i.environment";
+import { IExternalNtlmProxyFacade } from "../startup/interfaces/i.external.ntlm.proxy.facade";
+import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
 
 const container = new DependencyInjection();
-const ntlmProxyExit = container.get<INtlmProxyExit>(TYPES.INtlmProxyExit);
+const externalNtlmProxyFacade = container.get<IExternalNtlmProxyFacade>(
+  TYPES.IExternalNtlmProxyFacade
+);
 const upstreamProxyConfigurator = container.get<IUpstreamProxyConfigurator>(
   TYPES.IUpstreamProxyConfigurator
 );
+let environment = container.get<IEnvironment>(TYPES.IEnvironment);
 
 upstreamProxyConfigurator.processNoProxyLoopback();
 
 (async () => {
-  await ntlmProxyExit.quitIfRunning();
+  await externalNtlmProxyFacade.quitIfRunning(environment.configApiUrl);
 })();

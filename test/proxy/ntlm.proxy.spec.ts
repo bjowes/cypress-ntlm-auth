@@ -8,13 +8,9 @@ import { expect } from "chai";
 import http from "http";
 import express from "express";
 import bodyParser from "body-parser";
-import { Container } from "inversify";
 
-import { PortsFileService } from "../../src/util/ports.file.service";
 import { ProxyFacade } from "./proxy.facade";
 
-import { CoreServer } from "../../src/proxy/core.server";
-import { PortsFile } from "../../src/models/ports.file.model";
 import { AddressInfo } from "net";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
 import { DependencyInjection } from "../../src/proxy/dependency.injection";
@@ -59,8 +55,6 @@ async function initRemoteHost() {
 }
 
 describe("NTLM Proxy authentication", function () {
-  let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
-  let portsFileExistsStub: sinon.SinonStub<[], boolean>;
   let proxyFacade = new ProxyFacade();
   let coreServer: ICoreServer;
   let dependencyInjection = new DependencyInjection();
@@ -69,10 +63,6 @@ describe("NTLM Proxy authentication", function () {
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     await initRemoteHost();
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
   });
 
   beforeEach(function () {
@@ -92,12 +82,6 @@ describe("NTLM Proxy authentication", function () {
   });
 
   after(function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
     if (remoteHostListener) {
       remoteHostListener.close();
     }
@@ -105,7 +89,7 @@ describe("NTLM Proxy authentication", function () {
 
   it("proxy without configuration shall not add authentication header", async function () {
     // Act
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
     let res = await ProxyFacade.sendRemoteRequest(
       ports.ntlmProxyUrl,
@@ -134,7 +118,7 @@ describe("NTLM Proxy authentication", function () {
     remoteHostResponseWwwAuthHeaders = [];
 
     // Act
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
     let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
     expect(res.status).to.be.equal(200);
@@ -166,7 +150,7 @@ describe("NTLM Proxy authentication", function () {
     remoteHostResponseWwwAuthHeaders.push("test");
 
     // Act
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
     let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
     expect(res.status).to.be.equal(200);
@@ -198,7 +182,7 @@ describe("NTLM Proxy authentication", function () {
     };
 
     // Act
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
     let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
     expect(res.status).to.be.equal(200);
@@ -229,7 +213,7 @@ describe("NTLM Proxy authentication", function () {
     };
 
     // Act
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
     let res = await ProxyFacade.sendNtlmConfig(ports.configApiUrl, hostConfig);
     expect(res.status).to.be.equal(200);
@@ -259,7 +243,7 @@ describe("NTLM Proxy authentication", function () {
       domain: "mnpwr",
       ntlmVersion: 2,
     };
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
     let res = await ProxyFacade.sendNtlmConfig(
