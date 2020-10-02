@@ -1,44 +1,16 @@
 # Changelog
 
-## 3.0.0
+## 3.0.0 - released 2020-10-02
 
-- Support for multiple instances
+- Support for multiple instances!
 - Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
 - Cypress plugin config no longer needed - this means that it is now possible to launch cypress or cypress-ntlm without modifying the plugins file.
 - Return 502 if connect fails
-- It is now possible to specify ports for configApi and ntlmProxy when starting ntlm-proxy
+- Fix #129: It is now possible to specify ports for configApi and ntlmProxy using environment variables when starting ntlm-proxy
 - Alive now returns the current ports
 - Use of external ntlm-proxy now only requires setting CYPRESS_NTLM_AUTH_API environment variable
-
-## 3.0.0-beta.5
-
-- It is now possible to specify ports for configApi and ntlmProxy when starting ntlm-proxy
-- Alive now returns the current ports
-- Use of external ntlm-proxy now only requires setting CYPRESS_NTLM_AUTH_API environment variable
-
-## 3.0.0-beta.4
-
-- Return 502 if connect fails
-
-## 3.0.0-beta.3
-
-- Handle process termination on Windows
-
-## 3.0.0-beta.2
-
-- Improved parsing of cli arguments on Windows
-
-## 3.0.0-beta.1
-
-- Improved parsing of cli arguments
-- Close client sockets on reset or quit
+- Fix #114: Close client sockets on reset or quit
 - Clean up socket close listeners
-
-## 3.0.0-beta.0
-
-- Support for multiple instances
-- Rewritten launcher, ntlm-proxy is now started as part of cypress-ntlm
-- Cypress plugin config no longer needed
 
 ## 2.3.0 - released 2020-09-20
 
@@ -76,10 +48,6 @@
 - Improvements in Negotiate authentication.
 - Unit tests for Negotiate authentication.
 
-## 2.1.0-beta.1 - released 2019-12-19
-
-- Fix #91 - Support for Negotiate (Kerberos)! Only available on Windows and with SSO.
-
 ## 2.0.5 - released 2019-12-03
 
 - Fix #76 - SSO hosts can now be specified using wildcards.
@@ -89,10 +57,6 @@
 - Unit tests for fix of #88
 - Handled the case when server prompts for reauthentication after a host reconfiguration
 - Fixed #86: Increased startup wait time for ntlm-proxy to 15 seconds
-
-## 2.0.4-beta.1 - released 2019-11-27
-
-- Handle reuse of client sockets for new targets to fix #88.
 
 ## 2.0.3 - released 2019-11-13
 
@@ -113,34 +77,6 @@
 ## 2.0.0 - released 2019-10-12
 
 - Fixed #73: Single sign on is here! This is a big improvement in usability and security (no password required) for use cases where authentication only needs a single user, and that user is the same as the account running the tests. Naturally this only works on Windows OSs test clients.
-
-## 2.0.0-beta.6 - released 2019-10-10
-
-- Fix: Disable OS validation in browser context
-
-## 2.0.0-beta.5 - released 2019-10-10
-
-- Fix: Missing require for ntlmSso command
-
-## 2.0.0-beta.4 - released 2019-10-10
-
-- Validation of SSO configuration
-- Updated to latest win-sso to handle empty targetHost
-- Grab PeerCertificate for channel binding on first response
-- Unit tests in place for SSO
-
-## 2.0.0-beta.3 - released 2019-09-29
-
-- Updated to latest win-sso to include prebuilt native modules.
-
-## 2.0.0-beta.2 - released 2019-09-28
-
-- Updated to latest win-sso to fix odd npm packaging
-
-## 2.0.0-beta.1 - released 2019-09-28
-
-- BETA for #73 - Single-sign-on on Windows hosts! Use `cy.ntlmSso(['ntlm-host.company.com', 'ntlm-host2.company.com'])` to register target hosts that should be accessed using the credentials of the user running Cypress. No calls to `cy.ntlm()` are required for hosts using SSO.
-- NTLM source files are no longer copied to the dist folder
 
 ## 1.3.2 - released 2019-08-28
 
@@ -163,30 +99,9 @@
   - when the server repeats the challenge after first authentication (#64)
   - subsites within a host that does not use NTLM authentication (#62)
 
-## 1.3.0-beta.4 - released 2019-07-29
-
-- Fix #62, #64 and #65: Implemented full NTLM handshake. Authentication is only initiated when the server sends a 401 challenge response which indicates that NTLM authentication is supported. This should resolve the issues seen by some users for:
-  - CORS preflight messages
-  - when the server repeats the challenge after first authentication
-  - subsites within a host that does not use NTLM authentication.
-
-## 1.3.0-beta.3 - released 2019-07-23
-
-- Fix #60: NTLM version can now be set in the cy.ntlm call. Defaults to NTLMv2.
-
 ## 1.2.1 - released 2019-07-13
 
 - Made workstation field more consistent in NTLM messages. Fixes authentication issues with some NTLMv2 hosts.
-
-## 1.3.0-beta.2 - released 2019-07-13
-
-- Consistent use of workstation field in NTLM headers
-
-## 1.3.0-beta.1 - released 2019-07-07
-
-- Implemented support for SERVER_TIMESTAMP and MIC of NTLM protocol
-- Improved unit tests for NTLM headers
-- Bumped dependencies
 
 ## 1.2.0 - released 2019-06-29
 
