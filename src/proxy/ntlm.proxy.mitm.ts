@@ -16,7 +16,7 @@ import { TLSSocket } from "tls";
 import { AuthModeEnum } from "../models/auth.mode.enum";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 const nodeCommon = require("_http_common");
 
@@ -25,7 +25,7 @@ let self: NtlmProxyMitm;
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
-  private _apiUrlStore: IApiUrlStore;
+  private _portsConfigStore: IPortsConfigStore;
   private _connectionContextManager: IConnectionContextManager;
   private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
   private _negotiateManager: INegotiateManager;
@@ -35,7 +35,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IApiUrlStore) apiUrlStore: IApiUrlStore,
+    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IConnectionContextManager)
     connectionContextManager: IConnectionContextManager,
     @inject(TYPES.NewableIWinSsoFacade)
@@ -47,7 +47,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
-    this._apiUrlStore = apiUrlStore;
+    this._portsConfigStore = portsConfigStore;
     this._connectionContextManager = connectionContextManager;
     this.WinSsoFacade = winSsoFacade;
     this._negotiateManager = negotiateManager;
@@ -99,10 +99,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isConfigApiRequest(targetHost: CompleteUrl) {
-    if (!self._apiUrlStore.configApiUrl) {
+    if (!self._portsConfigStore.configApiUrl) {
       return false;
     }
-    return targetHost.href.startsWith(self._apiUrlStore.configApiUrl);
+    return targetHost.href.startsWith(self._portsConfigStore.configApiUrl);
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -173,11 +173,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
-    if (!self._apiUrlStore.ntlmProxyPort) {
+    if (!self._portsConfigStore.ntlmProxyPort) {
       return false;
     }
     return (
-      hostUrl.isLocalhost && hostUrl.port === self._apiUrlStore.ntlmProxyPort
+      hostUrl.isLocalhost &&
+      hostUrl.port === self._portsConfigStore.ntlmProxyPort
     );
   }
 

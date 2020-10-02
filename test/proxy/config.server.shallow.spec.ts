@@ -9,26 +9,26 @@ import { IConfigController } from "../../src/proxy/interfaces/i.config.controlle
 import { IExpressServerFacade } from "../../src/proxy/interfaces/i.express.server.facade";
 import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../src/util/debug.logger";
-import { ApiUrlStoreMock } from "./api.url.store.mock";
+import { PortsConfigStoreMock } from "./ports.config.store.mock";
 
 describe("ConfigServer", () => {
   let configServer: ConfigServer;
   let configControllerMock: SubstituteOf<IConfigController>;
-  let apiUrlStoreMock: ApiUrlStoreMock;
+  let portsConfigStoreMock: PortsConfigStoreMock;
   let expressServerMock: SubstituteOf<IExpressServerFacade>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     configControllerMock = Substitute.for<IConfigController>();
-    apiUrlStoreMock = new ApiUrlStoreMock();
+    portsConfigStoreMock = new PortsConfigStoreMock();
     expressServerMock = Substitute.for<IExpressServerFacade>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     configServer = new ConfigServer(
       expressServerMock,
       configControllerMock,
-      apiUrlStoreMock,
+      portsConfigStoreMock,
       debugMock
     );
   });
@@ -42,7 +42,7 @@ describe("ConfigServer", () => {
 
     await configServer.start();
     expressServerMock.received(1).listen(Arg.any());
-    expect(apiUrlStoreMock.configApiUrl).to.eq(
+    expect(portsConfigStoreMock.configApiUrl).to.eq(
       "http://127.0.0.1:" + listenPort
     );
     expect(listenPort).to.be.greaterThan(0);
@@ -82,7 +82,7 @@ describe("ConfigServer", () => {
     await configServer.start();
     await configServer.stop();
     expressServerMock.received(1).close();
-    expect(apiUrlStoreMock.configApiUrl).to.eq("");
+    expect(portsConfigStoreMock.configApiUrl).to.eq("");
   });
 
   it("stop should throw if close fail", async function () {

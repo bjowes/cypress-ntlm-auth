@@ -9,27 +9,26 @@ import { INtlmProxyMitm } from "../../src/proxy/interfaces/i.ntlm.proxy.mitm";
 import { IHttpMitmProxyFacade } from "../../src/proxy/interfaces/i.http.mitm.proxy.facade";
 import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../src/util/debug.logger";
-import { IApiUrlStore } from "../../src/proxy/interfaces/i.api.url.store";
-import { ApiUrlStoreMock } from "./api.url.store.mock";
+import { PortsConfigStoreMock } from "./ports.config.store.mock";
 
 describe("NtlmProxyServer shallow", () => {
   let ntlmProxyServer: NtlmProxyServer;
   let ntlmProxyMitmMock: SubstituteOf<INtlmProxyMitm>;
   let httpMitmProxyMock: SubstituteOf<IHttpMitmProxyFacade>;
-  let apiUrlStoreMock: ApiUrlStoreMock;
+  let portsConfigStoreMock: PortsConfigStoreMock;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     ntlmProxyMitmMock = Substitute.for<INtlmProxyMitm>();
     httpMitmProxyMock = Substitute.for<IHttpMitmProxyFacade>();
-    apiUrlStoreMock = new ApiUrlStoreMock();
+    portsConfigStoreMock = new PortsConfigStoreMock();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyServer = new NtlmProxyServer(
       ntlmProxyMitmMock,
       httpMitmProxyMock,
-      apiUrlStoreMock,
+      portsConfigStoreMock,
       debugMock
     );
   });
@@ -44,10 +43,10 @@ describe("NtlmProxyServer shallow", () => {
     await ntlmProxyServer.start();
     httpMitmProxyMock.received(1).listen(Arg.any());
     expect(listenPort).to.be.greaterThan(0);
-    expect(apiUrlStoreMock.ntlmProxyUrl).to.eq(
+    expect(portsConfigStoreMock.ntlmProxyUrl).to.eq(
       "http://127.0.0.1:" + listenPort
     );
-    expect(apiUrlStoreMock.ntlmProxyPort).to.eq(String(listenPort));
+    expect(portsConfigStoreMock.ntlmProxyPort).to.eq(String(listenPort));
   });
 
   it("start should call init", async function () {
@@ -83,8 +82,8 @@ describe("NtlmProxyServer shallow", () => {
     await ntlmProxyServer.start();
     await ntlmProxyServer.stop();
     httpMitmProxyMock.received(1).close();
-    expect(apiUrlStoreMock.ntlmProxyUrl).to.eq("");
-    expect(apiUrlStoreMock.ntlmProxyPort).to.eq("");
+    expect(portsConfigStoreMock.ntlmProxyUrl).to.eq("");
+    expect(portsConfigStoreMock.ntlmProxyPort).to.eq("");
   });
 
   it("stop should throw if close throws", async function () {

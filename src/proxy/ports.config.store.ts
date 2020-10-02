@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
-import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 @injectable()
-export class ApiUrlStore implements IApiUrlStore {
+export class PortsConfigStore implements IPortsConfigStore {
   private _configApiUrl = "";
   private _ntlmProxyUrl = "";
   private _ntlmProxyPort = "";

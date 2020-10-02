@@ -6,25 +6,25 @@ import { IConfigServer } from "./interfaces/i.config.server";
 import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 @injectable()
 export class ConfigServer implements IConfigServer {
   private initDone: boolean = false;
   private _expressServer: IExpressServerFacade;
   private _configController: IConfigController;
-  private _apiUrlStore: IApiUrlStore;
+  private _portsConfigStore: IPortsConfigStore;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IExpressServerFacade) expressServer: IExpressServerFacade,
     @inject(TYPES.IConfigController) configController: IConfigController,
-    @inject(TYPES.IApiUrlStore) apiUrlStore: IApiUrlStore,
+    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._expressServer = expressServer;
     this._configController = configController;
-    this._apiUrlStore = apiUrlStore;
+    this._portsConfigStore = portsConfigStore;
     this._debug = debug;
   }
 
@@ -47,9 +47,11 @@ export class ConfigServer implements IConfigServer {
           throw new Error("Cannot find free port");
         }
       }
-      this._apiUrlStore.configApiUrl = await this._expressServer.listen(port);
+      this._portsConfigStore.configApiUrl = await this._expressServer.listen(
+        port
+      );
       this._debug.log("NTLM auth config API listening on port:", port);
-      return this._apiUrlStore.configApiUrl;
+      return this._portsConfigStore.configApiUrl;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth config API");
       throw err;
@@ -60,7 +62,7 @@ export class ConfigServer implements IConfigServer {
     this._debug.log("Shutting down config API");
     try {
       await this._expressServer.close();
-      this._apiUrlStore.configApiUrl = "";
+      this._portsConfigStore.configApiUrl = "";
       this._debug.log("NTLM auth config API stopped");
     } catch (err) {
       this._debug.log("Cannot stop NTLM auth config API");

@@ -12,20 +12,22 @@ import { IConfigStore } from "../../src/proxy/interfaces/i.config.store";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../src/models/ntlm.sso.config.model";
 import { osSupported } from "win-sso";
-import { IApiUrlStore } from "../../src/proxy/interfaces/i.api.url.store";
+import { IPortsConfigStore } from "../../src/proxy/interfaces/i.ports.config.store";
 
 describe("Config API (ConfigServer deep tests)", () => {
   let configApiUrl: string;
   let dependencyInjection = new DependencyInjection();
   let configServer: IConfigServer;
   let configStore: IConfigStore;
-  let apiUrlStore: IApiUrlStore;
+  let portsConfigStore: IPortsConfigStore;
   let hostConfig: NtlmConfig;
 
   before(async function () {
     configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
     configStore = dependencyInjection.get<IConfigStore>(TYPES.IConfigStore);
-    apiUrlStore = dependencyInjection.get<IApiUrlStore>(TYPES.IApiUrlStore);
+    portsConfigStore = dependencyInjection.get<IPortsConfigStore>(
+      TYPES.IPortsConfigStore
+    );
     configServer.init();
     configApiUrl = await configServer.start();
   });
@@ -271,7 +273,7 @@ describe("Config API (ConfigServer deep tests)", () => {
 
   describe("alive", function () {
     it("should return response", async function () {
-      apiUrlStore.ntlmProxyUrl = "http://localhost:8012";
+      portsConfigStore.ntlmProxyUrl = "http://localhost:8012";
       // Act
       let res = await ProxyFacade.sendAliveRequest(configApiUrl);
       expect(res.status).to.equal(200);

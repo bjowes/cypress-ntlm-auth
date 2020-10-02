@@ -9,8 +9,7 @@ import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { SsoConfigValidator } from "../util/sso.config.validator";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { IApiUrlStore } from "./interfaces/i.api.url.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
@@ -18,16 +17,16 @@ export class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;
-  private _apiUrlStore: IApiUrlStore;
+  private _portsConfigStore: IPortsConfigStore;
   private _debug: IDebugLogger;
 
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IApiUrlStore) apiUrlStore: IApiUrlStore,
+    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
-    this._apiUrlStore = apiUrlStore;
+    this._portsConfigStore = portsConfigStore;
     this._debug = debug;
     this.router.post("/ntlm-config", (req: Request, res: Response) =>
       this.ntlmConfig(req, res)
@@ -79,10 +78,10 @@ export class ConfigController implements IConfigController {
 
   private alive(req: Request, res: Response) {
     this._debug.log("Received alive");
-    if (this._apiUrlStore.ntlmProxyUrl) {
+    if (this._portsConfigStore.ntlmProxyUrl) {
       const ports: PortsConfig = {
-        configApiUrl: this._apiUrlStore.configApiUrl,
-        ntlmProxyUrl: this._apiUrlStore.ntlmProxyUrl,
+        configApiUrl: this._portsConfigStore.configApiUrl,
+        ntlmProxyUrl: this._portsConfigStore.ntlmProxyUrl,
       };
       res.status(200).send(ports);
     } else {

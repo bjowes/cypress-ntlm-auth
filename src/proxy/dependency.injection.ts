@@ -64,8 +64,8 @@ import { Main } from "./main";
 
 import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
 import { CypressFacade } from "../startup/cypress.facade";
-import { IApiUrlStore } from "./interfaces/i.api.url.store";
-import { ApiUrlStore } from "./api.url.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { PortsConfigStore } from "./ports.config.store";
 import { IEnvironment } from "../startup/interfaces/i.environment";
 import { Environment } from "../startup/environment";
 
@@ -74,7 +74,9 @@ export class DependencyInjection {
 
   constructor() {
     this._container = new Container({ defaultScope: "Singleton" });
-    this._container.bind<IApiUrlStore>(TYPES.IApiUrlStore).to(ApiUrlStore);
+    this._container
+      .bind<IPortsConfigStore>(TYPES.IPortsConfigStore)
+      .to(PortsConfigStore);
     this._container
       .bind<IConfigController>(TYPES.IConfigController)
       .to(ConfigController);

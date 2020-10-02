@@ -1,5 +1,5 @@
 export let TYPES = {
-  IApiUrlStore: Symbol.for("IApiUrlStore"),
+  IPortsConfigStore: Symbol.for("IPortsConfigStore"),
   IConfigController: Symbol.for("IConfigController"),
   IConfigServer: Symbol.for("IConfigServer"),
   IConfigStore: Symbol.for("IConfigStore"),
