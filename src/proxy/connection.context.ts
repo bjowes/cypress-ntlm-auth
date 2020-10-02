@@ -4,6 +4,7 @@ import { injectable } from "inversify";
 import { IConnectionContext } from "./interfaces/i.connection.context";
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import { Socket } from "net";
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
@@ -14,6 +15,9 @@ export class ConnectionContext implements IConnectionContext {
   private _winSso?: IWinSsoFacade;
   private _peerCert?: PeerCertificate;
   private _clientAddress = "";
+  private _clientSocket?: Socket;
+  private _socketCloseListener: any;
+  private _configApiConnection = false;
 
   get agent(): any {
     return this._agent;
@@ -44,6 +48,27 @@ export class ConnectionContext implements IConnectionContext {
   }
   set clientAddress(clientAddress: string) {
     this._clientAddress = clientAddress;
+  }
+
+  get clientSocket(): Socket | undefined {
+    return this._clientSocket;
+  }
+  set clientSocket(clientSocket: Socket | undefined) {
+    this._clientSocket = clientSocket;
+  }
+
+  get socketCloseListener(): any {
+    return this._socketCloseListener;
+  }
+  set socketCloseListener(listener: any) {
+    this._socketCloseListener = listener;
+  }
+
+  get configApiConnection(): boolean {
+    return this._configApiConnection;
+  }
+  set configApiConnection(val: boolean) {
+    this._configApiConnection = val;
   }
 
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
@@ -85,9 +110,12 @@ export class ConnectionContext implements IConnectionContext {
     return this._requestBody;
   }
 
-  destroy() {
+  destroy(event: string) {
     if (this._agent.destroy) {
       this._agent.destroy(); // Destroys any sockets to servers
+    }
+    if (this._clientSocket && event !== "reuse") {
+      this._clientSocket.destroy();
     }
     if (this._winSso) {
       this._winSso.freeAuthContext();

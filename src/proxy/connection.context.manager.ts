@@ -64,8 +64,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let context = new this.ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
+    context.clientSocket = clientSocket;
     this._connectionContexts[clientAddress] = context;
-    clientSocket.on("close", () => this.removeAgent("close", clientAddress));
+    context.socketCloseListener = this.removeAgentOnClose.bind(
+      this,
+      clientAddress
+    );
+    clientSocket.once("close", context.socketCloseListener);
     this._debug.log(
       "Created agent for client " +
         clientAddress +
@@ -73,6 +78,10 @@ export class ConnectionContextManager implements IConnectionContextManager {
         targetHost.href
     );
     return context;
+  }
+
+  private removeAgentOnClose(clientAddress: string) {
+    this.removeAgent("close", clientAddress);
   }
 
   getConnectionContextFromClientSocket(
@@ -128,18 +137,33 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   removeAllConnectionContexts(event: string) {
+    let preservedContexts: ConnectionContextHash = {};
     for (let property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
-        this._connectionContexts[property].destroy();
+        const context = this._connectionContexts[property];
+        if (context.configApiConnection) {
+          // Must let config api context stay alive, otherwise there is no response to a reset or quit call
+          preservedContexts[context.clientAddress] = context;
+        } else {
+          context.clientSocket?.removeListener(
+            "close",
+            context.socketCloseListener
+          );
+          context.destroy(event);
+        }
       }
     }
-    this._connectionContexts = {};
+    this._connectionContexts = preservedContexts;
     this._debug.log("Removed all agents due to " + event);
   }
 
   removeAgent(event: string, clientAddress: string) {
     if (clientAddress in this._connectionContexts) {
-      this._connectionContexts[clientAddress].destroy();
+      this._connectionContexts[clientAddress].clientSocket?.removeListener(
+        "close",
+        this._connectionContexts[clientAddress].socketCloseListener
+      );
+      this._connectionContexts[clientAddress].destroy(event);
       delete this._connectionContexts[clientAddress];
       this._debug.log(
         "Removed agent for " + clientAddress + " due to socket." + event

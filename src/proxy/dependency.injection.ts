@@ -20,14 +20,14 @@ import { ConfigServer } from "./config.server";
 import { ICoreServer } from "./interfaces/i.core.server";
 import { CoreServer } from "./core.server";
 
-import { ICypressNtlm } from "../util/interfaces/i.cypress.ntlm";
-import { CypressNtlm } from "../util/cypress.ntlm";
+import { IStartup } from "../startup/interfaces/i.startup";
+import { Startup } from "../startup/startup";
 
 import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { UpstreamProxyManager } from "./upstream.proxy.manager";
 
-import { IUpstreamProxyConfigurator } from "../util/interfaces/i.upstream.proxy.configurator";
-import { UpstreamProxyConfigurator } from "../util/upstream.proxy.configurator";
+import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
+import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator";
 
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { WinSsoFacade } from "./win-sso.facade";
@@ -50,26 +50,33 @@ import { NtlmProxyServer } from "./ntlm.proxy.server";
 import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
 import { ExpressServerFacade } from "./express.server.facade";
 
-import { IPortsFileService } from "../util/interfaces/i.ports.file.service";
-import { PortsFileService } from "../util/ports.file.service";
-
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
 import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { DebugLogger } from "../util/debug.logger";
 
-import { INtlmProxyExit } from "../util/interfaces/i.ntlm.proxy.exit";
-import { NtlmProxyExit } from "../util/ntlm.proxy.exit";
+import { IExternalNtlmProxyFacade } from "../startup/interfaces/i.external.ntlm.proxy.facade";
+import { ExternalNtlmProxyFacade } from "../startup/external.ntlm.proxy.facade";
 
 import { IMain } from "./interfaces/i.main";
 import { Main } from "./main";
+
+import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
+import { CypressFacade } from "../startup/cypress.facade";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { PortsConfigStore } from "./ports.config.store";
+import { IEnvironment } from "../startup/interfaces/i.environment";
+import { Environment } from "../startup/environment";
 
 export class DependencyInjection {
   private _container: Container;
 
   constructor() {
     this._container = new Container({ defaultScope: "Singleton" });
+    this._container
+      .bind<IPortsConfigStore>(TYPES.IPortsConfigStore)
+      .to(PortsConfigStore);
     this._container
       .bind<IConfigController>(TYPES.IConfigController)
       .to(ConfigController);
@@ -79,8 +86,12 @@ export class DependencyInjection {
       .bind<IConnectionContextManager>(TYPES.IConnectionContextManager)
       .to(ConnectionContextManager);
     this._container.bind<ICoreServer>(TYPES.ICoreServer).to(CoreServer);
-    this._container.bind<ICypressNtlm>(TYPES.ICypressNtlm).to(CypressNtlm);
+    this._container
+      .bind<ICypressFacade>(TYPES.ICypressFacade)
+      .to(CypressFacade);
+    this._container.bind<IStartup>(TYPES.IStartup).to(Startup);
     this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
+    this._container.bind<IEnvironment>(TYPES.IEnvironment).to(Environment);
     this._container
       .bind<IExpressServerFacade>(TYPES.IExpressServerFacade)
       .to(ExpressServerFacade);
@@ -94,17 +105,14 @@ export class DependencyInjection {
     this._container.bind<INtlm>(TYPES.INtlm).to(Ntlm);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container
-      .bind<INtlmProxyExit>(TYPES.INtlmProxyExit)
-      .to(NtlmProxyExit);
+      .bind<IExternalNtlmProxyFacade>(TYPES.IExternalNtlmProxyFacade)
+      .to(ExternalNtlmProxyFacade);
     this._container
       .bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm)
       .to(NtlmProxyMitm);
     this._container
       .bind<INtlmProxyServer>(TYPES.INtlmProxyServer)
       .to(NtlmProxyServer);
-    this._container
-      .bind<IPortsFileService>(TYPES.IPortsFileService)
-      .to(PortsFileService);
     this._container
       .bind<IUpstreamProxyConfigurator>(TYPES.IUpstreamProxyConfigurator)
       .to(UpstreamProxyConfigurator);

@@ -3,28 +3,27 @@ import "reflect-metadata";
 import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import net from "net";
+import http from "http";
 
 import { expect } from "chai";
 import { IConfigStore } from "../../src/proxy/interfaces/i.config.store";
-import { IConfigServer } from "../../src/proxy/interfaces/i.config.server";
 import { IConnectionContextManager } from "../../src/proxy/interfaces/i.connection.context.manager";
 import { INtlmManager } from "../../src/proxy/interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "../../src/proxy/interfaces/i.upstream.proxy.manager";
 import { NtlmProxyMitm } from "../../src/proxy/ntlm.proxy.mitm";
 import { IContext } from "http-mitm-proxy";
-import { IncomingMessage } from "http";
 import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../src/util/debug.logger";
 import { ExpressServer } from "./express.server";
 import { INegotiateManager } from "../../src/proxy/interfaces/i.negotiate.manager";
 import { interfaces } from "inversify";
 import { IWinSsoFacade } from "../../src/proxy/interfaces/i.win-sso.facade";
-import { ConnectionContext } from "../../src/proxy/connection.context";
+import { PortsConfigStoreMock } from "./ports.config.store.mock";
 
 describe("NtlmProxyMitm error logging", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let portsConfigStoreMock: PortsConfigStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -33,9 +32,9 @@ describe("NtlmProxyMitm error logging", () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
-  beforeEach(function() {
+  beforeEach(function () {
     configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
+    portsConfigStoreMock = new PortsConfigStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -45,7 +44,7 @@ describe("NtlmProxyMitm error logging", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      portsConfigStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -55,21 +54,21 @@ describe("NtlmProxyMitm error logging", () => {
     );
   });
 
-  it("connection errors should not throw when no context", async function() {
+  it("connection errors should not throw when no context", async function () {
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "code"
+      code: "code",
     };
     ntlmProxyMitm.onError(undefined, error, "SOME");
     debugMock.received(1).log("SOME" + " on " + "" + ":", error);
   });
 
-  it("connection errors should not throw when no clientToProxyRequest in context", async function() {
+  it("connection errors should not throw when no clientToProxyRequest in context", async function () {
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "code"
+      code: "code",
     };
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(undefined);
@@ -77,13 +76,13 @@ describe("NtlmProxyMitm error logging", () => {
     debugMock.received(1).log("SOME" + " on " + "" + ":", error);
   });
 
-  it("connection errors should log to debug", async function() {
+  it("connection errors should log to debug", async function () {
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "code"
+      code: "code",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     message.url.returns("/testurl");
@@ -91,13 +90,13 @@ describe("NtlmProxyMitm error logging", () => {
     debugMock.received(1).log("SOME" + " on " + "/testurl" + ":", error);
   });
 
-  it("chrome startup connection tests (host without port) should not throw", function() {
+  it("chrome startup connection tests (host without port) should not throw", function () {
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ENOTFOUND"
+      code: "ENOTFOUND",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     const mockHost = "nctwerijlksf";
@@ -115,13 +114,13 @@ describe("NtlmProxyMitm error logging", () => {
       );
   });
 
-  it("chrome startup connection tests (host with port) should not throw", function() {
+  it("chrome startup connection tests (host with port) should not throw", function () {
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ENOTFOUND"
+      code: "ENOTFOUND",
     };
-    const message = Substitute.for<IncomingMessage>();
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     const mockHost = "nctwerijlksf:80";
@@ -143,7 +142,7 @@ describe("NtlmProxyMitm error logging", () => {
 describe("NtlmProxyMitm REQUEST", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let portsConfigStoreMock: PortsConfigStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -152,9 +151,9 @@ describe("NtlmProxyMitm REQUEST", () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
+    portsConfigStoreMock = new PortsConfigStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -165,7 +164,7 @@ describe("NtlmProxyMitm REQUEST", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      portsConfigStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -175,8 +174,8 @@ describe("NtlmProxyMitm REQUEST", () => {
     );
   });
 
-  it("invalid url should throw", async function() {
-    const message = Substitute.for<IncomingMessage>();
+  it("invalid url should throw", async function () {
+    const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns(message);
     message.headers.returns({ hostMissing: "test" });
@@ -201,7 +200,7 @@ describe("NtlmProxyMitm REQUEST", () => {
 describe("NtlmProxyMitm CONNECT", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
   let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
+  let portsConfigStoreMock: PortsConfigStoreMock;
   let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
   let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
@@ -218,12 +217,12 @@ describe("NtlmProxyMitm CONNECT", () => {
   let socketEventListener: (err: NodeJS.ErrnoException) => void;
   let serverStream: NodeJS.WritableStream;
 
-  before(async function() {
+  before(async function () {
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     urlNoProtocol = httpsUrl.substring(httpsUrl.indexOf("localhost"));
   });
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     socketEventListener = undefined;
     serverStream = undefined;
 
@@ -234,11 +233,13 @@ describe("NtlmProxyMitm CONNECT", () => {
       }
       return socketMock;
     });
-    socketMock.write(Arg.all()).mimicks((str, encoding, cb) => {
-      cb();
-      return true;
-    });
-    socketMock.pipe(Arg.all()).mimicks(stream => {
+    socketMock
+      .write(Arg.any(), Arg.any(), Arg.any())
+      .mimicks((str, encoding, cb) => {
+        cb();
+        return true;
+      });
+    socketMock.pipe(Arg.all()).mimicks((stream) => {
       serverStream = stream;
       return socketMock;
     });
@@ -246,7 +247,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     configStoreMock = Substitute.for<IConfigStore>();
     configStoreMock.existsOrUseSso(Arg.any()).returns(false);
 
-    configServerMock = Substitute.for<IConfigServer>();
+    portsConfigStoreMock = new PortsConfigStoreMock();
     connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
     winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
     negotiateManagerMock = Substitute.for<INegotiateManager>();
@@ -258,7 +259,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
       configStoreMock,
-      configServerMock,
+      portsConfigStoreMock,
       connectionContextManagerMock,
       winSsoFacadeMock,
       negotiateManagerMock,
@@ -268,12 +269,12 @@ describe("NtlmProxyMitm CONNECT", () => {
     );
   });
 
-  after(async function() {
+  after(async function () {
     await expressServer.stopHttpsServer();
   });
 
-  it("invalid url should not throw", async function() {
-    let req = Substitute.for<IncomingMessage>();
+  it("invalid url should not throw", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(null);
     let callbackCount = 0;
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -283,13 +284,13 @@ describe("NtlmProxyMitm CONNECT", () => {
     expect(callbackCount).to.equal(1);
   });
 
-  it("unknown socket error after connect should not throw", async function() {
-    let req = Substitute.for<IncomingMessage>();
+  it("unknown socket error after connect should not throw", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ENOTFOUND"
+      code: "ENOTFOUND",
     };
 
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -308,13 +309,13 @@ describe("NtlmProxyMitm CONNECT", () => {
     serverStream.end();
   });
 
-  it("ECONNRESET socket error after connect should not throw", async function() {
-    let req = Substitute.for<IncomingMessage>();
+  it("ECONNRESET socket error after connect should not throw", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ECONNRESET"
+      code: "ECONNRESET",
     };
 
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -333,13 +334,13 @@ describe("NtlmProxyMitm CONNECT", () => {
     serverStream.end();
   });
 
-  it("unknown peer socket error after connect should not throw", async function() {
-    let req = Substitute.for<IncomingMessage>();
+  it("unknown peer socket error after connect should not throw", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ENOTFOUND"
+      code: "ENOTFOUND",
     };
 
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -358,13 +359,13 @@ describe("NtlmProxyMitm CONNECT", () => {
     serverStream.end();
   });
 
-  it("ECONNRESET peer socket error after connect should not throw", async function() {
-    let req = Substitute.for<IncomingMessage>();
+  it("ECONNRESET peer socket error after connect should not throw", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
     req.url.returns(urlNoProtocol);
     const error: NodeJS.ErrnoException = {
       message: "testmessage",
       name: "testname",
-      code: "ECONNRESET"
+      code: "ECONNRESET",
     };
 
     ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
@@ -383,7 +384,20 @@ describe("NtlmProxyMitm CONNECT", () => {
     serverStream.end();
   });
 
-  const sleepMs = (ms: number) => new Promise(res => setTimeout(res, ms));
+  it("should send 502 response if target is unreachable", async function () {
+    let req = Substitute.for<http.IncomingMessage>();
+    let freePort = await getFreePort();
+    socketMock.end(Arg.any(), Arg.any()).mimicks((data, enc) => {
+      socketMock.received(1).end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+      return true;
+    });
+    req.url.returns("localhost:" + freePort);
+    ntlmProxyMitm.onConnect(req, socketMock, "", (err: Error) => {
+      if (err) throw err;
+    });
+  });
+
+  const sleepMs = (ms: number) => new Promise((res) => setTimeout(res, ms));
   async function sleep(ms: number): Promise<void> {
     await sleepMs(ms);
   }
@@ -399,51 +413,19 @@ describe("NtlmProxyMitm CONNECT", () => {
       reject();
     });
   }
-});
 
-describe("NtlmProxyMitm NtlmProxyPort", () => {
-  let ntlmProxyMitm: NtlmProxyMitm;
-  let configStoreMock: SubstituteOf<IConfigStore>;
-  let configServerMock: SubstituteOf<IConfigServer>;
-  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
-  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
-  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
-  let ntlmManagerMock: SubstituteOf<INtlmManager>;
-  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
-  let debugMock: SubstituteOf<IDebugLogger>;
-  let debugLogger = new DebugLogger();
-
-  beforeEach(async function() {
-    configStoreMock = Substitute.for<IConfigStore>();
-    configServerMock = Substitute.for<IConfigServer>();
-    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
-    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
-    negotiateManagerMock = Substitute.for<INegotiateManager>();
-    ntlmManagerMock = Substitute.for<INtlmManager>();
-    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
-
-    debugMock = Substitute.for<IDebugLogger>();
-    debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyMitm = new NtlmProxyMitm(
-      configStoreMock,
-      configServerMock,
-      connectionContextManagerMock,
-      winSsoFacadeMock,
-      negotiateManagerMock,
-      ntlmManagerMock,
-      upstreamProxyManagerMock,
-      debugMock
-    );
-  });
-
-  it("NtlmProxyPort should throw if not initialized", async function() {
-    await expect(() => ntlmProxyMitm.NtlmProxyPort).throws(
-      "Cannot get ntlmProxyPort, port has not been set!"
-    );
-  });
-
-  it("NtlmProxyPort should not throw if initialized", async function() {
-    ntlmProxyMitm.NtlmProxyPort = "1234";
-    expect(ntlmProxyMitm.NtlmProxyPort).to.be.equal("1234");
-  });
+  function getFreePort(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      let server = http.createServer();
+      server.listen(0);
+      server.on("listening", function () {
+        let port = (server.address() as net.AddressInfo).port;
+        server.close();
+        resolve(port);
+      });
+      server.on("error", function (err) {
+        reject(err);
+      });
+    });
+  }
 });

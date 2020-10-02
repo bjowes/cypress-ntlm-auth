@@ -4,15 +4,12 @@ import "mocha";
 import { ExpressServer } from "./express.server";
 import { ProxyFacade } from "./proxy.facade";
 
-import sinon from "sinon";
-import { expect } from "chai";
-import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import chai from "chai";
+const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-import { PortsFileService } from "../../src/util/ports.file.service";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
-import { PortsFile } from "../../src/models/ports.file.model";
 import { DependencyInjection } from "../../src/proxy/dependency.injection";
 import { TYPES } from "../../src/proxy/dependency.injection.types";
 import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
@@ -22,8 +19,6 @@ import { NtlmSsoConfig } from "../../src/models/ntlm.sso.config.model";
 let configApiUrl: string;
 let ntlmProxyUrl: string;
 let httpsUrl: string;
-let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
-let portsFileExistsStub: sinon.SinonStub<[], boolean>;
 let upstreamProxyUrl: string;
 let upstreamProxyReqCount: number;
 
@@ -35,11 +30,6 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
   let dependencyInjection = new DependencyInjection();
 
   before("Start HTTPS server and proxy", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(30000);
     upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
       ctx,
@@ -57,24 +47,13 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
       ntlmVersion: 2,
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(
-      false,
-      undefined,
-      upstreamProxyUrl,
-      undefined
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    await coreServer.stop(true);
+    await coreServer.stop();
     proxyFacade.stopMitmProxy();
     await expressServer.stopHttpsServer();
   });
@@ -258,11 +237,6 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
       return;
     }
 
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(15000);
     upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
       ctx,
@@ -277,25 +251,14 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
     };
 
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(
-      false,
-      undefined,
-      upstreamProxyUrl,
-      undefined
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
     if (coreServer) {
-      await coreServer.stop(true);
+      await coreServer.stop();
       proxyFacade.stopMitmProxy();
       await expressServer.stopHttpsServer();
     }
@@ -374,11 +337,6 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   let dependencyInjection = new DependencyInjection();
 
   before("Start HTTPS server and proxy", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(15000);
     upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
       ctx,
@@ -389,24 +347,13 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
     });
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(
-      false,
-      undefined,
-      upstreamProxyUrl,
-      undefined
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    await coreServer.stop(true);
+    await coreServer.stop();
     proxyFacade.stopMitmProxy();
     await expressServer.stopHttpsServer();
   });
@@ -497,11 +444,6 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   let dependencyInjection = new DependencyInjection();
 
   before("Start HTTPS server", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(15000);
     upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
       ctx,
@@ -515,17 +457,10 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   afterEach("Stop proxy", async function () {
-    await coreServer.stop(true);
+    await coreServer.stop();
   });
 
   after("Stop HTTPS server", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-
     httpsUrl = "";
     proxyFacade.stopMitmProxy();
     await expressServer.stopHttpsServer();
@@ -537,12 +472,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should use upstream proxy for https host when only http upstream proxy is defined", async function () {
-    let ports = await coreServer.start(
-      false,
-      upstreamProxyUrl,
-      undefined,
-      undefined
-    );
+    let ports = await coreServer.start(upstreamProxyUrl, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
@@ -566,7 +496,6 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
 
   it("should not use upstream proxy with NO_PROXY localhost", async function () {
     let ports = await coreServer.start(
-      false,
       undefined,
       upstreamProxyUrl,
       "localhost"
@@ -593,12 +522,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should not use upstream proxy with NO_PROXY *host", async function () {
-    let ports = await coreServer.start(
-      false,
-      undefined,
-      upstreamProxyUrl,
-      "*host"
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, "*host");
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
@@ -621,12 +545,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should not use upstream proxy with NO_PROXY local*", async function () {
-    let ports = await coreServer.start(
-      false,
-      undefined,
-      upstreamProxyUrl,
-      "local*"
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, "local*");
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
@@ -649,7 +568,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should not use upstream proxy with NO_PROXY *", async function () {
-    let ports = await coreServer.start(false, undefined, upstreamProxyUrl, "*");
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, "*");
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
@@ -673,7 +592,6 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
 
   it("should use upstream proxy with NO_PROXY google.com", async function () {
     let ports = await coreServer.start(
-      false,
       undefined,
       upstreamProxyUrl,
       "google.com"

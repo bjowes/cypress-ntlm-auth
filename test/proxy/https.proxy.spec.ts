@@ -4,17 +4,16 @@ import "mocha";
 import { ExpressServer } from "./express.server";
 import { ProxyFacade } from "./proxy.facade";
 import http from "http";
-import sinon from "sinon";
-import { expect } from "chai";
-import chai from "chai";
+
 import chaiAsPromised from "chai-as-promised";
+import chai from "chai";
+const expect = chai.expect;
 chai.use(chaiAsPromised);
+
 import url from "url";
 const kapAgent = require("keepalive-proxy-agent");
 
-import { PortsFileService } from "../../src/util/ports.file.service";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
-import { PortsFile } from "../../src/models/ports.file.model";
 import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
 import { DependencyInjection } from "../../src/proxy/dependency.injection";
 import { TYPES } from "../../src/proxy/dependency.injection.types";
@@ -24,8 +23,6 @@ import { osSupported } from "win-sso";
 let configApiUrl: string;
 let ntlmProxyUrl: string;
 let httpsUrl: string;
-let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
-let portsFileExistsStub: sinon.SinonStub<[], boolean>;
 
 describe("Proxy for HTTPS host with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
@@ -35,11 +32,6 @@ describe("Proxy for HTTPS host with NTLM", function () {
   let dependencyInjection = new DependencyInjection();
 
   before("Start HTTPS server and proxy", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
@@ -51,19 +43,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
       ntlmVersion: 2,
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    await coreServer.stop(true);
+    await coreServer.stop();
     await expressServer.stopHttpsServer();
   });
 
@@ -360,11 +346,6 @@ describe("Proxy for HTTPS host with NTLM using SSO", function () {
       return;
     }
 
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
@@ -373,20 +354,14 @@ describe("Proxy for HTTPS host with NTLM using SSO", function () {
       ntlmHosts: ["localhost"],
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
     if (coreServer) {
-      await coreServer.stop(true);
+      await coreServer.stop();
       await expressServer.stopHttpsServer();
     }
   });
@@ -453,16 +428,11 @@ describe("Proxy for HTTPS host without NTLM", function () {
   let dependencyInjection = new DependencyInjection();
 
   before("Start HTTPS server and proxy", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
@@ -472,13 +442,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 
   after("Stop HTTPS server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    await coreServer.stop(true);
+    await coreServer.stop();
     await expressServer.stopHttpsServer();
   });
 
@@ -712,11 +676,6 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
   let httpsUrl2: string;
 
   before("Start HTTP server and proxy", async function () {
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl1 = await expressServer1.startHttpsServer(true, undefined);
@@ -736,19 +695,13 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
       ntlmVersion: 2,
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
-    let ports = await coreServer.start(false, undefined, undefined, undefined);
+    let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
   after("Stop HTTP server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-    await coreServer.stop(true);
+    await coreServer.stop();
     await expressServer1.stopHttpsServer();
     await expressServer2.stopHttpsServer();
   });
