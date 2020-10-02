@@ -25,7 +25,7 @@ export class CypressFacade implements ICypressFacade {
   }
 
   async open(options: any) {
-    return await this._cypress.run(options);
+    return await this._cypress.open(options);
   }
 
   async parseRunArguments(runArguments: string[]) {
