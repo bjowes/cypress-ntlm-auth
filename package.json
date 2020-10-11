@@ -8,7 +8,7 @@
     "launch": "src/launchers/cypress.ntlm.js",
     "pnl": "npm run proxy && npm run launch",
     "test": "npm run unittest && npm run e2e",
-    "e2e": "(cd test && cd e2e && npm run test",
+    "e2e": "(cd test && cd e2e && npm run test)",
     "unittest": "mocha --require ./test/unittest/ts.hooks.js --require source-map-support/register test/unittest/**/*.spec.ts",
     "build": "shx rm -rf dist && tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js",
     "prepare": "npm run build",
