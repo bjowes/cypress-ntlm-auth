@@ -4,13 +4,13 @@
   "description": "e2e test for cypress-ntlm-auth",
   "main": "index.js",
   "scripts": {
-    "prepare-e2e": "npm pack ../.. && npm i cypress-ntlm-auth*.tgz",
+    "prepare-e2e": "npm i cypress-ntlm-auth-*.tgz",
     "webserver": "node webserver/server.js",
     "webserver:stop": "node webserver/stop-server.js",
-    "e2e": "npx cypress-ntlm run",
+    "e2e": "npm-run-all --continue-on-error cypress-ntlm:run webserver:stop",
+    "cypress-ntlm:run": "npx cypress-ntlm run",
     "pretest": "npm run prepare-e2e",
-    "test": "npm-run-all --parallel webserver e2e",
-    "posttest": "npm run webserver:stop"
+    "test": "npm-run-all --parallel webserver e2e"
   },
   "author": "Björn Weström",
   "license": "MIT",
