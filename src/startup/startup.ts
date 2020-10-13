@@ -84,24 +84,34 @@ export class Startup implements IStartup {
 
     let ports: PortsConfig;
     if (this._environment.configApiUrl) {
-      this._internalNtlmProxy = false;
-      this._debug.log(
-        "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
-      );
-      ports = await this._externalNtlmProxyFacade.alive(
-        this._environment.configApiUrl
-      );
+      ports = await this.prepareExternalNtlmProxy();
     } else {
-      this._internalNtlmProxy = true;
-      this._debug.log("Starting ntlm-proxy...");
-      ports = await this._proxyMain.run(
-        this._environment.httpProxy,
-        this._environment.httpsProxy,
-        this._environment.noProxy
-      );
+      ports = await this.startNtlmProxy();
     }
     this._environment.configureForCypress(ports);
     this._upstreamProxyConfigurator.removeUnusedProxyEnv();
+  }
+
+  private async prepareExternalNtlmProxy(): Promise<PortsConfig> {
+    this._internalNtlmProxy = false;
+    this._upstreamProxyConfigurator.processNoProxyLoopback();
+    this._debug.log(
+      "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
+    );
+    return await this._externalNtlmProxyFacade.alive(
+      this._environment.configApiUrl
+    );
+  }
+
+  async startNtlmProxy(): Promise<PortsConfig> {
+    this._internalNtlmProxy = true;
+    this._upstreamProxyConfigurator.processNoProxyLoopback();
+    this._debug.log("Starting ntlm-proxy...");
+    return await this._proxyMain.run(
+      this._environment.httpProxy,
+      this._environment.httpsProxy,
+      this._environment.noProxy
+    );
   }
 
   async run(options: any) {
@@ -118,7 +128,7 @@ export class Startup implements IStartup {
       this._debug.log("Tests exception");
       throw err;
     } finally {
-      await this.stop();
+      await this.stopNtlmProxy();
     }
   }
 
@@ -135,11 +145,11 @@ export class Startup implements IStartup {
       this._debug.log("Tests exception");
       throw err;
     } finally {
-      await this.stop();
+      await this.stopNtlmProxy();
     }
   }
 
-  async stop() {
+  async stopNtlmProxy() {
     if (this._internalNtlmProxy) {
       this._debug.log("Stopping ntlm-proxy...");
       await this._proxyMain.stop();

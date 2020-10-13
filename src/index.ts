@@ -47,14 +47,14 @@ nodeCleanup((exitCode, signal) => {
     debug.log("Detected process exit with code", exitCode);
     // On a non-signal exit, we cannot postpone the process termination.
     // We try to cleanup but cannot be sure that the ports file was deleted.
-    startup.stop();
+    startup.stopNtlmProxy();
   }
   if (signal) {
     debug.log("Detected termination signal", signal);
     // On signal exit, we postpone the process termination by returning false,
     // to ensure that cleanup has completed.
     (async () => {
-      await startup.stop();
+      await startup.stopNtlmProxy();
       process.kill(process.pid, signal);
     })();
     nodeCleanup.uninstall(); // don't call cleanup handler again
