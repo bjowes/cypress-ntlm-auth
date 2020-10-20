@@ -5,7 +5,7 @@ import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import { IMain } from "../proxy/interfaces/i.main";
 import { ICypressFacade } from "./interfaces/i.cypress.facade";
-import { IExternalNtlmProxyFacade } from "./interfaces/i.external.ntlm.proxy.facade";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
 import { IEnvironment } from "./interfaces/i.environment";
 import { PortsConfig } from "../models/ports.config.model";
 
@@ -15,7 +15,7 @@ export class Startup implements IStartup {
   private _proxyMain: IMain;
   private _cypressFacade: ICypressFacade;
   private _environment: IEnvironment;
-  private _externalNtlmProxyFacade: IExternalNtlmProxyFacade;
+  private _externalNtlmProxyFacade: INtlmProxyFacade;
   private _debug: IDebugLogger;
   private _internalNtlmProxy = true;
 
@@ -25,8 +25,8 @@ export class Startup implements IStartup {
     @inject(TYPES.IMain) proxyMain: IMain,
     @inject(TYPES.ICypressFacade) cypressFacade: ICypressFacade,
     @inject(TYPES.IEnvironment) environment: IEnvironment,
-    @inject(TYPES.IExternalNtlmProxyFacade)
-    externalNtlmProxyFacade: IExternalNtlmProxyFacade,
+    @inject(TYPES.INtlmProxyFacade)
+    externalNtlmProxyFacade: INtlmProxyFacade,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._upstreamProxyConfigurator = upstreamProxyConfigurator;
@@ -80,8 +80,6 @@ export class Startup implements IStartup {
   }
 
   private async prepareProxy() {
-    this._upstreamProxyConfigurator.processNoProxyLoopback();
-
     let ports: PortsConfig;
     if (this._environment.configApiUrl) {
       ports = await this.prepareExternalNtlmProxy();
@@ -149,7 +147,7 @@ export class Startup implements IStartup {
     }
   }
 
-  async stopNtlmProxy() {
+  private async stopNtlmProxy() {
     if (this._internalNtlmProxy) {
       this._debug.log("Stopping ntlm-proxy...");
       await this._proxyMain.stop();

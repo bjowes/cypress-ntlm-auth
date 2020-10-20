@@ -1,40 +1,47 @@
-import { DependencyInjection } from "./proxy/dependency.injection";
-import { TYPES } from "./proxy/dependency.injection.types";
-import { IStartup } from "./startup/interfaces/i.startup";
-import { IDebugLogger } from "./util/interfaces/i.debug.logger";
 import { PortsConfig } from "./models/ports.config.model";
+import { NtlmConfig } from "./models/ntlm.config.model";
+import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
+import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
 
-const container = new DependencyInjection();
-const startup = container.get<IStartup>(TYPES.IStartup);
-const debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
+export class NtlmProxy {
+  ports: PortsConfig;
+  private ntlmProxyFacade: INtlmProxyFacade;
 
-/**
- * Starts ntlm-proxy
- * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
- */
-export async function start(options: any): Promise<PortsConfig> {
-  return await startup.startNtlmProxy();
-}
+  constructor(ports: PortsConfig, ntlmProxyFacade: INtlmProxyFacade) {
+    this.ports = ports;
+    this.ntlmProxyFacade = ntlmProxyFacade;
+  }
 
-/**
- * Stops ntlm-proxy
- */
-export async function stop() {
-  return await startup.stopNtlmProxy();
-}
-
-/**
- * Converts command line arguments to Cypress mode ('run' or 'open')
- * @param args command line arguments
- */
-export function argumentsToCypressMode(args: string[]) {
-  return startup.argumentsToCypressMode(args);
-}
-
-/**
- * Converts command line arguments to a Cypress options object.
- * @param args command line arguments
- */
-export async function argumentsToOptions(args: string[]) {
-  return await startup.prepareOptions(args);
+  /**
+   * Add NTLM configuration
+   */
+  async ntlm(config: NtlmConfig) {
+    await this.ntlmProxyFacade.ntlm(this.ports.configApiUrl, config);
+  }
+  /**
+   * Add NTLM SSO configuration
+   */
+  async ntlmSso(config: NtlmSsoConfig) {
+    await this.ntlmProxyFacade.ntlmSso(this.ports.configApiUrl, config);
+  }
+  /**
+   * Reset connections and configuration
+   */
+  async reset() {
+    await this.ntlmProxyFacade.reset(this.ports.configApiUrl);
+  }
+  /**
+   * Check if proxy is alive
+   */
+  async alive() {
+    await this.ntlmProxyFacade.alive(this.ports.configApiUrl);
+  }
+  /**
+   * Stops ntlm-proxy
+   */
+  async stop() {
+    await this.ntlmProxyFacade.quitIfRunning(this.ports.configApiUrl);
+    this.ports.configApiUrl = "";
+    this.ports.ntlmProxyUrl = "";
+  }
 }

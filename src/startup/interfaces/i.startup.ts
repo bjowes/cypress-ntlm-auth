@@ -6,5 +6,4 @@ export interface IStartup {
   run(options: any): Promise<any>;
   open(options: any): Promise<any>;
   startNtlmProxy(): Promise<PortsConfig>;
-  stopNtlmProxy(): Promise<void>;
 }

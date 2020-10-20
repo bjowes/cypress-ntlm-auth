@@ -15,8 +15,7 @@ import { IUpstreamProxyConfigurator } from "../../src/startup/interfaces/i.upstr
 import { ICypressFacade } from "../../src/startup/interfaces/i.cypress.facade";
 import { IMain } from "../../src/proxy/interfaces/i.main";
 import { fail } from "assert";
-import { IExternalNtlmProxyFacade } from "../../src/startup/interfaces/i.external.ntlm.proxy.facade";
-import { IEnvironment } from "../../src/startup/interfaces/i.environment";
+import { INtlmProxyFacade } from "../../src/startup/interfaces/i.ntlm.proxy.facade";
 import { PortsConfig } from "../../src/models/ports.config.model";
 import { EnvironmentMock } from "./environment.mock";
 import { spy } from "sinon";
@@ -26,7 +25,7 @@ describe("Startup shallow", () => {
   let upstreamProxyConfiguratorMock: SubstituteOf<IUpstreamProxyConfigurator>;
   let proxyMainMock: SubstituteOf<IMain>;
   let cypressFacadeMock: SubstituteOf<ICypressFacade>;
-  let externalNtlmProxyFacadeMock: SubstituteOf<IExternalNtlmProxyFacade>;
+  let externalNtlmProxyFacadeMock: SubstituteOf<INtlmProxyFacade>;
   let environmentMock: EnvironmentMock;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
@@ -37,7 +36,7 @@ describe("Startup shallow", () => {
     >();
     proxyMainMock = Substitute.for<IMain>();
     cypressFacadeMock = Substitute.for<ICypressFacade>();
-    externalNtlmProxyFacadeMock = Substitute.for<IExternalNtlmProxyFacade>();
+    externalNtlmProxyFacadeMock = Substitute.for<INtlmProxyFacade>();
     environmentMock = new EnvironmentMock();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -356,15 +355,15 @@ describe("Startup shallow", () => {
     });
   });
 
-  describe("stop", function () {
+  describe("stopNtlmProxy", function () {
     it("should stop proxyMain", function () {
-      startup.stop();
+      startup["stopNtlmProxy"]();
       proxyMainMock.received(1).stop();
     });
 
     it("should not stop proxyMain if external proxy", function () {
       startup["_internalNtlmProxy"] = false;
-      startup.stop();
+      startup["stopNtlmProxy"]();
       proxyMainMock.didNotReceive().stop();
     });
   });

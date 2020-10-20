@@ -1,12 +1,14 @@
 import { DependencyInjection } from "./proxy/dependency.injection";
 import { TYPES } from "./proxy/dependency.injection.types";
 import { IStartup } from "./startup/interfaces/i.startup";
-import { IDebugLogger } from "./util/interfaces/i.debug.logger";
-import nodeCleanup from "node-cleanup";
+import { NtlmProxy } from "./ntlm-proxy";
+import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
+import { IEnvironment } from "./startup/interfaces/i.environment";
 
 const container = new DependencyInjection();
 const startup = container.get<IStartup>(TYPES.IStartup);
-const debug = container.get<IDebugLogger>(TYPES.IDebugLogger);
+const environment = container.get<IEnvironment>(TYPES.IEnvironment);
+const ntlmProxyFacade = container.get<INtlmProxyFacade>(TYPES.INtlmProxyFacade);
 
 /**
  * Starts Cypress in headless mode with NTLM plugin
@@ -40,24 +42,23 @@ export async function argumentsToOptions(args: string[]) {
   return await startup.prepareOptions(args);
 }
 
-// Unfortunately we can only catch these signals on Mac/Linux,
-// Windows gets a hard exit
-nodeCleanup((exitCode, signal) => {
-  if (exitCode) {
-    debug.log("Detected process exit with code", exitCode);
-    // On a non-signal exit, we cannot postpone the process termination.
-    // We try to cleanup but cannot be sure that the ports file was deleted.
-    startup.stopNtlmProxy();
-  }
-  if (signal) {
-    debug.log("Detected termination signal", signal);
-    // On signal exit, we postpone the process termination by returning false,
-    // to ensure that cleanup has completed.
-    (async () => {
-      await startup.stopNtlmProxy();
-      process.kill(process.pid, signal);
-    })();
-    nodeCleanup.uninstall(); // don't call cleanup handler again
+/**
+ * Starts a new ntlm-proxy
+ */
+export async function startNtlmProxy(): Promise<NtlmProxy> {
+  // Create a new root instance for each ntlm-proxy
+  const startup = container.get<IStartup>(TYPES.IStartup);
+  let ports = await startup.startNtlmProxy();
+  return new NtlmProxy(ports, ntlmProxyFacade);
+}
+
+/**
+ * Stop a running ntlm-proxy, uses environment variable to find the config API url
+ */
+export async function stopNtlmProxy(): Promise<boolean> {
+  if (!environment.configApiUrl) {
+    console.info("CYPRESS_NTLM_AUTH_API environment variable not set");
     return false;
   }
-});
+  return await ntlmProxyFacade.quitIfRunning(environment.configApiUrl);
+}
