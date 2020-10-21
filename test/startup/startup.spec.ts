@@ -161,6 +161,15 @@ describe("Startup shallow", () => {
       ]);
       expect(res).to.eq("run");
     });
+
+    it("should accept full path on global mac/linux install for cypress-ntlm", function () {
+      let res = startup.argumentsToCypressMode([
+        "node",
+        "/usr/local/bin/cypress-ntlm",
+        "run",
+      ]);
+      expect(res).to.eq("run");
+    });
   });
 
   describe("run", function () {

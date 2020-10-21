@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.1 - released 2020-10-21
+
+- Fix #139: cypress-ntlm launcher updated to support global install
+- Updated docs with Docker info
+
 ## 3.0.0 - released 2020-10-02
 
 - Support for multiple instances!
