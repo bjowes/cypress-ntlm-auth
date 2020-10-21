@@ -47,8 +47,11 @@ export class Startup implements IStartup {
     const cypressNtlmIndex = args.findIndex(
       (t) =>
         t === "cypress-ntlm" ||
-        t.endsWith("node_modules/.bin/cypress-ntlm") ||
-        t.endsWith("cypress-ntlm-auth\\dist\\launchers\\cypress.ntlm.js")
+        t === "cypress.ntlm.js" ||
+        t.endsWith("/cypress-ntlm") ||
+        t.endsWith("/cypress.ntlm.js") ||
+        t.endsWith("\\cypress-ntlm") ||
+        t.endsWith("\\cypress.ntlm.js")
     );
     if (cypressNtlmIndex === -1) {
       this._debug.log(args);

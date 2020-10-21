@@ -343,6 +343,20 @@ cypressNtlmAuth
 
 ## Notes
 
+### Docker and global installs
+
+When using the Docker containers provided by Cypress, Cypress is installed globally. Since this plugin requires the Node module API of Cypress, one cannot mix global Cypress with a local install of the plugin. There are two options:
+
+1. Install cypress-ntlm-auth both globally and locally, and use global binary to start it (use `cypress-ntlm`, not `npx cypress-ntlm`).
+2. Install cypress-ntlm-auth globally and modify the `cypress/support/index.js` file to use the path of the global installation of the plugin. The path to use can be found by entering `npm root -g`. Prefix the import statement of cypress-ntlm-auth with this path.
+   For instance, the typical path for a linux installation should be `/usr/local/lib/node_modules`, meaning that for that environment the import statement in `cypress/support/index.js` should be
+
+```js
+import "/usr/local/lib/node_modules/cypress-ntlm-auth/dist/commands";
+```
+
+Which option to use is up to you. The first option is platform agnostic but requires the extra step of the local install (a Docker container can be prepared with all the global installs already in place). The second option removes the requirement of the local install, but the import path specified is not portable - it will vary between different OS variants, and also if you have multiple Node versions installed.
+
 ### .http-mitm-proxy
 
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
