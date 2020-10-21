@@ -4,6 +4,11 @@
 
 - Fix #138: Exported Node module API for creating, controlling and stopping multiple ntlm-proxy instances
 
+## 3.0.1 - released 2020-10-21
+
+- Fix #139: cypress-ntlm launcher updated to support global install
+- Updated docs with Docker info
+
 ## 3.0.0 - released 2020-10-02
 
 - Support for multiple instances!
