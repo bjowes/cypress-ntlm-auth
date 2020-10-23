@@ -13,6 +13,7 @@ const ntlmProxyFacade = container.get<INtlmProxyFacade>(TYPES.INtlmProxyFacade);
 /**
  * Starts Cypress in headless mode with NTLM plugin
  * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
+ * @returns Test results as defined by https://docs.cypress.io/guides/guides/module-api.html#Results
  */
 export async function run(options: any) {
   return await startup.run(options);
@@ -29,6 +30,7 @@ export async function open(options: any) {
 /**
  * Converts command line arguments to Cypress mode ('run' or 'open')
  * @param args command line arguments
+ * @returns 'run' or 'open'
  */
 export function argumentsToCypressMode(args: string[]) {
   return startup.argumentsToCypressMode(args);
@@ -37,6 +39,7 @@ export function argumentsToCypressMode(args: string[]) {
 /**
  * Converts command line arguments to a Cypress options object.
  * @param args command line arguments
+ * @returns An options object for the run() or open() methods
  */
 export async function argumentsToOptions(args: string[]) {
   return await startup.prepareOptions(args);
@@ -44,6 +47,7 @@ export async function argumentsToOptions(args: string[]) {
 
 /**
  * Starts a new ntlm-proxy
+ * @returns The created NtlmProxy
  */
 export async function startNtlmProxy(): Promise<NtlmProxy> {
   // Create a new root instance for each ntlm-proxy
@@ -54,6 +58,7 @@ export async function startNtlmProxy(): Promise<NtlmProxy> {
 
 /**
  * Stop a running ntlm-proxy, uses environment variable to find the config API url
+ * @returns True if the proxy was stopped, false if there was not response or the proxy does not exist.
  */
 export async function stopNtlmProxy(): Promise<boolean> {
   if (!environment.configApiUrl) {

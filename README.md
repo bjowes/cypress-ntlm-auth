@@ -327,9 +327,13 @@ To write also the NTLM and Negotiate headers sent and received by ntlm-proxy, se
 
 ## Node module API
 
-This plugin can also be called as a Node module. It mimics the behavior of the [run and open methods in Cypress module API](https://docs.cypress.io/guides/guides/module-api.html) - accepting the same arguments, passing them on to Cypress and returning the same value. It will automatically start the ntlm-proxy before calling `cypress.run()`, and it will shut down the ntlm-proxy after the tests have finished.
+This plugin can also be called as a Node module.
 
-### Example
+### cypress-ntlm API
+
+The cypress-ntlm API mimics the behavior of the [run and open methods in Cypress module API](https://docs.cypress.io/guides/guides/module-api.html) - accepting the same arguments, passing them on to Cypress and returning the same value. It will automatically start the ntlm-proxy before calling `cypress.run()`, and it will shut down the ntlm-proxy after the tests have finished.
+
+#### Example
 
 ```javascript
 const cypressNtlmAuth = require("cypress-ntlm-auth");
@@ -339,6 +343,53 @@ cypressNtlmAuth
   })
   .then((result) => console.log(result))
   .catch((err) => console.log(err));
+```
+
+### ntlm-proxy API
+
+It is also possible to launch and control the ntlm-proxy through the API, without using Cypress. Through this method, it is possible to launch multiple parallel ntlm-proxy instances within the same node process. Each process can operate independently with unique configuration, making it possible to act as multiple users towards the same site simultaneously. This may be useful for testing chat servers for instance.
+
+#### Factory method
+
+- `startNtlmProxy()` : starts a ntlm-proxy and returns a NtlmProxy object. It contains a `ports` property with the URLs to config API and to the proxy. The URL to the proxy should be used to configure your test object (likely a browser) to ensure the traffic will pass through the proxy.
+
+#### NtlmProxy methods
+
+All these methods mimic the corresponding Cypress commands, see [Usage](#Usage) for details about the arguments.
+
+- `async NtlmProxy.alive()` : check if the proxy responds. Returns a resets configuration and connections in the proxy
+- `async NtlmProxy.reset()` : resets configuration and connections in the proxy
+- `async NtlmProxy.ntlm(NtlmConfig)` : adds an NTLM enabled site (or an array of sites) to the proxy
+- `async NtlmProxy.ntlmSso(NtlmSsoConfig)` : sets which sites should perform SSO authentication. Only supported on Windows.
+- `async NtlmProxy.stop()` : closes all connections and stops the proxy.
+
+#### Example
+
+```javascript
+const cypressNtlmAuth = require("cypress-ntlm-auth");
+
+async function run() {
+  let proxy = await cypressNtlmAuth.startNtlmProxy();
+  console.log(proxy);
+  await proxy.reset();
+  let ntlmConfig = {
+    ntlmHosts: ["localhost:5000"],
+    username: "bobby",
+    password: "brown",
+    domain: "acme",
+  };
+  await proxy.ntlm(ntlmConfig);
+
+  let ntlmSso = {
+    ntlmHosts: ["localhost:5006"],
+  };
+  // ntlmSso will throw on non-Windows OS
+  await proxy.ntlmSso(ntlmSso);
+
+  await proxy.alive();
+  await proxy.stop();
+}
+run();
 ```
 
 ## Notes

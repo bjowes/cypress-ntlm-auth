@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0-beta.1 - released 2020-10-21
+## 3.1.0 - released 2020-10-23
 
 - Fix #138: Exported Node module API for creating, controlling and stopping multiple ntlm-proxy instances
 
