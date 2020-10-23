@@ -56,8 +56,8 @@ import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { DebugLogger } from "../util/debug.logger";
 
-import { IExternalNtlmProxyFacade } from "../startup/interfaces/i.external.ntlm.proxy.facade";
-import { ExternalNtlmProxyFacade } from "../startup/external.ntlm.proxy.facade";
+import { INtlmProxyFacade } from "../startup/interfaces/i.ntlm.proxy.facade";
+import { NtlmProxyFacade } from "../startup/ntlm.proxy.facade";
 
 import { IMain } from "./interfaces/i.main";
 import { Main } from "./main";
@@ -73,7 +73,7 @@ export class DependencyInjection {
   private _container: Container;
 
   constructor() {
-    this._container = new Container({ defaultScope: "Singleton" });
+    this._container = new Container({ defaultScope: "Request" });
     this._container
       .bind<IPortsConfigStore>(TYPES.IPortsConfigStore)
       .to(PortsConfigStore);
@@ -90,7 +90,10 @@ export class DependencyInjection {
       .bind<ICypressFacade>(TYPES.ICypressFacade)
       .to(CypressFacade);
     this._container.bind<IStartup>(TYPES.IStartup).to(Startup);
-    this._container.bind<IDebugLogger>(TYPES.IDebugLogger).to(DebugLogger);
+    this._container
+      .bind<IDebugLogger>(TYPES.IDebugLogger)
+      .to(DebugLogger)
+      .inSingletonScope();
     this._container.bind<IEnvironment>(TYPES.IEnvironment).to(Environment);
     this._container
       .bind<IExpressServerFacade>(TYPES.IExpressServerFacade)
@@ -105,8 +108,8 @@ export class DependencyInjection {
     this._container.bind<INtlm>(TYPES.INtlm).to(Ntlm);
     this._container.bind<INtlmManager>(TYPES.INtlmManager).to(NtlmManager);
     this._container
-      .bind<IExternalNtlmProxyFacade>(TYPES.IExternalNtlmProxyFacade)
-      .to(ExternalNtlmProxyFacade);
+      .bind<INtlmProxyFacade>(TYPES.INtlmProxyFacade)
+      .to(NtlmProxyFacade);
     this._container
       .bind<INtlmProxyMitm>(TYPES.INtlmProxyMitm)
       .to(NtlmProxyMitm);

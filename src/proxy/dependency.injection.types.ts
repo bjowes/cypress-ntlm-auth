@@ -14,7 +14,7 @@ export let TYPES = {
   INegotiateManager: Symbol.for("INegotiateManager"),
   INtlm: Symbol.for("INtlm"),
   INtlmManager: Symbol.for("INtlmManager"),
-  IExternalNtlmProxyFacade: Symbol.for("IExternalNtlmProxyFacade"),
+  INtlmProxyFacade: Symbol.for("INtlmProxyFacade"),
   INtlmProxyMitm: Symbol.for("INtlmProxyMitm"),
   INtlmProxyServer: Symbol.for("INtlmProxyServer"),
   IStartup: Symbol.for("IStartup"),

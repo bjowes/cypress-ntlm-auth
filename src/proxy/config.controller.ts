@@ -91,7 +91,7 @@ export class ConfigController implements IConfigController {
 
   private quit(req: Request, res: Response) {
     this._debug.log("Received quit");
-    res.status(200).send("Over and out!");
+    res.sendStatus(200);
     this.configApiEvent.emit("quit");
   }
 }
