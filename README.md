@@ -172,12 +172,12 @@ If domain and workstation are not set, the ntlm-proxy will use the domain of the
 cy.ntlm(ntlmHosts, username, password, [domain, [workstation, [ntlmVersion]]]);
 ```
 
-- ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication shall be applied. The hosts must NOT include protocol or the rest of the url (path and query) _ only host:port level authentication is supported. In addition, wildcards are allowed to simplify specifying hosts for a whole intranet. Ports cannot be combined with wildcards. Example: `['localhost:4200', '_.acme.com']`
+- ntlmHosts: array of FQDNs or hostnames of the servers where NTLM authentication shall be applied. The hosts must NOT include protocol or the rest of the url (path and query) - only host:port level authentication is supported. In addition, wildcards are allowed to simplify specifying hosts for a whole intranet. Ports cannot be combined with wildcards. Example: `['localhost:4200', '*.acme.com']`
 - username: the username for the account to authenticate with
-- password: the password \*or the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
-- domain (optional): the \*omain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
-- workstation (optional):\*the workstation name of the client. Default value: `os.hostname()`;
-- ntlmVersion (optional):_the version of the NTLM protocol to use. Valid values are 1 and 2. Default value: 2. This can be useful for legacy hosts that don't support NTLMv2_ or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
+- password: the password or the account to authenticate with (see [Security advice](#Security-advice) regarding entering passwords)
+- domain (optional): the domain for the account to authenticate with (for AD account authentication). Default value: the domain of the ntlmHost.
+- workstation (optional): the workstation name of the client. Default value: `os.hostname()`
+- ntlmVersion (optional): the version of the NTLM protocol to use. Valid values are 1 and 2. Default value: 2. This can be useful for legacy hosts that don't support NTLMv2 or for certain scenarios where the NTLMv2 handshake fails (the plugin does not implement all features of NTLMv2 yet).
 
 The ntlm command may be called multiple times to setup multiple ntlmHosts, also with different credentials. If the ntlm command is called with the same ntlmHost again, it overwrites the credentials for that ntlmHost. Existing connections are not terminated, but if the server requests reauthentication the new credentials will be used.
 
@@ -327,9 +327,13 @@ To write also the NTLM and Negotiate headers sent and received by ntlm-proxy, se
 
 ## Node module API
 
-This plugin can also be called as a Node module. It mimics the behavior of the [run and open methods in Cypress module API](https://docs.cypress.io/guides/guides/module-api.html) - accepting the same arguments, passing them on to Cypress and returning the same value. It will automatically start the ntlm-proxy before calling `cypress.run()`, and it will shut down the ntlm-proxy after the tests have finished.
+This plugin can also be called as a Node module.
 
-### Example
+### cypress-ntlm API
+
+The cypress-ntlm API mimics the behavior of the [run and open methods in Cypress module API](https://docs.cypress.io/guides/guides/module-api.html) - accepting the same arguments, passing them on to Cypress and returning the same value. It will automatically start the ntlm-proxy before calling `cypress.run()`, and it will shut down the ntlm-proxy after the tests have finished.
+
+#### Example
 
 ```javascript
 const cypressNtlmAuth = require("cypress-ntlm-auth");
@@ -341,7 +345,68 @@ cypressNtlmAuth
   .catch((err) => console.log(err));
 ```
 
+### ntlm-proxy API
+
+It is also possible to launch and control the ntlm-proxy through the API, without using Cypress. Through this method, it is possible to launch multiple parallel ntlm-proxy instances within the same node process. Each process can operate independently with unique configuration, making it possible to act as multiple users towards the same site simultaneously. This may be useful for testing chat servers for instance.
+
+#### Factory method
+
+- `startNtlmProxy()` : starts a ntlm-proxy and returns a NtlmProxy object. It contains a `ports` property with the URLs to config API and to the proxy. The URL to the proxy should be used to configure your test object (likely a browser) to ensure the traffic will pass through the proxy.
+
+#### NtlmProxy methods
+
+All these methods mimic the corresponding Cypress commands, see [Usage](#Usage) for details about the arguments.
+
+- `async NtlmProxy.alive()` : check if the proxy responds. Returns a resets configuration and connections in the proxy
+- `async NtlmProxy.reset()` : resets configuration and connections in the proxy
+- `async NtlmProxy.ntlm(NtlmConfig)` : adds an NTLM enabled site (or an array of sites) to the proxy
+- `async NtlmProxy.ntlmSso(NtlmSsoConfig)` : sets which sites should perform SSO authentication. Only supported on Windows.
+- `async NtlmProxy.stop()` : closes all connections and stops the proxy.
+
+#### Example
+
+```javascript
+const cypressNtlmAuth = require("cypress-ntlm-auth");
+
+async function run() {
+  let proxy = await cypressNtlmAuth.startNtlmProxy();
+  console.log(proxy);
+  await proxy.reset();
+  let ntlmConfig = {
+    ntlmHosts: ["localhost:5000"],
+    username: "bobby",
+    password: "brown",
+    domain: "acme",
+  };
+  await proxy.ntlm(ntlmConfig);
+
+  let ntlmSso = {
+    ntlmHosts: ["localhost:5006"],
+  };
+  // ntlmSso will throw on non-Windows OS
+  await proxy.ntlmSso(ntlmSso);
+
+  await proxy.alive();
+  await proxy.stop();
+}
+run();
+```
+
 ## Notes
+
+### Docker and global installs
+
+When using the Docker containers provided by Cypress, Cypress is installed globally. Since this plugin requires the Node module API of Cypress, one cannot mix global Cypress with a local install of the plugin. There are two options:
+
+1. Install cypress-ntlm-auth both globally and locally, and use global binary to start it (use `cypress-ntlm`, not `npx cypress-ntlm`).
+2. Install cypress-ntlm-auth globally and modify the `cypress/support/index.js` file to use the path of the global installation of the plugin. The path to use can be found by entering `npm root -g`. Prefix the import statement of cypress-ntlm-auth with this path.
+   For instance, the typical path for a linux installation should be `/usr/local/lib/node_modules`, meaning that for that environment the import statement in `cypress/support/index.js` should be
+
+```js
+import "/usr/local/lib/node_modules/cypress-ntlm-auth/dist/commands";
+```
+
+Which option to use is up to you. The first option is platform agnostic but requires the extra step of the local install (a Docker container can be prepared with all the global installs already in place). The second option removes the requirement of the local install, but the import path specified is not portable - it will vary between different OS variants, and also if you have multiple Node versions installed.
 
 ### .http-mitm-proxy
 

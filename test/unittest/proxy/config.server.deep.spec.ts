@@ -24,10 +24,11 @@ describe("Config API (ConfigServer deep tests)", () => {
 
   before(async function () {
     configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
-    configStore = dependencyInjection.get<IConfigStore>(TYPES.IConfigStore);
-    portsConfigStore = dependencyInjection.get<IPortsConfigStore>(
-      TYPES.IPortsConfigStore
-    );
+    // Cannot resolve these from DI since that would yield new instances
+    configStore = (configServer as any)["_configController"]["_configStore"];
+    portsConfigStore = (configServer as any)["_configController"][
+      "_portsConfigStore"
+    ];
     configServer.init();
     configApiUrl = await configServer.start();
   });

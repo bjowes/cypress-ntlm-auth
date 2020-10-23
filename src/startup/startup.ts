@@ -5,7 +5,7 @@ import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import { IMain } from "../proxy/interfaces/i.main";
 import { ICypressFacade } from "./interfaces/i.cypress.facade";
-import { IExternalNtlmProxyFacade } from "./interfaces/i.external.ntlm.proxy.facade";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
 import { IEnvironment } from "./interfaces/i.environment";
 import { PortsConfig } from "../models/ports.config.model";
 
@@ -15,7 +15,7 @@ export class Startup implements IStartup {
   private _proxyMain: IMain;
   private _cypressFacade: ICypressFacade;
   private _environment: IEnvironment;
-  private _externalNtlmProxyFacade: IExternalNtlmProxyFacade;
+  private _externalNtlmProxyFacade: INtlmProxyFacade;
   private _debug: IDebugLogger;
   private _internalNtlmProxy = true;
 
@@ -25,8 +25,8 @@ export class Startup implements IStartup {
     @inject(TYPES.IMain) proxyMain: IMain,
     @inject(TYPES.ICypressFacade) cypressFacade: ICypressFacade,
     @inject(TYPES.IEnvironment) environment: IEnvironment,
-    @inject(TYPES.IExternalNtlmProxyFacade)
-    externalNtlmProxyFacade: IExternalNtlmProxyFacade,
+    @inject(TYPES.INtlmProxyFacade)
+    externalNtlmProxyFacade: INtlmProxyFacade,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._upstreamProxyConfigurator = upstreamProxyConfigurator;
@@ -47,8 +47,11 @@ export class Startup implements IStartup {
     const cypressNtlmIndex = args.findIndex(
       (t) =>
         t === "cypress-ntlm" ||
-        t.endsWith("node_modules/.bin/cypress-ntlm") ||
-        t.endsWith("cypress-ntlm-auth\\dist\\launchers\\cypress.ntlm.js")
+        t === "cypress.ntlm.js" ||
+        t.endsWith("/cypress-ntlm") ||
+        t.endsWith("/cypress.ntlm.js") ||
+        t.endsWith("\\cypress-ntlm") ||
+        t.endsWith("\\cypress.ntlm.js")
     );
     if (cypressNtlmIndex === -1) {
       this._debug.log(args);
@@ -80,28 +83,36 @@ export class Startup implements IStartup {
   }
 
   private async prepareProxy() {
-    this._upstreamProxyConfigurator.processNoProxyLoopback();
-
     let ports: PortsConfig;
     if (this._environment.configApiUrl) {
-      this._internalNtlmProxy = false;
-      this._debug.log(
-        "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
-      );
-      ports = await this._externalNtlmProxyFacade.alive(
-        this._environment.configApiUrl
-      );
+      ports = await this.prepareExternalNtlmProxy();
     } else {
-      this._internalNtlmProxy = true;
-      this._debug.log("Starting ntlm-proxy...");
-      ports = await this._proxyMain.run(
-        this._environment.httpProxy,
-        this._environment.httpsProxy,
-        this._environment.noProxy
-      );
+      ports = await this.startNtlmProxy();
     }
     this._environment.configureForCypress(ports);
     this._upstreamProxyConfigurator.removeUnusedProxyEnv();
+  }
+
+  private async prepareExternalNtlmProxy(): Promise<PortsConfig> {
+    this._internalNtlmProxy = false;
+    this._upstreamProxyConfigurator.processNoProxyLoopback();
+    this._debug.log(
+      "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
+    );
+    return await this._externalNtlmProxyFacade.alive(
+      this._environment.configApiUrl
+    );
+  }
+
+  async startNtlmProxy(): Promise<PortsConfig> {
+    this._internalNtlmProxy = true;
+    this._upstreamProxyConfigurator.processNoProxyLoopback();
+    this._debug.log("Starting ntlm-proxy...");
+    return await this._proxyMain.run(
+      this._environment.httpProxy,
+      this._environment.httpsProxy,
+      this._environment.noProxy
+    );
   }
 
   async run(options: any) {
@@ -118,7 +129,7 @@ export class Startup implements IStartup {
       this._debug.log("Tests exception");
       throw err;
     } finally {
-      await this.stop();
+      await this.stopNtlmProxy();
     }
   }
 
@@ -135,11 +146,11 @@ export class Startup implements IStartup {
       this._debug.log("Tests exception");
       throw err;
     } finally {
-      await this.stop();
+      await this.stopNtlmProxy();
     }
   }
 
-  async stop() {
+  private async stopNtlmProxy() {
     if (this._internalNtlmProxy) {
       this._debug.log("Stopping ntlm-proxy...");
       await this._proxyMain.stop();
