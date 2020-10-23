@@ -20,5 +20,6 @@ cache:
   directories:
     # we also need to cache folder with Cypress binary
     - ~/.cache
+    - $HOME/AppData/Local/Cypress/Cache
 install:
   - npm ci
