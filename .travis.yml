@@ -2,11 +2,11 @@ language: node_js
 os:
   - "windows"
   - "linux"
-#  - "osx"
+  - "osx"
 node_js:
   - "lts/*"
-  #  - "node"
-#  - "10"
+  - "node"
+  - "10"
 
 addons:
   apt:
