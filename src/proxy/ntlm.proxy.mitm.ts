@@ -375,7 +375,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     self._debug.log("Tunnel to", req.url);
     let onPrematureClose = function () {
       self._debug.log("cannot establish connection to server, CONNECT failed");
-      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
     };
     let conn = net.connect(
       {
@@ -394,7 +394,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         });
         conn.removeListener("close", onPrematureClose);
 
-        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function () {
+        socket.write("HTTP/1.1 200 OK\r\n\r\n", "utf8", function () {
           conn.write(head);
           conn.pipe(socket);
           socket.pipe(conn);

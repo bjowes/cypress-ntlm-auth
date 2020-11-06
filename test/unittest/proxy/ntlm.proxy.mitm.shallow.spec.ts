@@ -388,7 +388,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     let req = Substitute.for<http.IncomingMessage>();
     let freePort = await getFreePort();
     socketMock.end(Arg.any(), Arg.any()).mimicks((data, enc) => {
-      socketMock.received(1).end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+      socketMock.received(1).end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
       return true;
     });
     req.url.returns("localhost:" + freePort);
