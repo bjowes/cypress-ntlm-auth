@@ -1,7 +1,5 @@
 /// <reference types="Cypress" />
 
-import { osSupported } from "win-sso";
-
 context("Commands", function () {
   context("Plugin required", function () {
     let ntlm_auth_proxy;
@@ -92,7 +90,7 @@ context("Commands", function () {
     const httpHost = "http://localhost:5000";
 
     beforeEach("Reset NTLM config", function () {
-      cy.ntlmReset();
+      //cy.ntlmReset();
     });
 
     it("cy.ntlmSso with protocol in ntlmHosts shall not succeed", function () {
@@ -126,14 +124,45 @@ context("Commands", function () {
       cy.ntlmSso(undefined);
     });
 
-    it("cy.ntlmSso with on non windows shall not succeed", function () {
-      if (osSupported()) {
+    it.only("cy.ntlmSso with on non windows shall not succeed", function () {
+      if (Cypress.platform === "win32") {
         this.skip();
       }
+      /*
       expectFail(
         "Body: SSO config parse error. SSO is not supported on this platform. Only Windows OSs are supported."
       );
+      */
+
+      cy.log("Request without log");
+      cy.request({
+        method: "GET",
+        url: "https://jsonplaceholder.cypress.io/todos/2",
+        log: false,
+      });
+      /*
+      cy.request({
+        method: "POST",
+        url: "https://this.does.not.exxizzt",
+        log: false,
+        body: { muu: "more" },
+        headers: { "x-my-header": "yess" },
+      });
+*/
+      cy.log("Request with log");
+      cy.request({
+        method: "GET",
+        url: "https://jsonplaceholder.cypress.io/todos/2",
+      });
+
+      cy.request({
+        method: "POST",
+        url: "http://www.mocky.io/v2/5ec993803000009700a6ce1f",
+        log: false,
+      });
+
       cy.ntlmSso(["nisse.com", "google.com"]);
+      //cy.get("body").should("have.value", "dummy");
     });
   });
 

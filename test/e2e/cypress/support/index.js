@@ -20,3 +20,4 @@ import "./commands";
 // require('./commands')
 
 import "cypress-ntlm-auth/dist/commands";
+require("cypress-terminal-report/src/installLogsCollector")();

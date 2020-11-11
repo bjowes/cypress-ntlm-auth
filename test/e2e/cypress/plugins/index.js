@@ -18,4 +18,12 @@
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-}
+  const options = {
+    xhr: {
+      printHeaderData: true,
+      printRequestData: false,
+    },
+  };
+  //require("cypress-terminal-report/src/installLogsPrinter")(on, options);
+  require("cypress-terminal-report/src/installLogsPrinter")(on);
+};
