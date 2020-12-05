@@ -50,23 +50,27 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
     cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
     cy.visit(httpHost + "/load-test.html");
+    cy.get("#error-count").should("contain.text", "No errors!");
   });
 
   it("Authenticated HTTP page with 100 random API calls", function () {
     cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
     cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
     cy.visit(httpNtlmHost + "/load-test.html");
+    cy.get("#error-count").should("contain.text", "No errors!");
   });
 
   it("HTTPS page with 100 random API calls", function () {
     cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
     cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
     cy.visit(httpsHost + "/load-test.html");
+    cy.get("#error-count").should("contain.text", "No errors!");
   });
 
   it("Authenticated HTTPS page with 100 random API calls", function () {
     cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
     cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
     cy.visit(httpsNtlmHost + "/load-test.html");
+    cy.get("#error-count").should("contain.text", "No errors!");
   });
 });

@@ -40,9 +40,15 @@
         }
       }
 
-      multiRandomRequest(100, (url, type) => (status, err) => {
+      let requestsLeft = 100;
+      let errorCount = 0;
+      multiRandomRequest(requestsLeft, (url, type) => (status, err) => {
+        requestsLeft--;
         let element = "";
         if (!err) {
+          if (status !== 'success') {
+            errorCount++;
+          }
           element =
             '<li class="item-' +
             status +
@@ -54,6 +60,7 @@
             status +
             "</li>";
         } else {
+          errorCount++;
           element =
             '<li class="item-' +
             status +
@@ -66,11 +73,21 @@
             "</li>";
         }
         $("#results ul").append(element);
+
+        if (requestsLeft === 0) {
+          if (errorCount === 0) {
+            $("#error-count").text('No errors!');
+          } else {
+            $("#error-count").text(errorCount + ' errors!');
+          }
+        }
       });
     </script>
   </head>
   <body>
     <h1>cypress-ntlm-auth e2e load test page</h1>
+    <div id="error-count">
+    </div>
     <div id="results">
       <ul></ul>
     </div>
