@@ -450,4 +450,30 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     return headers;
   }
+
+  onWebSocketClose(
+    ctx: IContext,
+    code: number,
+    message: string,
+    callback: (error?: NodeJS.ErrnoException) => void
+  ) {
+    // The default behavior of http-mitm-proxy causes exceptions on network errors on websockets
+    // so we need to override it
+    if (code === 1005 || code === 1006) {
+      if (ctx.closedByServer) {
+        self._debug.log(
+          "ProxyToServer websocket closed due to connectivity issue, terminating ClientToProxy websocket. Target:",
+          ctx.proxyToServerWebSocket.url
+        );
+        return ctx.clientToProxyWebSocket.terminate();
+      } else {
+        self._debug.log(
+          "ClientToProxy websocket closed due to connectivity issue, terminating ProxyToServer websocket. Target:",
+          ctx.proxyToServerWebSocket.url
+        );
+        return ctx.proxyToServerWebSocket.terminate();
+      }
+    }
+    return callback();
+  }
 }

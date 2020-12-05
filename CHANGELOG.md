@@ -2,6 +2,7 @@
 
 ## 3.1.2 - released 2020-11-06
 
+- Fix #144: websockets were not correctly closed on ntlmReset
 - Added E2E tests to CI
 
 ## 3.1.1 - released 2020-10-31

@@ -4,6 +4,7 @@ import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import net from "net";
 import http from "http";
+import ws from "ws";
 
 import { expect } from "chai";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
@@ -428,4 +429,116 @@ describe("NtlmProxyMitm CONNECT", () => {
       });
     });
   }
+});
+
+describe("NtlmProxyMitm WebSocketClose", () => {
+  let ntlmProxyMitm: NtlmProxyMitm;
+  let configStoreMock: SubstituteOf<IConfigStore>;
+  let portsConfigStoreMock: PortsConfigStoreMock;
+  let connectionContextManagerMock: SubstituteOf<IConnectionContextManager>;
+  let winSsoFacadeMock: SubstituteOf<interfaces.Newable<IWinSsoFacade>>;
+  let negotiateManagerMock: SubstituteOf<INegotiateManager>;
+  let ntlmManagerMock: SubstituteOf<INtlmManager>;
+  let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let debugMock: SubstituteOf<IDebugLogger>;
+  let debugLogger = new DebugLogger();
+
+  beforeEach(async function () {
+    configStoreMock = Substitute.for<IConfigStore>();
+    configStoreMock.existsOrUseSso(Arg.any()).returns(false);
+
+    portsConfigStoreMock = new PortsConfigStoreMock();
+    connectionContextManagerMock = Substitute.for<IConnectionContextManager>();
+    winSsoFacadeMock = Substitute.for<interfaces.Newable<IWinSsoFacade>>();
+    negotiateManagerMock = Substitute.for<INegotiateManager>();
+    ntlmManagerMock = Substitute.for<INtlmManager>();
+    upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+    upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+
+    debugMock = Substitute.for<IDebugLogger>();
+    debugMock.log(Arg.all()).mimicks(debugLogger.log);
+    ntlmProxyMitm = new NtlmProxyMitm(
+      configStoreMock,
+      portsConfigStoreMock,
+      connectionContextManagerMock,
+      winSsoFacadeMock,
+      negotiateManagerMock,
+      ntlmManagerMock,
+      upstreamProxyManagerMock,
+      debugMock
+    );
+  });
+
+  it("normal close code should go to callback", async function () {
+    const ctx = Substitute.for<IContext>();
+    let callbackCount = 0;
+    ntlmProxyMitm.onWebSocketClose(ctx, 1000, null, (err: Error) => {
+      callbackCount++;
+      if (err) throw err;
+    });
+    expect(callbackCount).to.equal(1);
+  });
+
+  it("1005 close code from client websocket should terminate server websocket", async function () {
+    const serverWsMock = Substitute.for<ws>();
+    const ctx = Substitute.for<IContext>();
+    ctx.closedByServer.returns(false);
+    ctx.proxyToServerWebSocket.returns(serverWsMock);
+    let callbackCount = 0;
+    ntlmProxyMitm.onWebSocketClose(ctx, 1005, null, (err: Error) => {
+      callbackCount++;
+      if (err) throw err;
+    });
+    expect(callbackCount).to.equal(0);
+    serverWsMock.received(1).terminate();
+  });
+
+  it("1006 close code from client websocket should terminate server websocket", async function () {
+    const serverWsMock = Substitute.for<ws>();
+    const ctx = Substitute.for<IContext>();
+    ctx.closedByServer.returns(false);
+    ctx.proxyToServerWebSocket.returns(serverWsMock);
+    let callbackCount = 0;
+    ntlmProxyMitm.onWebSocketClose(ctx, 1006, null, (err: Error) => {
+      callbackCount++;
+      if (err) throw err;
+    });
+    expect(callbackCount).to.equal(0);
+    serverWsMock.received(1).terminate();
+    serverWsMock.received(1).url;
+  });
+
+  it("1005 close code from server websocket should terminate client websocket", async function () {
+    const clientWsMock = Substitute.for<ws>();
+    const serverWsMock = Substitute.for<ws>();
+    const ctx = Substitute.for<IContext>();
+    ctx.closedByServer.returns(true);
+    ctx.clientToProxyWebSocket.returns(clientWsMock);
+    ctx.proxyToServerWebSocket.returns(serverWsMock);
+    let callbackCount = 0;
+    ntlmProxyMitm.onWebSocketClose(ctx, 1005, null, (err: Error) => {
+      callbackCount++;
+      if (err) throw err;
+    });
+    expect(callbackCount).to.equal(0);
+    clientWsMock.received(1).terminate();
+    serverWsMock.received(1).url;
+  });
+
+  it("1006 close code from server websocket should terminate client websocket", async function () {
+    const clientWsMock = Substitute.for<ws>();
+    const serverWsMock = Substitute.for<ws>();
+    const ctx = Substitute.for<IContext>();
+    ctx.closedByServer.returns(true);
+    ctx.clientToProxyWebSocket.returns(clientWsMock);
+    ctx.proxyToServerWebSocket.returns(serverWsMock);
+    let callbackCount = 0;
+    ntlmProxyMitm.onWebSocketClose(ctx, 1006, null, (err: Error) => {
+      callbackCount++;
+      if (err) throw err;
+    });
+    expect(callbackCount).to.equal(0);
+    clientWsMock.received(1).terminate();
+    serverWsMock.received(1).url;
+  });
 });

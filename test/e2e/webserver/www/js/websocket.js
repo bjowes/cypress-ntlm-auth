@@ -1,7 +1,7 @@
-function initWs(wsUri, elementId) {
+function initWs(wsUri, elementId, closeAfterFirstMessage) {
   output = document.getElementById(elementId);
   output.hidden = false;
-  testWebSocket(wsUri, output);
+  testWebSocket(wsUri, output, closeAfterFirstMessage);
 }
 
 function initAllWs() {
@@ -11,7 +11,7 @@ function initAllWs() {
   initWs("wss://localhost:5001/ws/echo", "wss-ntlm-output");
 }
 
-function testWebSocket(wsUri, outputElement) {
+function testWebSocket(wsUri, outputElement, closeAfterFirstMessage) {
   let ws = new WebSocket(wsUri);
   ws.onopen = function (evt) {
     onOpen(evt, ws, outputElement);
@@ -20,7 +20,7 @@ function testWebSocket(wsUri, outputElement) {
     onClose(evt, outputElement);
   };
   ws.onmessage = function (evt) {
-    onMessage(evt, ws, outputElement);
+    onMessage(evt, ws, outputElement, closeAfterFirstMessage);
   };
   ws.onerror = function (evt) {
     onError(evt, outputElement);
@@ -36,12 +36,14 @@ function onClose(evt, outputElement) {
   writeToScreen("DISCONNECTED", outputElement);
 }
 
-function onMessage(evt, ws, outputElement) {
+function onMessage(evt, ws, outputElement, close) {
   writeToScreen(
     '<span style="color: blue;">RESPONSE: ' + evt.data + "</span>",
     outputElement
   );
-  ws.close();
+  if (close) {
+    ws.close();
+  }
 }
 
 function onError(evt, outputElement) {

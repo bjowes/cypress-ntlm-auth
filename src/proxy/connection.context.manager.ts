@@ -149,6 +149,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
             "close",
             context.socketCloseListener
           );
+          this._debug.log("Destroying context for", context.clientAddress);
           context.destroy(event);
         }
       }

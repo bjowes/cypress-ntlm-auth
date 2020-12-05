@@ -8,10 +8,12 @@
   <body>
     <h1>cypress-ntlm-auth e2e websocket test page</h1>
     <br />
-    <button type="button" onclick="initWs('ws://localhost:5002/ws/echo', 'ws-output')">HTTP WebSocket</button>
-    <button type="button" onclick="initWs('ws://localhost:5000/ws/echo', 'ws-ntlm-output')">HTTP NTLM WebSocket</button>
-    <button type="button" onclick="initWs('wss://localhost:5003/ws/echo', 'wss-output')">HTTPS WebSocket</button>
-    <button type="button" onclick="initWs('wss://localhost:5001/ws/echo', 'wss-ntlm-output')">HTTPS NTLM WebSocket</button>
+    <button type="button" onclick="initWs('ws://localhost:5002/ws/echo', 'ws-output', true)">HTTP WebSocket</button>
+    <button type="button" onclick="initWs('ws://localhost:5002/ws/echo', 'ws-output', false)">HTTP WebSocket - stay open</button>
+    <button type="button" onclick="initWs('ws://localhost:5000/ws/echo', 'ws-ntlm-output', true)">HTTP NTLM WebSocket</button>
+    <button type="button" onclick="initWs('wss://localhost:5003/ws/echo', 'wss-output', true)">HTTPS WebSocket</button>
+    <button type="button" onclick="initWs('wss://localhost:5003/ws/echo', 'wss-output', false)">HTTPS WebSocket - stay open</button>
+    <button type="button" onclick="initWs('wss://localhost:5001/ws/echo', 'wss-ntlm-output', true)">HTTPS NTLM WebSocket</button>
     <br />
     <div id="ws-output" hidden>
       <h2>Websocket over HTTP</h2>

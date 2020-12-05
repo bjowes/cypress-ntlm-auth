@@ -14,9 +14,9 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "cypress": "^5.5.0",
+    "cypress": "^6.0.1",
     "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-3.1.1.tgz",
-    "cypress-terminal-report": "^2.2.0",
+    "cypress-terminal-report": "^2.4.0",
     "debug": "^4.2.0",
     "express": "^4.17.1",
     "express-ntlm": "^2.5.2",
