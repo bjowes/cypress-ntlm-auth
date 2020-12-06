@@ -6,17 +6,10 @@ import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import { expect } from "chai";
 import nock from "nock";
 
-<<<<<<< HEAD:test/unittest/startup/external.ntlm.proxy.facade.shallow.spec.ts
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
-import { ExternalNtlmProxyFacade } from "../../../src/startup/external.ntlm.proxy.facade";
+import { NtlmProxyFacade } from "../../../src/startup/ntlm.proxy.facade";
 import { PortsConfig } from "../../../src/models/ports.config.model";
-=======
-import { IDebugLogger } from "../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../src/util/debug.logger";
-import { NtlmProxyFacade } from "../../src/startup/ntlm.proxy.facade";
-import { PortsConfig } from "../../src/models/ports.config.model";
->>>>>>> master:test/startup/ntlm.proxy.facade.shallow.spec.ts
 
 describe("NtlmProxyFacade shallow", () => {
   let ntlmProxyFacade: NtlmProxyFacade;

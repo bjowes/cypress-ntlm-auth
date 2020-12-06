@@ -114,6 +114,11 @@ const ntlmSso = (ntlmHosts) => {
       "The cypress-ntlm-auth plugin must be loaded before using this method"
     );
   }
+  if (Cypress.platform !== "win32") {
+    throw new Error(
+      "SSO is not supported on this platform. Only Windows OSs are supported."
+    );
+  }
 
   let ntlmSsoConfig = {
     ntlmHosts: ntlmHosts,

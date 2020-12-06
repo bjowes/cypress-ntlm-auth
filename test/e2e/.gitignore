@@ -1,0 +1,12 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+node_modules/
+
+.http-mitm-proxy/
+cypress/videos/
+cypress/screenshots/
+/cypress-ntlm-auth-*.tgz
+

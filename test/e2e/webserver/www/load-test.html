@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>cypress-ntlm-auth E2E Load test</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="js/request.js"></script>
+    <script type="text/javascript">
+      function randomRequest(cb) {
+        const type = Math.floor(Math.random() * 4);
+        var reqType = "";
+        switch (type) {
+          case 0:
+            reqType = "GET";
+            break;
+          case 1:
+            reqType = "POST";
+            break;
+          case 2:
+            reqType = "PUT";
+            break;
+          case 3:
+            reqType = "DELETE";
+            break;
+        }
+
+        const site = Math.floor(Math.random() * 4);
+        var protocol = "http://";
+        if (site === 1 || site === 3) {
+          protocol = "https://";
+        }
+        var url = protocol + "localhost:500" + site;
+        request(url, reqType, cb(url, reqType));
+      }
+
+      function multiRandomRequest(count, cb) {
+        if (count <= 0) return;
+        while (count--) {
+          randomRequest(cb);
+        }
+      }
+
+      let requestsLeft = 100;
+      let errorCount = 0;
+      multiRandomRequest(requestsLeft, (url, type) => (status, err) => {
+        requestsLeft--;
+        let element = "";
+        if (!err) {
+          if (status !== 'success') {
+            errorCount++;
+          }
+          element =
+            '<li class="item-' +
+            status +
+            '">' +
+            url +
+            " " +
+            type +
+            ": " +
+            status +
+            "</li>";
+        } else {
+          errorCount++;
+          element =
+            '<li class="item-' +
+            status +
+            '">' +
+            url +
+            " " +
+            type +
+            ": " +
+            err +
+            "</li>";
+        }
+        $("#results ul").append(element);
+
+        if (requestsLeft === 0) {
+          if (errorCount === 0) {
+            $("#error-count").text('No errors!');
+          } else {
+            $("#error-count").text(errorCount + ' errors!');
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <h1>cypress-ntlm-auth e2e load test page</h1>
+    <div id="error-count">
+    </div>
+    <div id="results">
+      <ul></ul>
+    </div>
+  </body>
+</html>

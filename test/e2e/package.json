@@ -1,0 +1,28 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "e2e test for cypress-ntlm-auth",
+  "main": "index.js",
+  "scripts": {
+    "webserver": "node webserver/server.js",
+    "webserver:stop": "node webserver/stop-server.js",
+    "cypress-ntlm:run": "npx cypress-ntlm run",
+    "test": "npm-run-all -p -r webserver cypress-ntlm:run"
+  },
+  "author": "Björn Weström",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "cypress": "^6.0.1",
+    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-3.1.1.tgz",
+    "cypress-terminal-report": "^2.4.0",
+    "debug": "^4.2.0",
+    "express": "^4.17.1",
+    "express-ntlm": "^2.5.2",
+    "express-ws": "^4.0.0",
+    "morgan": "^1.10.0",
+    "morgan-debug": "^2.0.0",
+    "npm-run-all": "^4.1.5"
+  }
+}

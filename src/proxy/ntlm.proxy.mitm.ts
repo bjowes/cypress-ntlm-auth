@@ -375,7 +375,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     self._debug.log("Tunnel to", req.url);
     let onPrematureClose = function () {
       self._debug.log("cannot establish connection to server, CONNECT failed");
-      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "UTF-8");
+      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
     };
     let conn = net.connect(
       {
@@ -394,7 +394,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         });
         conn.removeListener("close", onPrematureClose);
 
-        socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", function () {
+        socket.write("HTTP/1.1 200 OK\r\n\r\n", "utf8", function () {
           conn.write(head);
           conn.pipe(socket);
           socket.pipe(conn);
@@ -449,5 +449,31 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
 
     return headers;
+  }
+
+  onWebSocketClose(
+    ctx: IContext,
+    code: number,
+    message: string,
+    callback: (error?: NodeJS.ErrnoException) => void
+  ) {
+    // The default behavior of http-mitm-proxy causes exceptions on network errors on websockets
+    // so we need to override it
+    if (code === 1005 || code === 1006) {
+      if (ctx.closedByServer) {
+        self._debug.log(
+          "ProxyToServer websocket closed due to connectivity issue, terminating ClientToProxy websocket. Target:",
+          ctx.proxyToServerWebSocket.url
+        );
+        return ctx.clientToProxyWebSocket.terminate();
+      } else {
+        self._debug.log(
+          "ClientToProxy websocket closed due to connectivity issue, terminating ProxyToServer websocket. Target:",
+          ctx.proxyToServerWebSocket.url
+        );
+        return ctx.proxyToServerWebSocket.terminate();
+      }
+    }
+    return callback();
   }
 }

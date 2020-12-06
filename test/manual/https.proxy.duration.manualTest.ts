@@ -8,14 +8,14 @@ import "mocha";
 
 import { ProxyFacade } from "../proxy/proxy.facade";
 import { expect } from "chai";
-import { DependencyInjection } from "../../src/proxy/dependency.injection";
-import { TYPES } from "../../src/proxy/dependency.injection.types";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection";
+import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { ExpressServer } from "../proxy/express.server";
 import sinon from "sinon";
-import { PortsFileService } from "../../src/util/ports.file.service";
-import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
-import { PortsFile } from "../../src/models/ports.file.model";
-import { NtlmConfig } from "../../src/models/ntlm.config.model";
+import { PortsFileService } from "../../../src/util/ports.file.service";
+import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
+import { PortsFile } from "../../../src/models/ports.file.model";
+import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
