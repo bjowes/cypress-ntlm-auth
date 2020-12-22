@@ -53,7 +53,7 @@ export class CoreServer implements ICoreServer {
     ntlmProxyPort?: number
   ): Promise<PortsConfig> {
     this._upstreamProxyManager.init(httpProxy, httpsProxy, noProxy);
-    let configApiUrl = await this._configServer.start(configApiPort);
+    const configApiUrl = await this._configServer.start(configApiPort);
     let ntlmProxyUrl: string;
     try {
       ntlmProxyUrl = await this._ntlmProxyServer.start(ntlmProxyPort);
@@ -61,7 +61,7 @@ export class CoreServer implements ICoreServer {
       await this._configServer.stop();
       throw err;
     }
-    let ports: PortsConfig = {
+    const ports: PortsConfig = {
       configApiUrl: configApiUrl,
       ntlmProxyUrl: ntlmProxyUrl,
     };

@@ -17,17 +17,17 @@ export class Type2Message {
   constructor(buf: Buffer) {
     this.raw = buf;
 
-    //check signature
+    // check signature
     if (buf.toString('ascii', 0, NtlmConstants.NTLM_SIGNATURE.length) !== NtlmConstants.NTLM_SIGNATURE) {
       throw new Error('Invalid message signature');
     }
 
-    //check message type
+    // check message type
     if (buf.readUInt32LE(NtlmConstants.NTLM_SIGNATURE.length) !== 2) {
       throw new Error('Invalid message type (no type 2)');
     }
 
-    //read flags
+    // read flags
     this.flags = buf.readUInt32LE(20);
 
     this.encoding = (this.flags & NtlmFlags.NEGOTIATE_OEM) ? 'ascii' : 'ucs2';
@@ -36,19 +36,19 @@ export class Type2Message {
 
     this.challenge = buf.slice(24, 32);
 
-    //read target name
+    // read target name
     this.targetName = this.readTargetName();
 
-    //read target info
+    // read target info
     if (this.flags & NtlmFlags.NEGOTIATE_TARGET_INFO) {
       this.targetInfo = this.parseTargetInfo();
     }
   }
 
   private readTargetName(): string {
-    let length = this.raw.readUInt16LE(12);
-    //skipping allocated space
-    let offset = this.raw.readUInt32LE(16);
+    const length = this.raw.readUInt16LE(12);
+    // skipping allocated space
+    const offset = this.raw.readUInt32LE(16);
 
     if (length === 0) {
       return '';
@@ -62,13 +62,13 @@ export class Type2Message {
   }
 
   private parseTargetInfo() {
-    let info: TargetInfoHash = {};
+    const info: TargetInfoHash = {};
 
-    let length = this.raw.readUInt16LE(40);
-    //skipping allocated space
-    let offset = this.raw.readUInt32LE(44);
+    const length = this.raw.readUInt16LE(40);
+    // skipping allocated space
+    const offset = this.raw.readUInt32LE(44);
 
-    let targetInfoBuffer = Buffer.alloc(length);
+    const targetInfoBuffer = Buffer.alloc(length);
     this.raw.copy(targetInfoBuffer, 0, offset, offset + length);
 
     if (length === 0) {
@@ -82,13 +82,13 @@ export class Type2Message {
     let pos = offset;
 
     while (pos < (offset + length)) {
-      let blockType = this.raw.readUInt16LE(pos);
+      const blockType = this.raw.readUInt16LE(pos);
       pos += 2;
-      let blockLength = this.raw.readUInt16LE(pos);
+      const blockLength = this.raw.readUInt16LE(pos);
       pos += 2;
 
       if (blockType === 0) {
-        //reached the terminator subblock
+        // reached the terminator subblock
         break;
       }
 
@@ -140,7 +140,7 @@ export class Type2Message {
           info[blockTypeStr] = this.raw.toString('ucs2', pos, pos + blockLength);
         } else {
           // Output as hex in little endian order
-          let twoCharBlocks = this.raw.toString('hex', pos, pos + blockLength).match(/.{2}/g);
+          const twoCharBlocks = this.raw.toString('hex', pos, pos + blockLength).match(/.{2}/g);
           if (twoCharBlocks) {
             info[blockTypeStr] = twoCharBlocks.reverse().join("");
           } else {

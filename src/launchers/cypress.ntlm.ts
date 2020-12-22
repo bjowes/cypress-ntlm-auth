@@ -7,6 +7,9 @@ import {
   argumentsToOptions,
 } from "../index";
 
+/**
+ *
+ */
 async function execute() {
   try {
     const mode = argumentsToCypressMode(process.argv);

@@ -2,8 +2,11 @@
 
 import { stopNtlmProxy } from "../index";
 
+/**
+ *
+ */
 async function execute() {
-  let ok = await stopNtlmProxy();
+  const ok = await stopNtlmProxy();
   if (ok) {
     console.info("ntlm-proxy stopped");
   } else {

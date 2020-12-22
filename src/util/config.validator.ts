@@ -6,7 +6,7 @@ import { HostnameValidator } from "./hostname.validator";
 
 export class ConfigValidator {
   static validate(config: NtlmConfig): NtlmConfigValidateResult {
-    let result = { ok: false } as NtlmConfigValidateResult;
+    const result = { ok: false } as NtlmConfigValidateResult;
 
     if (
       !config.ntlmHosts ||
@@ -24,7 +24,7 @@ export class ConfigValidator {
       return result;
     }
 
-    let allNtlmHostsPass = config.ntlmHosts.every((ntlmHost) => {
+    const allNtlmHostsPass = config.ntlmHosts.every((ntlmHost) => {
       if (
         !HostnameValidator.validHostnameOrFqdn(ntlmHost) &&
         !HostnameValidator.validHostnameOrFqdnWithPort(ntlmHost)
@@ -32,7 +32,9 @@ export class ConfigValidator {
         result.message =
           "Invalid host [" +
           HostnameValidator.escapeHtml(ntlmHost) +
-          "] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted " +
+          "] in ntlmHosts, must be one of: " +
+          "1) a hostname or FQDN, wildcards accepted. " +
+          "2) hostname or FQDN with port, wildcards not accepted " +
           "(localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok).";
         return false;
       }
@@ -71,8 +73,8 @@ export class ConfigValidator {
   }
 
   static validateLegacy(ntlmHost: string): NtlmConfigValidateResult {
-    let result = { ok: false } as NtlmConfigValidateResult;
-    let urlTest = url.parse(ntlmHost);
+    const result = { ok: false } as NtlmConfigValidateResult;
+    const urlTest = url.parse(ntlmHost);
     if (!urlTest.hostname || !urlTest.protocol || !urlTest.slashes) {
       result.message =
         "Invalid ntlmHost, must be a valid URL (like https://www.google.com)";
@@ -80,7 +82,8 @@ export class ConfigValidator {
     }
     if (urlTest.path && urlTest.path !== "" && urlTest.path !== "/") {
       result.message =
-        "Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)";
+        "Invalid ntlmHost, must not contain any path or query " +
+        "(https://www.google.com is ok, https://www.google.com/search is not ok)";
       return result;
     }
     result.ok = true;
@@ -88,7 +91,7 @@ export class ConfigValidator {
   }
 
   static convertLegacy(ntlmHost: string): string[] {
-    let urlTest = url.parse(ntlmHost);
+    const urlTest = url.parse(ntlmHost);
     return [urlTest.host || ""];
   }
 
@@ -120,6 +123,7 @@ export class ConfigValidator {
     return true;
   }
 
+  // eslint-disable-next-line max-len
   // https://support.microsoft.com/sv-se/help/909264/naming-conventions-in-active-directory-for-computers-domains-sites-and
   // Max 15 chars, invalid chars: " / \ : | * ? < >
   private static validateDomainOrWorkstation(domain: string): boolean {

@@ -1,4 +1,4 @@
-export let TYPES = {
+export const TYPES = {
   IPortsConfigStore: Symbol.for("IPortsConfigStore"),
   IConfigController: Symbol.for("IConfigController"),
   IConfigServer: Symbol.for("IConfigServer"),

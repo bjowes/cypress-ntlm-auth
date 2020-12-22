@@ -51,7 +51,7 @@ export class NtlmManager implements INtlmManager {
         return callback(err, ctx.serverToProxyResponse);
       }
     } else {
-      let configLookup = this._configStore.get(ntlmHostUrl);
+      const configLookup = this._configStore.get(ntlmHostUrl);
       if (!configLookup) {
         return callback(
           new Error("Cannot find NtlmHost config in handshake"),
@@ -68,7 +68,7 @@ export class NtlmManager implements INtlmManager {
       type1header = type1msg.header();
     }
     this.dropOriginalResponse(ctx);
-    let requestOptions: https.RequestOptions = {
+    const requestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
@@ -78,8 +78,8 @@ export class NtlmManager implements INtlmManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = type1header;
     requestOptions.headers["connection"] = "keep-alive";
-    let proto = ctx.isSSL ? https : http;
-    let type1req = proto.request(requestOptions, (type1res) => {
+    const proto = ctx.isSSL ? https : http;
+    const type1req = proto.request(requestOptions, (type1res) => {
       type1res.pause();
 
       if (this.canHandleNtlmAuthentication(type1res) === false) {
@@ -146,7 +146,7 @@ export class NtlmManager implements INtlmManager {
         );
         type3header = type3msg.header();
       }
-      let type3requestOptions: https.RequestOptions = {
+      const type3requestOptions: https.RequestOptions = {
         method: ctx.proxyToServerRequestOptions.method,
         path: ctx.proxyToServerRequestOptions.path,
         host: ctx.proxyToServerRequestOptions.host,
@@ -159,7 +159,7 @@ export class NtlmManager implements INtlmManager {
         type3requestOptions.headers["authorization"] = type3header;
       }
       type1res.on("end", () => {
-        let type3req = proto.request(type3requestOptions, (type3res) => {
+        const type3req = proto.request(type3requestOptions, (type3res) => {
           type3res.pause();
           this.handshakeResponse(type3res, ntlmHostUrl, context, () => {
             return callback(undefined, type3res);
@@ -197,7 +197,7 @@ export class NtlmManager implements INtlmManager {
     context: IConnectionContext,
     callback: () => void
   ) {
-    let authState = context.getState(ntlmHostUrl);
+    const authState = context.getState(ntlmHostUrl);
     if (authState === NtlmStateEnum.Type3Sent) {
       if (res.statusCode === 401) {
         this._debug.log(

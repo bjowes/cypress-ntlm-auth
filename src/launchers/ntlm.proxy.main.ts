@@ -2,8 +2,11 @@
 
 import { startNtlmProxy } from "../index";
 
+/**
+ *
+ */
 async function execute() {
-  let ntlmProxy = await startNtlmProxy();
+  const ntlmProxy = await startNtlmProxy();
   console.info(ntlmProxy.ports);
 }
 

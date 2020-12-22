@@ -7,7 +7,7 @@ import { HostnameValidator } from "./hostname.validator";
 
 export class SsoConfigValidator {
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {
-    let result = { ok: false } as NtlmConfigValidateResult;
+    const result = { ok: false } as NtlmConfigValidateResult;
 
     if (!osSupported() && (os.platform() as string) != "browser") {
       result.message =
@@ -26,7 +26,7 @@ export class SsoConfigValidator {
       return result;
     }
 
-    let allNtlmHostsPass = config.ntlmHosts.every((ntlmHost) => {
+    const allNtlmHostsPass = config.ntlmHosts.every((ntlmHost) => {
       if (!HostnameValidator.validHostnameOrFqdn(ntlmHost)) {
         result.message =
           "Invalid host [" +
