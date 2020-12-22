@@ -25,7 +25,7 @@ export class ConfigStore implements IConfigStore {
     const nonWildcards = config.ntlmHosts.filter((s) => s.indexOf("*") === -1);
     const wildcards = config.ntlmHosts.filter((s) => s.indexOf("*") !== -1);
     nonWildcards.forEach((host) => {
-      let hostConfig: NtlmHost = {
+      const hostConfig: NtlmHost = {
         ntlmHost: host,
         username: config.username,
         password: config.password,
@@ -38,7 +38,7 @@ export class ConfigStore implements IConfigStore {
       this.ntlmHosts[host] = hostConfig;
     });
     wildcards.forEach((wildcard) => {
-      let hostConfig: NtlmWildcardHost = {
+      const hostConfig: NtlmWildcardHost = {
         ntlmHost: wildcard,
         ntlmHostRegex: new RegExp(`^${wildcard.replace(/\*/g, ".*")}$`, "i"),
         username: config.username,

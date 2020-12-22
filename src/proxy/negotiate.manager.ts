@@ -34,20 +34,20 @@ export class NegotiateManager implements INegotiateManager {
       return callback(err, ctx.serverToProxyResponse);
     }
     this.dropOriginalResponse(ctx);
-    let originalRequestOptions: https.RequestOptions = {
+    const originalRequestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
       port: (ctx.proxyToServerRequestOptions.port as unknown) as string,
       agent: ctx.proxyToServerRequestOptions.agent,
-      headers: ctx.proxyToServerRequestOptions.headers
+      headers: ctx.proxyToServerRequestOptions.headers,
     };
-    let requestOptions = { ...originalRequestOptions };
+    const requestOptions = { ...originalRequestOptions };
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = requestToken;
     requestOptions.headers["connection"] = "keep-alive";
-    let proto = ctx.isSSL ? https : http;
-    let req = proto.request(requestOptions, res =>
+    const proto = ctx.isSSL ? https : http;
+    const req = proto.request(requestOptions, (res) =>
       this.handshakeResponse(
         res,
         ntlmHostUrl,
@@ -57,7 +57,7 @@ export class NegotiateManager implements INegotiateManager {
         callback
       )
     );
-    req.on("error", err => {
+    req.on("error", (err) => {
       this._debug.log(
         "Error while sending Negotiate message token request:",
         err
@@ -93,7 +93,8 @@ export class NegotiateManager implements INegotiateManager {
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(
           new Error(
-            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host " +
+            "Negotiate authentication failed " +
+              "(www-authenticate with Negotiate not found in server response) with host " +
               ntlmHostUrl.href
           ),
           res
@@ -144,21 +145,21 @@ export class NegotiateManager implements INegotiateManager {
     }
     // TODO - do we need to handle responseToken && res.statusCode !== 401 ?
 
-    let requestOptions: https.RequestOptions = {
+    const requestOptions: https.RequestOptions = {
       method: originalRequestOptions.method,
       path: originalRequestOptions.path,
       host: originalRequestOptions.host,
       port: (originalRequestOptions.port as unknown) as string,
       agent: originalRequestOptions.agent,
-      headers: originalRequestOptions.headers
+      headers: originalRequestOptions.headers,
     };
     if (requestOptions.headers) {
       // Always true, silent the compiler
       requestOptions.headers["authorization"] = responseToken;
     }
     res.on("end", () => {
-      let proto = isSSL ? https : http;
-      let req = proto.request(requestOptions, res =>
+      const proto = isSSL ? https : http;
+      const req = proto.request(requestOptions, (res) =>
         this.handshakeResponse(
           res,
           ntlmHostUrl,
@@ -168,7 +169,7 @@ export class NegotiateManager implements INegotiateManager {
           callback
         )
       );
-      req.on("error", err => {
+      req.on("error", (err) => {
         this._debug.log(
           "Error while sending Negotiate message token response:",
           err

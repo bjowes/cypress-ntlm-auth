@@ -26,7 +26,7 @@ export class Main implements IMain {
     ntlmProxyPort?: number
   ): Promise<PortsConfig> {
     try {
-      let ports = await this._coreServer.start(
+      const ports = await this._coreServer.start(
         httpProxy,
         httpsProxy,
         noProxy,

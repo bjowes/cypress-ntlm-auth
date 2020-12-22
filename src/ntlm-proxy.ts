@@ -14,14 +14,16 @@ export class NtlmProxy {
 
   /**
    * Add NTLM configuration
-   * @param config The NtlmConfig to apply, see the README for details
+   *
+   * @param {NtlmConfig} config The NtlmConfig to apply, see the README for details
    */
   async ntlm(config: NtlmConfig) {
     await this.ntlmProxyFacade.ntlm(this.ports.configApiUrl, config);
   }
   /**
    * Add NTLM SSO configuration
-   * @param config The NtlmSsoConfig to apply, see the README for details
+   *
+   * @param {NtlmSsoConfig} config The NtlmSsoConfig to apply, see the README for details
    */
   async ntlmSso(config: NtlmSsoConfig) {
     await this.ntlmProxyFacade.ntlmSso(this.ports.configApiUrl, config);
@@ -34,17 +36,19 @@ export class NtlmProxy {
   }
   /**
    * Check if proxy is alive
-   * @returns The PortsConfig for the proxy
+   *
+   * @returns {PortsConfig} The PortsConfig for the proxy
    */
   async alive(): Promise<PortsConfig> {
     return await this.ntlmProxyFacade.alive(this.ports.configApiUrl);
   }
   /**
    * Stops ntlm-proxy
-   * @returns True if the proxy was stopped, false if there was not response or the proxy does not exist.
+   *
+   * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
    */
   async stop(): Promise<boolean> {
-    let result = await this.ntlmProxyFacade.quitIfRunning(
+    const result = await this.ntlmProxyFacade.quitIfRunning(
       this.ports.configApiUrl
     );
     this.ports.configApiUrl = "";

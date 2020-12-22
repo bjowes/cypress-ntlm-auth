@@ -14,6 +14,7 @@ import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class ConfigController implements IConfigController {
+  // eslint-disable-next-line new-cap
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;
@@ -46,12 +47,12 @@ export class ConfigController implements IConfigController {
   }
 
   private ntlmConfig(req: Request, res: Response) {
-    let validateResult = ConfigValidator.validate(req.body);
+    const validateResult = ConfigValidator.validate(req.body);
     if (!validateResult.ok) {
       res.status(400).send("Config parse error. " + validateResult.message);
     } else {
       this._debug.log("Received valid NTLM config update");
-      let config = req.body as NtlmConfig;
+      const config = req.body as NtlmConfig;
       this._debug.log("Added new hosts", config.ntlmHosts);
       this._configStore.updateConfig(config);
       res.sendStatus(200);
@@ -59,12 +60,12 @@ export class ConfigController implements IConfigController {
   }
 
   private ntlmSso(req: Request, res: Response) {
-    let validateResult = SsoConfigValidator.validate(req.body);
+    const validateResult = SsoConfigValidator.validate(req.body);
     if (!validateResult.ok) {
       res.status(400).send("SSO config parse error. " + validateResult.message);
     } else {
       this._debug.log("Received valid NTLM SSO config");
-      let config = req.body as NtlmSsoConfig;
+      const config = req.body as NtlmSsoConfig;
       this._configStore.setSsoConfig(config);
       res.sendStatus(200);
     }

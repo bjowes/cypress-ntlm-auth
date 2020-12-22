@@ -54,14 +54,14 @@ export class ConnectionContextManager implements IConnectionContextManager {
     isSSL: boolean,
     targetHost: CompleteUrl
   ): IConnectionContext {
-    let clientAddress = this.getClientAddress(clientSocket);
+    const clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
     }
 
-    let agent = this.getAgent(isSSL, targetHost);
+    const agent = this.getAgent(isSSL, targetHost);
     agent._cyAgentId = this._agentCount++;
-    let context = new this.ConnectionContext();
+    const context = new this.ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
     context.clientSocket = clientSocket;
@@ -87,7 +87,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   getConnectionContextFromClientSocket(
     clientSocket: Socket
   ): IConnectionContext | undefined {
-    let clientAddress = this.getClientAddress(clientSocket);
+    const clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
     }
@@ -102,13 +102,14 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   getAgent(isSSL: boolean, targetHost: CompleteUrl) {
-    let agentOptions: https.AgentOptions = {
+    const agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
       rejectUnauthorized:
-        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost, // Allow self-signed certificates if target is on localhost
+        // Allow self-signed certificates if target is on localhost
+        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost,
     };
-    let useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
+    const useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
       targetHost,
       isSSL,
       agentOptions
@@ -130,6 +131,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   // These should not be destroyed on reset since that breaks the config API response.
   getUntrackedAgent(targetHost: CompleteUrl) {
     let agent: any;
+    // eslint-disable-next-line prefer-const
     agent = new http.Agent();
     agent._cyAgentId = this._agentCount++;
     this._debug.log("Created untracked agent for target " + targetHost.href);
@@ -137,8 +139,8 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   removeAllConnectionContexts(event: string) {
-    let preservedContexts: ConnectionContextHash = {};
-    for (let property in this._connectionContexts) {
+    const preservedContexts: ConnectionContextHash = {};
+    for (const property in this._connectionContexts) {
       if (this._connectionContexts.hasOwnProperty(property)) {
         const context = this._connectionContexts[property];
         if (context.configApiConnection) {
@@ -187,7 +189,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
   }
 
   removeAndCloseAllTunnels(event: string) {
-    for (let property in this._tunnels) {
+    for (const property in this._tunnels) {
       if (this._tunnels.hasOwnProperty(property)) {
         if (this._tunnels[property].target) {
           this._tunnels[property].target.end();

@@ -1,9 +1,9 @@
-import url from 'url';
+import url from "url";
 
 import { CompleteUrl } from "../models/complete.url.model";
-import { toCompleteUrl } from '../util/url.converter';
-import { injectable } from 'inversify';
-import { IUpstreamProxyManager } from './interfaces/i.upstream.proxy.manager';
+import { toCompleteUrl } from "../util/url.converter";
+import { injectable } from "inversify";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
@@ -12,27 +12,38 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _noProxyUrls?: string[];
 
   init(httpProxy?: string, httpsProxy?: string, noProxy?: string) {
-    if (httpProxy && this.validateUpstreamProxy(httpProxy, 'HTTP_PROXY')) {
+    if (httpProxy && this.validateUpstreamProxy(httpProxy, "HTTP_PROXY")) {
       this._httpProxyUrl = toCompleteUrl(httpProxy, false);
     }
-    if (httpsProxy && this.validateUpstreamProxy(httpsProxy, 'HTTPS_PROXY')) {
+    if (httpsProxy && this.validateUpstreamProxy(httpsProxy, "HTTPS_PROXY")) {
       this._httpsProxyUrl = toCompleteUrl(httpsProxy, false);
     }
-    if (noProxy) { // Might be a comma separated list of hosts
-      this._noProxyUrls = noProxy.split(',').map(item => item.trim());
+    if (noProxy) {
+      // Might be a comma separated list of hosts
+      this._noProxyUrls = noProxy.split(",").map((item) => item.trim());
     }
   }
 
   private validateUpstreamProxy(proxyUrl: string, parameterName: string) {
-    let proxyParsed = url.parse(proxyUrl);
-    if (!proxyParsed.protocol || !proxyParsed.hostname || !proxyParsed.port || proxyParsed.path !== '/') {
-      throw new Error('Invalid ' + parameterName + ' argument. It must be a complete URL without path. Example: http://proxy.acme.com:8080');
+    const proxyParsed = url.parse(proxyUrl);
+    if (
+      !proxyParsed.protocol ||
+      !proxyParsed.hostname ||
+      !proxyParsed.port ||
+      proxyParsed.path !== "/"
+    ) {
+      throw new Error(
+        "Invalid " +
+          parameterName +
+          " argument. " +
+          "It must be a complete URL without path. Example: http://proxy.acme.com:8080"
+      );
     }
     return true;
   }
 
   private matchWithWildcardRule(str: string, rule: string): boolean {
-    return new RegExp('^' + rule.split('*').join('.*') + '$').test(str);
+    return new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
   }
 
   private targetInNoProxy(ntlmHostUrl: CompleteUrl) {
@@ -41,7 +52,7 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     }
 
     let match = false;
-    this._noProxyUrls.forEach(rule => {
+    this._noProxyUrls.forEach((rule) => {
       if (this.matchWithWildcardRule(ntlmHostUrl.hostname, rule)) {
         match = true;
       }
@@ -49,7 +60,11 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     return match;
   }
 
-  setUpstreamProxyConfig(ntlmHostUrl: CompleteUrl, isSSL: boolean, agentOptions: any) {
+  setUpstreamProxyConfig(
+    ntlmHostUrl: CompleteUrl,
+    isSSL: boolean,
+    agentOptions: any
+  ) {
     let proxyUrl = null;
 
     if (this.targetInNoProxy(ntlmHostUrl)) {
@@ -64,16 +79,17 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     if (proxyUrl) {
       agentOptions.host = proxyUrl.hostname;
       agentOptions.port = +proxyUrl.port;
-      agentOptions.secureProxy = (proxyUrl.protocol === 'https:');
+      agentOptions.secureProxy = proxyUrl.protocol === "https:";
       return true;
     }
     return false;
   }
 
   hasHttpsUpstreamProxy(ntlmHostUrl: CompleteUrl): boolean {
-    return ((this._httpProxyUrl !== undefined ||
-             this._httpsProxyUrl !== undefined) &&
-             this.targetInNoProxy(ntlmHostUrl) === false);
+    return (
+      (this._httpProxyUrl !== undefined || this._httpsProxyUrl !== undefined) &&
+      this.targetInNoProxy(ntlmHostUrl) === false
+    );
   }
 
   reset() {

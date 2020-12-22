@@ -68,7 +68,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     if (!ctx || !ctx.clientToProxyRequest || !errno) {
       return false;
     }
-    let req = ctx.clientToProxyRequest;
+    const req = ctx.clientToProxyRequest;
     if (
       req.method === "HEAD" &&
       req.url === "/" &&
@@ -93,7 +93,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     if (self.filterChromeStartup(ctx, error.code, errorKind)) {
       return;
     }
-    let url =
+    const url =
       ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
     self._debug.log(errorKind + " on " + url + ":", error);
   }
@@ -106,13 +106,13 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    let targetHost = self.getTargetHost(ctx);
+    const targetHost = self.getTargetHost(ctx);
     if (targetHost) {
       let context = self._connectionContextManager.getConnectionContextFromClientSocket(
         ctx.clientToProxyRequest.socket
       );
-      let useSso = self._configStore.useSso(targetHost);
-      let useNtlm = useSso || self._configStore.exists(targetHost);
+      const useSso = self._configStore.useSso(targetHost);
+      const useNtlm = useSso || self._configStore.exists(targetHost);
       if (context) {
         if (context.matchHostOrNew(targetHost) === false) {
           self._debug.log(
@@ -189,8 +189,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       );
       return null;
     }
-    let host = ctx.clientToProxyRequest.headers.host;
-    let hostUrl = toCompleteUrl(host, ctx.isSSL, true);
+    const host = ctx.clientToProxyRequest.headers.host;
+    const hostUrl = toCompleteUrl(host, ctx.isSSL, true);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
       return null;
@@ -224,17 +224,17 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    let targetHost = self.getTargetHost(ctx);
+    const targetHost = self.getTargetHost(ctx);
     if (!targetHost) {
       return callback();
     }
-    let useSso = self._configStore.useSso(targetHost);
-    let useNtlm = useSso || self._configStore.exists(targetHost);
+    const useSso = self._configStore.useSso(targetHost);
+    const useNtlm = useSso || self._configStore.exists(targetHost);
     if (!useNtlm) {
       return callback();
     }
 
-    let context = self._connectionContextManager.getConnectionContextFromClientSocket(
+    const context = self._connectionContextManager.getConnectionContextFromClientSocket(
       ctx.clientToProxyRequest.socket
     );
 
@@ -254,8 +254,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
       // Grab PeerCertificate for NTLM channel binding
       if (ctx.isSSL) {
-        let tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
-        let peerCert = tlsSocket.getPeerCertificate();
+        const tlsSocket = ctx.serverToProxyResponse.connection as TLSSocket;
+        const peerCert = tlsSocket.getPeerCertificate();
         // getPeerCertificate may return an empty object.
         // Validate that it has fingerprint256 attribute (added in Node 9.8.0)
         if ((peerCert as any).fingerprint256) {
@@ -337,7 +337,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       res.resume();
     } else {
       // No response available, send empty 401 with headers from initial response
-      let headers = ctx.serverToProxyResponse.headers;
+      const headers = ctx.serverToProxyResponse.headers;
       if (headers["proxy-connection"]) {
         headers["proxy-connection"] = "keep-alive";
         headers["connection"] = "close";
@@ -361,7 +361,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return callback();
     }
 
-    let targetHost = toCompleteUrl(req.url, true, true);
+    const targetHost = toCompleteUrl(req.url, true, true);
     if (self._configStore.existsOrUseSso(targetHost)) {
       return callback();
     }
@@ -373,11 +373,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Let non-NTLM hosts tunnel through
     self._debug.log("Tunnel to", req.url);
-    let onPrematureClose = function () {
+    const onPrematureClose = function () {
       self._debug.log("cannot establish connection to server, CONNECT failed");
       socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
     };
-    let conn = net.connect(
+    const conn = net.connect(
       {
         port: +targetHost.port,
         host: targetHost.hostname,
@@ -413,6 +413,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     });
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
+    // eslint-disable-next-line jsdoc/require-jsdoc
     function filterSocketConnReset(
       err: NodeJS.ErrnoException,
       socketDescription: string,
@@ -435,16 +436,18 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   private filterAndCanonizeHeaders(originalHeaders: http.IncomingHttpHeaders) {
-    let headers: http.IncomingHttpHeaders = {};
-    for (let key in originalHeaders) {
-      let canonizedKey = key.trim();
-      if (/^public\-key\-pins/i.test(canonizedKey)) {
-        // HPKP header => filter
-        continue;
-      }
+    const headers: http.IncomingHttpHeaders = {};
+    for (const key in originalHeaders) {
+      if (originalHeaders.hasOwnProperty(key)) {
+        const canonizedKey = key.trim();
+        if (/^public\-key\-pins/i.test(canonizedKey)) {
+          // HPKP header => filter
+          continue;
+        }
 
-      if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
-        headers[canonizedKey] = originalHeaders[key];
+        if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
+          headers[canonizedKey] = originalHeaders[key];
+        }
       }
     }
 

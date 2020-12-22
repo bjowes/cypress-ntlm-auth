@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.3 - released 2020-12-23
+
+- Fix #151: Remove unused dependencies
+- Migrated from tslint to ESlint
+
 ## 3.1.2 - released 2020-12-06
 
 - Fix #144: websockets were not correctly closed on ntlmReset

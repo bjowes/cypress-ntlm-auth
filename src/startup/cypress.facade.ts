@@ -7,7 +7,7 @@ export class CypressFacade implements ICypressFacade {
 
   constructor() {
     try {
-      let canResolve = require.resolve("cypress");
+      const canResolve = require.resolve("cypress");
       if (canResolve !== null && canResolve !== undefined) {
         this._cypress = require("cypress");
       }

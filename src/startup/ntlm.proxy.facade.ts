@@ -22,7 +22,7 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
     method: string,
     body: any
   ) {
-    return new Promise((resolve, reject) => {
+    return new Promise<any>((resolve, reject) => {
       this._debug.log(
         "Sending " + path + " request to NTLM proxy " + configApiUrl
       );
@@ -45,13 +45,15 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
             this._debug.log("Response body: " + resBody);
             this._debug.log(path + " request failed");
             return reject(
-              "Unexpected response from NTLM proxy: " + res.statusCode
+              new Error(
+                "Unexpected response from NTLM proxy: " + res.statusCode
+              )
             );
           }
 
           this._debug.log(path + " request succeeded");
           if (!resBody || resBody === "OK") {
-            return resolve();
+            return resolve(undefined);
           } else {
             this._debug.log(path + " response body " + resBody);
             return resolve(JSON.parse(resBody));
@@ -62,8 +64,10 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
       req.on("error", (error) => {
         this._debug.log(path + " request failed");
         return reject(
-          "An error occurred while communicating with NTLM proxy: " +
-            error.message
+          new Error(
+            "An error occurred while communicating with NTLM proxy: " +
+              error.message
+          )
         );
       });
 

@@ -72,7 +72,7 @@ export class ConnectionContext implements IConnectionContext {
   }
 
   isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
-    let auth =
+    const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost !== undefined &&
         this._ntlmHost.href === ntlmHostUrl.href &&
