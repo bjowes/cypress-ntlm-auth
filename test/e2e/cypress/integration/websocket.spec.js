@@ -133,7 +133,7 @@ context("Proxy websocket on HTTPS server", function () {
       .and("not.contain", "DISCONNECTED");
   });
 
-  it.skip("should handle HTTPS websocket with NTLM - NOT SUPPORTED", function () {
+  it("should handle HTTPS websocket with NTLM - NOT SUPPORTED", function () {
     cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
     cy.visit(httpsHost + "/websocket.html");
     cy.get("button").contains("HTTPS NTLM WebSocket").click();
