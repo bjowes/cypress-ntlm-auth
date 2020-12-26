@@ -1,10 +1,10 @@
-name: Unit-test
+name: e2e-test
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   unit-test:
-    name: Unit test
+    name: E2E test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,6 +18,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run build
-      - run: npm run unittest
+      - run: npm run e2e
         env:
           CI: true
+      - name: Archive test screenshots
+        uses: actions/upload-artifact@v1
+        with:
+          name: screenshots
+          path: test/e2e/cypress/screenshots
+        if: ${{ failure() }}
