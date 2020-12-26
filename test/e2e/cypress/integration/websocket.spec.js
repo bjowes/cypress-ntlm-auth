@@ -10,10 +10,6 @@ context("Proxy websocket on HTTP server", function () {
     cy.ntlmReset();
   });
 
-  after("cleanup", function () {
-    cy.ntlmReset();
-  });
-
   it("should handle HTTP websocket", function () {
     cy.visit(httpHost + "/websocket.html");
     cy.get("button").contains("HTTP WebSocket").click();
@@ -83,10 +79,6 @@ context("Proxy websocket on HTTPS server", function () {
   const httpsNtlmHost = "https://localhost:5001";
 
   beforeEach("Reset NTLM config", function () {
-    cy.ntlmReset();
-  });
-
-  after("cleanup", function () {
     cy.ntlmReset();
   });
 
