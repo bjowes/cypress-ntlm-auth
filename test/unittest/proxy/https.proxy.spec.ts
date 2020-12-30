@@ -250,8 +250,9 @@ describe("Proxy for HTTPS host with NTLM", function () {
 
     agent1.destroy();
 
+    const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendQuitCommand(configApiUrl, true);
-    await waitForAgentSocketClose(agent2);
+    await agentSocketClosed;
   });
 
   it("should re-authentication after reconfiguration when required by server", async function () {
@@ -569,8 +570,9 @@ describe("Proxy for HTTPS host without NTLM", function () {
 
     agent1.destroy();
 
+    const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendNtlmReset(configApiUrl);
-    await waitForAgentSocketClose(agent2);
+    await agentSocketClosed;
   });
 
   it("should close SSL tunnels on quit", async function () {
@@ -627,8 +629,9 @@ describe("Proxy for HTTPS host without NTLM", function () {
 
     agent1.destroy();
 
+    const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendQuitCommand(configApiUrl, true);
-    await waitForAgentSocketClose(agent2);
+    await agentSocketClosed;
   });
 });
 
