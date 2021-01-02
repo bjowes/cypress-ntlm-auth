@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.4 - released 2020-12-26
+## 3.1.4 - released 2021-01-02
 
 - Migrated to Github Actions
 
