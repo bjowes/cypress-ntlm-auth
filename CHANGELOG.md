@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.4 - released 2021-01-02
+
+- Migrated to Github Actions
+
 ## 3.1.3 - released 2020-12-23
 
 - Fix #151: Remove unused dependencies

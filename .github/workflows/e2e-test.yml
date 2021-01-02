@@ -1,0 +1,32 @@
+name: e2e-test
+
+on:
+  pull_request:
+    paths-ignore:
+      - "*.md"
+
+jobs:
+  e2e-test:
+    name: E2E test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        node-version: [10, 12, 14]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build
+      - run: npm run e2e
+        env:
+          CI: true
+      - name: Archive test screenshots
+        uses: actions/upload-artifact@v1
+        with:
+          name: screenshots
+          path: test/e2e/cypress/screenshots
+        if: ${{ failure() }}
