@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.5 - released 2021-01-12
+
+- Fix #157: Corrected peer dependency version of Cypress, accept any version from 5.0.0 and up
+- Bump dependencies
+
 ## 3.1.4 - released 2021-01-02
 
 - Migrated to Github Actions
