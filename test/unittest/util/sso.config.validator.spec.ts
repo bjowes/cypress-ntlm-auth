@@ -3,18 +3,10 @@
 import chai from "chai";
 import { SsoConfigValidator } from "../../../src/util/sso.config.validator";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { osSupported } from "win-sso";
 
 describe("SsoConfigValidator", function () {
   describe("ntlmHosts", function () {
     let config: NtlmSsoConfig;
-
-    before("Check SSO support", function () {
-      if (osSupported() === false) {
-        this.skip();
-        return;
-      }
-    });
 
     beforeEach(function () {
       config = {
@@ -24,7 +16,7 @@ describe("SsoConfigValidator", function () {
 
     it("Valid hostname in ntlmHosts succeeds", function () {
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.true;
@@ -35,7 +27,7 @@ describe("SsoConfigValidator", function () {
       config.ntlmHosts = ["www.google.com"];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.true;
@@ -52,7 +44,7 @@ describe("SsoConfigValidator", function () {
       ];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.true;
@@ -70,7 +62,7 @@ describe("SsoConfigValidator", function () {
       ];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.true;
@@ -81,7 +73,7 @@ describe("SsoConfigValidator", function () {
       config.ntlmHosts = ["http://localhost:5000/search"];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.false;
@@ -97,7 +89,7 @@ describe("SsoConfigValidator", function () {
       config.ntlmHosts = ["http://localhost"];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.false;
@@ -113,7 +105,7 @@ describe("SsoConfigValidator", function () {
       config.ntlmHosts = ["localhost:80"];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.false;
@@ -129,7 +121,7 @@ describe("SsoConfigValidator", function () {
       config.ntlmHosts = ["nisse", "localhost:80"];
 
       // Act
-      let result = SsoConfigValidator.validate(config);
+      const result = SsoConfigValidator.validate(config);
 
       // Assert
       chai.expect(result.ok).to.be.false;
@@ -142,12 +134,12 @@ describe("SsoConfigValidator", function () {
 
     it("Does return error if ntlmHosts isn't and array", function () {
       // Arrange
-      let dummyConfig: any = {
+      const dummyConfig: any = {
         ntlmHosts: "localhost",
       };
 
       // Act
-      let result = SsoConfigValidator.validate(dummyConfig);
+      const result = SsoConfigValidator.validate(dummyConfig);
 
       // Assert
       chai.expect(result.ok).to.be.false;

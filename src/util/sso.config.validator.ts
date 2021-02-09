@@ -1,19 +1,10 @@
-import os from "os";
-
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
 import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
-import { osSupported } from "win-sso";
 import { HostnameValidator } from "./hostname.validator";
 
 export class SsoConfigValidator {
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
-
-    if (!osSupported() && (os.platform() as string) != "browser") {
-      result.message =
-        "SSO is not supported on this platform. Only Windows OSs are supported.";
-      return result;
-    }
 
     if (!config.ntlmHosts) {
       result.message =
