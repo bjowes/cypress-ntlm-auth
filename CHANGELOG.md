@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.6 - released 2021-02-09
+
+- Fix #159: Support cypress with typescript specfiles
+
 ## 3.1.5 - released 2021-01-12
 
 - Fix #157: Corrected peer dependency version of Cypress, accept any version from 5.0.0 and up
