@@ -11,6 +11,7 @@ import { SsoConfigValidator } from "../util/sso.config.validator";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 import { PortsConfig } from "../models/ports.config.model";
+import { osSupported } from "win-sso";
 
 @injectable()
 export class ConfigController implements IConfigController {
@@ -63,12 +64,20 @@ export class ConfigController implements IConfigController {
     const validateResult = SsoConfigValidator.validate(req.body);
     if (!validateResult.ok) {
       res.status(400).send("SSO config parse error. " + validateResult.message);
-    } else {
-      this._debug.log("Received valid NTLM SSO config");
-      const config = req.body as NtlmSsoConfig;
-      this._configStore.setSsoConfig(config);
-      res.sendStatus(200);
+      return;
     }
+    if (!osSupported()) {
+      res
+        .status(400)
+        .send(
+          "SSO is not supported on this platform. Only Windows OSs are supported."
+        );
+      return;
+    }
+    this._debug.log("Received valid NTLM SSO config");
+    const config = req.body as NtlmSsoConfig;
+    this._configStore.setSsoConfig(config);
+    res.sendStatus(200);
   }
 
   private reset(req: Request, res: Response) {

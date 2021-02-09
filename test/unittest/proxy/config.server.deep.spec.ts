@@ -256,7 +256,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       expect(res.status).to.equal(400);
       expect(res.data).to.equal(
-        "SSO config parse error. SSO is not supported on this platform. Only Windows OSs are supported."
+        "SSO is not supported on this platform. Only Windows OSs are supported."
       );
       expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
         .to.be.false;
