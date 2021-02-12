@@ -238,7 +238,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       ctx.clientToProxyRequest.socket
     );
 
-    if (context && context.isNewOrAuthenticated(targetHost)) {
+    if (context && context.canStartAuthHandshake(targetHost)) {
       const authMode = self.getAuthMode(ctx.serverToProxyResponse, useSso);
       if (authMode === AuthModeEnum.NotApplicable) {
         return callback();

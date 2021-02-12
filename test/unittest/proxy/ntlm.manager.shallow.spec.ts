@@ -14,7 +14,6 @@ import { toCompleteUrl } from "../../../src/util/url.converter";
 import { ConnectionContext } from "../../../src/proxy/connection.context";
 import { NtlmStateEnum } from "../../../src/models/ntlm.state.enum";
 import { ExpressServer } from "./express.server";
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { INtlm } from "../../../src/ntlm/interfaces/i.ntlm";
 import { NtlmMessage } from "../../../src/ntlm/ntlm.message";
 import { Ntlm } from "../../../src/ntlm/ntlm";
