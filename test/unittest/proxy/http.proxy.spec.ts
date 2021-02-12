@@ -53,6 +53,7 @@ describe("Proxy for HTTP host with NTLM", function () {
 
   beforeEach("Reset NTLM config", async function () {
     this.timeout(2000);
+
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
@@ -516,6 +517,55 @@ describe("Proxy for HTTP host with NTLM", function () {
     expect(
       expressServer.lastRequestContainedAuthHeader(),
       "should authenticate when server sends 401"
+    ).to.be.true;
+
+    agent.destroy();
+  });
+
+  it("should re-authenticate after failed auth when required by server", async function () {
+    let body = {
+      ntlmHost: "https://my.test.host/",
+    };
+    let agent = new http.Agent({ keepAlive: true });
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, "ntlm-config should return 200").to.be.equal(200);
+
+    expressServer.sendWwwAuth([
+      { header: "NTLM", status: 401 },
+      { header: "NTLM", status: 401 },
+    ]);
+
+    res = await ProxyFacade.sendRemoteRequest(
+      ntlmProxyUrl,
+      httpUrl,
+      "POST",
+      "/post",
+      body,
+      undefined,
+      agent
+    );
+    expect(res.status, "remote request should return 401").to.be.equal(401);
+    expect(
+      expressServer.lastRequestContainedAuthHeader(),
+      "should authenticate on first request"
+    ).to.be.true;
+
+    res = await ProxyFacade.sendRemoteRequest(
+      ntlmProxyUrl,
+      httpUrl,
+      "POST",
+      "/post",
+      body,
+      undefined,
+      agent
+    );
+    expect(res.status, "remote request should return 200").to.be.equal(200);
+    let resBody = res.data as any;
+    expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
+    expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
+    expect(
+      expressServer.lastRequestContainedAuthHeader(),
+      "should authenticate on second request"
     ).to.be.true;
 
     agent.destroy();

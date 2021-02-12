@@ -13,7 +13,7 @@ export interface IConnectionContext {
   socketCloseListener: any;
   configApiConnection: boolean;
 
-  isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean;
+  canStartAuthHandshake(ntlmHostUrl: CompleteUrl): boolean;
   matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean;
   getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum;
   setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum): void;

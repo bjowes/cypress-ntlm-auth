@@ -71,12 +71,17 @@ export class ConnectionContext implements IConnectionContext {
     this._configApiConnection = val;
   }
 
-  isNewOrAuthenticated(ntlmHostUrl: CompleteUrl): boolean {
+  /**
+   * If the connection is new or a handshake has been completed (successful or failed),
+   * a new handshake can be intiated
+   * @param ntlmHostUrl The target url
+   */
+  canStartAuthHandshake(ntlmHostUrl: CompleteUrl): boolean {
     const auth =
       this._ntlmHost === undefined ||
-      (this._ntlmHost !== undefined &&
-        this._ntlmHost.href === ntlmHostUrl.href &&
-        this._ntlmState === NtlmStateEnum.Authenticated);
+      (this._ntlmHost.href === ntlmHostUrl.href &&
+        (this._ntlmState === NtlmStateEnum.Authenticated ||
+          this._ntlmState === NtlmStateEnum.NotAuthenticated));
     return auth;
   }
 
