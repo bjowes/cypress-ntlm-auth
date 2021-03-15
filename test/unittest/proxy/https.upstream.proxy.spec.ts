@@ -9,6 +9,8 @@ import chai from "chai";
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
+const kapAgent = require("keepalive-proxy-agent");
+import url from "url";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
@@ -31,10 +33,7 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
 
   before("Start HTTPS server and proxy", async function () {
     this.timeout(30000);
-    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
-      ctx,
-      callback
-    ) {
+    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
       upstreamProxyReqCount++;
       return callback();
     });
@@ -67,18 +66,8 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
   it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -87,14 +76,7 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
 
   it("should return 401 for unconfigured host on GET requests", async function () {
     // Cert is for upstream mitm, not for express server
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, "should be one requests").to.be.equal(1);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
@@ -105,18 +87,8 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -146,18 +118,8 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -169,14 +131,7 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
       ntlmHost: "https://my.test.host/",
     };
     // Cert is for upstream mitm, not for express server
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, "should be one requests").to.be.equal(1);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
@@ -195,10 +150,7 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
       body,
       proxyFacade.mitmCaCert
     );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -221,6 +173,28 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
     expect(upstreamProxyReqCount, "should be one requests").to.be.equal(1);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
+
+  it("should forward 504 from upstream proxy on server socket error for NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [proxyFacade.mitmCaCert],
+    });
+
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, "ntlm-config should return 200").to.be.equal(200);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "first req should return 200").to.be.equal(200);
+
+    expressServer.closeConnectionOnNextRequest(true);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "Should return 504 from upstream proxy").to.be.equal(504);
+    agent.destroy();
+  });
 });
 
 describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function () {
@@ -238,10 +212,7 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
     }
 
     this.timeout(15000);
-    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
-      ctx,
-      callback
-    ) {
+    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
       upstreamProxyReqCount++;
       return callback();
     });
@@ -273,18 +244,8 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
   it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     expect(res.status, "ntlm-sso-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -293,14 +254,7 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
 
   it("should return 401 for unconfigured host on GET requests", async function () {
     // Cert is for upstream mitm, not for express server
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, "should be one requests").to.be.equal(1);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
@@ -311,18 +265,8 @@ describe("Proxy for HTTPS host with NTLM using SSO and upstream proxy", function
     };
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     expect(res.status, "ntlm-sso-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should be three requests due to handshake"
-    ).to.be.equal(3);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should be three requests due to handshake").to.be.equal(3);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -338,10 +282,7 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
 
   before("Start HTTPS server and proxy", async function () {
     this.timeout(15000);
-    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
-      ctx,
-      callback
-    ) {
+    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
       upstreamProxyReqCount++;
       return callback();
     });
@@ -364,14 +305,7 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   });
 
   it("should pass through GET requests for non NTLM host", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, "should be one request").to.be.equal(1);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
@@ -402,14 +336,7 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, proxyFacade.mitmCaCert);
     expect(upstreamProxyReqCount, "should be one request").to.be.equal(1);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
@@ -435,6 +362,43 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
   });
+
+  it("should forward 504 from upstream proxy on server socket error for non NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
+    });
+
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "first req should return 200").to.be.equal(200);
+    expressServer.closeConnectionOnNextRequest(true);
+
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "Broken connection should return 504 from upstream proxy").to.be.equal(504);
+    agent.destroy();
+  });
+
+  it("should forward 504 from upstream proxy on server CONNECT error for non NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
+    });
+
+    expressServer.closeConnectionOnNextRequest(true);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "Broken connection should return 504 from upstream proxy").to.be.equal(504);
+    agent.destroy();
+  });
 });
 
 describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", function () {
@@ -445,10 +409,7 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
 
   before("Start HTTPS server", async function () {
     this.timeout(15000);
-    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (
-      ctx,
-      callback
-    ) {
+    upstreamProxyUrl = await proxyFacade.startMitmProxy(false, function (ctx, callback) {
       upstreamProxyReqCount++;
       return callback();
     });
@@ -476,18 +437,8 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should not pass through upstream proxy"
-    ).to.be.equal(1);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should not pass through upstream proxy").to.be.equal(1);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -495,26 +446,12 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should not use upstream proxy with NO_PROXY localhost", async function () {
-    let ports = await coreServer.start(
-      undefined,
-      upstreamProxyUrl,
-      "localhost"
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, "localhost");
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should not pass through upstream proxy"
-    ).to.be.equal(0);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
+    expect(upstreamProxyReqCount, "should not pass through upstream proxy").to.be.equal(0);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -526,18 +463,8 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should not pass through upstream proxy"
-    ).to.be.equal(0);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
+    expect(upstreamProxyReqCount, "should not pass through upstream proxy").to.be.equal(0);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -549,18 +476,8 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should not pass through upstream proxy"
-    ).to.be.equal(0);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
+    expect(upstreamProxyReqCount, "should not pass through upstream proxy").to.be.equal(0);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -572,18 +489,8 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should not pass through upstream proxy"
-    ).to.be.equal(0);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
+    expect(upstreamProxyReqCount, "should not pass through upstream proxy").to.be.equal(0);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -591,26 +498,12 @@ describe("Proxy for HTTPS host without NTLM, upstream proxy + NO_PROXY", functio
   });
 
   it("should use upstream proxy with NO_PROXY google.com", async function () {
-    let ports = await coreServer.start(
-      undefined,
-      upstreamProxyUrl,
-      "google.com"
-    );
+    let ports = await coreServer.start(undefined, upstreamProxyUrl, "google.com");
     configApiUrl = ports.configApiUrl;
     ntlmProxyUrl = ports.ntlmProxyUrl;
 
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
-    expect(
-      upstreamProxyReqCount,
-      "should pass through upstream proxy"
-    ).to.be.equal(1);
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
+    expect(upstreamProxyReqCount, "should pass through upstream proxy").to.be.equal(1);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
