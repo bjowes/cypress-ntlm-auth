@@ -35,6 +35,7 @@ export class ExpressServer {
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
   private sendWwwAuthHeader: AuthResponeHeader[] = [];
+  private closeConnectionOnNextRequestState = false;
 
   constructor() {
     this.initExpress(this.appNoAuth, false);
@@ -51,28 +52,31 @@ export class ExpressServer {
   }
 
   private createResponse(res: express.Response, body: any) {
+    if (this.closeConnectionOnNextRequestState) {
+      this.closeConnectionOnNextRequestState = false;
+      res.connection.destroy();
+      return;
+    }
+
     res.setHeader("Content-Type", "application/json");
     if (this.sendNtlmType2Header !== null) {
       res.setHeader("www-authenticate", "NTLM " + this.sendNtlmType2Header);
       res.sendStatus(401);
-    } else if (this.sendWwwAuthHeader.length > 0) {
+      return;
+    }
+    if (this.sendWwwAuthHeader.length > 0) {
       const auth = this.sendWwwAuthHeader.shift();
       res.setHeader("www-authenticate", auth.header);
       res.sendStatus(auth.status);
-    } else {
-      res.status(200).send(JSON.stringify(body));
+      return;
     }
+    res.status(200).send(JSON.stringify(body));
   }
 
   private initExpress(app: express.Application, useNtlm: boolean) {
     app.use(bodyParser.json());
 
-    app.use(function (
-      err: ExpressError,
-      req: express.Request,
-      res: express.Response,
-      next: express.NextFunction
-    ) {
+    app.use(function (err: ExpressError, req: express.Request, res: express.Response, next: express.NextFunction) {
       if (res.headersSent) {
         return next(err);
       }
@@ -143,17 +147,12 @@ export class ExpressServer {
     // generate random 16 bytes hex string
     let sn = "";
     for (let i = 0; i < 4; i++) {
-      sn += (
-        "00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)
-      ).slice(-8);
+      sn += ("00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)).slice(-8);
     }
     return sn;
   }
 
-  private configureCert(
-    certServer: pki.Certificate,
-    publicKey: pki.rsa.PublicKey
-  ) {
+  private configureCert(certServer: pki.Certificate, publicKey: pki.rsa.PublicKey) {
     certServer.publicKey = publicKey;
     certServer.serialNumber = this.randomSerialNumber();
     certServer.validity.notBefore = this.yesterday();
@@ -364,10 +363,7 @@ export class ExpressServer {
   }
 
   lastRequestContainedAuthHeader(): boolean {
-    return (
-      this.lastRequestHeaders.authorization !== undefined &&
-      this.lastRequestHeaders.authorization.length > 0
-    );
+    return this.lastRequestHeaders.authorization !== undefined && this.lastRequestHeaders.authorization.length > 0;
   }
 
   sendNtlmType2(fakeHeader: string) {
@@ -380,6 +376,10 @@ export class ExpressServer {
 
   sendWwwAuth(fakeHeaders: AuthResponeHeader[]) {
     this.sendWwwAuthHeader = fakeHeaders;
+  }
+
+  closeConnectionOnNextRequest(close: boolean) {
+    this.closeConnectionOnNextRequestState = close;
   }
 
   restartNtlm() {

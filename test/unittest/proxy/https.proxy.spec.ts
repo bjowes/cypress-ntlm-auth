@@ -54,21 +54,22 @@ describe("Proxy for HTTPS host with NTLM", function () {
   });
 
   beforeEach("Reset NTLM config", async function () {
+    if (!coreServer) {
+      this.timeout(30000);
+      coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+      let ports = await coreServer.start(undefined, undefined, undefined);
+      configApiUrl = ports.configApiUrl;
+      ntlmProxyUrl = ports.ntlmProxyUrl;
+    } else {
+      await ProxyFacade.sendNtlmReset(configApiUrl);
+    }
     this.timeout(2000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
   it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -76,14 +77,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
 
@@ -93,14 +87,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -111,14 +98,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, expressServer.caCert);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
 
@@ -128,14 +108,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -146,14 +119,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, expressServer.caCert);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
 
@@ -220,29 +186,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent1
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, undefined, agent1);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent2
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, undefined, agent2);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -252,6 +202,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
 
     const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendQuitCommand(configApiUrl, true);
+    coreServer = null;
     await agentSocketClosed;
   });
 
@@ -271,33 +222,14 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, undefined, agent);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
-    expect(
-      expressServer.lastRequestContainedAuthHeader(),
-      "should authenticate on first request"
-    ).to.be.true;
+    expect(expressServer.lastRequestContainedAuthHeader(), "should authenticate on first request").to.be.true;
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, undefined, agent);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -311,25 +243,40 @@ describe("Proxy for HTTPS host with NTLM", function () {
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
     expressServer.sendWwwAuthOnce("NTLM");
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, undefined, agent);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
-    expect(
-      expressServer.lastRequestContainedAuthHeader(),
-      "should authenticate when server sends 401"
-    ).to.be.true;
+    expect(expressServer.lastRequestContainedAuthHeader(), "should authenticate when server sends 401").to.be.true;
 
     agent.destroy();
+  });
+
+  it("should terminate client socket on server socket error for NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
+    });
+
+    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    expect(res.status, "ntlm-config should return 200").to.be.equal(200);
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "first req should return 200").to.be.equal(200);
+    expressServer.closeConnectionOnNextRequest(true);
+    try {
+      await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+      throw new Error("Should throw on closed connection");
+    } catch (err) {
+      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+    } finally {
+      agent.destroy();
+    }
   });
 });
 
@@ -375,14 +322,7 @@ describe("Proxy for HTTPS host with NTLM using SSO", function () {
   it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     expect(res.status, "ntlm-sso-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -390,14 +330,7 @@ describe("Proxy for HTTPS host with NTLM using SSO", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
     expect(res.status, "remote request should return 401").to.be.equal(401);
   });
 
@@ -407,14 +340,7 @@ describe("Proxy for HTTPS host with NTLM using SSO", function () {
     };
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     expect(res.status, "ntlm-sso-config should return 200").to.be.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -438,7 +364,14 @@ describe("Proxy for HTTPS host without NTLM", function () {
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
-  beforeEach("Restore timeout", function () {
+  beforeEach("Restore timeout", async function () {
+    if (!coreServer) {
+      this.timeout(30000);
+      coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+      let ports = await coreServer.start(undefined, undefined, undefined);
+      configApiUrl = ports.configApiUrl;
+      ntlmProxyUrl = ports.ntlmProxyUrl;
+    }
     this.timeout(2000);
   });
 
@@ -448,14 +381,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 
   it("should pass through GET requests for non NTLM host", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "GET",
-      "/get",
-      null,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, expressServer.caCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
@@ -466,14 +392,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "POST",
-      "/post",
-      body,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "POST", "/post", body, expressServer.caCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -484,14 +403,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl,
-      "PUT",
-      "/put",
-      body,
-      expressServer.caCert
-    );
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "PUT", "/put", body, expressServer.caCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -631,7 +543,54 @@ describe("Proxy for HTTPS host without NTLM", function () {
 
     const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendQuitCommand(configApiUrl, true);
+    coreServer = null;
     await agentSocketClosed;
+  });
+
+  it("should terminate client socket on server socket error for non NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [expressServer.caCert],
+    });
+
+    let res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+    expect(res.status, "first req should return 200").to.be.equal(200);
+    expressServer.closeConnectionOnNextRequest(true);
+    try {
+      await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+      throw new Error("Should throw on closed connection");
+    } catch (err) {
+      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+    } finally {
+      agent.destroy();
+    }
+  });
+
+  it("should terminate client socket on server CONNECT error for non NTLM host", async function () {
+    let proxyUrl = url.parse(ntlmProxyUrl);
+    let agent = new kapAgent({
+      proxy: {
+        hostname: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      ca: [expressServer.caCert],
+    });
+
+    expressServer.closeConnectionOnNextRequest(true);
+    try {
+      await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
+      throw new Error("Should throw on closed connection");
+    } catch (err) {
+      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+    } finally {
+      agent.destroy();
+    }
   });
 });
 
@@ -724,27 +683,13 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
       ntlmHost: "https://my.test.host/",
     };
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl1,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl1, "POST", "/post", body, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl2,
-      "POST",
-      "/post",
-      body,
-      proxyFacade.mitmCaCert
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl2, "POST", "/post", body, proxyFacade.mitmCaCert);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
@@ -768,36 +713,16 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
         port: +proxyUrl.port,
         headers: { "User-Agent": "Node" },
       },
-      ca: [
-        expressServer1.caCert,
-        expressServer2.caCert,
-        proxyFacade.mitmCaCert,
-      ],
+      ca: [expressServer1.caCert, expressServer2.caCert, proxyFacade.mitmCaCert],
     });
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl1,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl1, "POST", "/post", body, undefined, agent);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     let resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
-      ntlmProxyUrl,
-      httpsUrl2,
-      "POST",
-      "/post",
-      body,
-      undefined,
-      agent
-    );
+    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl2, "POST", "/post", body, undefined, agent);
     expect(res.status, "remote request should return 200").to.be.equal(200);
     resBody = res.data as any;
     expect(resBody.ntlmHost).to.be.equal(body.ntlmHost);

@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0 - released 2021-03-16
+
+- Fix #163: Break client connection on network error
+
 ## 3.1.7 - released 2021-02-12
 
 - Fix #161: Re-authenticate on new request after authentication failed
