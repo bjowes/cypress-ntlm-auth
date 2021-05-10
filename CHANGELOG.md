@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.1 - released 2021-05-10
+
+- Bump dependencies
+
 ## 3.2.0 - released 2021-03-16
 
 - Fix #163: Break client connection on network error
