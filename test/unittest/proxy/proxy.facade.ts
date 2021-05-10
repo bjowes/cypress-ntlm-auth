@@ -24,10 +24,7 @@ export class ProxyFacade {
 
   async startMitmProxy(
     rejectUnauthorized: boolean,
-    requestCallback?: (
-      ctx: httpMitmProxy.IContext,
-      callback: (error?: Error) => void
-    ) => void
+    requestCallback?: (ctx: httpMitmProxy.IContext, callback: (error?: Error) => void) => void
   ): Promise<string> {
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: "localhost",
@@ -48,8 +45,7 @@ export class ProxyFacade {
     mitmOptions.port = port;
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
-      let url =
-        ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
+      let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
       console.log("proxyFacade: " + errorKind + " on " + url + ":", err);
     });
 
@@ -57,7 +53,7 @@ export class ProxyFacade {
       this._mitmProxy.onRequest(requestCallback);
     }
 
-    await new Promise((resolve, reject) =>
+    await new Promise<void>((resolve, reject) =>
       this._mitmProxy.listen(mitmOptions, (err: Error) => {
         if (err) {
           reject(err);
@@ -96,10 +92,7 @@ export class ProxyFacade {
         if (err) {
           return reject(err);
         }
-        ca.generateServerCertificateKeys([host], function (
-          key: string,
-          cert: string
-        ) {
+        ca.generateServerCertificateKeys([host], function (key: string, cert: string) {
           return resolve();
         });
       });
@@ -107,33 +100,19 @@ export class ProxyFacade {
   }
 
   get mitmCaCert(): Buffer {
-    const caCertPath = path.join(
-      process.cwd(),
-      ".http-mitm-proxy",
-      "certs",
-      "ca.pem"
-    );
+    const caCertPath = path.join(process.cwd(), ".http-mitm-proxy", "certs", "ca.pem");
     return fs.readFileSync(caCertPath);
   }
 
-  static async sendQuitCommand(
-    configApiUrl: string,
-    keepPortsFile: boolean
-  ): Promise<AxiosResponse<string>> {
-    let res = await axios.post(
-      configApiUrl + "/quit",
-      { keepPortsFile: keepPortsFile },
-      { timeout: 15000 }
-    );
+  static async sendQuitCommand(configApiUrl: string, keepPortsFile: boolean): Promise<AxiosResponse<string>> {
+    let res = await axios.post(configApiUrl + "/quit", { keepPortsFile: keepPortsFile }, { timeout: 15000 });
     if (res.status !== 200) {
       throw new Error("Unexpected response from NTLM proxy: " + res.status);
     }
     return res;
   }
 
-  static async sendAliveRequest(
-    configApiUrl: string
-  ): Promise<AxiosResponse<PortsConfig>> {
+  static async sendAliveRequest(configApiUrl: string): Promise<AxiosResponse<PortsConfig>> {
     let res = await axios.get<PortsConfig>(configApiUrl + "/alive", {
       timeout: 15000,
     });
@@ -167,9 +146,7 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendNtlmReset(
-    configApiUrl: string
-  ): Promise<AxiosResponse<string>> {
+  static async sendNtlmReset(configApiUrl: string): Promise<AxiosResponse<string>> {
     let res = await axios.post(configApiUrl + "/reset", null, {
       timeout: 15000,
     });
@@ -190,24 +167,9 @@ export class ProxyFacade {
   ): Promise<AxiosResponse<any>> {
     const remoteHostUrl = url.parse(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
-      return await this.sendProxiedHttpRequest(
-        ntlmProxyUrl,
-        remoteHostWithPort,
-        method,
-        path,
-        body,
-        agent
-      );
+      return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
-      return await this.sendProxiedHttpsRequest(
-        ntlmProxyUrl,
-        remoteHostWithPort,
-        method,
-        path,
-        body,
-        agent,
-        caCert
-      );
+      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent, caCert);
     }
   }
 

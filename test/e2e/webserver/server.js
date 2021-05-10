@@ -3,7 +3,7 @@ const https = require("https");
 const express = require("express");
 const expressWs = require("express-ws");
 const cors = require("cors");
-const ntlm = require("@bjowes/express-ntlm");
+const ntlm = require("express-ntlm");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
@@ -123,9 +123,7 @@ function configureCert(certServer, publicKey) {
     // generate random 16 bytes hex string
     let sn = "";
     for (let i = 0; i < 4; i++) {
-      sn += (
-        "00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)
-      ).slice(-8);
+      sn += ("00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)).slice(-8);
     }
     return sn;
   }

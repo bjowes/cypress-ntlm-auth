@@ -3,7 +3,7 @@
 import http from "http";
 import https from "https";
 import express from "express";
-const ntlm = require("@bjowes/express-ntlm");
+const ntlm = require("express-ntlm");
 import net from "net";
 import bodyParser from "body-parser";
 import { pki } from "node-forge";
@@ -279,7 +279,7 @@ export class ExpressServer {
   }
 
   async stopHttpServer() {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.httpServer.on("close", () => resolve()); // Called when all connections have been closed
       this.httpServer.close((err) => {
         if (err) {
@@ -341,7 +341,7 @@ export class ExpressServer {
   }
 
   async stopHttpsServer() {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.httpsServer.on("close", () => resolve()); // Called when all connections have been closed
       this.httpsServer.close((err) => {
         if (err) {
