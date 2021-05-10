@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.2 - released 2021-05-10
+
+- Bump dependencies
+
 ## 3.2.1 - released 2021-05-10
 
 - Bump dependencies
