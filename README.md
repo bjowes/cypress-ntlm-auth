@@ -148,7 +148,7 @@ npx ntlm-proxy-exit
 
 ##### Powershell (Windows)
 
-```shell
+```powershell
 # Terminate NTLM proxy
 npx ntlm-proxy-exit
 
