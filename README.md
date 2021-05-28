@@ -76,7 +76,9 @@ This starts the ntlm-proxy and runs cypress in headless mode (like `cypress run`
 
 This binary is available in the `node_modules/.bin` folder. Use it if you need to start the ntlm-proxy manually. To use specific ports you can set `CYPRESS_NTLM_AUTH_API` and `CYPRESS_NTLM_AUTH_PROXY` environment variables.
 
-#### Example - Mac and Linux
+#### Examples
+
+##### shell (Mac and Linux)
 
 ```shell
 # Start NTLM proxy
@@ -89,7 +91,7 @@ npx ntlm-proxy &
 DEBUG=cypress:plugin:ntlm-auth npx ntlm-proxy
 ```
 
-#### Example - Windows
+##### cmd (Windows)
 
 ```shell
 # Start NTLM proxy
@@ -103,11 +105,27 @@ set DEBUG=cypress:plugin:ntlm-auth
 npx ntlm-proxy
 ```
 
+##### Powershell (Windows)
+
+```powershell
+# Start NTLM proxy
+npx ntlm-proxy
+
+# Start NTLM proxy as a background process, close window when ntlm-proxy terminates
+start /min \"ntlm-proxy\" cmd /c npx ntlm-proxy
+
+# Start NTLM proxy with debug logging to console
+$env:DEBUG='cypress:plugin:ntlm-auth'
+npx ntlm-proxy
+```
+
 ### ntlm-proxy-exit
 
 This binary is available in the `node_modules/.bin` folder. Use it to send an exit command to a ntlm-proxy running in the background. `CYPRESS_NTLM_AUTH_API` environment variable must be set for this command.
 
-#### Example - Mac and Linux
+#### Examples
+
+##### shell (Mac and Linux)
 
 ```shell
 # Terminate NTLM proxy
@@ -117,7 +135,7 @@ npx ntlm-proxy-exit
 DEBUG=cypress:plugin:ntlm-auth npx ntlm-proxy-exit
 ```
 
-#### Example - Windows
+##### cmd (Windows)
 
 ```shell
 # Terminate NTLM proxy
@@ -125,6 +143,17 @@ npx ntlm-proxy-exit
 
 # Stop NTLM proxy with debug logging to console
 set DEBUG=cypress:plugin:ntlm-auth
+npx ntlm-proxy-exit
+```
+
+##### Powershell (Windows)
+
+```shell
+# Terminate NTLM proxy
+npx ntlm-proxy-exit
+
+# Stop NTLM proxy with debug logging to console
+$env:DEBUG='cypress:plugin:ntlm-auth'
 npx ntlm-proxy-exit
 ```
 
@@ -308,18 +337,25 @@ cy.visit("https://ntlm.acme.com"); // This fails (401)
 
 When reporting issues with this plugin, please collect debug logs for your scenario as described below and add them to the issue.
 
-### Mac or Linux
+### shell (Mac or Linux)
 
 1. Open a terminal and go to your project root directory.
 2. `DEBUG=cypress:plugin:ntlm-auth npx cypress-ntlm open`
 3. Run your cypress tests and view the logs in the terminal.
 
-### Windows
+### cmd (Windows)
 
 1. Open a cmd window and go to your project root directory.
 2. `set DEBUG=cypress:plugin:ntlm-auth`
 3. `npx cypress-ntlm open`
 4. Run your cypress tests and view the logs in the cmd window.
+
+### Powershell (Windows)
+
+1. Open a Powershell window and go to your project root directory.
+2. `$env:DEBUG='cypress:plugin:ntlm-auth'`
+3. `npx cypress-ntlm open`
+4. Run your cypress tests and view the logs in the Powershell window.
 
 ### Debug logging of NTLM and Negotiate headers
 
@@ -407,6 +443,8 @@ import "/usr/local/lib/node_modules/cypress-ntlm-auth/dist/commands";
 ```
 
 Which option to use is up to you. The first option is platform agnostic but requires the extra step of the local install (a Docker container can be prepared with all the global installs already in place). The second option removes the requirement of the local install, but the import path specified is not portable - it will vary between different OS variants, and also if you have multiple Node versions installed.
+
+An example repository using method 1 above can be found here: [cypress-ntlm-auth-docker](https://github.com/bjowes/cypress-ntlm-auth-docker)
 
 ### .http-mitm-proxy
 
