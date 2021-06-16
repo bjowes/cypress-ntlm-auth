@@ -37,6 +37,8 @@ export class ExpressServer {
   private sendWwwAuthHeader: AuthResponeHeader[] = [];
   private closeConnectionOnNextRequestState = false;
 
+  private customStatusPhrase: string = null;
+
   constructor() {
     this.initExpress(this.appNoAuth, false);
     this.initExpress(this.appNtlmAuth, true);
@@ -69,6 +71,11 @@ export class ExpressServer {
       res.setHeader("www-authenticate", auth.header);
       res.sendStatus(auth.status);
       return;
+    }
+
+    if (this.customStatusPhrase) {
+      res.statusMessage = this.customStatusPhrase;
+      this.customStatusPhrase = null;
     }
     res.status(200).send(JSON.stringify(body));
   }
@@ -384,5 +391,9 @@ export class ExpressServer {
 
   restartNtlm() {
     this.appNtlmAuth.use(ntlm({}));
+  }
+
+  setCustomStatusPhrase(phrase: string) {
+    this.customStatusPhrase = phrase;
   }
 }
