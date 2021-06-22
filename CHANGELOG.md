@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.2.3-beta.1 - released 2021-06-16
+## 3.2.3 - released 2021-06-22
 
 - Fix #175: Pass on custom status phrases in response 
 
