@@ -278,7 +278,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           res.headers["connection"] = "close";
         }
       }
-      ctx.proxyToClientResponse.writeHead(res.statusCode || 401, self.filterAndCanonizeHeaders(res.headers));
+      if (res.statusCode) {
+        ctx.proxyToClientResponse.writeHead(res.statusCode, res.statusMessage, self.filterAndCanonizeHeaders(res.headers));
+      } else {
+        ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(res.headers));
+      }
       res.on("data", (chunk) => ctx.proxyToClientResponse.write(chunk));
       res.on("end", () => ctx.proxyToClientResponse.end());
       res.resume();
@@ -287,15 +291,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       // Signal this to generic error handling by destroying the original request socket
       ctx.proxyToServerRequest.socket?.destroy();
       ctx.proxyToClientResponse.socket?.destroy();
-      /*
-      const headers = ctx.serverToProxyResponse.headers;
-      if (headers["proxy-connection"]) {
-        headers["proxy-connection"] = "keep-alive";
-        headers["connection"] = "close";
-      }
-      ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(headers));
-      ctx.proxyToClientResponse.end();
-      */
     }
   }
 
