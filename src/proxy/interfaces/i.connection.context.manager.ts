@@ -18,4 +18,5 @@ export interface IConnectionContextManager {
   addTunnel(client: Socket, target: Socket): void;
   removeTunnel(client: Socket): void;
   removeAndCloseAllTunnels(event: string): void;
+  resetHttpsValidation(): void;
 }

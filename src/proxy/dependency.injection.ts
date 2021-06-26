@@ -53,6 +53,8 @@ import { ExpressServerFacade } from "./express.server.facade";
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
 import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 
+
+
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { DebugLogger } from "../util/debug.logger";
 
@@ -68,6 +70,10 @@ import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 import { PortsConfigStore } from "./ports.config.store";
 import { IEnvironment } from "../startup/interfaces/i.environment";
 import { Environment } from "../startup/environment";
+import { IHttpsValidation } from "./interfaces/i.https.validation";
+import { HttpsValidation } from "./https.validation";
+import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
+import { TlsCertValidator } from "../util/tls.cert.validator";
 
 export class DependencyInjection {
   private _container: Container;
@@ -101,6 +107,9 @@ export class DependencyInjection {
     this._container
       .bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade)
       .to(HttpMitmProxyFacade);
+      this._container
+      .bind<IHttpsValidation>(TYPES.IHttpsValidation)
+      .to(HttpsValidation);
     this._container.bind<IMain>(TYPES.IMain).to(Main);
     this._container
       .bind<INegotiateManager>(TYPES.INegotiateManager)
@@ -116,6 +125,9 @@ export class DependencyInjection {
     this._container
       .bind<INtlmProxyServer>(TYPES.INtlmProxyServer)
       .to(NtlmProxyServer);
+    this._container
+      .bind<ITlsCertValidator>(TYPES.ITlsCertValidator)
+      .to(TlsCertValidator);
     this._container
       .bind<IUpstreamProxyConfigurator>(TYPES.IUpstreamProxyConfigurator)
       .to(UpstreamProxyConfigurator);

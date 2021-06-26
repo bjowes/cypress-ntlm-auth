@@ -1,4 +1,5 @@
 import { PortsConfig } from "../../models/ports.config.model";
+import { HttpsValidationLevel } from "../../proxy/https.validation";
 
 export interface IEnvironment {
   configApiUrl: string | undefined;
@@ -8,6 +9,7 @@ export interface IEnvironment {
   httpProxy: string | undefined;
   httpsProxy: string | undefined;
   noProxy: string | undefined;
+  httpsValidation: HttpsValidationLevel;
   configureForCypress(ports: PortsConfig): void;
   delete(key: string): void;
 }

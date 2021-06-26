@@ -79,5 +79,6 @@ export class CoreServer implements ICoreServer {
     this._configStore.clear();
     this._connectionContextManager.removeAllConnectionContexts(event);
     this._connectionContextManager.removeAndCloseAllTunnels(event);
+    this._connectionContextManager.resetHttpsValidation();
   }
 }

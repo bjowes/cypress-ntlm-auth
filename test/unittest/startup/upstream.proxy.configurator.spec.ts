@@ -10,7 +10,6 @@ import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { UpstreamProxyConfigurator } from "../../../src/startup/upstream.proxy.configurator";
 import { EnvironmentMock } from "./environment.mock";
-import { spy } from "sinon";
 
 describe("UpstreamProxyConfigurator", () => {
   let upstreamProxyConfigurator: UpstreamProxyConfigurator;

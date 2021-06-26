@@ -20,6 +20,7 @@ import { INegotiateManager } from "../../../src/proxy/interfaces/i.negotiate.man
 import { interfaces } from "inversify";
 import { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade";
 import { PortsConfigStoreMock } from "./ports.config.store.mock";
+import { IHttpsValidation } from "../../../src/proxy/interfaces/i.https.validation";
 
 describe("NtlmProxyMitm error logging", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
@@ -30,6 +31,7 @@ describe("NtlmProxyMitm error logging", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -41,6 +43,7 @@ describe("NtlmProxyMitm error logging", () => {
     negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
@@ -51,6 +54,7 @@ describe("NtlmProxyMitm error logging", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -149,6 +153,7 @@ describe("NtlmProxyMitm REQUEST", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -160,7 +165,7 @@ describe("NtlmProxyMitm REQUEST", () => {
     negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
-
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
@@ -171,6 +176,7 @@ describe("NtlmProxyMitm REQUEST", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -207,6 +213,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -255,6 +262,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -266,6 +274,7 @@ describe("NtlmProxyMitm CONNECT", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -440,6 +449,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -454,6 +464,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -465,6 +476,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });

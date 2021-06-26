@@ -17,6 +17,7 @@ import { AuthModeEnum } from "../models/auth.mode.enum";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { IHttpsValidation } from "./interfaces/i.https.validation";
 
 const nodeCommon = require("_http_common");
 
@@ -31,6 +32,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
+  private _httpsValidation: IHttpsValidation;
   private _debug: IDebugLogger;
 
   constructor(
@@ -44,6 +46,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
     @inject(TYPES.IUpstreamProxyManager)
     upstreamProxyManager: IUpstreamProxyManager,
+    @inject(TYPES.IHttpsValidation) httpsValidation: IHttpsValidation,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._configStore = configStore;
@@ -53,6 +56,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     this._negotiateManager = negotiateManager;
     this._ntlmManager = ntlmManager;
     this._upstreamProxyManager = upstreamProxyManager;
+    this._httpsValidation = httpsValidation;
     this._debug = debug;
 
     // Keep track of instance since methods will be triggered from HttpMitmProxy
@@ -106,6 +110,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     const targetHost = self.getTargetHost(ctx);
     if (targetHost) {
+      self._httpsValidation.validateRequest(targetHost);
       let context = self._connectionContextManager.getConnectionContextFromClientSocket(
         ctx.clientToProxyRequest.socket
       );
@@ -171,7 +176,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
-    const hostUrl = toCompleteUrl(host, ctx.isSSL, true);
+    const hostUrl = toCompleteUrl(host, ctx.isSSL, ctx.isSSL);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
       return null;
@@ -314,6 +319,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       // Don't tunnel if we need to go through an upstream proxy
       return callback();
     }
+    self._httpsValidation.validateConnect(targetHost);
 
     // Let non-NTLM hosts tunnel through
     self._debug.log("Tunnel to", req.url);
@@ -355,6 +361,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     socket.on("error", function (err: NodeJS.ErrnoException) {
       filterSocketConnReset(err, "CLIENT_TO_PROXY_SOCKET", req.url);
     });
+    conn.setNoDelay();
+    socket.setNoDelay();
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
     // eslint-disable-next-line jsdoc/require-jsdoc

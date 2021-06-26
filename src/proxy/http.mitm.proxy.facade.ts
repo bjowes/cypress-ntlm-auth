@@ -22,7 +22,7 @@ export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
       { host: 'localhost', port: port, keepAlive: true, forceSNI: false },
       (err: Error) => {
         if (err) {
-          reject(err);
+          return reject(err);
         }
         this._ntlmProxyListening = true;
         const url = 'http://127.0.0.1:' + port;

@@ -15,7 +15,7 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "cypress": "^7.2.0",
-    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-3.2.2.tgz",
+    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-3.2.3-beta.1.tgz",
     "cypress-terminal-report": "^3.1.1",
     "debug": "^4.3.1",
     "express": "^4.17.1",

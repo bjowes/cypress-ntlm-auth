@@ -39,6 +39,8 @@ export class ExpressServer {
 
   private customStatusPhrase: string = null;
 
+  private connectCount = 0;
+
   constructor() {
     this.initExpress(this.appNoAuth, false);
     this.initExpress(this.appNtlmAuth, true);
@@ -330,6 +332,7 @@ export class ExpressServer {
 
     this.httpsServer.on("connection", (socket) => {
       this.httpsServerSockets.add(socket);
+      this.connectCount++;
       socket.on("close", () => {
         this.httpsServerSockets.delete(socket);
       });
@@ -395,5 +398,13 @@ export class ExpressServer {
 
   setCustomStatusPhrase(phrase: string) {
     this.customStatusPhrase = phrase;
+  }
+
+  getConnectCount() {
+    return this.connectCount;
+  }
+
+  resetConnectCount() {
+    this.connectCount = 0;
   }
 }

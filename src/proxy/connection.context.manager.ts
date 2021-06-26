@@ -3,13 +3,13 @@ import { CompleteUrl } from "../models/complete.url.model";
 import { injectable, interfaces, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { IConfigController } from "./interfaces/i.config.controller";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
 import { IConnectionContext } from "./interfaces/i.connection.context";
 import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { SslTunnel } from "../models/ssl.tunnel.model";
+import { IHttpsValidation } from "./interfaces/i.https.validation";
 const HttpProxyAgent = require("http-proxy-agent");
 const HttpsProxyAgent = require("https-proxy-agent");
 
@@ -26,22 +26,22 @@ export class ConnectionContextManager implements IConnectionContextManager {
   private _agentCount: number = 0;
   private _connectionContexts: ConnectionContextHash = {};
   private _upstreamProxyManager: IUpstreamProxyManager;
-  private _configController: IConfigController;
   private ConnectionContext: interfaces.Newable<IConnectionContext>;
+  private _httpsValidation: IHttpsValidation;
   private _debug: IDebugLogger;
   private _tunnels: SslTunnelHash = {};
 
   constructor(
     @inject(TYPES.IUpstreamProxyManager)
     upstreamProxyManager: IUpstreamProxyManager,
-    @inject(TYPES.IConfigController) configController: IConfigController,
     @inject(TYPES.NewableIConnectionContext)
     connectionContext: interfaces.Newable<IConnectionContext>,
+    @inject(TYPES.IHttpsValidation) httpsValidation: IHttpsValidation,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._upstreamProxyManager = upstreamProxyManager;
-    this._configController = configController;
     this.ConnectionContext = connectionContext;
+    this._httpsValidation = httpsValidation;
     this._debug = debug;
   }
 
@@ -94,20 +94,11 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return undefined;
   }
 
-  private nodeTlsRejectUnauthorized(): boolean {
-    if (process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
-      return process.env.NODE_TLS_REJECT_UNAUTHORIZED !== "0";
-    }
-    return true;
-  }
-
   getAgent(isSSL: boolean, targetHost: CompleteUrl) {
     const agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
-      rejectUnauthorized:
-        // Allow self-signed certificates if target is on localhost
-        this.nodeTlsRejectUnauthorized() && !targetHost.isLocalhost,
+      rejectUnauthorized: this._httpsValidation.useHttpsValidation(targetHost)
     };
     const useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
       targetHost,
@@ -198,5 +189,9 @@ export class ConnectionContextManager implements IConnectionContextManager {
     }
     this._tunnels = {};
     this._debug.log("Removed and closed all tunnels due to " + event);
+  }
+
+  resetHttpsValidation() {
+    this._httpsValidation.reset();
   }
 }
