@@ -12,7 +12,7 @@ jobs:
   unit-test:
     name: Unit test
     env:
-      DEBUG: 'cypress:plugin:ntlm-auth'
+      DEBUG: 'cypress:plugin:ntlm-auth,win-sso'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
