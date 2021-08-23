@@ -11,6 +11,8 @@ on:
 jobs:
   unit-test:
     name: Unit test
+    env:
+      DEBUG: 'cypress:plugin:ntlm-auth'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
