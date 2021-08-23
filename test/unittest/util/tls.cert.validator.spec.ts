@@ -4,6 +4,7 @@ import { TlsCertValidator } from "../../../src/util/tls.cert.validator";
 import { ExpressServer } from "../proxy/express.server";
 import { toCompleteUrl } from "../../../src/util/url.converter";
 import { fail } from "assert";
+import { osSupported } from "win-sso";
 
 describe("TlsCertValidator", function () {
   let expressServer = new ExpressServer();
@@ -53,7 +54,9 @@ describe("TlsCertValidator", function () {
       fail();
     } catch (err) {
       expect(expressServer.getConnectCount()).to.eq(0);
-      expect(err.code).to.eq("EADDRNOTAVAIL");
+      if (osSupported) {
+        expect(["EADDRNOTAVAIL", "ECONNREFUSED"]).to.contain(err.code);
+      }
     }
   });
 });

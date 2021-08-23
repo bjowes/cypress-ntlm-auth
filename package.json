@@ -12,8 +12,6 @@
     "e2e:default": "npm pack && cd test/e2e && npm uninstall $npm_package_name && npm ci && npm i ../../$npm_package_name-$npm_package_version.tgz && npm run test",
     "e2e:win32": "npm pack && cd test\\e2e && npm uninstall %npm_package_name% && npm ci && npm i ..\\..\\%npm_package_name%-%npm_package_version%.tgz && npm run test",
     "unittest": "mocha --require ./test/unittest/ts.hooks.js --require source-map-support/register test/unittest/**/*.spec.ts",
-    "unittest2": "mocha --require ts-node/register test/unittest/**/*.spec.ts",
-    "unittest3": "mocha --require ./test/unittest/ts.hooks.js test/unittest/**/*.spec.ts",
     "build": "shx rm -rf dist && tsc && shx cp src/commands/index.d.ts dist/commands/ && shx chmod +x dist/launchers/*.js",
     "prepare": "npm run build",
     "coverage": "nyc --require ./test/ts.hooks.js --require source-map-support/register --include \"src\" --extension \".ts\" --exclude \"src/commands/index.d.ts\" --all npm run test",
