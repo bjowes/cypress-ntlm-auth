@@ -272,7 +272,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
   private handshakeCallback(ctx: IContext, err?: NodeJS.ErrnoException, res?: http.IncomingMessage) {
     if (err) {
-      self._debug.log("Cannot perform handshake.");
+      self._debug.log("Cannot perform handshake.", err);
     }
     if (res) {
       if (ctx.clientToProxyRequest.headers["proxy-connection"]) {

@@ -83,10 +83,6 @@ export class NtlmManager implements INtlmManager {
       type1res.pause();
 
       if (this.canHandleNtlmAuthentication(type1res) === false) {
-        this._debug.log(
-          "NTLM authentication failed (www-authenticate with NTLM not found in server response) with host " +
-            ntlmHostUrl.href
-        );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(
           new Error(
@@ -113,14 +109,8 @@ export class NtlmManager implements INtlmManager {
           "Cannot parse NTLM message type 2 from host",
           ntlmHostUrl.href
         );
-        this._debug.log(err);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-        return callback(
-          new Error(
-            "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
-          ),
-          type1res
-        );
+        return callback(err, type1res);
       }
 
       let type3msg: NtlmMessage;
@@ -131,6 +121,7 @@ export class NtlmManager implements INtlmManager {
             type1res.headers["www-authenticate"] || ""
           );
         } catch (err) {
+          this._debug.log("Error while creating SSO Auth response");
           return callback(err, type1res);
         }
       } else {
@@ -166,7 +157,7 @@ export class NtlmManager implements INtlmManager {
           });
         });
         type3req.on("error", (err) => {
-          this._debug.log("Error while sending NTLM message type 3:", err);
+          this._debug.log("Error while sending NTLM message type 3");
           context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
           return callback(err);
         });
@@ -181,7 +172,7 @@ export class NtlmManager implements INtlmManager {
       type1res.resume(); // complete message to reuse socket
     });
     type1req.on("error", (err) => {
-      this._debug.log("Error while sending NTLM message type 1:", err);
+      this._debug.log("Error while sending NTLM message type 1");
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err);
     });
