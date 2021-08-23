@@ -1,11 +1,8 @@
-import { IContext } from 'http-mitm-proxy';
 import { inject, injectable } from 'inversify';
-import tls from 'tls';
 import { CompleteUrl } from '../models/complete.url.model';
 import { IEnvironment } from '../startup/interfaces/i.environment';
 import { IDebugLogger } from '../util/interfaces/i.debug.logger';
 import { ITlsCertValidator } from '../util/interfaces/i.tls.cert.validator';
-import { TlsCertValidator } from '../util/tls.cert.validator';
 import { TYPES } from './dependency.injection.types';
 import { IHttpsValidation } from './interfaces/i.https.validation';
 
