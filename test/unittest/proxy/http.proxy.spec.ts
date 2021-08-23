@@ -422,7 +422,7 @@ describe("Proxy for HTTP host with NTLM using SSO", function () {
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
-  it.only("should handle authentication for GET requests", async function () {
+  it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     expect(res.status, "ntlm-sso-config should return 200").to.be.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);

@@ -12,8 +12,8 @@ jobs:
   unit-test:
     name: Unit test
     env:
-      DEBUG: 'cypress:plugin:ntlm-auth,win-sso'
-      DEBUG_NTLM_HEADERS: '1'
+      #DEBUG: 'cypress:plugin:ntlm-auth,win-sso'
+      #DEBUG_NTLM_HEADERS: '1'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
