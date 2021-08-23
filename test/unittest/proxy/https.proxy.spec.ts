@@ -598,8 +598,8 @@ function waitForAgentSocketClose(agent: http.Agent): Promise<void> {
   return new Promise((resolve, reject) => {
     let socketCount = 0;
     let socketProperty;
-    let sockets = agent.sockets as any;
-    let freeSockets = (agent as any)["freeSockets"] as any;
+    let sockets = agent.sockets;
+    let freeSockets = agent.freeSockets;
 
     for (let s in sockets) {
       if (sockets.hasOwnProperty(s)) {
@@ -608,7 +608,8 @@ function waitForAgentSocketClose(agent: http.Agent): Promise<void> {
       }
     }
     for (let s in freeSockets) {
-      if (freeSockets.hasOwnProperty(s)) {
+      // Very wierd, freeSockets does not inherit from Object on Node 16
+      if (!freeSockets.hasOwnProperty || freeSockets.hasOwnProperty(s)) {
         socketCount += freeSockets[s].length;
         socketProperty = freeSockets[s];
       }

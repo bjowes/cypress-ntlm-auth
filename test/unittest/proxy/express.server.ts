@@ -4,7 +4,7 @@ import http from "http";
 import https from "https";
 import express from "express";
 const ntlm = require("express-ntlm");
-import net from "net";
+import stream from "stream";
 import bodyParser from "body-parser";
 import { pki } from "node-forge";
 import { AddressInfo } from "net";
@@ -29,8 +29,8 @@ export class ExpressServer {
   private httpServer: http.Server;
   private httpsServer: https.Server;
 
-  private httpServerSockets = new Set<net.Socket>();
-  private httpsServerSockets = new Set<net.Socket>();
+  private httpServerSockets = new Set<stream.Duplex>();
+  private httpsServerSockets = new Set<stream.Duplex>();
 
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
