@@ -159,9 +159,12 @@ describe("NtlmManager", () => {
         connectionContext,
         false,
         (err) => {
-          expect(err.message).to.be.equal(
-            "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
+          debugMock
+          .received(1)
+          .log(
+            "Cannot parse NTLM message type 2 from host", ntlmHostUrl.href
           );
+          expect(err.message).to.be.equal("Invalid message signature");
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
             NtlmStateEnum.NotAuthenticated
           );
@@ -204,9 +207,12 @@ describe("NtlmManager", () => {
         connectionContext,
         false,
         (err) => {
-          expect(err.message).to.be.equal(
-            "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
+          debugMock
+          .received(1)
+          .log(
+            "Cannot parse NTLM message type 2 from host", ntlmHostUrl.href
           );
+          expect(err.message).to.be.equal("Invalid message signature");
           expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
             NtlmStateEnum.NotAuthenticated
           );
