@@ -106,7 +106,7 @@ describe("Startup shallow", () => {
       try {
         await startup.prepareOptions(["node", "cypress-ntlm", "run"]);
         fail();
-      } catch (err) {
+      } catch (err: any) {
         expect(err.message).to.eq(
           "cypress-ntlm-auth requires Cypress to be installed."
         );

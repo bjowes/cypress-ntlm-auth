@@ -365,7 +365,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     try {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
       fail("Should throw on closed connection");
-    } catch (err) {
+    } catch (err: any) {
       expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
     }
   });
@@ -686,8 +686,8 @@ describe("Proxy for HTTP host without NTLM", function () {
     try {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
       fail("Should throw on closed connection");
-    } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+    } catch (err: any) {
+      expect((err).message, "Client socket should be terminated").to.be.equal("socket hang up");
     }
   });
 });

@@ -30,7 +30,7 @@ export class NegotiateManager implements INegotiateManager {
     let requestToken: string;
     try {
       requestToken = context.winSso.createAuthRequestHeader();
-    } catch (err) {
+    } catch (err: any) {
       return callback(err, ctx.serverToProxyResponse);
     }
     this.dropOriginalResponse(ctx);
@@ -122,7 +122,7 @@ export class NegotiateManager implements INegotiateManager {
       responseToken = context.winSso.createAuthResponseHeader(
         res.headers["www-authenticate"] || ""
       );
-    } catch (err) {
+    } catch (err: any) {
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err, res);
     }

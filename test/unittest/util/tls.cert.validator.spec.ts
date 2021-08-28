@@ -31,7 +31,7 @@ describe("TlsCertValidator", function () {
     var tlsCertValidator = new TlsCertValidator();
     try {
       await tlsCertValidator.validate(googleUrl);
-    } catch (err) {
+    } catch (err: any) {
       fail(err);
     }
   });
@@ -41,7 +41,7 @@ describe("TlsCertValidator", function () {
     try {
       await tlsCertValidator.validate(localhostUrl);
       fail();
-    } catch (err) {
+    } catch (err: any) {
       expect(expressServer.getConnectCount()).to.eq(1);
       expect(err.code).to.eq("DEPTH_ZERO_SELF_SIGNED_CERT");
     }
@@ -52,7 +52,7 @@ describe("TlsCertValidator", function () {
     try {
       await tlsCertValidator.validate(badUrl);
       fail();
-    } catch (err) {
+    } catch (err: any) {
       expect(expressServer.getConnectCount()).to.eq(0);
       if (osSupported) {
         expect(["EADDRNOTAVAIL", "ECONNREFUSED"]).to.contain(err.code);

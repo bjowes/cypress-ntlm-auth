@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.0-beta.1 - released 2021-08-28
+
+- Refactored HTTPS validation. By default, the validation will only warn of errors but not break the test. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
+- Bump dependencies
+- Improved error logging
+- Dropped Node 10 support
+
 ## 3.2.3 - released 2021-06-23
 
 - Fix #175: Pass on custom status phrases in response 

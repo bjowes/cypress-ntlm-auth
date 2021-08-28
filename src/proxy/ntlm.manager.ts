@@ -47,7 +47,7 @@ export class NtlmManager implements INtlmManager {
     if (useSso) {
       try {
         type1header = context.winSso.createAuthRequestHeader();
-      } catch (err) {
+      } catch (err: any) {
         return callback(err, ctx.serverToProxyResponse);
       }
     } else {
@@ -104,7 +104,7 @@ export class NtlmManager implements INtlmManager {
         );
         this.debugHeader(type1res.headers["www-authenticate"], true);
         this.debugHeader(type2msg, false);
-      } catch (err) {
+      } catch (err: any) {
         this._debug.log(
           "Cannot parse NTLM message type 2 from host",
           ntlmHostUrl.href
@@ -120,7 +120,7 @@ export class NtlmManager implements INtlmManager {
           type3header = context.winSso.createAuthResponseHeader(
             type1res.headers["www-authenticate"] || ""
           );
-        } catch (err) {
+        } catch (err: any) {
           this._debug.log("Error while creating SSO Auth response");
           return callback(err, type1res);
         }

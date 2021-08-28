@@ -1,13 +1,13 @@
 # HTTPS/SSL/TLS Certificates
 
-When the target site is a HTTPS site, requests would normally validate the certificate since the web browser does this. This plugin used to do that too, until version 3.2.3. Due to the high ratio of support cases received involving issues with corporate certificates and self-signed certificates, it was decided to follow the same path as Cypress itself - allow invalid certificates, by default. Since Cypress is a testing platform, one can follow the reasoning that this takes the pressure of the testers to have full certificates also in the test environment. At the same time, this makes the test runs open to MITM attacks. To aim for higher security standards, the plugin will log warnings to the console when certificate validations fail. There is also a `strict` mode available to enforce valid certificates.
+When the target site is a HTTPS site, the request library would validate the certificate since the web browser does this. This plugin used to do that too, until version 3.2.3. Due to the high ratio of support cases involving issues with corporate certificates and self-signed certificates, it was decided to follow the same path as Cypress itself - allow invalid certificates by default. Since Cypress is a testing platform, one can follow the reasoning that this takes the pressure off the testers to have full certificates also in the test environment. At the same time, this makes the test runs open to MITM attacks. To aim for higher security standards, the plugin will log warnings to the console when certificate validations fail. There is also a `strict` mode available to enforce valid certificates.
 
 ## HTTPS_VALIDATION
 
 The plugins behavior for HTTPS validation can be configured using the environment variable `HTTPS_VALIDATION`. The following values are supported:
 - `unsafe` : No validations are performed at all. This is the same behavior as Cypress has when run without this plugin.
 - `warn` : Default mode. Allows invalid certificates, but validates certificates and logs warnings about invalid certificates to the console.
-- `strict` : Secure mode, this is the old (<= 3.2.3) behavior of this plugin. If validation fails, the socket to Cypress is terminated, resulting in a network error in Cypress. This will generally break the test.
+- `strict` : Secure mode, this is similar to the old (<= 3.2.3) behavior of this plugin, but even stricter since it does validate certificates also for targets on localhost. If validation fails, the socket to Cypress is terminated, resulting in a network error in Cypress. This will generally break the test.
 
 If `HTTPS_VALIDATION` is unset, or set to any other value, it will fall-back to `warn` mode.
 
