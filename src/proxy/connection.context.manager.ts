@@ -98,7 +98,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     const agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
-      rejectUnauthorized: this._httpsValidation.useHttpsValidation(targetHost)
+      rejectUnauthorized: this._httpsValidation.useRequestHttpsValidation()
     };
     const useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(
       targetHost,

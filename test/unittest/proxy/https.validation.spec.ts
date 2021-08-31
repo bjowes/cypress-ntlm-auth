@@ -41,41 +41,23 @@ describe("HTTPS Validation", function() {
     return new HttpsValidation(environmentMock, tlsCertValidatorMock, debugMock);
   }
 
-  describe("useHttpsValidation", () => {
+  describe("useRequestHttpsValidation", () => {
 
-    it("should return true for localhost in strict mode", () => {
+    it("should return true in strict mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
-      let res = getHttpsValidator().useHttpsValidation(localhostUrl);
+      let res = getHttpsValidator().useRequestHttpsValidation();
       expect(res).to.be.true;
     });
 
-    it("should return true for external in strict mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
-      let res = getHttpsValidator().useHttpsValidation(externalUrl);
-      expect(res).to.be.true;
-    });
-
-    it("should return false for localhost in warn mode", () => {
+    it("should return false in warn mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
-      let res = getHttpsValidator().useHttpsValidation(localhostUrl);
+      let res = getHttpsValidator().useRequestHttpsValidation();
       expect(res).to.be.false;
     });
 
-    it("should return true for external in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
-      let res = getHttpsValidator().useHttpsValidation(externalUrl);
-      expect(res).to.be.true;
-    });
-
-    it("should return false for localhost in unsafe mode", () => {
+    it("should return false in unsafe mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
-      let res = getHttpsValidator().useHttpsValidation(localhostUrl);
-      expect(res).to.be.false;
-    });
-
-    it("should return false for external in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
-      let res = getHttpsValidator().useHttpsValidation(externalUrl);
+      let res = getHttpsValidator().useRequestHttpsValidation();
       expect(res).to.be.false;
     });
   });

@@ -30,14 +30,8 @@ export class HttpsValidation implements IHttpsValidation {
     this._debug = debug;
   }
 
-  useHttpsValidation(targetHost: CompleteUrl): boolean {
-    if (this.validationLevel === HttpsValidationLevel.Strict) {
-      return true;
-    }
-    if (this.validationLevel === HttpsValidationLevel.Warn && !targetHost.isLocalhost) {
-      return true;
-    }
-    return false;
+  useRequestHttpsValidation(): boolean {
+    return this.validationLevel === HttpsValidationLevel.Strict;
   }
 
   validateRequest(targetHost: CompleteUrl) {
