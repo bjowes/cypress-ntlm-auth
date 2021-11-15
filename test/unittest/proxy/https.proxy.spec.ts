@@ -273,7 +273,9 @@ describe("Proxy for HTTPS host with NTLM", function () {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
       throw new Error("Should throw on closed connection");
     } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+      expect((err as NodeJS.ErrnoException).message, "Client socket should be terminated").to.be.equal(
+        "socket hang up"
+      );
     } finally {
       agent.destroy();
     }
@@ -565,7 +567,9 @@ describe("Proxy for HTTPS host without NTLM", function () {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
       throw new Error("Should throw on closed connection");
     } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+      expect((err as NodeJS.ErrnoException).message, "Client socket should be terminated").to.be.equal(
+        "socket hang up"
+      );
     } finally {
       agent.destroy();
     }
@@ -587,7 +591,9 @@ describe("Proxy for HTTPS host without NTLM", function () {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, undefined, agent);
       throw new Error("Should throw on closed connection");
     } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+      expect((err as NodeJS.ErrnoException).message, "Client socket should be terminated").to.be.equal(
+        "socket hang up"
+      );
     } finally {
       agent.destroy();
     }

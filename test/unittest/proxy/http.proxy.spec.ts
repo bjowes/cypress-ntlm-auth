@@ -366,17 +366,21 @@ describe("Proxy for HTTP host with NTLM", function () {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
       fail("Should throw on closed connection");
     } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+      expect((err as NodeJS.ErrnoException).message, "Client socket should be terminated").to.be.equal(
+        "socket hang up"
+      );
     }
   });
 
   it("should pass on custom status phrases in response", async function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     expect(res.status, "ntlm-config should return 200").to.be.equal(200);
-    expressServer.setCustomStatusPhrase('My fantastic status phrase');
+    expressServer.setCustomStatusPhrase("My fantastic status phrase");
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
     expect(res.status, "remote request should return 200").to.be.equal(200);
-    expect(res.statusText, "remote request should return custom status phrase").to.be.equal('My fantastic status phrase');
+    expect(res.statusText, "remote request should return custom status phrase").to.be.equal(
+      "My fantastic status phrase"
+    );
     let resBody = res.data as any;
     expect(resBody.message).to.be.equal("Expecting larger payload on GET");
     expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
@@ -687,7 +691,9 @@ describe("Proxy for HTTP host without NTLM", function () {
       await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
       fail("Should throw on closed connection");
     } catch (err) {
-      expect(err.message, "Client socket should be terminated").to.be.equal("socket hang up");
+      expect((err as NodeJS.ErrnoException).message, "Client socket should be terminated").to.be.equal(
+        "socket hang up"
+      );
     }
   });
 });

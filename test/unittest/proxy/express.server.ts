@@ -8,6 +8,7 @@ import net from "net";
 import bodyParser from "body-parser";
 import { pki } from "node-forge";
 import { AddressInfo } from "net";
+import internal from "stream";
 
 interface ExpressError extends Error {
   status?: number;
@@ -30,7 +31,7 @@ export class ExpressServer {
   private httpsServer: https.Server;
 
   private httpServerSockets = new Set<net.Socket>();
-  private httpsServerSockets = new Set<net.Socket>();
+  private httpsServerSockets = new Set<internal.Duplex>();
 
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
