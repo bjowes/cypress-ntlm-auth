@@ -1,8 +1,12 @@
 # Changelog
 
+## 3.2.4 - released 2021-11-16
+
+- Bump dependencies
+
 ## 3.2.3 - released 2021-06-23
 
-- Fix #175: Pass on custom status phrases in response 
+- Fix #175: Pass on custom status phrases in response
 
 ## 3.2.2 - released 2021-05-10
 
