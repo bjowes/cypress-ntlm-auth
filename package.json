@@ -79,7 +79,7 @@
     "keepalive-proxy-agent": "^1.2.0",
     "mocha": "^8.4.0",
     "nock": "^13.1.0",
-    "node-forge": "^0.10.0",
+    "node-forge": "^1.0.0",
     "run-script-os": "^1.1.6",
     "shx": "^0.3.3",
     "sinon": "^11.1.1",
