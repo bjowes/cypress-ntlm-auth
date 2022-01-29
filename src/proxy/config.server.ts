@@ -1,12 +1,12 @@
-const getPort = require("get-port");
+import getPort from "get-port";
 
-import { IConfigController } from "./interfaces/i.config.controller";
+import { IConfigController } from "./interfaces/i.config.controller.js";
 import { injectable, inject } from "inversify";
-import { IConfigServer } from "./interfaces/i.config.server";
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { IConfigServer } from "./interfaces/i.config.server.js";
+import { IExpressServerFacade } from "./interfaces/i.express.server.facade.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
 
 @injectable()
 export class ConfigServer implements IConfigServer {
@@ -47,9 +47,7 @@ export class ConfigServer implements IConfigServer {
           throw new Error("Cannot find free port");
         }
       }
-      this._portsConfigStore.configApiUrl = await this._expressServer.listen(
-        port
-      );
+      this._portsConfigStore.configApiUrl = await this._expressServer.listen(port);
       this._debug.log("NTLM auth config API listening on port:", port);
       return this._portsConfigStore.configApiUrl;
     } catch (err) {

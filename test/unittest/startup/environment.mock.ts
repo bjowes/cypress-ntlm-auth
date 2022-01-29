@@ -1,4 +1,4 @@
-import url from "url";
+import * as url from "url";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
 

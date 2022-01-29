@@ -1,16 +1,16 @@
 import { Router, Request, Response } from "express";
-import { ConfigValidator } from "../util/config.validator";
-import { NtlmConfig } from "../models/ntlm.config.model";
+import { ConfigValidator } from "../util/config.validator.js";
+import { NtlmConfig } from "../models/ntlm.config.model.js";
 import { injectable, inject } from "inversify";
 import { EventEmitter } from "events";
-import { IConfigController } from "./interfaces/i.config.controller";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { SsoConfigValidator } from "../util/sso.config.validator";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
-import { PortsConfig } from "../models/ports.config.model";
+import { IConfigController } from "./interfaces/i.config.controller.js";
+import { IConfigStore } from "./interfaces/i.config.store.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { SsoConfigValidator } from "../util/sso.config.validator.js";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
+import { PortsConfig } from "../models/ports.config.model.js";
 import { osSupported } from "win-sso";
 
 @injectable()
@@ -30,21 +30,11 @@ export class ConfigController implements IConfigController {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;
     this._debug = debug;
-    this.router.post("/ntlm-config", (req: Request, res: Response) =>
-      this.ntlmConfig(req, res)
-    );
-    this.router.post("/ntlm-sso", (req: Request, res: Response) =>
-      this.ntlmSso(req, res)
-    );
-    this.router.post("/reset", (req: Request, res: Response) =>
-      this.reset(req, res)
-    );
-    this.router.get("/alive", (req: Request, res: Response) =>
-      this.alive(req, res)
-    );
-    this.router.post("/quit", (req: Request, res: Response) =>
-      this.quit(req, res)
-    );
+    this.router.post("/ntlm-config", (req: Request, res: Response) => this.ntlmConfig(req, res));
+    this.router.post("/ntlm-sso", (req: Request, res: Response) => this.ntlmSso(req, res));
+    this.router.post("/reset", (req: Request, res: Response) => this.reset(req, res));
+    this.router.get("/alive", (req: Request, res: Response) => this.alive(req, res));
+    this.router.post("/quit", (req: Request, res: Response) => this.quit(req, res));
   }
 
   private ntlmConfig(req: Request, res: Response) {
@@ -67,11 +57,7 @@ export class ConfigController implements IConfigController {
       return;
     }
     if (!osSupported()) {
-      res
-        .status(400)
-        .send(
-          "SSO is not supported on this platform. Only Windows OSs are supported."
-        );
+      res.status(400).send("SSO is not supported on this platform. Only Windows OSs are supported.");
       return;
     }
     this._debug.log("Received valid NTLM SSO config");

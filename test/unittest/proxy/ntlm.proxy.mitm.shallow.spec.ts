@@ -1,12 +1,10 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
-import net from "net";
-import http from "http";
-import ws from "ws";
+import * as net from "net";
+import * as http from "http";
+import * as ws from "ws";
 
-import { expect } from "chai";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
 import { IConnectionContextManager } from "../../../src/proxy/interfaces/i.connection.context.manager";
 import { INtlmManager } from "../../../src/proxy/interfaces/i.ntlm.manager";
@@ -108,11 +106,7 @@ describe("NtlmProxyMitm error logging", () => {
     ntlmProxyMitm.onError(ctx, error, "PROXY_TO_SERVER_REQUEST_ERROR");
     debugMock
       .received(1)
-      .log(
-        "Chrome startup HEAD request detected (host: " +
-          mockHost +
-          "). Ignoring connection error."
-      );
+      .log("Chrome startup HEAD request detected (host: " + mockHost + "). Ignoring connection error.");
   });
 
   it("chrome startup connection tests (host with port) should not throw", function () {
@@ -132,11 +126,7 @@ describe("NtlmProxyMitm error logging", () => {
     ntlmProxyMitm.onError(ctx, error, "PROXY_TO_SERVER_REQUEST_ERROR");
     debugMock
       .received(1)
-      .log(
-        "Chrome startup HEAD request detected (host: " +
-          mockHost +
-          "). Ignoring connection error."
-      );
+      .log("Chrome startup HEAD request detected (host: " + mockHost + "). Ignoring connection error.");
   });
 });
 
@@ -190,11 +180,9 @@ describe("NtlmProxyMitm REQUEST", () => {
           throw err;
         }
       })
-    ).throws(
-      'Invalid request - Could not read "host" header or "host" header refers to this proxy'
-    );
-    expect(callbackCount).to.equal(1);
-    expect(callbackWithErrorCount).to.equal(1);
+    ).toThrow('Invalid request - Could not read "host" header or "host" header refers to this proxy');
+    expect(callbackCount).toEqual(1);
+    expect(callbackWithErrorCount).toEqual(1);
   });
 });
 
@@ -218,7 +206,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   let socketEventListener: (err: NodeJS.ErrnoException) => void;
   let serverStream: NodeJS.WritableStream;
 
-  before(async function () {
+  beforeAll(async function () {
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     urlNoProtocol = httpsUrl.substring(httpsUrl.indexOf("localhost"));
   });
@@ -234,12 +222,10 @@ describe("NtlmProxyMitm CONNECT", () => {
       }
       return socketMock;
     });
-    socketMock
-      .write(Arg.any(), Arg.any(), Arg.any())
-      .mimicks((str, encoding, cb) => {
-        cb();
-        return true;
-      });
+    socketMock.write(Arg.any(), Arg.any(), Arg.any()).mimicks((str, encoding, cb) => {
+      cb();
+      return true;
+    });
     socketMock.pipe(Arg.all()).mimicks((stream) => {
       serverStream = stream;
       return socketMock;
@@ -270,7 +256,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     );
   });
 
-  after(async function () {
+  afterAll(async function () {
     await expressServer.stopHttpsServer();
   });
 
@@ -282,7 +268,7 @@ describe("NtlmProxyMitm CONNECT", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(1);
+    expect(callbackCount).toEqual(1);
   });
 
   it("unknown socket error after connect should not throw", async function () {
@@ -298,15 +284,8 @@ describe("NtlmProxyMitm CONNECT", () => {
       if (err) throw err;
     });
     await waitForServerStream();
-    socketEventListener.call(this, error);
-    debugMock
-      .received(1)
-      .log(
-        "Got unexpected error on " +
-          "CLIENT_TO_PROXY_SOCKET. Target: " +
-          urlNoProtocol,
-        error
-      );
+    socketEventListener(error);
+    debugMock.received(1).log("Got unexpected error on " + "CLIENT_TO_PROXY_SOCKET. Target: " + urlNoProtocol, error);
     serverStream.end();
   });
 
@@ -323,15 +302,8 @@ describe("NtlmProxyMitm CONNECT", () => {
       if (err) throw err;
     });
     await waitForServerStream();
-    socketEventListener.call(this, error);
-    debugMock
-      .received(1)
-      .log(
-        "Got ECONNRESET on " +
-          "CLIENT_TO_PROXY_SOCKET" +
-          ", ignoring. Target: " +
-          urlNoProtocol
-      );
+    socketEventListener(error);
+    debugMock.received(1).log("Got ECONNRESET on " + "CLIENT_TO_PROXY_SOCKET" + ", ignoring. Target: " + urlNoProtocol);
     serverStream.end();
   });
 
@@ -349,14 +321,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     serverStream.emit("error", error);
-    debugMock
-      .received(1)
-      .log(
-        "Got unexpected error on " +
-          "PROXY_TO_SERVER_SOCKET. Target: " +
-          urlNoProtocol,
-        error
-      );
+    debugMock.received(1).log("Got unexpected error on " + "PROXY_TO_SERVER_SOCKET. Target: " + urlNoProtocol, error);
     serverStream.end();
   });
 
@@ -374,14 +339,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     serverStream.emit("error", error);
-    debugMock
-      .received(1)
-      .log(
-        "Got ECONNRESET on " +
-          "PROXY_TO_SERVER_SOCKET" +
-          ", ignoring. Target: " +
-          urlNoProtocol
-      );
+    debugMock.received(1).log("Got ECONNRESET on " + "PROXY_TO_SERVER_SOCKET" + ", ignoring. Target: " + urlNoProtocol);
     serverStream.end();
   });
 
@@ -476,7 +434,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(1);
+    expect(callbackCount).toEqual(1);
   });
 
   it("1005 close code from client websocket should terminate server websocket", async function () {
@@ -489,7 +447,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(0);
+    expect(callbackCount).toEqual(0);
     serverWsMock.received(1).terminate();
   });
 
@@ -503,7 +461,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(0);
+    expect(callbackCount).toEqual(0);
     serverWsMock.received(1).terminate();
     serverWsMock.received(1).url;
   });
@@ -520,7 +478,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(0);
+    expect(callbackCount).toEqual(0);
     clientWsMock.received(1).terminate();
     serverWsMock.received(1).url;
   });
@@ -537,7 +495,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       callbackCount++;
       if (err) throw err;
     });
-    expect(callbackCount).to.equal(0);
+    expect(callbackCount).toEqual(0);
     clientWsMock.received(1).terminate();
     serverWsMock.received(1).url;
   });

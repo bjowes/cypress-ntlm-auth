@@ -1,9 +1,7 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 
-import { expect } from "chai";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { Main } from "../../../src/proxy/main";
@@ -42,9 +40,7 @@ describe("Main shallow", () => {
     coreServerMock.start(Arg.all()).mimicks(() => {
       return Promise.reject(new Error("test error"));
     });
-    await expect(main.run(undefined, undefined, undefined)).to.rejectedWith(
-      "test error"
-    );
+    await expect(main.run(undefined, undefined, undefined)).rejects.toThrow("test error");
     debugMock.received(1).log("Could not start ntlm-proxy");
   });
 

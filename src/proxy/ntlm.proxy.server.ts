@@ -1,12 +1,13 @@
-const getPort = require("get-port");
+import getPort from "get-port";
 
 import { injectable, inject } from "inversify";
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { TYPES } from "./dependency.injection.types";
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.js";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
 
 @injectable()
 export class NtlmProxyServer implements INtlmProxyServer {

@@ -1,26 +1,26 @@
 import { IContext } from "http-mitm-proxy";
+import { TLSSocket } from "tls";
+import { injectable, inject, interfaces } from "inversify";
 
 import net from "net";
-import http from "http";
-import { toCompleteUrl } from "../util/url.converter";
-import { CompleteUrl } from "../models/complete.url.model";
-import { injectable, inject, interfaces } from "inversify";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { INtlmManager } from "./interfaces/i.ntlm.manager";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { TLSSocket } from "tls";
-import { AuthModeEnum } from "../models/auth.mode.enum";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import http from "node:http";
 
-const nodeCommon = require("_http_common");
+import { toCompleteUrl } from "../util/url.converter.js";
+import { CompleteUrl } from "../models/complete.url.model.js";
+import { IConfigStore } from "./interfaces/i.config.store.js";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
+import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { AuthModeEnum } from "../models/auth.mode.enum.js";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
+import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
 
 let self: NtlmProxyMitm;
+const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
@@ -279,7 +279,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         }
       }
       if (res.statusCode) {
-        ctx.proxyToClientResponse.writeHead(res.statusCode, res.statusMessage, self.filterAndCanonizeHeaders(res.headers));
+        ctx.proxyToClientResponse.writeHead(
+          res.statusCode,
+          res.statusMessage,
+          self.filterAndCanonizeHeaders(res.headers)
+        );
       } else {
         ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(res.headers));
       }
@@ -377,7 +381,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           continue;
         }
 
-        if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
+        if (httpTokenRegExp.test(canonizedKey)) {
           headers[canonizedKey] = originalHeaders[key];
         }
       }

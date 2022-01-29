@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
 
 @injectable()
 export class PortsConfigStore implements IPortsConfigStore {

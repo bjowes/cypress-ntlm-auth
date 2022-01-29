@@ -1,9 +1,9 @@
-import url from "url";
-
-import { CompleteUrl } from "../models/complete.url.model";
-import { toCompleteUrl } from "../util/url.converter";
+import * as url from "url";
 import { injectable } from "inversify";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+
+import { CompleteUrl } from "../models/complete.url.model.js";
+import { toCompleteUrl } from "../util/url.converter.js";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
 
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
@@ -26,12 +26,7 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
 
   private validateUpstreamProxy(proxyUrl: string, parameterName: string) {
     const proxyParsed = url.parse(proxyUrl);
-    if (
-      !proxyParsed.protocol ||
-      !proxyParsed.hostname ||
-      !proxyParsed.port ||
-      proxyParsed.path !== "/"
-    ) {
+    if (!proxyParsed.protocol || !proxyParsed.hostname || !proxyParsed.port || proxyParsed.path !== "/") {
       throw new Error(
         "Invalid " +
           parameterName +
@@ -60,11 +55,7 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     return match;
   }
 
-  setUpstreamProxyConfig(
-    ntlmHostUrl: CompleteUrl,
-    isSSL: boolean,
-    agentOptions: any
-  ) {
+  setUpstreamProxyConfig(ntlmHostUrl: CompleteUrl, isSSL: boolean, agentOptions: any) {
     let proxyUrl = null;
 
     if (this.targetInNoProxy(ntlmHostUrl)) {

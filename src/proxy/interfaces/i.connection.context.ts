@@ -1,7 +1,7 @@
-import { NtlmStateEnum } from "../../models/ntlm.state.enum";
-import { CompleteUrl } from "../../models/complete.url.model";
+import { NtlmStateEnum } from "../../models/ntlm.state.enum.js";
+import { CompleteUrl } from "../../models/complete.url.model.js";
 import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./i.win-sso.facade";
+import { IWinSsoFacade } from "./i.win-sso.facade.js";
 import { Socket } from "net";
 
 export interface IConnectionContext {

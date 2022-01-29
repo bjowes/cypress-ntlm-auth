@@ -2,13 +2,13 @@
   "name": "e2e",
   "version": "1.0.0",
   "description": "e2e test for cypress-ntlm-auth",
-  "main": "index.js",
   "scripts": {
     "webserver": "node webserver/server.js",
     "webserver:stop": "node webserver/stop-server.js",
     "cypress-ntlm:run": "npx cypress-ntlm run",
     "test": "npm-run-all -p -r webserver cypress-ntlm:run"
   },
+  "type": "module",
   "author": "Björn Weström",
   "license": "MIT",
   "dependencies": {

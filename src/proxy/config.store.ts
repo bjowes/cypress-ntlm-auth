@@ -1,10 +1,10 @@
-import { NtlmConfig } from "../models/ntlm.config.model";
-import { CompleteUrl } from "../models/complete.url.model";
+import { NtlmConfig } from "../models/ntlm.config.model.js";
+import { CompleteUrl } from "../models/complete.url.model.js";
 import { injectable } from "inversify";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { NtlmHost } from "../models/ntlm.host.model";
-import { NtlmWildcardHost } from "../models/ntlm.wildcard.host.model";
+import { IConfigStore } from "./interfaces/i.config.store.js";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
+import { NtlmHost } from "../models/ntlm.host.model.js";
+import { NtlmWildcardHost } from "../models/ntlm.wildcard.host.model.js";
 
 interface NtlmHostConfigHash {
   [ntlmHost: string]: NtlmHost;
@@ -30,9 +30,7 @@ export class ConfigStore implements IConfigStore {
         username: config.username,
         password: config.password,
         domain: config.domain ? config.domain.toUpperCase() : undefined,
-        workstation: config.workstation
-          ? config.workstation.toUpperCase()
-          : undefined,
+        workstation: config.workstation ? config.workstation.toUpperCase() : undefined,
         ntlmVersion: config.ntlmVersion,
       };
       this.ntlmHosts[host] = hostConfig;
@@ -44,9 +42,7 @@ export class ConfigStore implements IConfigStore {
         username: config.username,
         password: config.password,
         domain: config.domain ? config.domain.toUpperCase() : undefined,
-        workstation: config.workstation
-          ? config.workstation.toUpperCase()
-          : undefined,
+        workstation: config.workstation ? config.workstation.toUpperCase() : undefined,
         ntlmVersion: config.ntlmVersion,
       };
       this.ntlmHostWildcards[wildcard] = hostConfig;
@@ -82,41 +78,28 @@ export class ConfigStore implements IConfigStore {
   }
 
   setSsoConfig(ntlmSsoConfig: NtlmSsoConfig) {
-    const nonWildcards = ntlmSsoConfig.ntlmHosts.filter(
-      (s) => s.indexOf("*") === -1
-    );
-    const wildcards = ntlmSsoConfig.ntlmHosts.filter(
-      (s) => s.indexOf("*") !== -1
-    );
+    const nonWildcards = ntlmSsoConfig.ntlmHosts.filter((s) => s.indexOf("*") === -1);
+    const wildcards = ntlmSsoConfig.ntlmHosts.filter((s) => s.indexOf("*") !== -1);
     this.ntlmSsoHosts = nonWildcards;
-    this.ntlmSsoHostWildcards = wildcards.map(
-      (s) => new RegExp(`^${s.replace(/\*/g, ".*")}$`, "i")
-    );
+    this.ntlmSsoHostWildcards = wildcards.map((s) => new RegExp(`^${s.replace(/\*/g, ".*")}$`, "i"));
   }
 
   useSso(ntlmHostUrl: CompleteUrl): boolean {
-    if (
-      this.matchNtlmSsoHosts(ntlmHostUrl.hostname) &&
-      this.exists(ntlmHostUrl) === false
-    ) {
+    if (this.matchNtlmSsoHosts(ntlmHostUrl.hostname) && this.exists(ntlmHostUrl) === false) {
       return true;
     }
     return false;
   }
 
   existsOrUseSso(ntlmHostUrl: CompleteUrl): boolean {
-    return (
-      this.exists(ntlmHostUrl) || this.matchNtlmSsoHosts(ntlmHostUrl.hostname)
-    );
+    return this.exists(ntlmHostUrl) || this.matchNtlmSsoHosts(ntlmHostUrl.hostname);
   }
 
   private matchNtlmSsoHosts(hostname: string): boolean {
     if (this.ntlmSsoHosts.includes(hostname)) {
       return true;
     }
-    return (
-      this.ntlmSsoHostWildcards.findIndex((re) => re.test(hostname)) !== -1
-    );
+    return this.ntlmSsoHostWildcards.findIndex((re) => re.test(hostname)) !== -1;
   }
 
   clear() {

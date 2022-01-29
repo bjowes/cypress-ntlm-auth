@@ -2,12 +2,12 @@ import { IContext } from "http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
+import { CompleteUrl } from "../models/complete.url.model.js";
+import { IConnectionContext } from "./interfaces/i.connection.context.js";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 
 @injectable()
 export class NegotiateManager implements INegotiateManager {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { run, open, argumentsToCypressMode, argumentsToOptions } from "../index";
+import { run, open, argumentsToCypressMode, argumentsToOptions } from "../index.js";
 
 /**
  *

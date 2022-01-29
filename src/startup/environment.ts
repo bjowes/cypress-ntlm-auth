@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
-import { PortsConfig } from "../models/ports.config.model";
-import { IEnvironment } from "./interfaces/i.environment";
-import url from "url";
+import { PortsConfig } from "../models/ports.config.model.js";
+import { IEnvironment } from "./interfaces/i.environment.js";
+import * as url from "url";
 
 @injectable()
 export class Environment implements IEnvironment {

@@ -1,21 +1,15 @@
-import url from "url";
+import * as url from "url";
 
-import { NtlmConfig } from "../models/ntlm.config.model";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
-import { HostnameValidator } from "./hostname.validator";
+import { NtlmConfig } from "../models/ntlm.config.model.js";
+import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.js";
+import { HostnameValidator } from "./hostname.validator.js";
 
 export class ConfigValidator {
   static validate(config: NtlmConfig): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
 
-    if (
-      !config.ntlmHosts ||
-      !config.username ||
-      !config.password ||
-      !config.ntlmVersion
-    ) {
-      result.message =
-        "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields.";
+    if (!config.ntlmHosts || !config.username || !config.password || !config.ntlmVersion) {
+      result.message = "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields.";
       return result;
     }
 
@@ -54,12 +48,8 @@ export class ConfigValidator {
       return result;
     }
 
-    if (
-      config.workstation &&
-      !this.validateDomainOrWorkstation(config.workstation)
-    ) {
-      result.message =
-        "Workstation contains invalid characters or is too long.";
+    if (config.workstation && !this.validateDomainOrWorkstation(config.workstation)) {
+      result.message = "Workstation contains invalid characters or is too long.";
       return result;
     }
 
@@ -76,8 +66,7 @@ export class ConfigValidator {
     const result = { ok: false } as NtlmConfigValidateResult;
     const urlTest = url.parse(ntlmHost);
     if (!urlTest.hostname || !urlTest.protocol || !urlTest.slashes) {
-      result.message =
-        "Invalid ntlmHost, must be a valid URL (like https://www.google.com)";
+      result.message = "Invalid ntlmHost, must be a valid URL (like https://www.google.com)";
       return result;
     }
     if (urlTest.path && urlTest.path !== "" && urlTest.path !== "/") {

@@ -1,14 +1,14 @@
 import { injectable, inject } from "inversify";
 
-import { PortsConfig } from "../models/ports.config.model";
-import { IConfigController } from "./interfaces/i.config.controller";
-import { IConfigServer } from "./interfaces/i.config.server";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { ICoreServer } from "./interfaces/i.core.server";
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
+import { PortsConfig } from "../models/ports.config.model.js";
+import { IConfigController } from "./interfaces/i.config.controller.js";
+import { IConfigServer } from "./interfaces/i.config.server.js";
+import { IConfigStore } from "./interfaces/i.config.store.js";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
+import { ICoreServer } from "./interfaces/i.core.server.js";
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.js";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
+import { TYPES } from "./dependency.injection.types.js";
 
 @injectable()
 export class CoreServer implements ICoreServer {
@@ -36,13 +36,8 @@ export class CoreServer implements ICoreServer {
     this._connectionContextManager = connectionContextManager;
     this._configController = configController;
 
-    this._configController.configApiEvent.addListener("reset", () =>
-      this.ntlmConfigReset("reset")
-    );
-    this._configController.configApiEvent.addListener(
-      "quit",
-      async () => await this.stop()
-    );
+    this._configController.configApiEvent.addListener("reset", () => this.ntlmConfigReset("reset"));
+    this._configController.configApiEvent.addListener("quit", async () => await this.stop());
   }
 
   async start(

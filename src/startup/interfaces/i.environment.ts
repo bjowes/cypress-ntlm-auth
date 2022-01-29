@@ -1,4 +1,4 @@
-import { PortsConfig } from "../../models/ports.config.model";
+import { PortsConfig } from "../../models/ports.config.model.js";
 
 export interface IEnvironment {
   configApiUrl: string | undefined;

@@ -1,8 +1,8 @@
-import { debug as debugInit } from 'debug';
-import { injectable } from 'inversify';
-import { IDebugLogger } from './interfaces/i.debug.logger';
+import debugInit from "debug";
+import { injectable } from "inversify";
+import { IDebugLogger } from "./interfaces/i.debug.logger.js";
 
-const debug = debugInit('cypress:plugin:ntlm-auth');
+const debug = debugInit("cypress:plugin:ntlm-auth");
 
 @injectable()
 export class DebugLogger implements IDebugLogger {

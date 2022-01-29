@@ -1,9 +1,7 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "mocha";
 
 //const proxyFacade = require('./proxyFacade');
 import { ProxyFacade } from "./proxy.facade";
-import { expect } from "chai";
 import { toCompleteUrl } from "../../../src/util/url.converter";
 import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
@@ -13,6 +11,7 @@ import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { osSupported } from "win-sso";
 import { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store";
+import { describeIfNotWindows, describeIfWindows } from "../conditions";
 
 describe("Config API (ConfigServer deep tests)", () => {
   let configApiUrl: string;
@@ -22,13 +21,11 @@ describe("Config API (ConfigServer deep tests)", () => {
   let portsConfigStore: IPortsConfigStore;
   let hostConfig: NtlmConfig;
 
-  before(async function () {
+  beforeAll(async function () {
     configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
     // Cannot resolve these from DI since that would yield new instances
     configStore = (configServer as any)["_configController"]["_configStore"];
-    portsConfigStore = (configServer as any)["_configController"][
-      "_portsConfigStore"
-    ];
+    portsConfigStore = (configServer as any)["_configController"]["_portsConfigStore"];
     configServer.init();
     configApiUrl = await configServer.start();
   });
@@ -37,7 +34,7 @@ describe("Config API (ConfigServer deep tests)", () => {
     configStore.clear();
   });
 
-  after(async function () {
+  afterAll(async function () {
     await configServer.stop();
   });
 
@@ -54,12 +51,9 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
-        "Config parse error. Username contains invalid characters or is too long."
-      );
-      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).to.be
-        .false;
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual("Config parse error. Username contains invalid characters or is too long.");
+      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).toEqual(false);
     });
 
     it("should return bad request if the domain contains backslash", async function () {
@@ -74,12 +68,9 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
-        "Config parse error. Domain contains invalid characters or is too long."
-      );
-      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).to.be
-        .false;
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual("Config parse error. Domain contains invalid characters or is too long.");
+      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).toEqual(false);
     });
 
     it("should return bad request if the ntlmHost includes a path", async function () {
@@ -94,12 +85,11 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual(
         "Config parse error. Invalid host [localhost:5000/search] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
       );
-      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).to.be
-        .false;
+      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).toEqual(false);
     });
 
     it("should return bad request if the ntlmHost includes a protocol", async function () {
@@ -114,12 +104,11 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual(
         "Config parse error. Invalid host [http://localhost:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
       );
-      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).to.be
-        .false;
+      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).toEqual(false);
     });
 
     it("should return ok if the config is ok", async function () {
@@ -134,13 +123,11 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).to.be
-        .true;
-      expect(configStore.exists(toCompleteUrl("www.acme.org", false))).to.be
-        .true;
-      expect(configStore.exists(toCompleteUrl("google.com", false))).to.be.true;
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.exists(toCompleteUrl("localhost:5000", false))).toEqual(true);
+      expect(configStore.exists(toCompleteUrl("www.acme.org", false))).toEqual(true);
+      expect(configStore.exists(toCompleteUrl("google.com", false))).toEqual(true);
     });
 
     it("should allow reconfiguration", async function () {
@@ -156,29 +143,21 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.exists(completeUrl)).to.be.true;
-      expect(configStore.get(completeUrl).username).to.be.equal("nisse");
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.exists(completeUrl)).toEqual(true);
+      expect(configStore.get(completeUrl).username).toEqual("nisse");
 
       hostConfig.username = "dummy";
       res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.exists(completeUrl)).to.be.true;
-      expect(configStore.get(completeUrl).username).to.be.equal("dummy");
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.exists(completeUrl)).toEqual(true);
+      expect(configStore.get(completeUrl).username).toEqual("dummy");
     });
   });
 
-  describe("ntlm-sso on Window", function () {
-    before("Check SSO support", function () {
-      // Check SSO support
-      if (osSupported() === false) {
-        this.skip();
-        return;
-      }
-    });
-
+  describeIfWindows("ntlm-sso on Window", function () {
     it("should return ok if the config is ok", async function () {
       // Arrange
       let ssoConfig: NtlmSsoConfig = {
@@ -187,10 +166,9 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
-        .to.be.true;
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false))).toEqual(true);
     });
 
     it("should return bad request if the ntlmHosts includes anything else than hostnames / FQDNs", async function () {
@@ -201,14 +179,12 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual(
         "SSO config parse error. Invalid host [https://google.com] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
-      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
-        .to.be.false;
-      expect(configStore.useSso(toCompleteUrl("https://google.com", false))).to
-        .be.false;
+      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false))).toEqual(false);
+      expect(configStore.useSso(toCompleteUrl("https://google.com", false))).toEqual(false);
     });
 
     it("should allow reconfiguration", async function () {
@@ -222,30 +198,19 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
-        .to.be.true;
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false))).toEqual(true);
 
       res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig2);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
-      expect(configStore.useSso(toCompleteUrl("http://assa.com:5000", false)))
-        .to.be.true;
-      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
-        .to.be.false;
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
+      expect(configStore.useSso(toCompleteUrl("http://assa.com:5000", false))).toEqual(true);
+      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false))).toEqual(false);
     });
   });
 
-  describe("ntlm-sso on non-Window", function () {
-    before("Check SSO support", function () {
-      // Check SSO support
-      if (osSupported() === true) {
-        this.skip();
-        return;
-      }
-    });
-
+  describeIfNotWindows("ntlm-sso on non-Window", function () {
     it("should return fail even if the config is ok", async function () {
       // Arrange
       let ssoConfig: NtlmSsoConfig = {
@@ -254,12 +219,9 @@ describe("Config API (ConfigServer deep tests)", () => {
 
       // Act
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
-      expect(res.status).to.equal(400);
-      expect(res.data).to.equal(
-        "SSO is not supported on this platform. Only Windows OSs are supported."
-      );
-      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false)))
-        .to.be.false;
+      expect(res.status).toEqual(400);
+      expect(res.data).toEqual("SSO is not supported on this platform. Only Windows OSs are supported.");
+      expect(configStore.useSso(toCompleteUrl("http://localhost:5000", false))).toEqual(false);
     });
   });
 
@@ -267,8 +229,8 @@ describe("Config API (ConfigServer deep tests)", () => {
     it("should return response", async function () {
       // Act
       let res = await ProxyFacade.sendNtlmReset(configApiUrl);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.equal("OK");
+      expect(res.status).toEqual(200);
+      expect(res.data).toEqual("OK");
     });
   });
 
@@ -277,11 +239,9 @@ describe("Config API (ConfigServer deep tests)", () => {
       portsConfigStore.ntlmProxyUrl = "http://localhost:8012";
       // Act
       let res = await ProxyFacade.sendAliveRequest(configApiUrl);
-      expect(res.status).to.equal(200);
-      expect(res.data).to.deep.equal({
-        configApiUrl: configApiUrl,
-        ntlmProxyUrl: "http://localhost:8012",
-      });
+      expect(res.status).toEqual(200);
+      expect(res.data.configApiUrl).toEqual(configApiUrl);
+      expect(res.data.ntlmProxyUrl).toEqual(portsConfigStore.ntlmProxyUrl);
     });
   });
 });

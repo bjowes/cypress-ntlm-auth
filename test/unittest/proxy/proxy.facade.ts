@@ -1,15 +1,15 @@
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 
-import url from "url";
+import * as url from "url";
 import httpMitmProxy from "http-mitm-proxy";
-const CA = require("http-mitm-proxy/lib/ca");
+//import CA from "http-mitm-proxy/lib/ca.js";
 
-const getPort = require("get-port");
+import getPort from "get-port";
 import axios, { AxiosResponse, Method } from "axios";
-const kapAgent = require("keepalive-proxy-agent");
-import fs from "fs";
-import path from "path";
+//import kapAgent from "keepalive-proxy-agent";
+import * as fs from "fs";
+import * as path from "path";
 
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
@@ -41,6 +41,7 @@ export class ProxyFacade {
     };
 
     this._mitmProxy = httpMitmProxy();
+
     let port = await getPort();
     mitmOptions.port = port;
 
@@ -80,11 +81,13 @@ export class ProxyFacade {
     // This generates the localhost cert and key before starting the tests,
     // since this step is fairly slow on Node 8 the runtime of the actual tests are
     // more predictable this way.
-    await this.preGenerateCertificate("localhost");
+    //await this.preGenerateCertificate("localhost");
+    // TODO is this fast enough now?
 
     this._mitmProxyInit = true;
   }
 
+  /*
   private preGenerateCertificate(host: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const sslCaDir = path.resolve(process.cwd(), ".http-mitm-proxy");
@@ -98,6 +101,7 @@ export class ProxyFacade {
       });
     });
   }
+  */
 
   get mitmCaCert(): Buffer {
     const caCertPath = path.join(process.cwd(), ".http-mitm-proxy", "certs", "ca.pem");
@@ -221,8 +225,7 @@ export class ProxyFacade {
       ca = [caCert];
     }
 
-    const tunnelAgent =
-      agent ||
+    const tunnelAgent = agent; /* ||
       new kapAgent({
         proxy: {
           hostname: proxyUrl.hostname,
@@ -233,7 +236,7 @@ export class ProxyFacade {
         },
         ca: ca,
         keepAlive: false,
-      });
+      }); */
 
     let res = await axios.request({
       method: method,

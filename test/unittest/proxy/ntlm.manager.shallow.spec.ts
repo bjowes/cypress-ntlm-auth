@@ -1,10 +1,8 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 
-import { expect } from "chai";
-import http from "http";
+import * as http from "http";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
 import { IContext } from "http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
@@ -29,19 +27,15 @@ describe("NtlmManager", () => {
   let httpUrl: string;
   let ntlm = new Ntlm();
 
-  before(async function () {
+  beforeAll(async function () {
     httpUrl = await expressServer.startHttpServer(false, undefined);
   });
 
   beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
     ntlmMock = Substitute.for<INtlm>();
-    ntlmMock
-      .createType1Message(Arg.all())
-      .mimicks(() => new NtlmMessage(Buffer.alloc(0)));
-    ntlmMock
-      .createType3Message(Arg.all())
-      .mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock.createType1Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock.createType3Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
     ntlmMock.decodeType2Message(Arg.all()).mimicks(ntlm.decodeType2Message);
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -49,7 +43,7 @@ describe("NtlmManager", () => {
     ntlmManager = new NtlmManager(configStoreMock, ntlmMock, debugMock);
   });
 
-  after(async function () {
+  afterAll(async function () {
     await expressServer.stopHttpServer();
   });
 
@@ -61,23 +55,13 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-      ntlmManager["handshakeResponse"](
-        message,
-        ntlmHostUrl,
-        connectionContext,
-        () => {
-          return;
-        }
-      );
+      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
+        return;
+      });
       debugMock
         .received(1)
-        .log(
-          "NTLM authentication failed (invalid credentials) with host",
-          "http://www.google.com:8081/"
-        );
-      expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
-        NtlmStateEnum.NotAuthenticated
-      );
+        .log("NTLM authentication failed (invalid credentials) with host", "http://www.google.com:8081/");
+      expect(connectionContext.getState(ntlmHostUrl)).toEqual(NtlmStateEnum.NotAuthenticated);
     });
 
     it("Valid credentials shall set authenticated state", async function () {
@@ -87,17 +71,10 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-      ntlmManager["handshakeResponse"](
-        message,
-        ntlmHostUrl,
-        connectionContext,
-        () => {
-          return;
-        }
-      );
-      expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
-        NtlmStateEnum.Authenticated
-      );
+      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
+        return;
+      });
+      expect(connectionContext.getState(ntlmHostUrl)).toEqual(NtlmStateEnum.Authenticated);
     });
 
     it("Unexpected NTLM message shall be logged and clear auth state", async function () {
@@ -107,25 +84,16 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
 
-      ntlmManager["handshakeResponse"](
-        message,
-        ntlmHostUrl,
-        connectionContext,
-        () => {
-          return;
-        }
-      );
+      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
+        return;
+      });
       debugMock
         .received(1)
         .log(
-          "Response from server in unexpected NTLM state " +
-            NtlmStateEnum.Type1Sent +
-            ", resetting NTLM auth. Host",
+          "Response from server in unexpected NTLM state " + NtlmStateEnum.Type1Sent + ", resetting NTLM auth. Host",
           "http://www.google.com:8081/"
         );
-      expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
-        NtlmStateEnum.NotAuthenticated
-      );
+      expect(connectionContext.getState(ntlmHostUrl)).toEqual(NtlmStateEnum.NotAuthenticated);
     });
 
     it("Non Base64 in NTLM message", function (done) {
@@ -153,22 +121,12 @@ describe("NtlmManager", () => {
       });
       ctx.isSSL.returns(false);
 
-      ntlmManager.handshake(
-        ctx,
-        toCompleteUrl(httpUrl, false),
-        connectionContext,
-        false,
-        (err) => {
-          expect(err.message).to.be.equal(
-            "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
-          );
-          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
-            NtlmStateEnum.NotAuthenticated
-          );
-          agent.destroy();
-          return done();
-        }
-      );
+      ntlmManager.handshake(ctx, toCompleteUrl(httpUrl, false), connectionContext, false, (err) => {
+        expect(err.message).toEqual("Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
+        expect(connectionContext.getState(ntlmHostUrl)).toEqual(NtlmStateEnum.NotAuthenticated);
+        agent.destroy();
+        return done();
+      });
     });
 
     it("Not type 2 in NTLM message", function (done) {
@@ -198,22 +156,12 @@ describe("NtlmManager", () => {
       });
       ctx.isSSL.returns(false);
 
-      ntlmManager.handshake(
-        ctx,
-        toCompleteUrl(httpUrl, false),
-        connectionContext,
-        false,
-        (err) => {
-          expect(err.message).to.be.equal(
-            "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href
-          );
-          expect(connectionContext.getState(ntlmHostUrl)).to.be.equal(
-            NtlmStateEnum.NotAuthenticated
-          );
-          agent.destroy();
-          return done();
-        }
-      );
+      ntlmManager.handshake(ctx, toCompleteUrl(httpUrl, false), connectionContext, false, (err) => {
+        expect(err.message).toEqual("Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
+        expect(connectionContext.getState(ntlmHostUrl)).toEqual(NtlmStateEnum.NotAuthenticated);
+        agent.destroy();
+        return done();
+      });
     });
 
     describe("NTLM detection", () => {
@@ -221,28 +169,28 @@ describe("NtlmManager", () => {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "ntlm" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
-        expect(result).to.be.true;
+        expect(result).toEqual(true);
       });
 
       it("should detect uppercase NTLM in header", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "NTLM" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
-        expect(result).to.be.true;
+        expect(result).toEqual(true);
       });
 
       it("should detect NTLM in mixed header", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "Negotiate, NTLM" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
-        expect(result).to.be.true;
+        expect(result).toEqual(true);
       });
 
       it("should not detect missing NTLM", function () {
         let res = Substitute.for<http.IncomingMessage>();
         res.headers.returns({ "www-authenticate": "Negotiate, Digest" });
         let result = ntlmManager.acceptsNtlmAuthentication(res);
-        expect(result).to.be.false;
+        expect(result).toEqual(false);
       });
     });
   });

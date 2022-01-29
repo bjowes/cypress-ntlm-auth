@@ -1,9 +1,9 @@
-import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
+import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
+import { CompleteUrl } from "../models/complete.url.model.js";
 import { injectable } from "inversify";
-import { IConnectionContext } from "./interfaces/i.connection.context";
+import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
 import { Socket } from "net";
 
 @injectable()
@@ -80,15 +80,12 @@ export class ConnectionContext implements IConnectionContext {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
-        (this._ntlmState === NtlmStateEnum.Authenticated ||
-          this._ntlmState === NtlmStateEnum.NotAuthenticated));
+        (this._ntlmState === NtlmStateEnum.Authenticated || this._ntlmState === NtlmStateEnum.NotAuthenticated));
     return auth;
   }
 
   matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean {
-    return (
-      this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href
-    );
+    return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
   }
 
   getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum {

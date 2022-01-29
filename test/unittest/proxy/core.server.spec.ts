@@ -1,10 +1,7 @@
-import "mocha";
+import * as url from "url";
 
-import { expect } from "chai";
-
-import url from "url";
-
-const isPortReachable = require("is-port-reachable");
+import isPortReachable from "is-port-reachable";
+import { jest } from "@jest/globals";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -17,13 +14,13 @@ async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
   const configUrl = url.parse(ports.configApiUrl);
   const proxyUrl = url.parse(ports.ntlmProxyUrl);
 
-  let reachable = await isPortReachable(proxyUrl.port, {
+  let reachable = await isPortReachable(+proxyUrl.port, {
     host: proxyUrl.hostname,
   });
   if (!reachable) {
     return false;
   }
-  reachable = await isPortReachable(configUrl.port, {
+  reachable = await isPortReachable(+configUrl.port, {
     host: configUrl.hostname,
   });
   if (!reachable) {
@@ -38,13 +35,13 @@ describe("Core server startup and shutdown", () => {
   let coreServer: ICoreServer;
   let _configApiUrl: string | undefined;
 
-  before(async function () {
-    this.timeout(30000);
+  beforeAll(async function () {
+    jest.setTimeout(30000);
     await proxyFacade.initMitmProxy();
   });
 
   beforeEach(function () {
-    this.timeout(2000);
+    jest.setTimeout(2000);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     _configApiUrl = undefined;
   });
@@ -64,7 +61,7 @@ describe("Core server startup and shutdown", () => {
     expect(ports.configApiUrl.length).to.be.greaterThan(5);
     expect(ports.ntlmProxyUrl.length).to.be.greaterThan(5);
     let reachable = await isProxyReachable(ports);
-    expect(reachable, "Proxy should be reachable").to.be.true;
+    expect(reachable).to.equal(true);
   });
 
   it("quit command shuts down the proxy, keep portsFile", async function () {
@@ -76,6 +73,6 @@ describe("Core server startup and shutdown", () => {
     _configApiUrl = undefined;
 
     let reachable = await isProxyReachable(ports);
-    expect(reachable, "Proxy should not be reachable").to.be.false;
+    expect(reachable).to.equal(false);
   });
 });

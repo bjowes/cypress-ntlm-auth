@@ -1,12 +1,6 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
-
-import chaiAsPromised from "chai-as-promised";
-import chai from "chai";
-const expect = chai.expect;
-chai.use(chaiAsPromised);
 
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
@@ -18,7 +12,6 @@ import { fail } from "assert";
 import { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { EnvironmentMock } from "./environment.mock";
-import { spy } from "sinon";
 
 describe("Startup shallow", () => {
   let startup: Startup;
@@ -58,8 +51,8 @@ describe("Startup shallow", () => {
         return Promise.resolve(expectOptions);
       });
       let res = await startup.prepareOptions(["node", "cypress-ntlm", "run"]);
-      expect(res).to.eq(expectOptions);
-      expect(passedRunArguments).to.deep.eq(["cypress", "run"]);
+      expect(res).to.equal(expectOptions);
+      expect(passedRunArguments).to.equal(["cypress", "run"]);
     });
 
     it("should always pass run to parseRunArguments", async function () {
@@ -71,8 +64,8 @@ describe("Startup shallow", () => {
         return Promise.resolve(expectOptions);
       });
       let res = await startup.prepareOptions(["node", "cypress-ntlm", "open"]);
-      expect(res).to.eq(expectOptions);
-      expect(passedRunArguments).to.deep.eq(["cypress", "run"]);
+      expect(res).to.equal(expectOptions);
+      expect(passedRunArguments).to.equal(["cypress", "run"]);
     });
 
     it("should return options with arguments", async function () {
@@ -84,8 +77,8 @@ describe("Startup shallow", () => {
         return Promise.resolve(expectOptions);
       });
       let res = await startup.prepareOptions(["node", "cypress-ntlm", "run", "--env", "YELP=nook"]);
-      expect(res).to.eq(expectOptions);
-      expect(passedRunArguments).to.deep.eq(["cypress", "run", "--env", "YELP=nook"]);
+      expect(res).to.equal(expectOptions);
+      expect(passedRunArguments).to.equal(["cypress", "run", "--env", "YELP=nook"]);
     });
 
     it("should throw if cypress is not installed", async function () {
@@ -94,7 +87,7 @@ describe("Startup shallow", () => {
         await startup.prepareOptions(["node", "cypress-ntlm", "run"]);
         fail();
       } catch (err) {
-        expect((err as NodeJS.ErrnoException).message).to.eq("cypress-ntlm-auth requires Cypress to be installed.");
+        expect((err as NodeJS.ErrnoException).message).to.equal("cypress-ntlm-auth requires Cypress to be installed.");
       }
     });
   });
@@ -102,22 +95,22 @@ describe("Startup shallow", () => {
   describe("argumentsToCypressMode", function () {
     it("should return run on cypress-ntlm run", function () {
       let res = startup.argumentsToCypressMode(["node", "cypress-ntlm", "run"]);
-      expect(res).to.eq("run");
+      expect(res).to.equal("run");
     });
 
     it("should return open on cypress-ntlm open", function () {
       let res = startup.argumentsToCypressMode(["node", "cypress-ntlm", "open"]);
-      expect(res).to.eq("open");
+      expect(res).to.equal("open");
     });
 
     it("should throw on invalid mode", function () {
-      expect(() => startup.argumentsToCypressMode(["node", "cypress-ntlm", "verify"])).to.throw(
+      expect(() => startup.argumentsToCypressMode(["node", "cypress-ntlm", "verify"])).toThrow(
         "Unsupported command, use cypress-ntlm open or cypress-ntlm run."
       );
     });
 
     it("should throw on missing cypress-ntlm", function () {
-      expect(() => startup.argumentsToCypressMode(["node"])).to.throw("Cannot parse command line arguments");
+      expect(() => startup.argumentsToCypressMode(["node"])).toThrow("Cannot parse command line arguments");
     });
 
     it("should accept full path on windows for cypress-ntlm", function () {
@@ -126,24 +119,24 @@ describe("Startup shallow", () => {
         "C:\\test\\cypress-ntlm-auth\\dist\\launchers\\cypress.ntlm.js",
         "run",
       ]);
-      expect(res).to.eq("run");
+      expect(res).to.equal("run");
     });
 
     it("should accept full path on mac/linux for cypress-ntlm", function () {
       let res = startup.argumentsToCypressMode(["node", "/home/test/cypress/node_modules/.bin/cypress-ntlm", "run"]);
-      expect(res).to.eq("run");
+      expect(res).to.equal("run");
     });
 
     it("should accept full path on global mac/linux install for cypress-ntlm", function () {
       let res = startup.argumentsToCypressMode(["node", "/usr/local/bin/cypress-ntlm", "run"]);
-      expect(res).to.eq("run");
+      expect(res).to.equal("run");
     });
   });
 
   describe("run", function () {
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
-      expect(startup.run({})).to.be.rejectedWith("cypress-ntlm-auth requires Cypress to be installed.");
+      expect(startup.run({})).rejects.toThrow("cypress-ntlm-auth requires Cypress to be installed.");
     });
 
     it("should start proxy, call cypress run, return result and stop proxy", async function () {
@@ -152,7 +145,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
       let res = await startup.run(options);
-      expect(res).to.eq(fakeResult);
+      expect(res).to.equal(fakeResult);
       proxyMainMock.received(1).run(undefined, undefined, undefined);
       cypressFacadeMock.received(1).run(options);
       proxyMainMock.received(1).stop();
@@ -162,7 +155,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock.cypressLoaded().returns(true);
       cypressFacadeMock.run(Arg.any()).returns(Promise.reject(new Error("FakeError")));
       const options = {};
-      await expect(startup.run(options)).to.be.rejectedWith("FakeError");
+      await expect(startup.run(options)).rejects.toThrow("FakeError");
       proxyMainMock.received(1).run(Arg.all());
       cypressFacadeMock.received(1).run(options);
       proxyMainMock.received(1).stop();
@@ -181,14 +174,14 @@ describe("Startup shallow", () => {
       environmentMock.httpProxy = "http-proxy";
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
-      let configureSpy = spy(environmentMock, "configureForCypress");
+      let configureSpy = jest.spyOn(environmentMock, "configureForCypress");
       await startup.run(options);
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();
-      expect(configureSpy.calledOnceWith(fakePorts)).to.be.true;
-      configureSpy.restore();
+      expect(configureSpy).to.be.calledOnceWith(fakePorts);
+      configureSpy.mockRestore();
     });
 
     it("should use external proxy if available", async function () {
@@ -205,7 +198,7 @@ describe("Startup shallow", () => {
       await startup.run(options);
       proxyMainMock.didNotReceive().run(Arg.all());
       externalNtlmProxyFacadeMock.received(1).alive("dummy");
-      expect(environmentMock.ntlmProxyUrl).to.eq("dummy-proxy");
+      expect(environmentMock.ntlmProxyUrl).to.equal("dummy-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();
@@ -215,10 +208,10 @@ describe("Startup shallow", () => {
       cypressFacadeMock.cypressLoaded().returns(true);
       const fakeResult = {};
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
-      externalNtlmProxyFacadeMock.alive("dummy").returns(Promise.reject("FakeError"));
+      externalNtlmProxyFacadeMock.alive("dummy").returns(Promise.reject(new Error("FakeError")));
       const options = {};
       environmentMock.configApiUrl = "dummy";
-      await expect(startup.run(options)).rejectedWith("FakeError");
+      await expect(startup.run(options)).rejects.toThrow("FakeError");
       proxyMainMock.didNotReceive().run(Arg.all());
       externalNtlmProxyFacadeMock.received(1).alive("dummy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
@@ -230,7 +223,7 @@ describe("Startup shallow", () => {
   describe("open", function () {
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
-      expect(startup.open({})).to.be.rejectedWith("cypress-ntlm-auth requires Cypress to be installed.");
+      expect(startup.open({})).rejects.toThrow("cypress-ntlm-auth requires Cypress to be installed.");
     });
 
     it("should start proxy, call cypress open, return result and stop proxy", async function () {
@@ -239,7 +232,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
       let res = await startup.open(options);
-      expect(res).to.eq(fakeResult);
+      expect(res).to.equal(fakeResult);
       proxyMainMock.received(1).run(Arg.any());
       cypressFacadeMock.received(1).open(options);
       proxyMainMock.received(1).stop();
@@ -249,7 +242,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock.cypressLoaded().returns(true);
       cypressFacadeMock.open(Arg.any()).returns(Promise.reject(new Error("FakeError")));
       const options = {};
-      await expect(startup.open(options)).to.be.rejectedWith("FakeError");
+      await expect(startup.open(options)).rejects.toThrow("FakeError");
       proxyMainMock.received(1).run(Arg.all());
       cypressFacadeMock.received(1).open(options);
       proxyMainMock.received(1).stop();
@@ -268,14 +261,14 @@ describe("Startup shallow", () => {
       environmentMock.httpProxy = "http-proxy";
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
-      let configureSpy = spy(environmentMock, "configureForCypress");
+      let configureSpy = jest.spyOn(environmentMock, "configureForCypress");
       await startup.open(options);
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();
-      expect(configureSpy.calledOnceWith(fakePorts)).to.be.true;
-      configureSpy.restore();
+      expect(configureSpy).to.have.been.calledOnceWith(fakePorts);
+      configureSpy.mockRestore();
     });
 
     it("should use external proxy if available", async function () {
@@ -291,7 +284,7 @@ describe("Startup shallow", () => {
       environmentMock.configApiUrl = "dummy";
       await startup.open(options);
       proxyMainMock.didNotReceive().run(Arg.all());
-      expect(environmentMock.ntlmProxyUrl).to.eq("dummy-proxy");
+      expect(environmentMock.ntlmProxyUrl).to.equal("dummy-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.didNotReceive().stop();
@@ -301,10 +294,10 @@ describe("Startup shallow", () => {
       cypressFacadeMock.cypressLoaded().returns(true);
       const fakeResult = {};
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
-      externalNtlmProxyFacadeMock.alive("dummy").returns(Promise.reject("FakeError"));
+      externalNtlmProxyFacadeMock.alive("dummy").returns(Promise.reject(new Error("FakeError")));
       const options = {};
       environmentMock.configApiUrl = "dummy";
-      await expect(startup.open(options)).rejectedWith("FakeError");
+      await expect(startup.open(options)).rejects.toThrow("FakeError");
       proxyMainMock.didNotReceive().run(Arg.all());
       externalNtlmProxyFacadeMock.received(1).alive("dummy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();

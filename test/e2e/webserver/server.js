@@ -1,16 +1,14 @@
-const http = require("http");
-const https = require("https");
-const express = require("express");
-const expressWs = require("express-ws");
-const cors = require("cors");
-const ntlm = require("express-ntlm");
-const bodyParser = require("body-parser");
-const fs = require("fs");
-const path = require("path");
-const morganDebug = require("morgan-debug");
-const debug = require("debug");
+import http from "http";
+import https from "https";
+import express from "express";
+import expressWs from "express-ws";
+import cors from "cors";
+import ntlm from "express-ntlm";
+import bodyParser from "body-parser";
+import morganDebug from "morgan-debug";
+import debug from "debug";
 const webserverNtlmLog = debug("webserver:ntlm");
-const pki = require("node-forge").pki;
+import nodeForge from "node-forge";
 
 const NTLM_HTTP_PORT = 5000;
 const NTLM_HTTPS_PORT = 5001;
@@ -97,13 +95,7 @@ function initApp(app, useNtlm) {
     }
   });
 
-  app.use(express.static(__dirname + "/www"));
-
-  /*
-  app.get(/^.(?!((\/ws\/)|(\/api\/))).*$/, (req, res) => {
-    res.sendFile(path.join(__dirname, "/www/index.html"));
-  });
-  */
+  app.use(express.static("webserver/www")); // path.join(import.meta.url, "www")));
 }
 
 function configureCert(certServer, publicKey) {
@@ -213,13 +205,13 @@ function configureCert(certServer, publicKey) {
 }
 
 function generateSelfSignedCert(certs) {
-  let keysServer = pki.rsa.generateKeyPair(1024);
-  let certServer = pki.createCertificate();
+  let keysServer = nodeForge.pki.rsa.generateKeyPair(1024);
+  let certServer = nodeForge.pki.createCertificate();
   configureCert(certServer, keysServer.publicKey);
   certServer.sign(keysServer.privateKey);
-  certs.certPem = pki.certificateToPem(certServer);
-  certs.privateKeyPem = pki.privateKeyToPem(keysServer.privateKey);
-  certs.publicKeyPem = pki.publicKeyToPem(keysServer.publicKey);
+  certs.certPem = nodeForge.pki.certificateToPem(certServer);
+  certs.privateKeyPem = nodeForge.pki.privateKeyToPem(keysServer.privateKey);
+  certs.publicKeyPem = nodeForge.pki.publicKeyToPem(keysServer.publicKey);
 }
 
 function addQuitApi(app, servers) {

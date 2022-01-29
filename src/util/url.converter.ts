@@ -1,6 +1,6 @@
-import url from "url";
+import * as url from "url";
 
-import { CompleteUrl } from "../models/complete.url.model";
+import { CompleteUrl } from "../models/complete.url.model.js";
 
 /**
  * Convert the host header to a structured CompleteUrl object
@@ -10,11 +10,7 @@ import { CompleteUrl } from "../models/complete.url.model";
  * @param {boolean} useSSL true if the connection is using SSL
  * @returns {CompleteUrl} Converted from host header
  */
-export function toCompleteUrl(
-  host: string,
-  addProtocol: boolean,
-  useSSL?: boolean
-): CompleteUrl {
+export function toCompleteUrl(host: string | null, addProtocol: boolean, useSSL?: boolean): CompleteUrl {
   let hostUrl: url.UrlWithStringQuery;
   let isSSL: boolean;
 
@@ -56,21 +52,11 @@ export function toCompleteUrl(
 
   if (!hostUrl.port) {
     const port = isSSL ? "443" : "80";
-    hostUrl = url.parse(
-      hostUrl.protocol + "//" + hostUrl.hostname + ":" + port + hostUrl.path
-    );
+    hostUrl = url.parse(hostUrl.protocol + "//" + hostUrl.hostname + ":" + port + hostUrl.path);
   }
 
-  if (
-    !hostUrl.hostname ||
-    !hostUrl.port ||
-    !hostUrl.protocol ||
-    !hostUrl.href ||
-    !hostUrl.path
-  ) {
-    throw new Error(
-      "Missing mandatory properties of complete url: " + JSON.stringify(hostUrl)
-    );
+  if (!hostUrl.hostname || !hostUrl.port || !hostUrl.protocol || !hostUrl.href || !hostUrl.path) {
+    throw new Error("Missing mandatory properties of complete url: " + JSON.stringify(hostUrl));
   }
 
   const completeUrl: CompleteUrl = {

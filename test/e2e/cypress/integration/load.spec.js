@@ -10,7 +10,22 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     cy.ntlmReset();
   });
 
-  it("100 NTLM HTTP GET requests", function () {
+  it.only("100 HTTP GET requests", function () {
+    let iteration = 100;
+    while (iteration--) {
+      let id = iteration;
+      cy.request({
+        method: "GET",
+        url: httpHost + "/api/get" + "?id=" + id,
+      }).should((response) => {
+        expect(response.status).to.equal(200);
+        console.log(response.body);
+        expect(response.body).to.have.property("id", id.toString());
+      });
+    }
+  });
+
+  it.only("100 NTLM HTTP GET requests", function () {
     cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
     let iteration = 100;
     while (iteration--) {
@@ -19,7 +34,8 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
         method: "GET",
         url: httpNtlmHost + "/api/get" + "?id=" + id,
       }).should((response) => {
-        expect(response.status).to.eq(200);
+        expect(response.status).to.equal(200);
+        console.log(response.body);
         expect(response.body).to.have.property("id", id.toString());
       });
     }
@@ -39,7 +55,7 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
         url: httpNtlmHost + "/api/post",
         body: body,
       }).should((response) => {
-        expect(response.status).to.eq(200);
+        expect(response.status).to.equal(200);
         expect(response.body).to.have.property("ntlmHost", body.ntlmHost);
         expect(response.body).to.have.property("reply", "OK ÅÄÖéß");
       });

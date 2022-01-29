@@ -1,7 +1,6 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "mocha";
+import "reflect-metadata";
 
-import { expect } from "chai";
 import { toCompleteUrl } from "../../../src/util/url.converter";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
@@ -49,7 +48,7 @@ describe("ConfigStore", () => {
       let res = configStore.get(toCompleteUrl("www.acme.org:5000", false));
 
       // Assert
-      expect(res.password).to.equal("dummy");
+      expect(res.password).toEqual("dummy");
     });
 
     it("should return hostname match if multiple matches exists in ntlmHosts but no hostname with port match exists", function () {
@@ -83,7 +82,7 @@ describe("ConfigStore", () => {
       let res = configStore.get(toCompleteUrl("www.acme.org:5000", false));
 
       // Assert
-      expect(res.password).to.equal("dummy2");
+      expect(res.password).toEqual("dummy2");
     });
 
     it("should return wildcard match if no other matches exists in ntlmHosts", function () {
@@ -117,7 +116,7 @@ describe("ConfigStore", () => {
       let res = configStore.get(toCompleteUrl("www.acme.org:5000", false));
 
       // Assert
-      expect(res.password).to.equal("dummy3");
+      expect(res.password).toEqual("dummy3");
     });
   });
 
@@ -134,12 +133,10 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("localhost:5000", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("localhost:5000", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
 
     it("should return false if port mismatch of host in ntlmHosts", function () {
@@ -154,12 +151,10 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("localhost:5001", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("localhost:5001", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
 
     it("should return false if hostname mismatch of host in ntlmHosts", function () {
@@ -174,12 +169,10 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("localhosty:5000", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("localhosty:5000", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
 
     it("should return true if hostname exists in ntlmSso", function () {
@@ -190,12 +183,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("http://localhost:5000", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("http://localhost:5000", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
 
     it("should return false if hostname does not exist in ntlmSso", function () {
@@ -206,12 +197,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("http://localhostt:5000", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("http://localhostt:5000", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
 
     it("should return true if hostname matches single wildcard in ntlmSso", function () {
@@ -222,12 +211,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("http://api.google.com", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("http://api.google.com", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
 
     it("should return true if hostname matches multiple wildcard in ntlmSso", function () {
@@ -238,12 +225,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("http://a.google.more.b.nothing.com", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("http://a.google.more.b.nothing.com", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
 
     it("should return false if hostname does not match multiple wildcard in ntlmSso", function () {
@@ -254,12 +239,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(
-        toCompleteUrl("http://a.google.more.b.com", false)
-      );
+      let res = configStore.existsOrUseSso(toCompleteUrl("http://a.google.more.b.com", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
   });
 
@@ -279,7 +262,7 @@ describe("ConfigStore", () => {
       let res = configStore.useSso(toCompleteUrl("localhost:5000", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
 
     it("should return false if exact match of host exists in ntlmHosts and ntlmSsoHosts", function () {
@@ -301,7 +284,7 @@ describe("ConfigStore", () => {
       let res = configStore.useSso(toCompleteUrl("localhost:5000", false));
 
       // Assert
-      expect(res).to.be.false;
+      expect(res).toEqual(false);
     });
 
     it("should return true if exact match of host exists in ntlmSsoHosts but not in ntlmHosts", function () {
@@ -320,12 +303,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.useSso(
-        toCompleteUrl("http://localhost:5000", false)
-      );
+      let res = configStore.useSso(toCompleteUrl("http://localhost:5000", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
 
     it("should return true if wildcard match of host exists in ntlmSsoHosts but no exact match in ntlmHosts", function () {
@@ -344,12 +325,10 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.useSso(
-        toCompleteUrl("http://api.google.com:5000", false)
-      );
+      let res = configStore.useSso(toCompleteUrl("http://api.google.com:5000", false));
 
       // Assert
-      expect(res).to.be.true;
+      expect(res).toEqual(true);
     });
   });
 });

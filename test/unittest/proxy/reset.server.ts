@@ -1,4 +1,4 @@
-import net from 'net';
+import * as net from "net";
 
 export class ResetServer {
   private server?: net.Server;
@@ -9,14 +9,12 @@ export class ResetServer {
   }
 
   url() {
-    return 'http://localhost:' + this.port();
+    return "http://localhost:" + this.port();
   }
 
   start() {
-    this.server = net.createServer(
-      clientSocket => clientSocket.destroy()
-    );
-    this.server.on('error', err => {
+    this.server = net.createServer((clientSocket) => clientSocket.destroy());
+    this.server.on("error", (err) => {
       throw err;
     });
     this.server.listen(0);

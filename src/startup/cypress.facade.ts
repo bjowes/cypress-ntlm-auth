@@ -1,22 +1,16 @@
 import { injectable } from "inversify";
-import { ICypressFacade } from "./interfaces/i.cypress.facade";
+import { ICypressFacade } from "./interfaces/i.cypress.facade.js";
+import cypressLoader from "./cypress.loader.cjs";
 
 @injectable()
 export class CypressFacade implements ICypressFacade {
   private _cypress: any;
 
   constructor() {
-    try {
-      const canResolve = require.resolve("cypress");
-      if (canResolve !== null && canResolve !== undefined) {
-        this._cypress = require("cypress");
-      }
-    } catch {
-      this._cypress = undefined;
-    }
+    this._cypress = cypressLoader.cypress();
   }
 
-  cypressLoaded(): boolean {
+  cypressLoaded() {
     return this._cypress !== null && this._cypress !== undefined;
   }
 

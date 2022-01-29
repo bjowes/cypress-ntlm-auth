@@ -1,9 +1,7 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 
-import { expect } from "chai";
 import { NtlmProxyServer } from "../../../src/proxy/ntlm.proxy.server";
 import { INtlmProxyMitm } from "../../../src/proxy/interfaces/i.ntlm.proxy.mitm";
 import { IHttpMitmProxyFacade } from "../../../src/proxy/interfaces/i.http.mitm.proxy.facade";
@@ -25,12 +23,7 @@ describe("NtlmProxyServer shallow", () => {
     portsConfigStoreMock = new PortsConfigStoreMock();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    ntlmProxyServer = new NtlmProxyServer(
-      ntlmProxyMitmMock,
-      httpMitmProxyMock,
-      portsConfigStoreMock,
-      debugMock
-    );
+    ntlmProxyServer = new NtlmProxyServer(ntlmProxyMitmMock, httpMitmProxyMock, portsConfigStoreMock, debugMock);
   });
 
   it("start should use a free port if undefined", async function () {
@@ -42,17 +35,13 @@ describe("NtlmProxyServer shallow", () => {
 
     await ntlmProxyServer.start();
     httpMitmProxyMock.received(1).listen(Arg.any());
-    expect(listenPort).to.be.greaterThan(0);
-    expect(portsConfigStoreMock.ntlmProxyUrl).to.eq(
-      "http://127.0.0.1:" + listenPort
-    );
-    expect(portsConfigStoreMock.ntlmProxyPort).to.eq(String(listenPort));
+    expect(listenPort).toBeGreaterThan(0);
+    expect(portsConfigStoreMock.ntlmProxyUrl).toEqual("http://127.0.0.1:" + listenPort);
+    expect(portsConfigStoreMock.ntlmProxyPort).toEqual(String(listenPort));
   });
 
   it("start should call init", async function () {
-    httpMitmProxyMock
-      .listen(Arg.any())
-      .returns(Promise.resolve("http://127.0.0.1:2000"));
+    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
 
     await ntlmProxyServer.start();
 
@@ -61,10 +50,10 @@ describe("NtlmProxyServer shallow", () => {
 
   it("start should throw if listen fails", async function () {
     httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => {
-      return Promise.reject("test");
+      return Promise.reject(new Error("test"));
     });
 
-    await expect(ntlmProxyServer.start()).to.be.rejectedWith("test");
+    await expect(ntlmProxyServer.start()).rejects.toThrow("test");
   });
 
   it("init should just initialize once", function () {
@@ -76,24 +65,20 @@ describe("NtlmProxyServer shallow", () => {
   });
 
   it("stop should close server listener", async function () {
-    httpMitmProxyMock
-      .listen(Arg.any())
-      .returns(Promise.resolve("http://127.0.0.1:2000"));
+    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
     await ntlmProxyServer.start();
     await ntlmProxyServer.stop();
     httpMitmProxyMock.received(1).close();
-    expect(portsConfigStoreMock.ntlmProxyUrl).to.eq("");
-    expect(portsConfigStoreMock.ntlmProxyPort).to.eq("");
+    expect(portsConfigStoreMock.ntlmProxyUrl).toEqual("");
+    expect(portsConfigStoreMock.ntlmProxyPort).toEqual("");
   });
 
   it("stop should throw if close throws", async function () {
-    httpMitmProxyMock
-      .listen(Arg.any())
-      .returns(Promise.resolve("http://127.0.0.1:2000"));
+    httpMitmProxyMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
     httpMitmProxyMock.close().mimicks(() => {
       throw new Error("test");
     });
     await ntlmProxyServer.start();
-    expect(() => ntlmProxyServer.stop()).to.throw("test");
+    expect(() => ntlmProxyServer.stop()).toThrow("test");
   });
 });

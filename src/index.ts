@@ -1,9 +1,9 @@
-import { DependencyInjection } from "./proxy/dependency.injection";
-import { TYPES } from "./proxy/dependency.injection.types";
-import { IStartup } from "./startup/interfaces/i.startup";
-import { NtlmProxy } from "./ntlm-proxy";
-import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
-import { IEnvironment } from "./startup/interfaces/i.environment";
+import { DependencyInjection } from "./proxy/dependency.injection.js";
+import { TYPES } from "./proxy/dependency.injection.types.js";
+import { IStartup } from "./startup/interfaces/i.startup.js";
+import { NtlmProxy } from "./ntlm-proxy.js";
+import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.js";
+import { IEnvironment } from "./startup/interfaces/i.environment.js";
 
 const container = new DependencyInjection();
 const startup = container.get<IStartup>(TYPES.IStartup);

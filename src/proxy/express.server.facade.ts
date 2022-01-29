@@ -1,10 +1,9 @@
-import express, { RequestHandler } from 'express';
-import http from 'http';
-import bodyParser from 'body-parser';
-import { injectable } from 'inversify';
-import { IExpressServerFacade } from './interfaces/i.express.server.facade';
-import { PathParams } from 'express-serve-static-core';
-
+import express from "express";
+import http from "http";
+import bodyParser from "body-parser";
+import { injectable } from "inversify";
+import { IExpressServerFacade } from "./interfaces/i.express.server.facade.js";
+import { PathParams } from "express-serve-static-core";
 
 @injectable()
 export class ExpressServerFacade implements IExpressServerFacade {
@@ -15,19 +14,19 @@ export class ExpressServerFacade implements IExpressServerFacade {
     this._app.use(bodyParser.json());
   }
 
-  use(path: PathParams, ...handlers: RequestHandler[]): IExpressServerFacade {
+  use(path: PathParams, ...handlers: express.RequestHandler[]): IExpressServerFacade {
     this._app.use(path, handlers);
     return this;
   }
 
   listen(port: number): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const url = 'http://127.0.0.1:' + port;
+      const url = "http://127.0.0.1:" + port;
       this._listener = this._app.listen(port);
-      this._listener.on('listening', () => {
+      this._listener.on("listening", () => {
         resolve(url);
       });
-      this._listener.on('error', reject);
+      this._listener.on("error", reject);
     });
   }
 

@@ -1,6 +1,5 @@
 // cSpell:ignore nisse, manpwr, mptest, testpc
 
-import chai from "chai";
 import { ConfigValidator } from "../../../src/util/config.validator";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 
@@ -23,7 +22,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("Does return error if ntlmHost contains path", function () {
@@ -34,12 +33,10 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Invalid host [localhost:5000/search] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Invalid host [localhost:5000/search] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
+        );
       });
 
       it("Does return error if ntlmHost contains protocol", function () {
@@ -50,12 +47,10 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Invalid host [http://localhost:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Invalid host [http://localhost:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
+        );
       });
 
       it("Does return error if ntlmHosts has both port and wildcard", function () {
@@ -66,12 +61,10 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Invalid host [*.acme.org:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Invalid host [*.acme.org:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
+        );
       });
     });
 
@@ -92,7 +85,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("Does return error if username is too long", function () {
@@ -103,10 +96,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Username contains invalid characters or is too long.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Username contains invalid characters or is too long.");
       });
 
       it("Does return error if username contains invalid chars", function () {
@@ -117,10 +108,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Username contains invalid characters or is too long.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Username contains invalid characters or is too long.");
       });
     });
 
@@ -144,7 +133,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("Does return error if domain is too long", function () {
@@ -155,10 +144,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Domain contains invalid characters or is too long.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Domain contains invalid characters or is too long.");
       });
 
       it("Does return error if domain contains invalid chars", function () {
@@ -169,10 +156,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Domain contains invalid characters or is too long.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Domain contains invalid characters or is too long.");
       });
     });
 
@@ -196,7 +181,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("Does return error if workstation is too long", function () {
@@ -208,12 +193,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Workstation contains invalid characters or is too long."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Workstation contains invalid characters or is too long.");
       });
 
       it("Does return error if workstation contains invalid chars", function () {
@@ -225,12 +206,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Workstation contains invalid characters or is too long."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Workstation contains invalid characters or is too long.");
       });
     });
 
@@ -254,7 +231,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("ntlmVersion 2 succeeds", function () {
@@ -265,7 +242,7 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.true;
+        expect(result.ok).toEqual(true);
       });
 
       it("ntlmVersion -1 fails", function () {
@@ -276,10 +253,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Invalid ntlmVersion. Must be 1 or 2.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Invalid ntlmVersion. Must be 1 or 2.");
       });
 
       it("ntlmVersion 200 fails", function () {
@@ -290,10 +265,8 @@ describe("ConfigValidator", function () {
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal("Invalid ntlmVersion. Must be 1 or 2.");
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual("Invalid ntlmVersion. Must be 1 or 2.");
       });
     });
 
@@ -311,66 +284,58 @@ describe("ConfigValidator", function () {
 
       it("Does return error if ntlmHosts is missing", function () {
         // Arrange
-        delete config.ntlmHosts;
+        delete (config as Partial<NtlmConfig>).ntlmHosts;
 
         // Act
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
+        );
       });
 
       it("Does return error if username is missing", function () {
         // Arrange
-        delete config.username;
+        delete (config as Partial<NtlmConfig>).username;
 
         // Act
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
+        );
       });
 
       it("Does return error if password is missing", function () {
         // Arrange
-        delete config.password;
+        delete (config as Partial<NtlmConfig>).password;
 
         // Act
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
+        );
       });
 
       it("Does return error if ntlmVersion is missing", function () {
         // Arrange
-        delete config.ntlmVersion;
+        delete (config as Partial<NtlmConfig>).ntlmVersion;
 
         // Act
         let result = ConfigValidator.validate(config);
 
         // Assert
-        chai.expect(result.ok).to.be.false;
-        chai
-          .expect(result.message)
-          .to.be.equal(
-            "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
-          );
+        expect(result.ok).toEqual(false);
+        expect(result.message).toEqual(
+          "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
+        );
       });
     });
   });
@@ -382,7 +347,7 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.validateLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.ok).to.be.true;
+      expect(result.ok).toEqual(true);
     });
 
     it("Does return error if ntlmHost contains path", function () {
@@ -393,12 +358,10 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.validateLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.ok).to.be.false;
-      chai
-        .expect(result.message)
-        .to.be.equal(
-          "Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)"
-        );
+      expect(result.ok).toEqual(false);
+      expect(result.message).toEqual(
+        "Invalid ntlmHost, must not contain any path or query (https://www.google.com is ok, https://www.google.com/search is not ok)"
+      );
     });
 
     it("Does return error if ntlmHost is incomplete", function () {
@@ -409,12 +372,8 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.validateLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.ok).to.be.false;
-      chai
-        .expect(result.message)
-        .to.be.equal(
-          "Invalid ntlmHost, must be a valid URL (like https://www.google.com)"
-        );
+      expect(result.ok).toEqual(false);
+      expect(result.message).toEqual("Invalid ntlmHost, must be a valid URL (like https://www.google.com)");
     });
   });
 
@@ -425,8 +384,8 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.convertLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.length).to.equal(1);
-      chai.expect(result[0]).to.equal("google.com");
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual("google.com");
     });
 
     it("should convert to array without protocol and preserve port", function () {
@@ -435,8 +394,8 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.convertLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.length).to.equal(1);
-      chai.expect(result[0]).to.equal("google.com:8080");
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual("google.com:8080");
     });
 
     it("should convert to array without protocol and without auth", function () {
@@ -445,8 +404,8 @@ describe("ConfigValidator", function () {
       let result = ConfigValidator.convertLegacy(ntlmHost);
 
       // Assert
-      chai.expect(result.length).to.equal(1);
-      chai.expect(result[0]).to.equal("google.com:8080");
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual("google.com:8080");
     });
   });
 });

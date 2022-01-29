@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
-import { IStartup } from "./interfaces/i.startup";
-import { TYPES } from "../proxy/dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
-import { IMain } from "../proxy/interfaces/i.main";
-import { ICypressFacade } from "./interfaces/i.cypress.facade";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
-import { IEnvironment } from "./interfaces/i.environment";
-import { PortsConfig } from "../models/ports.config.model";
+import { IStartup } from "./interfaces/i.startup.js";
+import { TYPES } from "../proxy/dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.js";
+import { IMain } from "../proxy/interfaces/i.main.js";
+import { ICypressFacade } from "./interfaces/i.cypress.facade.js";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.js";
+import { IEnvironment } from "./interfaces/i.environment.js";
+import { PortsConfig } from "../models/ports.config.model.js";
 
 @injectable()
 export class Startup implements IStartup {
@@ -62,15 +62,10 @@ export class Startup implements IStartup {
 
   argumentsToCypressMode(args: string[]) {
     const cliArguments = this.getArgsAfterCypressNtlm(args);
-    if (
-      cliArguments.length > 0 &&
-      (cliArguments[0] === "run" || cliArguments[0] === "open")
-    ) {
+    if (cliArguments.length > 0 && (cliArguments[0] === "run" || cliArguments[0] === "open")) {
       return cliArguments[0];
     }
-    throw new Error(
-      "Unsupported command, use cypress-ntlm open or cypress-ntlm run."
-    );
+    throw new Error("Unsupported command, use cypress-ntlm open or cypress-ntlm run.");
   }
 
   async prepareOptions(args: string[]) {
@@ -96,12 +91,8 @@ export class Startup implements IStartup {
   private async prepareExternalNtlmProxy(): Promise<PortsConfig> {
     this._internalNtlmProxy = false;
     this._upstreamProxyConfigurator.processNoProxyLoopback();
-    this._debug.log(
-      "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
-    );
-    return await this._externalNtlmProxyFacade.alive(
-      this._environment.configApiUrl
-    );
+    this._debug.log("Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy");
+    return await this._externalNtlmProxyFacade.alive(this._environment.configApiUrl);
   }
 
   async startNtlmProxy(): Promise<PortsConfig> {

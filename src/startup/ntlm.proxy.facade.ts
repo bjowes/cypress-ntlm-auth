@@ -1,12 +1,13 @@
-import { TYPES } from "../proxy/dependency.injection.types";
+import * as http from "http";
+import * as url from "url";
 import { inject, injectable } from "inversify";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import http from "http";
-import url from "url";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
-import { PortsConfig } from "../models/ports.config.model";
-import { NtlmConfig } from "../models/ntlm.config.model";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
+
+import { TYPES } from "../proxy/dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.js";
+import { PortsConfig } from "../models/ports.config.model.js";
+import { NtlmConfig } from "../models/ntlm.config.model.js";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
 
 @injectable()
 export class NtlmProxyFacade implements INtlmProxyFacade {
@@ -16,16 +17,9 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
     this._debug = debug;
   }
 
-  private async request(
-    configApiUrl: string,
-    path: string,
-    method: string,
-    body: any
-  ) {
+  private async request(configApiUrl: string, path: string, method: string, body: any) {
     return new Promise<any>((resolve, reject) => {
-      this._debug.log(
-        "Sending " + path + " request to NTLM proxy " + configApiUrl
-      );
+      this._debug.log("Sending " + path + " request to NTLM proxy " + configApiUrl);
       const configApiUrlParsed = url.parse(configApiUrl);
       const options: http.RequestOptions = {
         hostname: configApiUrlParsed.hostname,
@@ -39,16 +33,10 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
         res.on("data", (chunk) => (resBody += chunk));
         res.on("end", () => {
           if (res.statusCode !== 200) {
-            this._debug.log(
-              "Unexpected response from NTLM proxy: " + res.statusCode
-            );
+            this._debug.log("Unexpected response from NTLM proxy: " + res.statusCode);
             this._debug.log("Response body: " + resBody);
             this._debug.log(path + " request failed");
-            return reject(
-              new Error(
-                "Unexpected response from NTLM proxy: " + res.statusCode
-              )
-            );
+            return reject(new Error("Unexpected response from NTLM proxy: " + res.statusCode));
           }
 
           this._debug.log(path + " request succeeded");
@@ -63,12 +51,7 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
 
       req.on("error", (error) => {
         this._debug.log(path + " request failed");
-        return reject(
-          new Error(
-            "An error occurred while communicating with NTLM proxy: " +
-              error.message
-          )
-        );
+        return reject(new Error("An error occurred while communicating with NTLM proxy: " + error.message));
       });
 
       if (body) {
@@ -82,12 +65,7 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
   }
 
   async alive(configApiUrl: string): Promise<PortsConfig> {
-    return (await this.request(
-      configApiUrl,
-      "alive",
-      "GET",
-      undefined
-    )) as PortsConfig;
+    return (await this.request(configApiUrl, "alive", "GET", undefined)) as PortsConfig;
   }
 
   async reset(configApiUrl: string) {
@@ -104,12 +82,7 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
 
   async quitIfRunning(configApiUrl?: string): Promise<boolean> {
     if (configApiUrl) {
-      (await this.request(
-        configApiUrl,
-        "quit",
-        "POST",
-        undefined
-      )) as PortsConfig;
+      (await this.request(configApiUrl, "quit", "POST", undefined)) as PortsConfig;
       return true;
     } else {
       this._debug.log("CYPRESS_NTLM_AUTH_API is not set, nothing to do.");

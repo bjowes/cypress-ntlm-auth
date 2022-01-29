@@ -1,14 +1,16 @@
 // cSpell:ignore Legoland, Bricksburg, objsign
 
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 import express from "express";
-const ntlm = require("express-ntlm");
-import net from "net";
+import ntlm from "express-ntlm";
+//const ntlm = require("express-ntlm");
+import * as net from "net";
 import bodyParser from "body-parser";
-import { pki } from "node-forge";
+//import * as pki from "node-forge/lib/pki.js";
+import forge from "node-forge";
 import { AddressInfo } from "net";
-import internal from "stream";
+import * as stream from "stream";
 
 interface ExpressError extends Error {
   status?: number;
@@ -31,7 +33,7 @@ export class ExpressServer {
   private httpsServer: https.Server;
 
   private httpServerSockets = new Set<net.Socket>();
-  private httpsServerSockets = new Set<internal.Duplex>();
+  private httpsServerSockets = new Set<stream.Duplex>();
 
   private lastRequestHeaders: http.IncomingHttpHeaders;
   private sendNtlmType2Header: string = null;
@@ -160,7 +162,7 @@ export class ExpressServer {
     return sn;
   }
 
-  private configureCert(certServer: pki.Certificate, publicKey: pki.rsa.PublicKey) {
+  private configureCert(certServer: forge.pki.Certificate, publicKey: forge.pki.rsa.PublicKey) {
     certServer.publicKey = publicKey;
     certServer.serialNumber = this.randomSerialNumber();
     certServer.validity.notBefore = this.yesterday();
@@ -246,13 +248,13 @@ export class ExpressServer {
   }
 
   private generateSelfSignedCert() {
-    let keysServer = pki.rsa.generateKeyPair(1024);
-    let certServer = pki.createCertificate();
+    let keysServer = forge.pki.rsa.generateKeyPair(1024);
+    let certServer = forge.pki.createCertificate();
     this.configureCert(certServer, keysServer.publicKey);
     certServer.sign(keysServer.privateKey);
-    this.certPem = pki.certificateToPem(certServer);
-    this.privateKeyPem = pki.privateKeyToPem(keysServer.privateKey);
-    this.publicKeyPem = pki.publicKeyToPem(keysServer.publicKey);
+    this.certPem = forge.pki.certificateToPem(certServer);
+    this.privateKeyPem = forge.pki.privateKeyToPem(keysServer.privateKey);
+    this.publicKeyPem = forge.pki.publicKeyToPem(keysServer.publicKey);
   }
 
   async startHttpServer(useNtlm: boolean, port?: number): Promise<string> {
