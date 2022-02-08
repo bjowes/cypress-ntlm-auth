@@ -11,7 +11,7 @@ import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
-import { PatchedHttpsProxyAgent } from "../../../src/proxy/patched.https.proxy.agent";
+import { httpsTunnel } from "../../../src/proxy/tunnel.agent";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -182,10 +182,13 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
 
   it("should forward 504 from upstream proxy on server socket error for NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = new PatchedHttpsProxyAgent({
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      headers: { "User-Agent": "Node" },
+    let agent = httpsTunnel({
+      proxy: {
+        host: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      keepAlive: true,
       ca: [proxyFacade.mitmCaCert],
     });
 
@@ -378,10 +381,13 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
 
   it("should forward 504 from upstream proxy on server socket error for non NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = new PatchedHttpsProxyAgent({
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      headers: { "User-Agent": "Node" },
+    let agent = httpsTunnel({
+      proxy: {
+        host: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      keepAlive: true,
       ca: [expressServer.caCert, proxyFacade.mitmCaCert],
     });
 
@@ -398,10 +404,13 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
 
   it("should forward 504 from upstream proxy on server CONNECT error for non NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = new PatchedHttpsProxyAgent({
-      host: proxyUrl.hostname,
-      port: proxyUrl.port,
-      headers: { "User-Agent": "Node" },
+    let agent = httpsTunnel({
+      proxy: {
+        host: proxyUrl.hostname,
+        port: +proxyUrl.port,
+        headers: { "User-Agent": "Node" },
+      },
+      keepAlive: true,
       ca: [expressServer.caCert, proxyFacade.mitmCaCert],
     });
 

@@ -2,7 +2,6 @@ import * as http from "http";
 import * as https from "https";
 
 import httpMitmProxy from "http-mitm-proxy";
-//import CA from "http-mitm-proxy/lib/ca.js";
 
 import getPort from "get-port";
 import axios, { AxiosResponse, Method } from "axios";
@@ -12,8 +11,7 @@ import * as path from "path";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { PortsConfig } from "../../../src/models/ports.config.model";
-//import { PatchedHttpsProxyAgent } from "../../../src/proxy/patched.https.proxy.agent";
-import { httpsTunnel, TunnelAgentOptions, TunnelingAgent } from "../../../src/proxy/tunnel.agent";
+import { httpsTunnel, TunnelingAgent } from "../../../src/proxy/tunnel.agent";
 import { Socket } from "node:net";
 
 export class ProxyFacade {
@@ -307,19 +305,6 @@ export class ProxyFacade {
         ca: ca,
         keepAlive: false,
       });
-    /*
-      new PatchedHttpsProxyAgent(
-        {
-          host: proxyUrl.hostname,
-          port: proxyUrl.port,
-          headers: {
-            "User-Agent": "Node",
-          },
-          ca: ca,
-          //keepAlive: false,
-        },
-        false
-      );*/
 
     let res = await axios.request({
       method: method,
