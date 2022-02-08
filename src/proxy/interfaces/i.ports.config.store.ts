@@ -1,5 +1,4 @@
 export interface IPortsConfigStore {
-  configApiUrl: string;
-  ntlmProxyUrl: string;
-  ntlmProxyPort: string;
+  configApiUrl?: URL;
+  ntlmProxyUrl?: URL;
 }

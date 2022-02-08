@@ -47,9 +47,9 @@ export class ConfigServer implements IConfigServer {
           throw new Error("Cannot find free port");
         }
       }
-      this._portsConfigStore.configApiUrl = await this._expressServer.listen(port);
+      this._portsConfigStore.configApiUrl = new URL(await this._expressServer.listen(port));
       this._debug.log("NTLM auth config API listening on port:", port);
-      return this._portsConfigStore.configApiUrl;
+      return this._portsConfigStore.configApiUrl.origin;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth config API");
       throw err;
@@ -60,7 +60,7 @@ export class ConfigServer implements IConfigServer {
     this._debug.log("Shutting down config API");
     try {
       await this._expressServer.close();
-      this._portsConfigStore.configApiUrl = "";
+      this._portsConfigStore.configApiUrl = undefined;
       this._debug.log("NTLM auth config API stopped");
     } catch (err) {
       this._debug.log("Cannot stop NTLM auth config API");

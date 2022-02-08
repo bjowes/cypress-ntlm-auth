@@ -1,12 +1,11 @@
 import { Socket } from "net";
-import { CompleteUrl } from "../../models/complete.url.model.js";
 import { IConnectionContext } from "./i.connection.context.js";
 
 export interface IConnectionContextManager {
-  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: CompleteUrl): IConnectionContext;
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URL): IConnectionContext;
   getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined;
-  getAgent(isSSL: boolean, targetHost: CompleteUrl): any;
-  getUntrackedAgent(targetHost: CompleteUrl): any;
+  getAgent(isSSL: boolean, targetHost: URL): any;
+  getUntrackedAgent(targetHost: URL): any;
   removeAllConnectionContexts(event: string): void;
   removeAgent(event: string, clientAddress: string): void;
   addTunnel(client: Socket, target: Socket): void;

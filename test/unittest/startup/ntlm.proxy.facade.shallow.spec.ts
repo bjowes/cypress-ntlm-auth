@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 
 import nock from "nock";
+import assert from "assert";
 
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
@@ -24,7 +25,7 @@ describe("NtlmProxyFacade shallow", () => {
     ntlmProxyFacade = new NtlmProxyFacade(debugMock);
   });
 
-  afterAll(function () {
+  after(function () {
     nock.cleanAll();
     nock.restore();
   });
@@ -34,9 +35,9 @@ describe("NtlmProxyFacade shallow", () => {
       let fakeConfigApiUrl = "http://localhost:50997";
       const scope = nock(fakeConfigApiUrl).get("/alive").reply(200, fakePortsConfig);
       let res = await ntlmProxyFacade.alive(fakeConfigApiUrl);
-      expect(res.configApiUrl).toEqual(fakePortsConfig.configApiUrl);
-      expect(res.ntlmProxyUrl).toEqual(fakePortsConfig.ntlmProxyUrl);
-      expect(scope.isDone()).toEqual(true);
+      assert.equal(res.configApiUrl, fakePortsConfig.configApiUrl);
+      assert.equal(res.ntlmProxyUrl, fakePortsConfig.ntlmProxyUrl);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("Sending alive request to NTLM proxy " + fakeConfigApiUrl);
       debugMock.received(1).log("alive request succeeded");
     });
@@ -47,18 +48,19 @@ describe("NtlmProxyFacade shallow", () => {
         .get("/alive")
         .replyWithError({ code: "ETIMEDOUT", message: "Request timeout" });
 
-      await expect(ntlmProxyFacade.alive(fakeConfigApiUrl)).rejects.toThrow(
-        "An error occurred while communicating with NTLM proxy: Request timeout"
+      await assert.rejects(
+        ntlmProxyFacade.alive(fakeConfigApiUrl),
+        /An error occurred while communicating with NTLM proxy: Request timeout$/
       );
-      expect(scope.isDone()).toEqual(true);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("alive request failed");
     });
 
     it("should throw if alive returns != 200", async function () {
       let fakeConfigApiUrl = "http://localhost:50997";
       const scope = nock(fakeConfigApiUrl).get("/alive").reply(404);
-      await expect(ntlmProxyFacade.alive(fakeConfigApiUrl)).rejects.toThrow("Unexpected response from NTLM proxy: 404");
-      expect(scope.isDone()).toEqual(true);
+      await assert.rejects(ntlmProxyFacade.alive(fakeConfigApiUrl), /Unexpected response from NTLM proxy: 404$/);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("Unexpected response from NTLM proxy: 404");
       debugMock.received(1).log("alive request failed");
     });
@@ -69,7 +71,7 @@ describe("NtlmProxyFacade shallow", () => {
       let fakeConfigApiUrl = "http://localhost:50997";
       const scope = nock(fakeConfigApiUrl).post("/quit").reply(200);
       await ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl);
-      expect(scope.isDone()).toEqual(true);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("Sending quit request to NTLM proxy " + fakeConfigApiUrl);
       debugMock.received(1).log("quit request succeeded");
     });
@@ -85,20 +87,22 @@ describe("NtlmProxyFacade shallow", () => {
         .post("/quit")
         .replyWithError({ code: "ETIMEDOUT", message: "Request timeout" });
 
-      await expect(ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl)).rejects.toThrow(
-        "An error occurred while communicating with NTLM proxy: Request timeout"
+      await assert.rejects(
+        ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl),
+        /An error occurred while communicating with NTLM proxy: Request timeout$/
       );
-      expect(scope.isDone()).toEqual(true);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("quit request failed");
     });
 
     it("should throw if quit returns != 200", async function () {
       let fakeConfigApiUrl = "http://localhost:50997";
       const scope = nock(fakeConfigApiUrl).post("/quit").reply(404);
-      await expect(ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl)).rejects.toThrow(
-        "Unexpected response from NTLM proxy: 404"
+      await assert.rejects(
+        ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl),
+        /Unexpected response from NTLM proxy: 404$/
       );
-      expect(scope.isDone()).toEqual(true);
+      assert.equal(scope.isDone(), true);
       debugMock.received(1).log("Unexpected response from NTLM proxy: 404");
       debugMock.received(1).log("quit request failed");
     });

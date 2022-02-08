@@ -51,9 +51,8 @@ export class NtlmProxyServer implements INtlmProxyServer {
       }
       await this._httpMitmProxy.listen(port);
       this._debug.log("NTLM auth proxy listening on port:", port);
-      this._portsConfigStore.ntlmProxyUrl = "http://127.0.0.1:" + port;
-      this._portsConfigStore.ntlmProxyPort = String(port);
-      return this._portsConfigStore.ntlmProxyUrl;
+      this._portsConfigStore.ntlmProxyUrl = new URL("http://127.0.0.1:" + port);
+      return this._portsConfigStore.ntlmProxyUrl.origin;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth proxy");
       throw err;
@@ -63,7 +62,6 @@ export class NtlmProxyServer implements INtlmProxyServer {
   stop() {
     this._debug.log("Shutting down NTLM proxy");
     this._httpMitmProxy.close();
-    this._portsConfigStore.ntlmProxyUrl = "";
-    this._portsConfigStore.ntlmProxyPort = "";
+    this._portsConfigStore.ntlmProxyUrl = undefined;
   }
 }

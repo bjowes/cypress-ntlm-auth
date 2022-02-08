@@ -1,5 +1,4 @@
 import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
-import { CompleteUrl } from "../models/complete.url.model.js";
 import { injectable } from "inversify";
 import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { PeerCertificate } from "tls";
@@ -9,7 +8,7 @@ import { Socket } from "net";
 @injectable()
 export class ConnectionContext implements IConnectionContext {
   private _agent: any;
-  private _ntlmHost?: CompleteUrl;
+  private _ntlmHost?: URL;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _winSso?: IWinSsoFacade;
@@ -76,7 +75,7 @@ export class ConnectionContext implements IConnectionContext {
    * a new handshake can be intiated
    * @param ntlmHostUrl The target url
    */
-  canStartAuthHandshake(ntlmHostUrl: CompleteUrl): boolean {
+  canStartAuthHandshake(ntlmHostUrl: URL): boolean {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
@@ -84,18 +83,18 @@ export class ConnectionContext implements IConnectionContext {
     return auth;
   }
 
-  matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean {
+  matchHostOrNew(ntlmHostUrl: URL): boolean {
     return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
   }
 
-  getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum {
+  getState(ntlmHostUrl: URL): NtlmStateEnum {
     if (this._ntlmHost && ntlmHostUrl.href === this._ntlmHost.href) {
       return this._ntlmState;
     }
     return NtlmStateEnum.NotAuthenticated;
   }
 
-  setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum) {
+  setState(ntlmHostUrl: URL, authState: NtlmStateEnum) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
   }

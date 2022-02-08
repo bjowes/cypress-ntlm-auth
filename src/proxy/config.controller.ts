@@ -74,10 +74,10 @@ export class ConfigController implements IConfigController {
 
   private alive(req: Request, res: Response) {
     this._debug.log("Received alive");
-    if (this._portsConfigStore.ntlmProxyUrl) {
+    if (this._portsConfigStore.ntlmProxyUrl && this._portsConfigStore.configApiUrl) {
       const ports: PortsConfig = {
-        configApiUrl: this._portsConfigStore.configApiUrl,
-        ntlmProxyUrl: this._portsConfigStore.ntlmProxyUrl,
+        configApiUrl: this._portsConfigStore.configApiUrl.origin,
+        ntlmProxyUrl: this._portsConfigStore.ntlmProxyUrl.origin,
       };
       res.status(200).send(ports);
     } else {

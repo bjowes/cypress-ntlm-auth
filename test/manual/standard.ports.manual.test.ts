@@ -42,7 +42,7 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
-  afterAll(async function () {
+  after(async function () {
     // Stop HTTP server and proxy
     await coreServer.stop();
     await expressServer.stopHttpServer();
@@ -58,21 +58,21 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
   it("should handle authentication for GET requests when config includes port", async function () {
     ntlmHostConfig.ntlmHosts = ["http://localhost:80"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     let resBody = res.data as any;
-    expect(resBody.reply).toEqual("OK ÅÄÖéß");
+    expect(resBody.reply).to.equal("OK ÅÄÖéß");
   });
 
   it("should handle authentication for GET requests when config excludes port", async function () {
     ntlmHostConfig.ntlmHosts = ["http://localhost"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     let resBody = res.data as any;
-    expect(resBody.reply).toEqual("OK ÅÄÖéß");
+    expect(resBody.reply).to.equal("OK ÅÄÖéß");
   });
 });
 
@@ -102,7 +102,7 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
-  afterAll(async function () {
+  after(async function () {
     // Stop HTTPS server and proxy
     coreServer.stop();
     await expressServer.stopHttpsServer();
@@ -118,20 +118,20 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
   it("should handle authentication for GET requests when config includes port", async function () {
     ntlmHostConfig.ntlmHosts = ["https://localhost:443"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     let resBody = res.data as any;
-    expect(resBody.reply).toEqual("OK ÅÄÖéß");
+    expect(resBody.reply).to.equal("OK ÅÄÖéß");
   });
 
   it("should handle authentication for GET requests when config excludes port", async function () {
     ntlmHostConfig.ntlmHosts = ["https://localhost"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
-    expect(res.status).toEqual(200);
+    expect(res.status).to.equal(200);
     let resBody = res.data as any;
-    expect(resBody.reply).toEqual("OK ÅÄÖéß");
+    expect(resBody.reply).to.equal("OK ÅÄÖéß");
   });
 });

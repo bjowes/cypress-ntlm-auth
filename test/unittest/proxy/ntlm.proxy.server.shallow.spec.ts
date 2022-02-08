@@ -1,6 +1,7 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import assert from "assert";
 
 import { NtlmProxyServer } from "../../../src/proxy/ntlm.proxy.server";
 import { INtlmProxyMitm } from "../../../src/proxy/interfaces/i.ntlm.proxy.mitm";
@@ -35,9 +36,8 @@ describe("NtlmProxyServer shallow", () => {
 
     await ntlmProxyServer.start();
     httpMitmProxyMock.received(1).listen(Arg.any());
-    expect(listenPort).toBeGreaterThan(0);
-    expect(portsConfigStoreMock.ntlmProxyUrl).toEqual("http://127.0.0.1:" + listenPort);
-    expect(portsConfigStoreMock.ntlmProxyPort).toEqual(String(listenPort));
+    assert.ok(listenPort > 0);
+    assert.equal(portsConfigStoreMock.ntlmProxyUrl!.href, `http://127.0.0.1:${listenPort}/`);
   });
 
   it("start should call init", async function () {
@@ -53,7 +53,7 @@ describe("NtlmProxyServer shallow", () => {
       return Promise.reject(new Error("test"));
     });
 
-    await expect(ntlmProxyServer.start()).rejects.toThrow("test");
+    await assert.rejects(ntlmProxyServer.start(), /test$/);
   });
 
   it("init should just initialize once", function () {
@@ -69,8 +69,7 @@ describe("NtlmProxyServer shallow", () => {
     await ntlmProxyServer.start();
     await ntlmProxyServer.stop();
     httpMitmProxyMock.received(1).close();
-    expect(portsConfigStoreMock.ntlmProxyUrl).toEqual("");
-    expect(portsConfigStoreMock.ntlmProxyPort).toEqual("");
+    assert.equal(portsConfigStoreMock.ntlmProxyUrl, undefined);
   });
 
   it("stop should throw if close throws", async function () {
@@ -79,6 +78,6 @@ describe("NtlmProxyServer shallow", () => {
       throw new Error("test");
     });
     await ntlmProxyServer.start();
-    expect(() => ntlmProxyServer.stop()).toThrow("test");
+    assert.throws(() => ntlmProxyServer.stop(), /test$/);
   });
 });

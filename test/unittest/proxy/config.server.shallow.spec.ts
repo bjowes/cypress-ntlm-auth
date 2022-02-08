@@ -1,6 +1,7 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import assert from "assert";
 
 import { ConfigServer } from "../../../src/proxy/config.server";
 import { IConfigController } from "../../../src/proxy/interfaces/i.config.controller";
@@ -35,8 +36,8 @@ describe("ConfigServer", () => {
 
     await configServer.start();
     expressServerMock.received(1).listen(Arg.any());
-    expect(portsConfigStoreMock.configApiUrl).toEqual("http://127.0.0.1:" + listenPort);
-    expect(listenPort).toBeGreaterThan(0);
+    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URL("http://127.0.0.1:" + listenPort).href);
+    assert.ok(listenPort > 0);
   });
 
   it("start should call init", async function () {
@@ -52,7 +53,7 @@ describe("ConfigServer", () => {
       return Promise.reject(new Error("test"));
     });
 
-    await expect(configServer.start()).rejects.toThrow("test");
+    await assert.rejects(configServer.start(), /test$/);
   });
 
   it("init should just initialize once", function () {
@@ -69,13 +70,13 @@ describe("ConfigServer", () => {
     await configServer.start();
     await configServer.stop();
     expressServerMock.received(1).close();
-    expect(portsConfigStoreMock.configApiUrl).toEqual("");
+    assert.equal(portsConfigStoreMock.configApiUrl, undefined);
   });
 
   it("stop should throw if close fail", async function () {
     expressServerMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
     expressServerMock.close().returns(Promise.reject(new Error("test")));
     await configServer.start();
-    await expect(configServer.stop()).rejects.toThrow("test");
+    await assert.rejects(configServer.stop(), /test$/);
   });
 });

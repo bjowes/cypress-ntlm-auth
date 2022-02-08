@@ -35,12 +35,12 @@ export class ExpressServer {
   private httpServerSockets = new Set<net.Socket>();
   private httpsServerSockets = new Set<stream.Duplex>();
 
-  private lastRequestHeaders: http.IncomingHttpHeaders;
-  private sendNtlmType2Header: string = null;
+  private lastRequestHeaders: http.IncomingHttpHeaders | null = null;
+  private sendNtlmType2Header: string | null = null;
   private sendWwwAuthHeader: AuthResponeHeader[] = [];
   private closeConnectionOnNextRequestState = false;
 
-  private customStatusPhrase: string = null;
+  private customStatusPhrase: string | null = null;
 
   constructor() {
     this.initExpress(this.appNoAuth, false);
@@ -59,7 +59,7 @@ export class ExpressServer {
   private createResponse(res: express.Response, body: any) {
     if (this.closeConnectionOnNextRequestState) {
       this.closeConnectionOnNextRequestState = false;
-      res.connection.destroy();
+      res.socket?.destroy();
       return;
     }
 
@@ -71,8 +71,8 @@ export class ExpressServer {
     }
     if (this.sendWwwAuthHeader.length > 0) {
       const auth = this.sendWwwAuthHeader.shift();
-      res.setHeader("www-authenticate", auth.header);
-      res.sendStatus(auth.status);
+      res.setHeader("www-authenticate", auth!.header);
+      res.sendStatus(auth!.status);
       return;
     }
 
@@ -98,7 +98,14 @@ export class ExpressServer {
     });
 
     if (useNtlm) {
-      app.use(ntlm({})); // Enables NTLM without check of user/pass
+      app.use(
+        ntlm({
+          debug: function () {
+            var args = Array.prototype.slice.apply(arguments);
+            console.log.apply(null, args);
+          },
+        })
+      ); // Enables NTLM without check of user/pass
     }
 
     app.get("/get", (req, res) => {
@@ -373,10 +380,14 @@ export class ExpressServer {
   }
 
   lastRequestContainedAuthHeader(): boolean {
-    return this.lastRequestHeaders.authorization !== undefined && this.lastRequestHeaders.authorization.length > 0;
+    return (
+      this.lastRequestHeaders != null &&
+      this.lastRequestHeaders.authorization !== undefined &&
+      this.lastRequestHeaders.authorization.length > 0
+    );
   }
 
-  sendNtlmType2(fakeHeader: string) {
+  sendNtlmType2(fakeHeader: string | null) {
     this.sendNtlmType2Header = fakeHeader;
   }
 

@@ -30,8 +30,8 @@ import { UpstreamProxyManager } from "./upstream.proxy.manager.js";
 import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator.js";
 import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator.js";
 
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
-import { WinSsoFacade } from "./win-sso.facade.js";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.js";
+import { WinSsoFacadeFactory } from "./win-sso.facade.factory.js";
 
 import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
 import { NegotiateManager } from "./negotiate.manager.js";
@@ -100,9 +100,7 @@ export class DependencyInjection {
     this._container
       .bind<interfaces.Newable<IConnectionContext>>(TYPES.NewableIConnectionContext)
       .toConstructor<IConnectionContext>(ConnectionContext);
-    this._container
-      .bind<interfaces.Newable<IWinSsoFacade>>(TYPES.NewableIWinSsoFacade)
-      .toConstructor<IWinSsoFacade>(WinSsoFacade);
+    this._container.bind<IWinSsoFacadeFactory>(TYPES.IWinSsoFacadeFactory).to(WinSsoFacadeFactory);
   }
 
   get<T>(typename: symbol): T {

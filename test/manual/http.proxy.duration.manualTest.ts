@@ -50,7 +50,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
   });
 
   // "Stop HTTP server and proxy"
-  afterAll(async function () {
+  after(async function () {
     await coreServer.stop();
     await expressServer.stopHttpServer();
   });
@@ -66,7 +66,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
     let runDuration = true;
     let burstCount = 5;
     ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-      expect(res.status).toEqual(200);
+      expect(res.status).to.equal(200);
 
       sendBurst(burstCount);
 
@@ -109,10 +109,10 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
         ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
-          expect(res.status).toEqual(200);
+          expect(res.status).to.equal(200);
           let resBody = res.data as any;
-          expect(resBody.message).toEqual("Expecting larger payload on GET");
-          expect(resBody.reply).toEqual("OK ÅÄÖéß");
+          expect(resBody.message).to.equal("Expecting larger payload on GET");
+          expect(resBody.reply).to.equal("OK ÅÄÖéß");
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);
@@ -127,7 +127,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
     let runDuration = true;
     let burstCount = 5;
     ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-      expect(res.status).toEqual(200);
+      expect(res.status).to.equal(200);
       sendBurst(burstCount);
 
       setTimeout(() => {
@@ -167,14 +167,14 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
         let responseCount = 0;
         //console.log("Send burst");
         ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-          expect(res.status).toEqual(200);
+          expect(res.status).to.equal(200);
 
           for (let j = 0; j < burstCount; j++) {
             ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
-              expect(res.status).toEqual(200);
+              expect(res.status).to.equal(200);
               let resBody = res.data as any;
-              expect(resBody.message).toEqual("Expecting larger payload on GET");
-              expect(resBody.reply).toEqual("OK ÅÄÖéß");
+              expect(resBody.message).to.equal("Expecting larger payload on GET");
+              expect(resBody.reply).to.equal("OK ÅÄÖéß");
               responseCount++;
               if (responseCount === burstCount && runDuration) {
                 setTimeout(() => sendBurst(burstCount), 25);
@@ -230,7 +230,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
         ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
-          expect(res.status).toEqual(401);
+          expect(res.status).to.equal(401);
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);
@@ -268,7 +268,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
   });
 
   // "Stop HTTP server and proxy"
-  afterAll(async function () {
+  after(async function () {
     await coreServer.stop();
     await expressServer.stopHttpServer();
   });
@@ -320,10 +320,10 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
         ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "POST", "/post", body).then((res) => {
-          expect(res.status).toEqual(200);
+          expect(res.status).to.equal(200);
           let resBody = res.data as any;
-          expect(resBody.ntlmHost).toEqual("https://my.test.host/");
-          expect(resBody.reply).toEqual("OK ÅÄÖéß");
+          expect(resBody.ntlmHost).to.equal("https://my.test.host/");
+          expect(resBody.reply).to.equal("OK ÅÄÖéß");
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);

@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
 import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
-import { CompleteUrl } from "../models/complete.url.model.js";
 import { IConfigStore } from "./interfaces/i.config.store.js";
 import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
@@ -32,7 +31,7 @@ export class NtlmManager implements INtlmManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     useSso: boolean,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
@@ -68,6 +67,7 @@ export class NtlmManager implements INtlmManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = type1header;
     requestOptions.headers["connection"] = "keep-alive";
+    requestOptions.headers["proxy-connection"] = "keep-alive"; // TODO only when needed
     const proto = ctx.isSSL ? https : http;
     const type1req = proto.request(requestOptions, (type1res) => {
       type1res.pause();
@@ -167,7 +167,7 @@ export class NtlmManager implements INtlmManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: () => void
   ) {

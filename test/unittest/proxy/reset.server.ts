@@ -4,8 +4,11 @@ export class ResetServer {
   private server?: net.Server;
 
   port() {
-    const { port } = this.server.address() as net.AddressInfo;
-    return port;
+    if (this.server) {
+      const { port } = this.server.address() as net.AddressInfo;
+      return port;
+    }
+    return 0;
   }
 
   url() {
@@ -21,7 +24,9 @@ export class ResetServer {
   }
 
   stop() {
-    this.server.close();
-    this.server = undefined;
+    if (this.server) {
+      this.server.close();
+      this.server = undefined;
+    }
   }
 }

@@ -1,4 +1,4 @@
-import "jest";
+import assert from "assert";
 
 import { DependencyInjection } from "../../../src/proxy/dependency.injection.js";
 import { TYPES } from "../../../src/proxy/dependency.injection.types.js";
@@ -59,88 +59,88 @@ describe("NTLM hashes", function () {
 
   it("should create expected Type 1 message. NTLMv1 ASCII", function () {
     const type1 = ntlm.createType1Message(1, "", "");
-    expect(type1.header()).toEqual(NTLMv1asciiType1);
+    assert.equal(type1.header(), NTLMv1asciiType1);
   });
 
   it("should create expected Type 1 message. NTLMv1 ASCII with domain and workstation", function () {
     const type1 = ntlm.createType1Message(1, hostName.toUpperCase(), domainName.toUpperCase());
-    expect(type1.header()).toEqual(NTLMv1asciiType1withDomainAndWS);
+    assert.equal(type1.header(), NTLMv1asciiType1withDomainAndWS);
   });
 
   it("should create expected Type 1 message. NTLMv2 ASCII", function () {
     const type1 = ntlm.createType1Message(2, "", "");
-    expect(type1.header()).toEqual(NTLMv2asciiType1);
+    assert.equal(type1.header(), NTLMv2asciiType1);
   });
 
   it("should create expected Type 1 message. NTLMv2 ASCII with domain and workstation", function () {
     const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
-    expect(type1.header()).toEqual(NTLMv2asciiType1withDomainAndWS);
+    assert.equal(type1.header(), NTLMv2asciiType1withDomainAndWS);
   });
 
   it("should decode Type 2 message. NTLMv1 ASCII", function () {
     const type2 = ntlm.decodeType2Message(NTLMv1asciiType2);
     // ["Negotiate OEM", "Request Target", "Negotiate NTLM", "Target Type Domain", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02810206);
-    expect(type2.version).toEqual(1);
-    expect(type2.encoding).toEqual("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02810206);
+    assert.equal(type2.version, 1);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv1 UCS2", function () {
     const type2 = ntlm.decodeType2Message(NTLMv1ucsType2);
     // ["Negotiate Unicode", "Request Target", "Negotiate NTLM", "Target Type Domain", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02810205);
-    expect(type2.version).toEqual(1);
-    expect(type2.encoding).toEqual("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02810205);
+    assert.equal(type2.version, 1);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 ASCII", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2);
     // ["Negotiate OEM", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02890006);
-    expect(type2.version).toEqual(2);
-    expect(type2.encoding).toEqual("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02890006);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 UCS2", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2);
     // ["Negotiate Unicode", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02890005);
-    expect(type2.version).toEqual(2);
-    expect(type2.encoding).toEqual("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02890005);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 ASCII with full target info", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2withFullTargetInfo);
     // ["Negotiate OEM", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02890006);
-    expect(type2.version).toEqual(2);
-    expect(type2.encoding).toEqual("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).not.toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02890006);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.notEqual(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 UCS2 with full target info", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2withFullTargetInfo);
     // ["Negotiate Unicode", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).toEqual(0x02890005);
-    expect(type2.version).toEqual(2);
-    expect(type2.encoding).toEqual("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).toEqual(domainName.toUpperCase());
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).not.toBeUndefined();
-    expect(type2.challenge.toString("ascii")).toEqual(nonce);
+    assert.equal(type2.flags, 0x02890005);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.notEqual(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should create expected Type 3 message. NTLMv1 ASCII", function () {
@@ -156,7 +156,7 @@ describe("NTLM hashes", function () {
       undefined,
       undefined
     );
-    expect(type3.header()).toEqual(NTLMv1asciiType3);
+    assert.equal(type3.header(), NTLMv1asciiType3);
   });
 
   it("should create expected Type 3 message. NTLMv1 UCS2", function () {
@@ -172,7 +172,7 @@ describe("NTLM hashes", function () {
       undefined,
       undefined
     );
-    expect(type3.header()).toEqual(NTLMv1ucsType3);
+    assert.equal(type3.header(), NTLMv1ucsType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 ASCII", function () {
@@ -194,7 +194,7 @@ describe("NTLM hashes", function () {
       client_nonce,
       timestamp
     );
-    expect(type3.header()).toEqual(NTLMv2asciiType3);
+    assert.equal(type3.header(), NTLMv2asciiType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 UCS2", function () {
@@ -216,7 +216,7 @@ describe("NTLM hashes", function () {
       client_nonce,
       timestamp
     );
-    expect(type3.header()).toEqual(NTLMv2ucsType3);
+    assert.equal(type3.header(), NTLMv2ucsType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 ASCII with full target info", function () {
@@ -237,7 +237,7 @@ describe("NTLM hashes", function () {
       client_nonce,
       undefined
     );
-    expect(type3.header()).toEqual(NTLMv2asciiType3withFullTargetInfo);
+    assert.equal(type3.header(), NTLMv2asciiType3withFullTargetInfo);
   });
 
   it("should create expected Type 3 message. NTLMv2 UCS2 with full target info", function () {
@@ -258,6 +258,6 @@ describe("NTLM hashes", function () {
       client_nonce,
       undefined
     );
-    expect(type3.header()).toEqual(NTLMv2ucsType3withFullTargetInfo);
+    assert.equal(type3.header(), NTLMv2ucsType3withFullTargetInfo);
   });
 });

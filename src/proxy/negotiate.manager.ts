@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
 import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
-import { CompleteUrl } from "../models/complete.url.model.js";
 import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
 import { TYPES } from "./dependency.injection.types.js";
@@ -19,7 +18,7 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
   ) {
@@ -60,7 +59,7 @@ export class NegotiateManager implements INegotiateManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,

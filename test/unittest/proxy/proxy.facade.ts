@@ -1,44 +1,55 @@
 import * as http from "http";
 import * as https from "https";
 
-import * as url from "url";
 import httpMitmProxy from "http-mitm-proxy";
 //import CA from "http-mitm-proxy/lib/ca.js";
 
 import getPort from "get-port";
 import axios, { AxiosResponse, Method } from "axios";
-//import kapAgent from "keepalive-proxy-agent";
 import * as fs from "fs";
 import * as path from "path";
 
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { PortsConfig } from "../../../src/models/ports.config.model";
+//import { PatchedHttpsProxyAgent } from "../../../src/proxy/patched.https.proxy.agent";
+import { httpsTunnel, TunnelAgentOptions, TunnelingAgent } from "../../../src/proxy/tunnel.agent";
+import { Socket } from "node:net";
 
 export class ProxyFacade {
   // The MITM proxy takes a significant time to start the first time
   // due to cert generation, so we ensure this is done before the
   // tests are executed to avoid timeouts
   private _mitmProxyInit = false;
-  private _mitmProxy: httpMitmProxy.IProxy = httpMitmProxy();
+  private _mitmProxy?: httpMitmProxy.IProxy = undefined;
+  private _httpAgent?: http.Agent;
+  private _httpsAgent?: https.Agent;
+  private _trackedSockets: {
+    [key: string]: boolean;
+  } = {};
 
   async startMitmProxy(
     rejectUnauthorized: boolean,
     requestCallback?: (ctx: httpMitmProxy.IContext, callback: (error?: Error) => void) => void
   ): Promise<string> {
+    this._httpAgent = new http.Agent({
+      keepAlive: true,
+      maxSockets: 1,
+    });
+    this._httpsAgent = new https.Agent({
+      keepAlive: true,
+      maxSockets: 1,
+      rejectUnauthorized: rejectUnauthorized,
+    });
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: "localhost",
       port: undefined,
       keepAlive: true,
       forceSNI: false,
-      httpAgent: new http.Agent({
-        keepAlive: true,
-      }),
-      httpsAgent: new https.Agent({
-        keepAlive: true,
-        rejectUnauthorized: rejectUnauthorized,
-      }),
+      httpAgent: this._httpAgent,
+      httpsAgent: this._httpsAgent,
     };
+    this._trackedSockets = {};
 
     this._mitmProxy = httpMitmProxy();
 
@@ -50,12 +61,58 @@ export class ProxyFacade {
       console.log("proxyFacade: " + errorKind + " on " + url + ":", err);
     });
 
-    if (requestCallback) {
-      this._mitmProxy.onRequest(requestCallback);
-    }
+    // TODO: on request, register close event handler on client socket.
+    // close event triggers a callback with the target (host:port) as parameter
+    // find the matching socket in the agent (search in sockets and freeSockets)
+    // emit the "remove" event on the socket -> will remove it from the agent
+
+    // For the tunnel agent, similar feature is required. Support for remove and perform remove
+    // on socket error/close/timeout for freeSockets.
+
+    let self = this;
+    this._mitmProxy.onRequest(function (ctx, cb) {
+      const targetHost = (ctx.clientToProxyRequest.headers.host as string) + ":";
+      if (!self._trackedSockets[targetHost]) {
+        self._trackedSockets[targetHost] = true;
+        ctx.clientToProxyRequest.socket.once("close", function (hadError) {
+          let destroyed = 0;
+          function destroySocket(sockets: NodeJS.ReadOnlyDict<Socket[]>) {
+            for (let key in sockets) {
+              console.log(key, targetHost);
+              if (key.startsWith(targetHost)) {
+                console.log("match");
+                sockets[key]!.forEach((socket) => {
+                  socket.destroy();
+                  destroyed++;
+                });
+              }
+            }
+          }
+          function destroyAll(agent: http.Agent | https.Agent | undefined) {
+            if (!agent) return;
+            destroySocket(agent.sockets);
+            destroySocket(agent.freeSockets);
+          }
+          destroyAll(self._httpAgent);
+          destroyAll(self._httpsAgent);
+          console.log(
+            "upstream proxy: detect client socket close " +
+              targetHost +
+              ", removed " +
+              destroyed +
+              " sockets from agents."
+          );
+          delete self._trackedSockets[targetHost];
+        });
+      }
+      if (requestCallback) {
+        return requestCallback(ctx, cb);
+      }
+      return cb();
+    });
 
     await new Promise<void>((resolve, reject) =>
-      this._mitmProxy.listen(mitmOptions, (err: Error) => {
+      this._mitmProxy!.listen(mitmOptions, (err: Error) => {
         if (err) {
           reject(err);
         }
@@ -67,7 +124,18 @@ export class ProxyFacade {
   }
 
   stopMitmProxy() {
-    this._mitmProxy.close();
+    if (this._mitmProxy) {
+      this._mitmProxy.close();
+      this._mitmProxy = undefined;
+    }
+    if (this._httpAgent) {
+      this._httpAgent.destroy();
+      this._httpAgent = undefined;
+    }
+    if (this._httpsAgent) {
+      this._httpsAgent.destroy();
+      this._httpsAgent = undefined;
+    }
   }
 
   async initMitmProxy() {
@@ -167,9 +235,9 @@ export class ProxyFacade {
     path: string,
     body: any,
     caCert?: Buffer,
-    agent?: http.Agent
+    agent?: http.Agent | TunnelingAgent
   ): Promise<AxiosResponse<any>> {
-    const remoteHostUrl = url.parse(remoteHostWithPort);
+    const remoteHostUrl = new URL(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
@@ -183,9 +251,9 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent
+    agent?: http.Agent | TunnelingAgent
   ) {
-    const proxyUrl = url.parse(ntlmProxyUrl);
+    const proxyUrl = new URL(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error("Invalid proxy url");
     }
@@ -212,10 +280,10 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent,
+    agent?: http.Agent | TunnelingAgent,
     caCert?: Buffer
   ) {
-    const proxyUrl = url.parse(ntlmProxyUrl);
+    const proxyUrl = new URL(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
       throw new Error("Invalid proxy url");
     }
@@ -225,18 +293,33 @@ export class ProxyFacade {
       ca = [caCert];
     }
 
-    const tunnelAgent = agent; /* ||
-      new kapAgent({
+    const tunnelAgent =
+      agent ||
+      httpsTunnel({
         proxy: {
-          hostname: proxyUrl.hostname,
+          host: proxyUrl.hostname,
           port: +proxyUrl.port,
+          secureProxy: proxyUrl.protocol === "https:",
           headers: {
             "User-Agent": "Node",
           },
         },
         ca: ca,
         keepAlive: false,
-      }); */
+      });
+    /*
+      new PatchedHttpsProxyAgent(
+        {
+          host: proxyUrl.hostname,
+          port: proxyUrl.port,
+          headers: {
+            "User-Agent": "Node",
+          },
+          ca: ca,
+          //keepAlive: false,
+        },
+        false
+      );*/
 
     let res = await axios.request({
       method: method,
@@ -249,6 +332,11 @@ export class ProxyFacade {
 
       validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
     });
+
+    if (!agent) {
+      // Clean up internally created agent
+      tunnelAgent.destroy();
+    }
     return res;
   }
 }

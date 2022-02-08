@@ -1,5 +1,7 @@
 // cSpell:ignore nisse, manpwr, mptest, testpc
 
+import assert from "assert";
+
 import { SsoConfigValidator } from "../../../src/util/sso.config.validator";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 
@@ -18,7 +20,7 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(true);
+      assert.equal(result.ok, true);
     });
 
     it("Valid FQDN in ntlmHosts succeeds", function () {
@@ -29,7 +31,7 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(true);
+      assert.equal(result.ok, true);
     });
 
     it("Mix of valid hostnames and FQDNs in ntlmHosts succeeds", function () {
@@ -40,7 +42,7 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(true);
+      assert.equal(result.ok, true);
     });
 
     it("Mix of valid hostnames, FQDNs and wildcard FQDNs in ntlmHosts succeeds", function () {
@@ -51,7 +53,7 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(true);
+      assert.equal(result.ok, true);
     });
 
     it("Does return error if ntlmHost contains path", function () {
@@ -62,8 +64,9 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(false);
-      expect(result.message).toEqual(
+      assert.equal(result.ok, false);
+      assert.equal(
+        result.message,
         "Invalid host [http://localhost:5000/search] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
     });
@@ -76,8 +79,9 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(false);
-      expect(result.message).toEqual(
+      assert.equal(result.ok, false);
+      assert.equal(
+        result.message,
         "Invalid host [http://localhost] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
     });
@@ -90,8 +94,9 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(false);
-      expect(result.message).toEqual(
+      assert.equal(result.ok, false);
+      assert.equal(
+        result.message,
         "Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
     });
@@ -104,8 +109,9 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(config);
 
       // Assert
-      expect(result.ok).toEqual(false);
-      expect(result.message).toEqual(
+      assert.equal(result.ok, false);
+      assert.equal(
+        result.message,
         "Invalid host [localhost:80] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
     });
@@ -120,8 +126,8 @@ describe("SsoConfigValidator", function () {
       const result = SsoConfigValidator.validate(dummyConfig);
 
       // Assert
-      expect(result.ok).toEqual(false);
-      expect(result.message).toEqual("Invalid ntlmHosts, must be an array.");
+      assert.equal(result.ok, false);
+      assert.equal(result.message, "Invalid ntlmHosts, must be an array.");
     });
   });
 });

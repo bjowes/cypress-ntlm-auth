@@ -1,5 +1,4 @@
 import { NtlmConfig } from "../models/ntlm.config.model.js";
-import { CompleteUrl } from "../models/complete.url.model.js";
 import { injectable } from "inversify";
 import { IConfigStore } from "./interfaces/i.config.store.js";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
@@ -26,7 +25,7 @@ export class ConfigStore implements IConfigStore {
     const wildcards = config.ntlmHosts.filter((s) => s.indexOf("*") !== -1);
     nonWildcards.forEach((host) => {
       const hostConfig: NtlmHost = {
-        ntlmHost: host,
+        ntlmHost: new URL(`http://${host}`).host, // Trims away default ports
         username: config.username,
         password: config.password,
         domain: config.domain ? config.domain.toUpperCase() : undefined,
@@ -49,29 +48,32 @@ export class ConfigStore implements IConfigStore {
     });
   }
 
-  exists(ntlmHostUrl: CompleteUrl): boolean {
-    const hostWithPort = ntlmHostUrl.hostname + ":" + ntlmHostUrl.port;
-    if (hostWithPort in this.ntlmHosts) {
+  exists(ntlmHostUrl: URL): boolean {
+    // Match with and without port
+    if (ntlmHostUrl.host in this.ntlmHosts) {
       return true;
     }
     if (ntlmHostUrl.hostname in this.ntlmHosts) {
       return true;
     }
+    // Wildcard match only without port
     return (
       Object.values(this.ntlmHostWildcards).findIndex((hostConfig) =>
-        hostConfig.ntlmHostRegex.test(ntlmHostUrl.hostname)
+        hostConfig.ntlmHostRegex.test(ntlmHostUrl.host)
       ) !== -1
     );
   }
 
-  get(ntlmHostUrl: CompleteUrl): NtlmHost | undefined {
-    const hostWithPort = ntlmHostUrl.hostname + ":" + ntlmHostUrl.port;
-    if (hostWithPort in this.ntlmHosts) {
-      return this.ntlmHosts[hostWithPort];
+  get(ntlmHostUrl: URL): NtlmHost | undefined {
+    // Match first with port
+    if (ntlmHostUrl.host in this.ntlmHosts) {
+      return this.ntlmHosts[ntlmHostUrl.host];
     }
+    // Then without port
     if (ntlmHostUrl.hostname in this.ntlmHosts) {
       return this.ntlmHosts[ntlmHostUrl.hostname];
     }
+    // Wildcard match only without port
     return Object.values(this.ntlmHostWildcards).find((hostConfig) =>
       hostConfig.ntlmHostRegex.test(ntlmHostUrl.hostname)
     );
@@ -84,22 +86,21 @@ export class ConfigStore implements IConfigStore {
     this.ntlmSsoHostWildcards = wildcards.map((s) => new RegExp(`^${s.replace(/\*/g, ".*")}$`, "i"));
   }
 
-  useSso(ntlmHostUrl: CompleteUrl): boolean {
-    if (this.matchNtlmSsoHosts(ntlmHostUrl.hostname) && this.exists(ntlmHostUrl) === false) {
-      return true;
-    }
-    return false;
+  useSso(ntlmHostUrl: URL): boolean {
+    return this.existsSso(ntlmHostUrl) && this.exists(ntlmHostUrl) === false;
   }
 
-  existsOrUseSso(ntlmHostUrl: CompleteUrl): boolean {
-    return this.exists(ntlmHostUrl) || this.matchNtlmSsoHosts(ntlmHostUrl.hostname);
+  existsOrUseSso(ntlmHostUrl: URL): boolean {
+    return this.exists(ntlmHostUrl) || this.existsSso(ntlmHostUrl);
   }
 
-  private matchNtlmSsoHosts(hostname: string): boolean {
-    if (this.ntlmSsoHosts.includes(hostname)) {
+  private existsSso(ntlmHostUrl: URL): boolean {
+    // Match with and without port
+    if (this.ntlmSsoHosts.includes(ntlmHostUrl.host) || this.ntlmSsoHosts.includes(ntlmHostUrl.hostname)) {
       return true;
     }
-    return this.ntlmSsoHostWildcards.findIndex((re) => re.test(hostname)) !== -1;
+    // Wildcard match only without port
+    return this.ntlmSsoHostWildcards.findIndex((re) => re.test(ntlmHostUrl.hostname)) !== -1;
   }
 
   clear() {

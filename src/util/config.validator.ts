@@ -1,5 +1,3 @@
-import * as url from "url";
-
 import { NtlmConfig } from "../models/ntlm.config.model.js";
 import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.js";
 import { HostnameValidator } from "./hostname.validator.js";
@@ -64,12 +62,12 @@ export class ConfigValidator {
 
   static validateLegacy(ntlmHost: string): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
-    const urlTest = url.parse(ntlmHost);
-    if (!urlTest.hostname || !urlTest.protocol || !urlTest.slashes) {
+    const urlTest = new URL(ntlmHost);
+    if (!urlTest.hostname || !urlTest.protocol) {
       result.message = "Invalid ntlmHost, must be a valid URL (like https://www.google.com)";
       return result;
     }
-    if (urlTest.path && urlTest.path !== "" && urlTest.path !== "/") {
+    if (urlTest.pathname && urlTest.pathname !== "" && urlTest.pathname !== "/") {
       result.message =
         "Invalid ntlmHost, must not contain any path or query " +
         "(https://www.google.com is ok, https://www.google.com/search is not ok)";
@@ -80,7 +78,7 @@ export class ConfigValidator {
   }
 
   static convertLegacy(ntlmHost: string): string[] {
-    const urlTest = url.parse(ntlmHost);
+    const urlTest = new URL(ntlmHost);
     return [urlTest.host || ""];
   }
 

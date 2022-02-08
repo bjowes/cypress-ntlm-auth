@@ -1,7 +1,6 @@
-import * as url from "url";
+import assert from "assert";
 
 import isPortReachable from "is-port-reachable";
-import { jest } from "@jest/globals";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -11,8 +10,8 @@ import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 
 async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
-  const configUrl = url.parse(ports.configApiUrl);
-  const proxyUrl = url.parse(ports.ntlmProxyUrl);
+  const configUrl = new URL(ports.configApiUrl);
+  const proxyUrl = new URL(ports.ntlmProxyUrl);
 
   let reachable = await isPortReachable(+proxyUrl.port, {
     host: proxyUrl.hostname,
@@ -35,13 +34,13 @@ describe("Core server startup and shutdown", () => {
   let coreServer: ICoreServer;
   let _configApiUrl: string | undefined;
 
-  beforeAll(async function () {
-    jest.setTimeout(30000);
+  before(async function () {
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
   });
 
   beforeEach(function () {
-    jest.setTimeout(2000);
+    this.timeout(2000);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     _configApiUrl = undefined;
   });
@@ -58,10 +57,10 @@ describe("Core server startup and shutdown", () => {
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
-    expect(ports.configApiUrl.length).to.be.greaterThan(5);
-    expect(ports.ntlmProxyUrl.length).to.be.greaterThan(5);
+    assert.ok(ports.configApiUrl.length > 5);
+    assert.ok(ports.ntlmProxyUrl.length > 5);
     let reachable = await isProxyReachable(ports);
-    expect(reachable).to.equal(true);
+    assert.equal(reachable, true);
   });
 
   it("quit command shuts down the proxy, keep portsFile", async function () {
@@ -73,6 +72,6 @@ describe("Core server startup and shutdown", () => {
     _configApiUrl = undefined;
 
     let reachable = await isProxyReachable(ports);
-    expect(reachable).to.equal(false);
+    assert.equal(reachable, false);
   });
 });

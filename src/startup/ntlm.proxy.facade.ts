@@ -1,5 +1,4 @@
 import * as http from "http";
-import * as url from "url";
 import { inject, injectable } from "inversify";
 
 import { TYPES } from "../proxy/dependency.injection.types.js";
@@ -20,7 +19,7 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
   private async request(configApiUrl: string, path: string, method: string, body: any) {
     return new Promise<any>((resolve, reject) => {
       this._debug.log("Sending " + path + " request to NTLM proxy " + configApiUrl);
-      const configApiUrlParsed = url.parse(configApiUrl);
+      const configApiUrlParsed = new URL(configApiUrl);
       const options: http.RequestOptions = {
         hostname: configApiUrlParsed.hostname,
         port: configApiUrlParsed.port,
