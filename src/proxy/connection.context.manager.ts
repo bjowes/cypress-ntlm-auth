@@ -9,7 +9,7 @@ import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js"
 import { TYPES } from "./dependency.injection.types.js";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 import { SslTunnel } from "../models/ssl.tunnel.model.js";
-import { httpsTunnel, httpTunnel, TunnelAgentOptions } from "./tunnel.agent";
+import { httpsTunnel, httpTunnel, TunnelAgentOptions } from "./tunnel.agent.js";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
