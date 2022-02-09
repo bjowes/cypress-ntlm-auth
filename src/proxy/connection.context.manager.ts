@@ -9,7 +9,7 @@ import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js"
 import { TYPES } from "./dependency.injection.types.js";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 import { SslTunnel } from "../models/ssl.tunnel.model.js";
-import { httpsTunnel, httpTunnel, TunnelAgentOptions } from "./tunnel.agent.js";
+import { httpsTunnel, TunnelAgentOptions } from "./tunnel.agent.js";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -51,7 +51,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
     const useUpstreamProxy = this._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost);
     const agent = this.getAgent(isSSL, targetHost, useUpstreamProxy);
-    //agent._cyAgentId = this._agentCount++;
     const context = new this.ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
@@ -111,7 +110,6 @@ export class ConnectionContextManager implements IConnectionContextManager {
     let agent: any;
     // eslint-disable-next-line prefer-const
     agent = new http.Agent();
-    //agent._cyAgentId = this._agentCount++;
     this._debug.log("Created untracked agent for target " + targetHost.href);
     return agent;
   }

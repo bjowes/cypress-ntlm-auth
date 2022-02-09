@@ -81,7 +81,9 @@ export class ConnectionContext implements IConnectionContext {
   /**
    * If the connection is new or a handshake has been completed (successful or failed),
    * a new handshake can be initiated
-   * @param ntlmHostUrl The target url
+   *
+   * @param {URL} ntlmHostUrl The target url
+   * @returns {boolean} True if the connection is new or a handshake has been completed
    */
   canStartAuthHandshake(ntlmHostUrl: URL): boolean {
     const auth =

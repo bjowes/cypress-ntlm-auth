@@ -34,10 +34,22 @@ interface Request {
   socketKey: string;
 }
 
+/**
+ * Create an agent for tunnelling HTTP requests through an upstream proxy
+ *
+ * @param {CombinedAgentOptions} options Agent options
+ * @returns {TunnelAgent} the tunnel agent
+ */
 export function httpTunnel(options: CombinedAgentOptions) {
   return new TunnelAgent(options, options.proxy.secureProxy, false);
 }
 
+/**
+ * Create an agent for tunnelling HTTPS requests through an upstream proxy
+ *
+ * @param {CombinedAgentOptions} options Agent options
+ * @returns {TunnelAgent} the tunnel agent
+ */
 export function httpsTunnel(options: CombinedAgentOptions) {
   return new TunnelAgent(options, options.proxy.secureProxy, true);
 }
@@ -119,7 +131,7 @@ export class TunnelAgent extends EventEmitter {
   agentId: number;
   createSocket: (request: Request) => void;
 
-  debugLog(message: string) {
+  private debugLog(message: string) {
     debug("[" + this.agentId + "]: " + message);
   }
 
@@ -145,7 +157,7 @@ export class TunnelAgent extends EventEmitter {
 
     self.on("free", function onFree(socket: net.Socket, request: Request) {
       for (let i = 0, len = self.requests.length; i < len; ++i) {
-        let pending = self.requests[i];
+        const pending = self.requests[i];
         if (pending.socketKey === request.socketKey) {
           self.debugLog("socket free, reusing for pending request");
           // Detect the request to connect same origin server, reuse the connection.
@@ -177,6 +189,8 @@ export class TunnelAgent extends EventEmitter {
 
   /**
    * Counts all sockets active in requests and pending (keep-alive)
+   *
+   * @returns {number} The number of sockets, free and in use
    */
   socketCount() {
     return this.sockets.count() + this.freeSockets.count();
@@ -184,7 +198,7 @@ export class TunnelAgent extends EventEmitter {
 
   addRequest(req: http.ClientRequest, _opts: RequestOptions) {
     const self = this;
-    let request: Request = {
+    const request: Request = {
       clientReq: req,
       socketKey: `${_opts.host}:${_opts.port}`,
       options: { ..._opts, ...self.options },
@@ -197,7 +211,7 @@ export class TunnelAgent extends EventEmitter {
     }
 
     if (self.keepAlive) {
-      var socket = self.freeSockets.get(request.socketKey);
+      const socket = self.freeSockets.get(request.socketKey);
       if (socket) {
         this.debugLog("addRequest: reuse free socket for " + request.socketKey);
         socket.removeAllListeners();
@@ -213,19 +227,21 @@ export class TunnelAgent extends EventEmitter {
     self.createSocket(request);
   }
 
-  executeRequest(request: Request, socket: net.Socket) {
-    let self = this;
+  private executeRequest(request: Request, socket: net.Socket) {
+    const self = this;
     socket.on("free", onFree);
     socket.on("close", onCloseOrRemove);
     socket.on("agentRemove", onCloseOrRemove);
     request.clientReq.onSocket(socket);
 
+    // eslint-disable-next-line jsdoc/require-jsdoc
     function onFree() {
       self.debugLog("onFree");
       self.emit("free", socket, request);
     }
 
-    function onCloseOrRemove(hadError: boolean) {
+    // eslint-disable-next-line jsdoc/require-jsdoc
+    function onCloseOrRemove(hadError: boolean): void {
       self.debugLog("onClose");
       if (self.destroyPending) return;
       socket.removeListener("free", onFree);
@@ -238,9 +254,9 @@ export class TunnelAgent extends EventEmitter {
     }
   }
 
-  createSocketInternal(request: Request, cb: (socket: net.Socket) => void) {
-    var self = this;
-    var connectOptions: http.RequestOptions = {
+  private createSocketInternal(request: Request, cb: (socket: net.Socket) => void) {
+    const self = this;
+    const connectOptions: http.RequestOptions = {
       ...self.proxyOptions,
       method: "CONNECT",
       path: request.options.host + ":" + request.options.port,
@@ -257,12 +273,13 @@ export class TunnelAgent extends EventEmitter {
         "Basic " + Buffer.from(self.proxyOptions.proxyAuth).toString("base64");
     }
 
-    var connectReq = self.request(connectOptions);
+    const connectReq = self.request(connectOptions);
     connectReq.once("connect", onConnect);
     connectReq.once("error", onError);
     connectReq.end();
 
-    function onConnect(res: http.IncomingMessage, socket: net.Socket, head: any) {
+    // eslint-disable-next-line jsdoc/require-jsdoc
+    function onConnect(res: http.IncomingMessage, socket: net.Socket, head: string): void {
       connectReq.removeAllListeners();
       socket.removeAllListeners();
 
@@ -287,7 +304,8 @@ export class TunnelAgent extends EventEmitter {
       return cb(socket);
     }
 
-    function onError(cause: Error) {
+    // eslint-disable-next-line jsdoc/require-jsdoc
+    function onError(cause: Error): void {
       connectReq.removeAllListeners();
       self.debugLog("tunneling socket could not be established, cause=" + cause.message + "\n" + cause.stack);
       request.clientReq.destroy(new Error("tunneling socket could not be established, " + "cause=" + cause.message));
@@ -295,8 +313,8 @@ export class TunnelAgent extends EventEmitter {
     }
   }
 
-  processPending() {
-    var pending = this.requests.shift();
+  private processPending() {
+    const pending = this.requests.shift();
     if (pending) {
       // If we have pending requests and a socket gets closed a new one
       // needs to be created to take over in the pool for the one that closed.
@@ -304,16 +322,16 @@ export class TunnelAgent extends EventEmitter {
     }
   }
 
-  createTcpSocket(request: Request) {
-    var self = this;
+  private createTcpSocket(request: Request) {
+    const self = this;
     self.createSocketInternal(request, (socket: net.Socket) => self.executeRequest(request, socket));
   }
 
-  createSecureSocket(request: Request) {
-    var self = this;
+  private createSecureSocket(request: Request) {
+    const self = this;
     self.createSocketInternal(request, function (socket: net.Socket) {
-      let hostHeader = request.clientReq.getHeader("host") as string;
-      let tlsOptions: tls.ConnectionOptions = {
+      const hostHeader = request.clientReq.getHeader("host") as string;
+      const tlsOptions: tls.ConnectionOptions = {
         ...omit(self.options, "host", "path", "port"),
         socket: socket,
       };
@@ -327,7 +345,7 @@ export class TunnelAgent extends EventEmitter {
         tlsOptions.servername = servername;
       }
 
-      var secureSocket = tls.connect(0, tlsOptions);
+      const secureSocket = tls.connect(0, tlsOptions);
       self.sockets.replace(request.socketKey, socket, secureSocket);
       self.executeRequest(request, secureSocket);
     });
@@ -341,6 +359,7 @@ export class TunnelAgent extends EventEmitter {
   }
 }
 
+// eslint-disable-next-line jsdoc/require-jsdoc
 function omit<T extends object, K extends [...(keyof T)[]]>(
   obj: T,
   ...keys: K

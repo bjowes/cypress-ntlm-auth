@@ -14,6 +14,9 @@ import { PortsConfig } from "../../../src/models/ports.config.model";
 import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
 import { Socket } from "node:net";
 
+import debugInit from "debug";
+const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
+
 export class ProxyFacade {
   // The MITM proxy takes a significant time to start the first time
   // due to cert generation, so we ensure this is done before the
@@ -56,7 +59,7 @@ export class ProxyFacade {
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
       let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
-      console.log("proxyFacade: " + errorKind + " on " + url + ":", err);
+      debug(errorKind + " on " + url + ":", err);
     });
 
     let self = this;
@@ -68,9 +71,9 @@ export class ProxyFacade {
           let destroyed = 0;
           function destroySocket(sockets: NodeJS.ReadOnlyDict<Socket[]>) {
             for (let key in sockets) {
-              console.log(key, targetHost);
+              debug(key, targetHost);
               if (key.startsWith(targetHost)) {
-                console.log("match");
+                debug("match");
                 sockets[key]!.forEach((socket) => {
                   socket.destroy();
                   destroyed++;
@@ -85,13 +88,7 @@ export class ProxyFacade {
           }
           destroyAll(self._httpAgent);
           destroyAll(self._httpsAgent);
-          console.log(
-            "upstream proxy: detect client socket close " +
-              targetHost +
-              ", removed " +
-              destroyed +
-              " sockets from agents."
-          );
+          debug("detect client socket close " + targetHost + ", removed " + destroyed + " sockets from agents.");
           delete self._trackedSockets[targetHost];
         });
       }
