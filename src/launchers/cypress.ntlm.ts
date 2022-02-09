@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
-import {
-  run,
-  open,
-  argumentsToCypressMode,
-  argumentsToOptions,
-} from "../index";
+import { run, open, argumentsToCypressMode, argumentsToOptions } from "../index.js";
 
 /**
  *
@@ -27,7 +22,7 @@ async function execute() {
       process.exit(result.totalFailed);
     }
   } catch (err) {
-    console.error(err.message);
+    console.error((err as NodeJS.ErrnoException).message);
     console.error(err);
     process.exit(1);
   }

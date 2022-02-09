@@ -1,12 +1,8 @@
-import { Type2Message } from "../type2.message";
-import { NtlmMessage } from "../ntlm.message";
+import { Type2Message } from "../type2.message.js";
+import { NtlmMessage } from "../ntlm.message.js";
 
 export interface INtlm {
-  createType1Message(
-    ntlmVersion: number,
-    workstation: string | undefined,
-    target: string | undefined
-  ): NtlmMessage;
+  createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage;
   decodeType2Message(str: string | undefined): Type2Message;
   createType3Message(
     type1message: NtlmMessage,

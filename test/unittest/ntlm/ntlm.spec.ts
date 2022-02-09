@@ -1,10 +1,9 @@
-import "mocha";
+import assert from "assert";
 
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.js";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.js";
 
-import { expect } from "chai";
-import { INtlm } from "../../../src/ntlm/interfaces/i.ntlm";
+import { INtlm } from "../../../src/ntlm/interfaces/i.ntlm.js";
 
 describe("NTLM hashes", function () {
   let dependencyInjection = new DependencyInjection();
@@ -16,13 +15,11 @@ describe("NTLM hashes", function () {
   const password = "Beeblebrox";
   const nonce = "SrvNonce";
 
-  const NTLMv1asciiType1 =
-    "NTLM TlRMTVNTUAABAAAAgoIAAgAAAAAoAAAAAAAAACgAAAAKALpHAAAADw==";
+  const NTLMv1asciiType1 = "NTLM TlRMTVNTUAABAAAAgoIAAgAAAAAoAAAAAAAAACgAAAAKALpHAAAADw==";
   const NTLMv1asciiType1withDomainAndWS =
     "NTLM TlRMTVNTUAABAAAAgrIAAgoACgAoAAAACQAJADIAAAAKALpHAAAAD1VSU0EtTUlOT1JMSUdIVENJVFk=";
 
-  const NTLMv2asciiType1 =
-    "NTLM TlRMTVNTUAABAAAAAoAIAgAAAAAoAAAAAAAAACgAAAAKALpHAAAADw==";
+  const NTLMv2asciiType1 = "NTLM TlRMTVNTUAABAAAAAoAIAgAAAAAoAAAAAAAAACgAAAAKALpHAAAADw==";
   const NTLMv2asciiType1withDomainAndWS =
     "NTLM TlRMTVNTUAABAAAAArAIAgoACgAoAAAACQAJADIAAAAKALpHAAAAD1VSU0EtTUlOT1JMSUdIVENJVFk=";
 
@@ -56,122 +53,98 @@ describe("NTLM hashes", function () {
   const NTLMv2ucsType3withFullTargetInfo =
     "NTLM TlRMTVNTUAADAAAAGAAYAIoAAADOAM4AogAAABQAFABYAAAADAAMAGwAAAASABIAeAAAAAAAAABwAQAABQCJAgoAukcAAAAPZMtzZqis7BLo0lsLULi+9FUAUgBTAEEALQBNAEkATgBPAFIAWgBhAHAAaABvAGQATABJAEcASABUAEMASQBUAFkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA14WR4AtH4DySM6L9ekJ0jAEBAAAAAAAApS8jGTAw1QFDbGlOb25jZQAAAAABABAATQBPAFMASQBTAEwARQBZAAIAFABVAFIAUwBBAC0ATQBJAE4ATwBSAAMAJgBNAG8AcwBJAHMAbABlAHkALgB1AHIAcwBhAC4AbQBpAG4AbwByAAQAFAB1AHIAcwBhAC4AbQBpAG4AbwByAAUAFAB1AHIAcwBhAC4AbQBpAG4AbwByAAcACAClLyMZMDDVAQYABAACAAAAAAAAAAAAAAA=";
 
-  beforeEach("", function () {
+  beforeEach(function () {
     ntlm = dependencyInjection.get<INtlm>(TYPES.INtlm);
   });
 
   it("should create expected Type 1 message. NTLMv1 ASCII", function () {
     const type1 = ntlm.createType1Message(1, "", "");
-    expect(type1.header()).to.be.equal(NTLMv1asciiType1);
+    assert.equal(type1.header(), NTLMv1asciiType1);
   });
 
   it("should create expected Type 1 message. NTLMv1 ASCII with domain and workstation", function () {
-    const type1 = ntlm.createType1Message(
-      1,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
-    expect(type1.header()).to.be.equal(NTLMv1asciiType1withDomainAndWS);
+    const type1 = ntlm.createType1Message(1, hostName.toUpperCase(), domainName.toUpperCase());
+    assert.equal(type1.header(), NTLMv1asciiType1withDomainAndWS);
   });
 
   it("should create expected Type 1 message. NTLMv2 ASCII", function () {
     const type1 = ntlm.createType1Message(2, "", "");
-    expect(type1.header()).to.be.equal(NTLMv2asciiType1);
+    assert.equal(type1.header(), NTLMv2asciiType1);
   });
 
   it("should create expected Type 1 message. NTLMv2 ASCII with domain and workstation", function () {
-    const type1 = ntlm.createType1Message(
-      2,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
-    expect(type1.header()).to.be.equal(NTLMv2asciiType1withDomainAndWS);
+    const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
+    assert.equal(type1.header(), NTLMv2asciiType1withDomainAndWS);
   });
 
   it("should decode Type 2 message. NTLMv1 ASCII", function () {
     const type2 = ntlm.decodeType2Message(NTLMv1asciiType2);
     // ["Negotiate OEM", "Request Target", "Negotiate NTLM", "Target Type Domain", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02810206);
-    expect(type2.version).to.be.equal(1);
-    expect(type2.encoding).to.be.equal("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02810206);
+    assert.equal(type2.version, 1);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv1 UCS2", function () {
     const type2 = ntlm.decodeType2Message(NTLMv1ucsType2);
     // ["Negotiate Unicode", "Request Target", "Negotiate NTLM", "Target Type Domain", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02810205);
-    expect(type2.version).to.be.equal(1);
-    expect(type2.encoding).to.be.equal("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02810205);
+    assert.equal(type2.version, 1);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 ASCII", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2);
     // ["Negotiate OEM", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02890006);
-    expect(type2.version).to.be.equal(2);
-    expect(type2.encoding).to.be.equal("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02890006);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 UCS2", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2);
     // ["Negotiate Unicode", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02890005);
-    expect(type2.version).to.be.equal(2);
-    expect(type2.encoding).to.be.equal("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02890005);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.equal(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 ASCII with full target info", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2withFullTargetInfo);
     // ["Negotiate OEM", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02890006);
-    expect(type2.version).to.be.equal(2);
-    expect(type2.encoding).to.be.equal("ascii");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.not.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02890006);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ascii");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.notEqual(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should decode Type 2 message. NTLMv2 UCS2 with full target info", function () {
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2withFullTargetInfo);
     // ["Negotiate Unicode", "Request Target", "Target Type Domain", "Negotiate NTLM2 Key", "Negotiate Target Info", "Negotiate Version"]
-    expect(type2.flags).to.be.equal(0x02890005);
-    expect(type2.version).to.be.equal(2);
-    expect(type2.encoding).to.be.equal("ucs2");
-    expect(type2.targetInfo.parsed["DOMAIN"]).to.be.equal(
-      domainName.toUpperCase()
-    );
-    expect(type2.targetInfo.parsed["SERVER_TIMESTAMP"]).to.not.be.undefined;
-    expect(type2.challenge.toString("ascii")).to.be.equal(nonce);
+    assert.equal(type2.flags, 0x02890005);
+    assert.equal(type2.version, 2);
+    assert.equal(type2.encoding, "ucs2");
+    assert.equal(type2.targetInfo.parsed["DOMAIN"], domainName.toUpperCase());
+    assert.notEqual(type2.targetInfo.parsed["SERVER_TIMESTAMP"], undefined);
+    assert.equal(type2.challenge.toString("ascii"), nonce);
   });
 
   it("should create expected Type 3 message. NTLMv1 ASCII", function () {
-    const type1 = ntlm.createType1Message(
-      1,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(1, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv1asciiType2);
     const type3 = ntlm.createType3Message(
       type1,
@@ -183,15 +156,11 @@ describe("NTLM hashes", function () {
       undefined,
       undefined
     );
-    expect(type3.header()).to.be.equal(NTLMv1asciiType3);
+    assert.equal(type3.header(), NTLMv1asciiType3);
   });
 
   it("should create expected Type 3 message. NTLMv1 UCS2", function () {
-    const type1 = ntlm.createType1Message(
-      1,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(1, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv1ucsType2);
     const type3 = ntlm.createType3Message(
       type1,
@@ -203,26 +172,18 @@ describe("NTLM hashes", function () {
       undefined,
       undefined
     );
-    expect(type3.header()).to.be.equal(NTLMv1ucsType3);
+    assert.equal(type3.header(), NTLMv1ucsType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 ASCII", function () {
-    const type1 = ntlm.createType1Message(
-      2,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2);
     // Since the client nonce and timestamp are generated by the client, we have
     // to force usage of the actual values from our expected answer (which was generated by another the python ntlm-auth client)
     let buf = Buffer.from(NTLMv2asciiType3.substring(5), "base64");
     let timestamp_index = 121 + 16 + 8;
-    let timestamp =
-      buf.readUInt32LE(timestamp_index + 4).toString(16) +
-      buf.readUInt32LE(timestamp_index).toString(16);
-    let client_nonce = buf
-      .slice(timestamp_index + 8, timestamp_index + 16)
-      .toString("hex");
+    let timestamp = buf.readUInt32LE(timestamp_index + 4).toString(16) + buf.readUInt32LE(timestamp_index).toString(16);
+    let client_nonce = buf.slice(timestamp_index + 8, timestamp_index + 16).toString("hex");
     const type3 = ntlm.createType3Message(
       type1,
       type2,
@@ -233,26 +194,18 @@ describe("NTLM hashes", function () {
       client_nonce,
       timestamp
     );
-    expect(type3.header()).to.be.equal(NTLMv2asciiType3);
+    assert.equal(type3.header(), NTLMv2asciiType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 UCS2", function () {
-    const type1 = ntlm.createType1Message(
-      2,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2);
     // Since the client nonce and timestamp are generated by the client, we have
     // to force usage of the actual values from our expected answer (which was generated by another the python ntlm-auth client)
     let buf = Buffer.from(NTLMv2ucsType3.substring(5), "base64");
     let timestamp_index = 146 + 16 + 8;
-    let timestamp =
-      buf.readUInt32LE(timestamp_index + 4).toString(16) +
-      buf.readUInt32LE(timestamp_index).toString(16);
-    let client_nonce = buf
-      .slice(timestamp_index + 8, timestamp_index + 16)
-      .toString("hex");
+    let timestamp = buf.readUInt32LE(timestamp_index + 4).toString(16) + buf.readUInt32LE(timestamp_index).toString(16);
+    let client_nonce = buf.slice(timestamp_index + 8, timestamp_index + 16).toString("hex");
     const type3 = ntlm.createType3Message(
       type1,
       type2,
@@ -263,26 +216,17 @@ describe("NTLM hashes", function () {
       client_nonce,
       timestamp
     );
-    expect(type3.header()).to.be.equal(NTLMv2ucsType3);
+    assert.equal(type3.header(), NTLMv2ucsType3);
   });
 
   it("should create expected Type 3 message. NTLMv2 ASCII with full target info", function () {
-    const type1 = ntlm.createType1Message(
-      2,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv2asciiType2withFullTargetInfo);
     // Since the client nonce is generated by the client, we have
     // to force usage of the actual values from our expected answer (which was generated by another the python ntlm-auth client)
-    let buf = Buffer.from(
-      NTLMv2asciiType3withFullTargetInfo.substring(5),
-      "base64"
-    );
+    let buf = Buffer.from(NTLMv2asciiType3withFullTargetInfo.substring(5), "base64");
     let timestamp_index = 137 + 16 + 8;
-    let client_nonce = buf
-      .slice(timestamp_index + 8, timestamp_index + 16)
-      .toString("hex");
+    let client_nonce = buf.slice(timestamp_index + 8, timestamp_index + 16).toString("hex");
     const type3 = ntlm.createType3Message(
       type1,
       type2,
@@ -293,26 +237,17 @@ describe("NTLM hashes", function () {
       client_nonce,
       undefined
     );
-    expect(type3.header()).to.be.equal(NTLMv2asciiType3withFullTargetInfo);
+    assert.equal(type3.header(), NTLMv2asciiType3withFullTargetInfo);
   });
 
   it("should create expected Type 3 message. NTLMv2 UCS2 with full target info", function () {
-    const type1 = ntlm.createType1Message(
-      2,
-      hostName.toUpperCase(),
-      domainName.toUpperCase()
-    );
+    const type1 = ntlm.createType1Message(2, hostName.toUpperCase(), domainName.toUpperCase());
     const type2 = ntlm.decodeType2Message(NTLMv2ucsType2withFullTargetInfo);
     // Since the client nonce is generated by the client, we have
     // to force usage of the actual values from our expected answer (which was generated by another the python ntlm-auth client)
-    let buf = Buffer.from(
-      NTLMv2ucsType3withFullTargetInfo.substring(5),
-      "base64"
-    );
+    let buf = Buffer.from(NTLMv2ucsType3withFullTargetInfo.substring(5), "base64");
     let timestamp_index = 162 + 16 + 8;
-    let client_nonce = buf
-      .slice(timestamp_index + 8, timestamp_index + 16)
-      .toString("hex");
+    let client_nonce = buf.slice(timestamp_index + 8, timestamp_index + 16).toString("hex");
     const type3 = ntlm.createType3Message(
       type1,
       type2,
@@ -323,6 +258,6 @@ describe("NTLM hashes", function () {
       client_nonce,
       undefined
     );
-    expect(type3.header()).to.be.equal(NTLMv2ucsType3withFullTargetInfo);
+    assert.equal(type3.header(), NTLMv2ucsType3withFullTargetInfo);
   });
 });

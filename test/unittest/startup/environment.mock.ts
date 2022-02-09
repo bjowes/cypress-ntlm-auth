@@ -1,4 +1,3 @@
-import url from "url";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
 
@@ -34,7 +33,7 @@ export class EnvironmentMock implements IEnvironment {
     if (!value) {
       return undefined;
     }
-    const parsed = url.parse(value);
+    const parsed = new URL(value);
     if (!parsed.port) {
       return undefined;
     }

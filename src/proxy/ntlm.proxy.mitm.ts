@@ -1,33 +1,31 @@
 import { IContext } from "http-mitm-proxy";
+import { TLSSocket } from "tls";
+import { injectable, inject } from "inversify";
 
 import net from "net";
-import http from "http";
-import { toCompleteUrl } from "../util/url.converter";
-import { CompleteUrl } from "../models/complete.url.model";
-import { injectable, inject, interfaces } from "inversify";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { INtlmManager } from "./interfaces/i.ntlm.manager";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { TLSSocket } from "tls";
-import { AuthModeEnum } from "../models/auth.mode.enum";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import http from "node:http";
 
-const nodeCommon = require("_http_common");
+import { IConfigStore } from "./interfaces/i.config.store.js";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
+import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { AuthModeEnum } from "../models/auth.mode.enum.js";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.js";
 
 let self: NtlmProxyMitm;
+const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
   private _portsConfigStore: IPortsConfigStore;
   private _connectionContextManager: IConnectionContextManager;
-  private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
+  private _winSsoFacadeFactory: IWinSsoFacadeFactory;
   private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
@@ -38,8 +36,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IConnectionContextManager)
     connectionContextManager: IConnectionContextManager,
-    @inject(TYPES.NewableIWinSsoFacade)
-    winSsoFacade: interfaces.Newable<IWinSsoFacade>,
+    @inject(TYPES.IWinSsoFacadeFactory)
+    winSsoFacadeFactory: IWinSsoFacadeFactory,
     @inject(TYPES.INegotiateManager) negotiateManager: INegotiateManager,
     @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
     @inject(TYPES.IUpstreamProxyManager)
@@ -49,7 +47,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;
     this._connectionContextManager = connectionContextManager;
-    this.WinSsoFacade = winSsoFacade;
+    this._winSsoFacadeFactory = winSsoFacadeFactory;
     this._negotiateManager = negotiateManager;
     this._ntlmManager = ntlmManager;
     this._upstreamProxyManager = upstreamProxyManager;
@@ -96,11 +94,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private isConfigApiRequest(targetHost: CompleteUrl) {
+  private isConfigApiRequest(targetHost: URL) {
     if (!self._portsConfigStore.configApiUrl) {
       return false;
     }
-    return targetHost.href.startsWith(self._portsConfigStore.configApiUrl);
+    return targetHost.host === self._portsConfigStore.configApiUrl.host;
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -128,6 +126,9 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           ctx.isSSL,
           targetHost
         );
+      }
+      if (self._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost)) {
+        self._upstreamProxyManager.setUpstreamProxyHeaders(ctx.proxyToServerRequestOptions.headers);
       }
 
       if (useNtlm) {
@@ -158,20 +159,20 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
-    if (!self._portsConfigStore.ntlmProxyPort) {
+  private isNtlmProxyAddress(hostUrl: URL): boolean {
+    if (!self._portsConfigStore.ntlmProxyUrl) {
       return false;
     }
-    return hostUrl.isLocalhost && hostUrl.port === self._portsConfigStore.ntlmProxyPort;
+    return hostUrl.host === self._portsConfigStore.ntlmProxyUrl.host;
   }
 
-  private getTargetHost(ctx: IContext): CompleteUrl | null {
+  private getTargetHost(ctx: IContext): URL | null {
     if (!ctx.clientToProxyRequest.headers.host) {
       self._debug.log('Invalid request - Could not read "host" header from incoming request to proxy');
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
-    const hostUrl = toCompleteUrl(host, ctx.isSSL, true);
+    const hostUrl = new URL((ctx.isSSL ? "https://" : "http://") + host);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
       return null;
@@ -238,7 +239,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (authMode === AuthModeEnum.Negotiate) {
         self._debug.log("Received 401 with Negotiate in www-authenticate header. Starting handshake.");
         if (useSso) {
-          context.winSso = new self.WinSsoFacade("Negotiate", ctx.proxyToServerRequestOptions.host, context.peerCert);
+          context.winSso = self._winSsoFacadeFactory.create(
+            "Negotiate",
+            ctx.proxyToServerRequestOptions.host,
+            context.peerCert
+          );
         }
         self._negotiateManager.handshake(
           ctx,
@@ -250,7 +255,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       if (authMode === AuthModeEnum.NTLM) {
         self._debug.log("Received 401 with NTLM in www-authenticate header. Starting handshake.");
         if (useSso) {
-          context.winSso = new self.WinSsoFacade("NTLM", ctx.proxyToServerRequestOptions.host, context.peerCert);
+          context.winSso = self._winSsoFacadeFactory.create(
+            "NTLM",
+            ctx.proxyToServerRequestOptions.host,
+            context.peerCert
+          );
         }
         self._ntlmManager.handshake(
           ctx,
@@ -279,7 +288,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         }
       }
       if (res.statusCode) {
-        ctx.proxyToClientResponse.writeHead(res.statusCode, res.statusMessage, self.filterAndCanonizeHeaders(res.headers));
+        ctx.proxyToClientResponse.writeHead(
+          res.statusCode,
+          res.statusMessage,
+          self.filterAndCanonizeHeaders(res.headers)
+        );
       } else {
         ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(res.headers));
       }
@@ -305,7 +318,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return callback();
     }
 
-    const targetHost = toCompleteUrl(req.url, true, true);
+    const targetHost = new URL(`https://${req.url}`); // On CONNECT the req.url includes target host
     if (self._configStore.existsOrUseSso(targetHost)) {
       return callback();
     }
@@ -377,7 +390,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           continue;
         }
 
-        if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
+        if (httpTokenRegExp.test(canonizedKey)) {
           headers[canonizedKey] = originalHeaders[key];
         }
       }

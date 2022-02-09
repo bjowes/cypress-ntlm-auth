@@ -4,24 +4,17 @@
 // Run test like this:
 // node_modules/.bin/mocha  --require ./test/ts.hooks.js --require source-map-support/register test/manual/http.proxy.duration.manualTest.ts --expose-gc
 
-import "mocha";
-
-import { ProxyFacade } from "../proxy/proxy.facade";
-import { expect } from "chai";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { ExpressServer } from "../proxy/express.server";
-import sinon from "sinon";
-import { PortsFileService } from "../../../src/util/ports.file.service";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { PortsFile } from "../../../src/models/ports.file.model";
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
+import { ProxyFacade } from "../unittest/proxy/proxy.facade";
+import { DependencyInjection } from "../../src/proxy/dependency.injection";
+import { TYPES } from "../../src/proxy/dependency.injection.types";
+import { ExpressServer } from "../unittest/proxy/express.server";
+import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
+import { NtlmConfig } from "../../src/models/ntlm.config.model";
+import { jest } from "@jest/globals";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
 let httpUrl: string;
-let savePortsFileStub: sinon.SinonStub<[PortsFile], Promise<void>>;
-let portsFileExistsStub: sinon.SinonStub<[], boolean>;
 
 const phaseDuration = 1500;
 const phaseFinalizeDuration = 2000;
@@ -34,21 +27,17 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
 
-  before("Start HTTP server and proxy", async function () {
+  // "Start HTTP server and proxy",
+  beforeAll(async function () {
     if (!global || !global.gc) {
       throw new Error("Test must be executed with --expose-gc option");
     }
 
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
-
-    this.timeout(30000);
+    jest.setTimeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(true, null);
     ntlmHostConfig = {
-      ntlmHost: httpUrl,
+      ntlmHosts: [httpUrl],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
@@ -60,29 +49,24 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
-  after("Stop HTTP server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-
+  // "Stop HTTP server and proxy"
+  after(async function () {
     await coreServer.stop();
     await expressServer.stopHttpServer();
   });
 
-  beforeEach("Reset NTLM config", async function () {
-    this.timeout(5000);
+  // "Reset NTLM config"
+  beforeEach(async function () {
+    jest.setTimeout(5000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
   it("should not leak memory handling multiple GET requests for the same NTLM host", function (done) {
-    this.timeout(testTimeout);
+    jest.setTimeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
     ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-      expect(res.status).to.be.equal(200);
+      expect(res.status).to.equal(200);
 
       sendBurst(burstCount);
 
@@ -94,9 +78,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
           global.gc();
           const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
           console.log(
-            `Phase 1: The script uses approximately ${used1.toFixed(
-              3
-            )} MB (${preGcUsed1.toFixed(3)} MB before GC)`
+            `Phase 1: The script uses approximately ${used1.toFixed(3)} MB (${preGcUsed1.toFixed(3)} MB before GC)`
           );
 
           runDuration = true;
@@ -110,15 +92,11 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
               global.gc();
               const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
               console.log(
-                `Phase 2: The script uses approximately ${used2.toFixed(
-                  3
-                )} MB (${preGcUsed2.toFixed(3)} before GC)`
+                `Phase 2: The script uses approximately ${used2.toFixed(3)} MB (${preGcUsed2.toFixed(3)} before GC)`
               );
 
-              expect(
-                used2 - used1,
-                "Unexpected memory usage diff, possible memory leak"
-              ).to.be.lessThan(1.0);
+              // "Unexpected memory usage diff, possible memory leak"
+              expect(used2 - used1).toBeLessThan(1.0);
               return done();
             }, phaseFinalizeDuration);
           }, phaseDuration);
@@ -130,19 +108,11 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendRemoteRequest(
-          ntlmProxyUrl,
-          httpUrl,
-          "GET",
-          "/get",
-          null
-        ).then((res) => {
-          expect(res.status).to.be.equal(200);
+        ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
+          expect(res.status).to.equal(200);
           let resBody = res.data as any;
-          expect(resBody.message).to.be.equal(
-            "Expecting larger payload on GET"
-          );
-          expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
+          expect(resBody.message).to.equal("Expecting larger payload on GET");
+          expect(resBody.reply).to.equal("OK ÅÄÖéß");
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);
@@ -153,11 +123,11 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
   });
 
   it("should not leak memory handling multiple GET requests for the same NTLM host with reconfiguration", function (done) {
-    this.timeout(testTimeout);
+    jest.setTimeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
     ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-      expect(res.status).to.be.equal(200);
+      expect(res.status).to.equal(200);
       sendBurst(burstCount);
 
       setTimeout(() => {
@@ -168,9 +138,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
           global.gc();
           const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
           console.log(
-            `Phase 1: The script uses approximately ${used1.toFixed(
-              3
-            )} MB (${preGcUsed1.toFixed(3)} MB before GC)`
+            `Phase 1: The script uses approximately ${used1.toFixed(3)} MB (${preGcUsed1.toFixed(3)} MB before GC)`
           );
 
           runDuration = true;
@@ -184,15 +152,11 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
               global.gc();
               const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
               console.log(
-                `Phase 2: The script uses approximately ${used2.toFixed(
-                  3
-                )} MB (${preGcUsed2.toFixed(3)} before GC)`
+                `Phase 2: The script uses approximately ${used2.toFixed(3)} MB (${preGcUsed2.toFixed(3)} before GC)`
               );
 
-              expect(
-                used2 - used1,
-                "Unexpected memory usage diff, possible memory leak"
-              ).to.be.lessThan(1.0);
+              // "Unexpected memory usage diff, possible memory leak"
+              expect(used2 - used1).toBeLessThan(1.0);
               return done();
             }, phaseFinalizeDuration);
           }, phaseDuration);
@@ -203,22 +167,14 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
         let responseCount = 0;
         //console.log("Send burst");
         ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
-          expect(res.status).to.be.equal(200);
+          expect(res.status).to.equal(200);
 
           for (let j = 0; j < burstCount; j++) {
-            ProxyFacade.sendRemoteRequest(
-              ntlmProxyUrl,
-              httpUrl,
-              "GET",
-              "/get",
-              null
-            ).then((res) => {
-              expect(res.status).to.be.equal(200);
+            ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
+              expect(res.status).to.equal(200);
               let resBody = res.data as any;
-              expect(resBody.message).to.be.equal(
-                "Expecting larger payload on GET"
-              );
-              expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
+              expect(resBody.message).to.equal("Expecting larger payload on GET");
+              expect(resBody.reply).to.equal("OK ÅÄÖéß");
               responseCount++;
               if (responseCount === burstCount && runDuration) {
                 setTimeout(() => sendBurst(burstCount), 25);
@@ -231,7 +187,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
   });
 
   it("should not leak memory handling multiple GET requests for a NTLM host without config", function (done) {
-    this.timeout(testTimeout);
+    jest.setTimeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
     sendBurst(burstCount);
@@ -244,9 +200,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
         global.gc();
         const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log(
-          `Phase 1: The script uses approximately ${used1.toFixed(
-            3
-          )} MB (${preGcUsed1.toFixed(3)} MB before GC)`
+          `Phase 1: The script uses approximately ${used1.toFixed(3)} MB (${preGcUsed1.toFixed(3)} MB before GC)`
         );
 
         runDuration = true;
@@ -260,15 +214,11 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
             global.gc();
             const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log(
-              `Phase 2: The script uses approximately ${used2.toFixed(
-                3
-              )} MB (${preGcUsed2.toFixed(3)} before GC)`
+              `Phase 2: The script uses approximately ${used2.toFixed(3)} MB (${preGcUsed2.toFixed(3)} before GC)`
             );
 
-            expect(
-              used2 - used1,
-              "Unexpected memory usage diff, possible memory leak"
-            ).to.be.lessThan(1.0);
+            // "Unexpected memory usage diff, possible memory leak"
+            expect(used2 - used1).toBeLessThan(1.0);
             return done();
           }, phaseFinalizeDuration);
         }, phaseDuration);
@@ -279,14 +229,8 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendRemoteRequest(
-          ntlmProxyUrl,
-          httpUrl,
-          "GET",
-          "/get",
-          null
-        ).then((res) => {
-          expect(res.status).to.be.equal(401);
+        ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null).then((res) => {
+          expect(res.status).to.equal(401);
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);
@@ -303,16 +247,13 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
 
-  before("Start HTTP server and proxy", async function () {
+  //"Start HTTP server and proxy"
+  beforeAll(async function () {
     if (!global || !global.gc) {
       throw new Error("Test must be executed with --expose-gc option");
     }
-    savePortsFileStub = sinon.stub(PortsFileService.prototype, "save");
-    portsFileExistsStub = sinon.stub(PortsFileService.prototype, "exists");
-    portsFileExistsStub.returns(false);
-    savePortsFileStub.returns(Promise.resolve());
 
-    this.timeout(30000);
+    jest.setTimeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, null);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
@@ -321,24 +262,19 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
     ntlmProxyUrl = ports.ntlmProxyUrl;
   });
 
-  beforeEach("Restore timeout", function () {
-    this.timeout(5000);
+  // "Restore timeout"
+  beforeEach(function () {
+    jest.setTimeout(5000);
   });
 
-  after("Stop HTTP server and proxy", async function () {
-    if (savePortsFileStub) {
-      savePortsFileStub.restore();
-    }
-    if (portsFileExistsStub) {
-      portsFileExistsStub.restore();
-    }
-
+  // "Stop HTTP server and proxy"
+  after(async function () {
     await coreServer.stop();
     await expressServer.stopHttpServer();
   });
 
   it("should not leak memory handling multiple GET requests for non NTLM host", function (done) {
-    this.timeout(testTimeout);
+    jest.setTimeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
     sendBurst(burstCount);
@@ -351,9 +287,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
         global.gc();
         const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log(
-          `Phase 1: The script uses approximately ${used1.toFixed(
-            3
-          )} MB (${preGcUsed1.toFixed(3)} MB before GC)`
+          `Phase 1: The script uses approximately ${used1.toFixed(3)} MB (${preGcUsed1.toFixed(3)} MB before GC)`
         );
 
         runDuration = true;
@@ -367,15 +301,11 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
             global.gc();
             const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log(
-              `Phase 2: The script uses approximately ${used2.toFixed(
-                3
-              )} MB (${preGcUsed2.toFixed(3)} before GC)`
+              `Phase 2: The script uses approximately ${used2.toFixed(3)} MB (${preGcUsed2.toFixed(3)} before GC)`
             );
 
-            expect(
-              used2 - used1,
-              "Unexpected memory usage diff, possible memory leak"
-            ).to.be.lessThan(1.0);
+            // "Unexpected memory usage diff, possible memory leak"
+            expect(used2 - used1).toBeLessThan(1.0);
             return done();
           }, phaseFinalizeDuration);
         }, phaseDuration);
@@ -389,17 +319,11 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendRemoteRequest(
-          ntlmProxyUrl,
-          httpUrl,
-          "POST",
-          "/post",
-          body
-        ).then((res) => {
-          expect(res.status).to.be.equal(200);
+        ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "POST", "/post", body).then((res) => {
+          expect(res.status).to.equal(200);
           let resBody = res.data as any;
-          expect(resBody.ntlmHost).to.be.equal("https://my.test.host/");
-          expect(resBody.reply).to.be.equal("OK ÅÄÖéß");
+          expect(resBody.ntlmHost).to.equal("https://my.test.host/");
+          expect(resBody.reply).to.equal("OK ÅÄÖéß");
           responseCount++;
           if (responseCount === burstCount && runDuration) {
             setTimeout(() => sendBurst(burstCount), 25);

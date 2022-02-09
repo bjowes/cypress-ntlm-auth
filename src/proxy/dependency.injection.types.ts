@@ -20,6 +20,6 @@ export const TYPES = {
   IStartup: Symbol.for("IStartup"),
   IUpstreamProxyConfigurator: Symbol.for("IUpstreamProxyConfigurator"),
   IUpstreamProxyManager: Symbol.for("IUpstreamProxyManager"),
-  NewableIWinSsoFacade: Symbol.for("Newable<IWinSsoFacade>"),
+  IWinSsoFacadeFactory: Symbol.for("IWinSsoFacadeFactory"),
   NewableIConnectionContext: Symbol.for("Newable<IConnectionContext>"),
 };

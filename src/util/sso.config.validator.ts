@@ -1,14 +1,13 @@
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
-import { HostnameValidator } from "./hostname.validator";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
+import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.js";
+import { HostnameValidator } from "./hostname.validator.js";
 
 export class SsoConfigValidator {
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
 
     if (!config.ntlmHosts) {
-      result.message =
-        "Incomplete configuration. ntlmHosts is an required field.";
+      result.message = "Incomplete configuration. ntlmHosts is an required field.";
       return result;
     }
 

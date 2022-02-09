@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-"use strict";
 
 export enum NtlmFlags {
   /* Indicates that Unicode strings are supported for use in security buffer

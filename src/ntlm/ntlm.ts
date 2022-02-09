@@ -24,24 +24,18 @@
 // THE SOFTWARE.
 // ----------------------------------------------------------------------------
 
-"use strict";
-
 import { injectable } from "inversify";
-import { INtlm } from "./interfaces/i.ntlm";
-import { NtlmFlags } from "./ntlm.flags";
-import { NtlmConstants } from "./ntlm.constants";
-import { Hash } from "./hash";
+import { INtlm } from "./interfaces/i.ntlm.js";
+import { NtlmFlags } from "./ntlm.flags.js";
+import { NtlmConstants } from "./ntlm.constants.js";
+import { Hash } from "./hash.js";
 import os from "os";
-import { Type2Message } from "./type2.message";
-import { NtlmMessage } from "./ntlm.message";
+import { Type2Message } from "./type2.message.js";
+import { NtlmMessage } from "./ntlm.message.js";
 
 @injectable()
 export class Ntlm implements INtlm {
-  createType1Message(
-    ntlmVersion: number,
-    workstation: string | undefined,
-    target: string | undefined
-  ): NtlmMessage {
+  createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage {
     let dataPos = 40;
     let pos = 0;
     const buf = Buffer.alloc(256);
@@ -55,12 +49,7 @@ export class Ntlm implements INtlm {
     }
 
     // signature
-    buf.write(
-      NtlmConstants.NTLM_SIGNATURE,
-      pos,
-      NtlmConstants.NTLM_SIGNATURE.length,
-      "ascii"
-    );
+    buf.write(NtlmConstants.NTLM_SIGNATURE, pos, NtlmConstants.NTLM_SIGNATURE.length, "ascii");
     pos += NtlmConstants.NTLM_SIGNATURE.length;
 
     // message type
@@ -68,10 +57,7 @@ export class Ntlm implements INtlm {
     pos += 4;
 
     // flags
-    let messageFlags =
-      NtlmFlags.NEGOTIATE_OEM |
-      NtlmFlags.NEGOTIATE_ALWAYS_SIGN |
-      NtlmFlags.NEGOTIATE_VERSION;
+    let messageFlags = NtlmFlags.NEGOTIATE_OEM | NtlmFlags.NEGOTIATE_ALWAYS_SIGN | NtlmFlags.NEGOTIATE_VERSION;
 
     if (ntlmVersion == 1) {
       messageFlags |= NtlmFlags.NEGOTIATE_NTLM_KEY | NtlmFlags.NEGOTIATE_LM_KEY;
@@ -171,34 +157,20 @@ export class Ntlm implements INtlm {
     }
 
     // signature
-    buf.write(
-      NtlmConstants.NTLM_SIGNATURE,
-      0,
-      NtlmConstants.NTLM_SIGNATURE.length,
-      "ascii"
-    );
+    buf.write(NtlmConstants.NTLM_SIGNATURE, 0, NtlmConstants.NTLM_SIGNATURE.length, "ascii");
 
     // message type
     buf.writeUInt32LE(3, 8);
 
-    const targetLen =
-      type2message.encoding === "ascii" ? target.length : target.length * 2;
-    const usernameLen =
-      type2message.encoding === "ascii" ? username.length : username.length * 2;
-    const workstationLen =
-      type2message.encoding === "ascii"
-        ? workstation.length
-        : workstation.length * 2;
+    const targetLen = type2message.encoding === "ascii" ? target.length : target.length * 2;
+    const usernameLen = type2message.encoding === "ascii" ? username.length : username.length * 2;
+    const workstationLen = type2message.encoding === "ascii" ? workstation.length : workstation.length * 2;
     const dataPosOffset = targetLen + usernameLen + workstationLen;
     let timestamp = "";
     let clientNonce = "";
     let withMic = false;
     let withServerTimestamp = false;
-    if (
-      type2message.version === 2 &&
-      type2message.targetInfo &&
-      type2message.targetInfo.parsed["SERVER_TIMESTAMP"]
-    ) {
+    if (type2message.version === 2 && type2message.targetInfo && type2message.targetInfo.parsed["SERVER_TIMESTAMP"]) {
       // Must include MIC, add room for it
       withServerTimestamp = true;
       withMic = true;
@@ -220,13 +192,7 @@ export class Ntlm implements INtlm {
       if (withServerTimestamp) {
         lmv2 = Buffer.alloc(24); // zero-filled
       } else {
-        lmv2 = Hash.createLMv2Response(
-          type2message,
-          username,
-          target,
-          ntlmHash,
-          clientNonce
-        );
+        lmv2 = Hash.createLMv2Response(type2message, username, target, ntlmHash, clientNonce);
       }
 
       // lmv2 security buffer

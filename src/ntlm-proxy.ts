@@ -1,7 +1,7 @@
-import { PortsConfig } from "./models/ports.config.model";
-import { NtlmConfig } from "./models/ntlm.config.model";
-import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
-import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
+import { PortsConfig } from "./models/ports.config.model.js";
+import { NtlmConfig } from "./models/ntlm.config.model.js";
+import { NtlmSsoConfig } from "./models/ntlm.sso.config.model.js";
+import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.js";
 
 export class NtlmProxy {
   ports: PortsConfig;
@@ -48,9 +48,7 @@ export class NtlmProxy {
    * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
    */
   async stop(): Promise<boolean> {
-    const result = await this.ntlmProxyFacade.quitIfRunning(
-      this.ports.configApiUrl
-    );
+    const result = await this.ntlmProxyFacade.quitIfRunning(this.ports.configApiUrl);
     this.ports.configApiUrl = "";
     this.ports.ntlmProxyUrl = "";
     return result;

@@ -2,12 +2,11 @@ import { IContext } from "http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
+import { IConnectionContext } from "./interfaces/i.connection.context.js";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
+import { TYPES } from "./dependency.injection.types.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 
 @injectable()
 export class NegotiateManager implements INegotiateManager {
@@ -19,26 +18,23 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
-    callback: (
-      error?: NodeJS.ErrnoException,
-      res?: http.IncomingMessage
-    ) => void
+    callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
   ) {
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let requestToken: string;
     try {
       requestToken = context.winSso.createAuthRequestHeader();
     } catch (err) {
-      return callback(err, ctx.serverToProxyResponse);
+      return callback(err as NodeJS.ErrnoException, ctx.serverToProxyResponse);
     }
     this.dropOriginalResponse(ctx);
     const originalRequestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
-      port: (ctx.proxyToServerRequestOptions.port as unknown) as string,
+      port: ctx.proxyToServerRequestOptions.port as unknown as string,
       agent: ctx.proxyToServerRequestOptions.agent,
       headers: ctx.proxyToServerRequestOptions.headers,
     };
@@ -46,22 +42,15 @@ export class NegotiateManager implements INegotiateManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = requestToken;
     requestOptions.headers["connection"] = "keep-alive";
+    if (context.useUpstreamProxy) {
+      requestOptions.headers["proxy-connection"] = "keep-alive";
+    }
     const proto = ctx.isSSL ? https : http;
     const req = proto.request(requestOptions, (res) =>
-      this.handshakeResponse(
-        res,
-        ntlmHostUrl,
-        context,
-        originalRequestOptions,
-        ctx.isSSL,
-        callback
-      )
+      this.handshakeResponse(res, ntlmHostUrl, context, originalRequestOptions, ctx.isSSL, callback)
     );
     req.on("error", (err) => {
-      this._debug.log(
-        "Error while sending Negotiate message token request:",
-        err
-      );
+      this._debug.log("Error while sending Negotiate message token request:", err);
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err);
     });
@@ -73,14 +62,11 @@ export class NegotiateManager implements INegotiateManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,
-    callback: (
-      error?: NodeJS.ErrnoException,
-      res?: http.IncomingMessage
-    ) => void
+    callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
   ) {
     res.pause();
 
@@ -100,17 +86,11 @@ export class NegotiateManager implements INegotiateManager {
           res
         );
       } else if (res.statusCode === 401) {
-        this._debug.log(
-          "Negotiate authentication failed (invalid credentials) with host",
-          ntlmHostUrl.href
-        );
+        this._debug.log("Negotiate authentication failed (invalid credentials) with host", ntlmHostUrl.href);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(undefined, res);
       } else {
-        this._debug.log(
-          "Negotiate authentication failed (server responded without token) with host",
-          ntlmHostUrl.href
-        );
+        this._debug.log("Negotiate authentication failed (server responded without token) with host", ntlmHostUrl.href);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(undefined, res);
       }
@@ -119,27 +99,19 @@ export class NegotiateManager implements INegotiateManager {
     context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
     let responseToken: string;
     try {
-      responseToken = context.winSso.createAuthResponseHeader(
-        res.headers["www-authenticate"] || ""
-      );
+      responseToken = context.winSso.createAuthResponseHeader(res.headers["www-authenticate"] || "");
     } catch (err) {
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-      return callback(err, res);
+      return callback(err as NodeJS.ErrnoException, res);
     }
 
     if (!responseToken && res.statusCode !== 401) {
-      this._debug.log(
-        "Negotiate authentication successful with host",
-        ntlmHostUrl.href
-      );
+      this._debug.log("Negotiate authentication successful with host", ntlmHostUrl.href);
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
       return callback(undefined, res);
     }
     if (!responseToken && res.statusCode === 401) {
-      this._debug.log(
-        "Negotiate authentication failed (invalid credentials) with host",
-        ntlmHostUrl.href
-      );
+      this._debug.log("Negotiate authentication failed (invalid credentials) with host", ntlmHostUrl.href);
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(undefined, res);
     }
@@ -149,7 +121,7 @@ export class NegotiateManager implements INegotiateManager {
       method: originalRequestOptions.method,
       path: originalRequestOptions.path,
       host: originalRequestOptions.host,
-      port: (originalRequestOptions.port as unknown) as string,
+      port: originalRequestOptions.port as unknown as string,
       agent: originalRequestOptions.agent,
       headers: originalRequestOptions.headers,
     };
@@ -160,26 +132,14 @@ export class NegotiateManager implements INegotiateManager {
     res.on("end", () => {
       const proto = isSSL ? https : http;
       const req = proto.request(requestOptions, (res) =>
-        this.handshakeResponse(
-          res,
-          ntlmHostUrl,
-          context,
-          originalRequestOptions,
-          isSSL,
-          callback
-        )
+        this.handshakeResponse(res, ntlmHostUrl, context, originalRequestOptions, isSSL, callback)
       );
       req.on("error", (err) => {
-        this._debug.log(
-          "Error while sending Negotiate message token response:",
-          err
-        );
+        this._debug.log("Error while sending Negotiate message token response:", err);
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(err);
       });
-      this._debug.log(
-        "Sending Negotiate message token response with initial client request"
-      );
+      this._debug.log("Sending Negotiate message token response with initial client request");
       this.debugHeader(responseToken, true);
       context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
       req.write(context.getRequestBody());
@@ -201,10 +161,7 @@ export class NegotiateManager implements INegotiateManager {
   acceptsNegotiateAuthentication(res: http.IncomingMessage): boolean {
     // Ensure that we're talking Negotiate here
     const wwwAuthenticate = res.headers["www-authenticate"];
-    if (
-      wwwAuthenticate &&
-      wwwAuthenticate.split(", ").indexOf("Negotiate") !== -1
-    ) {
+    if (wwwAuthenticate && wwwAuthenticate.split(", ").indexOf("Negotiate") !== -1) {
       return true;
     }
     return false;
@@ -219,10 +176,7 @@ export class NegotiateManager implements INegotiateManager {
   }
 
   private debugHeader(obj: any, brackets: boolean) {
-    if (
-      process.env.DEBUG_NTLM_HEADERS &&
-      process.env.DEBUG_NTLM_HEADERS === "1"
-    ) {
+    if (process.env.DEBUG_NTLM_HEADERS && process.env.DEBUG_NTLM_HEADERS === "1") {
       if (brackets) {
         this._debug.log("[" + obj + "]");
       } else {
