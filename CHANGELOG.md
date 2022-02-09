@@ -1,8 +1,10 @@
 # Changelog
 
-## 3.2.4 - released 2021-11-16
+## 3.2.4 - released 2022-02-09
 
+- Migrated to ESM
 - Bump dependencies
+- Implemented internal tunnelling agent
 
 ## 3.2.3 - released 2021-06-23
 
