@@ -4,13 +4,14 @@ import * as http from "http";
 import * as https from "https";
 import express from "express";
 import ntlm from "express-ntlm";
-//const ntlm = require("express-ntlm");
 import * as net from "net";
 import bodyParser from "body-parser";
-//import * as pki from "node-forge/lib/pki.js";
 import forge from "node-forge";
 import { AddressInfo } from "net";
 import * as stream from "stream";
+
+import debugInit from "debug";
+const debug = debugInit("cypress:plugin:ntlm-auth:express-ntlm");
 
 interface ExpressError extends Error {
   status?: number;
@@ -100,12 +101,13 @@ export class ExpressServer {
     if (useNtlm) {
       app.use(
         ntlm({
+          // Enables NTLM without check of user/pass
           debug: function () {
             var args = Array.prototype.slice.apply(arguments);
-            console.log.apply(null, args);
+            debug.apply(null, args.slice(1) as [formatter: any, ...args: any[]]);
           },
         })
-      ); // Enables NTLM without check of user/pass
+      );
     }
 
     app.get("/get", (req, res) => {

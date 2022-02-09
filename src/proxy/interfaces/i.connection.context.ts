@@ -11,6 +11,7 @@ export interface IConnectionContext {
   clientSocket: Socket | undefined;
   socketCloseListener: any;
   configApiConnection: boolean;
+  useUpstreamProxy: boolean;
 
   canStartAuthHandshake(ntlmHostUrl: URL): boolean;
   matchHostOrNew(ntlmHostUrl: URL): boolean;

@@ -11,7 +11,7 @@ import * as path from "path";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { PortsConfig } from "../../../src/models/ports.config.model";
-import { httpsTunnel, TunnelingAgent } from "../../../src/proxy/tunnel.agent";
+import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
 import { Socket } from "node:net";
 
 export class ProxyFacade {
@@ -58,14 +58,6 @@ export class ProxyFacade {
       let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
       console.log("proxyFacade: " + errorKind + " on " + url + ":", err);
     });
-
-    // TODO: on request, register close event handler on client socket.
-    // close event triggers a callback with the target (host:port) as parameter
-    // find the matching socket in the agent (search in sockets and freeSockets)
-    // emit the "remove" event on the socket -> will remove it from the agent
-
-    // For the tunnel agent, similar feature is required. Support for remove and perform remove
-    // on socket error/close/timeout for freeSockets.
 
     let self = this;
     this._mitmProxy.onRequest(function (ctx, cb) {
@@ -143,31 +135,8 @@ export class ProxyFacade {
 
     await this.startMitmProxy(false);
     this.stopMitmProxy();
-
-    // This generates the localhost cert and key before starting the tests,
-    // since this step is fairly slow on Node 8 the runtime of the actual tests are
-    // more predictable this way.
-    //await this.preGenerateCertificate("localhost");
-    // TODO is this fast enough now?
-
     this._mitmProxyInit = true;
   }
-
-  /*
-  private preGenerateCertificate(host: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const sslCaDir = path.resolve(process.cwd(), ".http-mitm-proxy");
-      CA.create(sslCaDir, function (err: NodeJS.ErrnoException, ca: any) {
-        if (err) {
-          return reject(err);
-        }
-        ca.generateServerCertificateKeys([host], function (key: string, cert: string) {
-          return resolve();
-        });
-      });
-    });
-  }
-  */
 
   get mitmCaCert(): Buffer {
     const caCertPath = path.join(process.cwd(), ".http-mitm-proxy", "certs", "ca.pem");
@@ -233,7 +202,7 @@ export class ProxyFacade {
     path: string,
     body: any,
     caCert?: Buffer,
-    agent?: http.Agent | TunnelingAgent
+    agent?: http.Agent | TunnelAgent
   ): Promise<AxiosResponse<any>> {
     const remoteHostUrl = new URL(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
@@ -249,7 +218,7 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent | TunnelingAgent
+    agent?: http.Agent | TunnelAgent
   ) {
     const proxyUrl = new URL(ntlmProxyUrl);
     if (!proxyUrl.hostname || !proxyUrl.port) {
@@ -278,7 +247,7 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent | TunnelingAgent,
+    agent?: http.Agent | TunnelAgent,
     caCert?: Buffer
   ) {
     const proxyUrl = new URL(ntlmProxyUrl);

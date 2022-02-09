@@ -11,7 +11,7 @@ import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
-import { httpsTunnel, TunnelingAgent } from "../../../src/proxy/tunnel.agent";
+import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -21,7 +21,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
-  let coreServer: ICoreServer;
+  let coreServer: ICoreServer | undefined;
   let dependencyInjection = new DependencyInjection();
 
   before(async function () {
@@ -44,7 +44,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
 
   after(async function () {
     // Stop HTTPS server and proxy
-    await coreServer.stop();
+    await coreServer?.stop();
     await expressServer.stopHttpsServer();
   });
 
@@ -154,8 +154,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     assert.equal(res.status, 401);
   });
 
-  // This test will requires an adapted version of http-mitm-proxy, to be implemented later
-  xit("should close SSL tunnels on quit", async function () {
+  it("should close SSL tunnels on quit", async function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
@@ -200,7 +199,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
 
     const agentSocketClosed = waitForAgentSocketClose(agent2);
     await ProxyFacade.sendQuitCommand(configApiUrl, true);
-    // coreServer = null; TODO required?
+    coreServer = undefined; // Reinitialize core server after quit
     await agentSocketClosed;
   });
 
@@ -603,34 +602,30 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 });
 
-function waitForAgentSocketClose(agent: http.Agent | TunnelingAgent): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let socketCount = 0;
-    let socketProperty;
-    let sockets = agent.sockets as any;
-    let freeSockets = (agent as any)["freeSockets"] as any;
-
-    for (let s in sockets) {
-      if (sockets.hasOwnProperty(s)) {
-        socketCount += sockets[s].length;
-        socketProperty = sockets[s];
-      }
-    }
-    for (let s in freeSockets) {
-      socketCount += freeSockets[s].length;
-      socketProperty = freeSockets[s];
-    }
-
-    if (socketCount > 1) {
-      return reject(new Error("too many sockets"));
-    }
-    if (socketCount < 1) {
-      return reject(new Error("no sockets"));
-    }
-    socketProperty[0].on("close", () => {
-      return resolve();
+function waitForAgentSocketClose(agent: TunnelAgent): Promise<number> {
+  function rejectDelay(reason: number) {
+    return new Promise<number>(function (resolve, reject) {
+      setTimeout(reject.bind(null, reason), 50);
     });
-  });
+  }
+
+  function attempt() {
+    return agent.socketCount();
+  }
+
+  function test(val: number) {
+    if (val > 0) {
+      throw val;
+    } else {
+      return val;
+    }
+  }
+
+  var p: Promise<number> = Promise.reject();
+  for (var i = 0; i < 20; i++) {
+    p = p.catch(attempt).then(test).catch(rejectDelay);
+  }
+  return p;
 }
 
 describe("Proxy for multiple HTTPS hosts with NTLM", function () {

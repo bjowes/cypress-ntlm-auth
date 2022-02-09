@@ -67,7 +67,9 @@ export class NtlmManager implements INtlmManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = type1header;
     requestOptions.headers["connection"] = "keep-alive";
-    requestOptions.headers["proxy-connection"] = "keep-alive"; // TODO only when needed
+    if (context.useUpstreamProxy) {
+      requestOptions.headers["proxy-connection"] = "keep-alive";
+    }
     const proto = ctx.isSSL ? https : http;
     const type1req = proto.request(requestOptions, (type1res) => {
       type1res.pause();

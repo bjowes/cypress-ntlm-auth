@@ -9,16 +9,19 @@ const debug = debugInit("cypress:plugin:ntlm-auth:tunnelagent");
 
 type RequestOptions = http.RequestOptions | https.RequestOptions;
 
+export interface TunnelAgentProxyOptions {
+  host: string;
+  port: number;
+  secureProxy?: boolean;
+  proxyAuth?: string;
+  headers?: {};
+  ALPNProtocols?: string[];
+}
+
 export interface TunnelAgentOptions {
   maxSockets?: number;
   keepAlive?: boolean;
-  proxy: {
-    host: string;
-    port: number;
-    secureProxy?: boolean;
-    proxyAuth?: string;
-    headers?: {};
-  };
+  proxy: TunnelAgentProxyOptions;
   ca?: string | Buffer | (string | Buffer)[] | undefined;
   rejectUnauthorized?: boolean;
 }
@@ -26,32 +29,93 @@ export interface TunnelAgentOptions {
 type CombinedAgentOptions = TunnelAgentOptions & https.AgentOptions;
 
 interface Request {
-  request: http.ClientRequest;
+  clientReq: http.ClientRequest;
   options: RequestOptions & TunnelAgentOptions;
+  socketKey: string;
 }
 
 export function httpTunnel(options: CombinedAgentOptions) {
-  return new TunnelingAgent(options, options.proxy.secureProxy, false);
+  return new TunnelAgent(options, options.proxy.secureProxy, false);
 }
 
 export function httpsTunnel(options: CombinedAgentOptions) {
-  return new TunnelingAgent(options, options.proxy.secureProxy, true);
+  return new TunnelAgent(options, options.proxy.secureProxy, true);
 }
 
 let agentCount = 0;
 
-export class TunnelingAgent extends EventEmitter {
+class SocketStore {
+  private sockets: {
+    [key: string]: net.Socket[];
+  } = {};
+
+  insert(key: string, socket: net.Socket) {
+    if (this.sockets[key]) {
+      this.sockets[key].push(socket);
+    } else {
+      this.sockets[key] = [socket];
+    }
+  }
+
+  get(key: string): net.Socket | undefined {
+    if (this.sockets[key] && this.sockets[key].length > 0) {
+      return this.sockets[key].pop();
+    }
+    return undefined;
+  }
+
+  length(key: string) {
+    if (this.sockets[key]) {
+      return this.sockets[key].length;
+    }
+    return 0;
+  }
+
+  count() {
+    let sum = 0;
+    for (const property in this.sockets) {
+      if (this.sockets.hasOwnProperty(property)) {
+        sum += this.sockets[property].length;
+      }
+    }
+    return sum;
+  }
+
+  remove(key: string, socket: net.Socket) {
+    const socketIndex = this.sockets[key].indexOf(socket);
+    if (socketIndex === -1) {
+      throw new Error("SocketStore: Attempt to remove non-existing socket");
+    }
+    this.sockets[key].splice(socketIndex, 1);
+  }
+
+  replace(key: string, socket: net.Socket, newSocket: net.Socket) {
+    this.sockets[key][this.sockets[key].indexOf(socket)] = newSocket;
+  }
+
+  destroy() {
+    for (const property in this.sockets) {
+      if (this.sockets.hasOwnProperty(property)) {
+        const sockets = this.sockets[property];
+        sockets.forEach((socket) => {
+          socket.destroy();
+        });
+      }
+    }
+  }
+}
+
+export class TunnelAgent extends EventEmitter {
   request: typeof http.request | typeof https.request;
   options: CombinedAgentOptions;
   defaultPort: number;
   maxSockets: number;
   requests: Request[];
-  sockets: net.Socket[];
-  freeSockets: {
-    [key: string]: net.Socket[];
-  };
+  sockets: SocketStore;
+  freeSockets: SocketStore;
   keepAlive: boolean;
-  proxyOptions: any;
+  proxyOptions: TunnelAgentProxyOptions;
+  destroyPending = false;
   agentId: number;
   createSocket: (request: Request) => void;
 
@@ -61,83 +125,84 @@ export class TunnelingAgent extends EventEmitter {
 
   constructor(options: CombinedAgentOptions, proxyOverHttps: boolean = false, targetUsesHttps: boolean = false) {
     super();
-    var self = this;
+    const self = this;
     this.options = options;
     this.proxyOptions = options.proxy || {};
     this.maxSockets = options.maxSockets || 1;
     this.keepAlive = options.keepAlive || false;
     this.requests = [];
-    this.sockets = [];
-    this.freeSockets = {};
+    this.sockets = new SocketStore();
+    this.freeSockets = new SocketStore();
     this.request = proxyOverHttps ? https.request : http.request;
     this.createSocket = targetUsesHttps ? this.createSecureSocket : this.createTcpSocket;
     this.defaultPort = targetUsesHttps ? 443 : 80;
     this.agentId = agentCount++;
 
-    this.debugLog("created");
+    // attempt to negotiate http/1.1 for proxy servers that support http/2
+    if (this.proxyOptions.secureProxy && !("ALPNProtocols" in this.proxyOptions)) {
+      this.proxyOptions.ALPNProtocols = ["http 1.1"];
+    }
 
     self.on("free", function onFree(socket: net.Socket, request: Request) {
-      for (var i = 0, len = self.requests.length; i < len; ++i) {
-        var pending = self.requests[i];
-        self.debugLog("attempt to match socket on free");
-        if (pending.options.host === request.options.host && pending.options.port === request.options.port) {
-          self.debugLog("match ok");
-          // Detect the request to connect same origin server,
-          // reuse the connection.
+      for (let i = 0, len = self.requests.length; i < len; ++i) {
+        let pending = self.requests[i];
+        if (pending.socketKey === request.socketKey) {
+          self.debugLog("socket free, reusing for pending request");
+          // Detect the request to connect same origin server, reuse the connection.
           self.requests.splice(i, 1);
-          pending.request.reusedSocket = true;
-          pending.request.onSocket(socket);
-          //pending.request.end();
+          pending.clientReq.reusedSocket = true;
+          pending.clientReq.onSocket(socket);
           return;
         }
       }
+
+      self.sockets.remove(request.socketKey, socket);
       if (!self.keepAlive) {
         socket.destroy();
-        self.removeSocket(socket);
-        self.debugLog("non keep-alive, socket self destruct");
+        self.debugLog("socket free, non keep-alive => destroy socket");
       } else {
         // save the socket for reuse later
-        self.removeSocket(socket);
         socket.removeAllListeners();
         socket.unref();
-        const socketKey = request.options.host + ":" + request.options.port;
-        if (!!self.freeSockets[socketKey]) {
-          self.freeSockets[socketKey].push(socket);
-        } else {
-          self.freeSockets[socketKey] = [socket];
-        }
-        socket.once("close", (hadError) => {
-          self.debugLog("Remove socket on close");
-          const socketIndex = self.freeSockets[socketKey].indexOf(socket);
-          if (socketIndex !== -1) {
-            self.freeSockets[socketKey].splice(socketIndex, 1);
-          }
+        self.freeSockets.insert(request.socketKey, socket);
+        socket.once("close", (_) => {
+          if (self.destroyPending) return;
+          self.debugLog("remove socket on socket close");
+          self.freeSockets.remove(request.socketKey, socket);
         });
       }
+      self.processPending();
     });
   }
 
-  //util.inherits(TunnelingAgent, events.EventEmitter);
+  /**
+   * Counts all sockets active in requests and pending (keep-alive)
+   */
+  socketCount() {
+    return this.sockets.count() + this.freeSockets.count();
+  }
 
   addRequest(req: http.ClientRequest, _opts: RequestOptions) {
-    this.debugLog("addRequest");
-    var self = this;
-    let request: Request = { request: req, options: { ..._opts, ...self.options } };
+    const self = this;
+    let request: Request = {
+      clientReq: req,
+      socketKey: `${_opts.host}:${_opts.port}`,
+      options: { ..._opts, ...self.options },
+    };
 
-    if (self.sockets.length >= this.maxSockets) {
-      // We are over limit so we'll add it to the queue.
+    if (self.sockets.length(request.socketKey) >= this.maxSockets) {
+      // We are over limit for the host so we'll add it to the queue.
       self.requests.push(request);
       return;
     }
 
     if (self.keepAlive) {
-      const socketKey = request.options.host + ":" + request.options.port;
-      this.debugLog("addRequest: match " + socketKey);
-      var socket = !!self.freeSockets[socketKey] ? self.freeSockets[socketKey].pop() : undefined;
+      var socket = self.freeSockets.get(request.socketKey);
       if (socket) {
+        this.debugLog("addRequest: reuse free socket for " + request.socketKey);
         socket.removeAllListeners();
         socket.ref();
-        this.sockets.push(socket);
+        self.sockets.insert(request.socketKey, socket);
         req.reusedSocket = true;
         self.executeRequest(request, socket);
         return;
@@ -149,42 +214,36 @@ export class TunnelingAgent extends EventEmitter {
   }
 
   executeRequest(request: Request, socket: net.Socket) {
-    this.debugLog("executeRequest");
     let self = this;
     socket.on("free", onFree);
     socket.on("close", onCloseOrRemove);
     socket.on("agentRemove", onCloseOrRemove);
-    request.request.onSocket(socket);
-    //request.request.end();
+    request.clientReq.onSocket(socket);
 
     function onFree() {
+      self.debugLog("onFree");
       self.emit("free", socket, request);
     }
 
-    function onCloseOrRemove(err: Error) {
-      self.removeSocket(socket);
+    function onCloseOrRemove(hadError: boolean) {
+      self.debugLog("onClose");
+      if (self.destroyPending) return;
       socket.removeListener("free", onFree);
       socket.removeListener("close", onCloseOrRemove);
       socket.removeListener("agentRemove", onCloseOrRemove);
+      if (self.keepAlive) {
+        socket.emit("close", hadError); // Let the freeSocket event handler remove the socket
+      }
+      self.processPending();
     }
   }
 
   createSocketInternal(request: Request, cb: (socket: net.Socket) => void) {
     var self = this;
-
-    /*
-    const keepAliveAgent = new http.Agent({
-      keepAlive: true,
-      maxSockets: 1,
-      maxFreeSockets: 1,
-    });
-    */
-
-    var connectOptions = {
+    var connectOptions: http.RequestOptions = {
       ...self.proxyOptions,
       method: "CONNECT",
       path: request.options.host + ":" + request.options.port,
-      //agent: keepAliveAgent,
       headers: {
         host: request.options.host + ":" + request.options.port,
       },
@@ -192,34 +251,17 @@ export class TunnelingAgent extends EventEmitter {
     if (request.options.localAddress) {
       connectOptions.localAddress = request.options.localAddress;
     }
-    if (connectOptions.proxyAuth) {
+    if (self.proxyOptions.proxyAuth) {
       connectOptions.headers = connectOptions.headers || {};
       connectOptions.headers["Proxy-Authorization"] =
-        "Basic " + Buffer.from(connectOptions.proxyAuth).toString("base64");
+        "Basic " + Buffer.from(self.proxyOptions.proxyAuth).toString("base64");
     }
 
-    //debug("making CONNECT request");
     var connectReq = self.request(connectOptions);
-    //connectReq.useChunkedEncodingByDefault = false; // for v0.6
-    //connectReq.once("response", onResponse); // for v0.6
-    //connectReq.once("upgrade", onUpgrade); // for v0.6
-    connectReq.once("connect", onConnect); // for v0.7 or later
+    connectReq.once("connect", onConnect);
     connectReq.once("error", onError);
     connectReq.end();
-    /*
-    function onResponse(res: http.IncomingMessage) {
-      // Very hacky. This is necessary to avoid http-parser leaks.
-      // TODO bjowes
-      //res.upgrade = true;
-    }
 
-    function onUpgrade(res: http.IncomingMessage, socket: net.Socket, head: any) {
-      // Hacky.
-      process.nextTick(function () {
-        onConnect(res, socket, head);
-      });
-    }
-*/
     function onConnect(res: http.IncomingMessage, socket: net.Socket, head: any) {
       connectReq.removeAllListeners();
       socket.removeAllListeners();
@@ -227,7 +269,7 @@ export class TunnelingAgent extends EventEmitter {
       if (res.statusCode !== 200) {
         self.debugLog("tunneling socket could not be established, statusCode=" + res.statusCode);
         socket.destroy();
-        request.request.destroy(
+        request.clientReq.destroy(
           new Error("tunneling socket could not be established, " + "statusCode=" + res.statusCode)
         );
         self.processPending();
@@ -236,31 +278,21 @@ export class TunnelingAgent extends EventEmitter {
       if (head.length > 0) {
         self.debugLog("got illegal response body from proxy");
         socket.destroy();
-        request.request.destroy(new Error("got illegal response body from proxy"));
+        request.clientReq.destroy(new Error("got illegal response body from proxy"));
         self.processPending();
         return;
       }
       self.debugLog("tunneling connection established");
-      self.sockets.push(socket);
+      self.sockets.insert(request.socketKey, socket);
       return cb(socket);
     }
 
     function onError(cause: Error) {
       connectReq.removeAllListeners();
-
       self.debugLog("tunneling socket could not be established, cause=" + cause.message + "\n" + cause.stack);
-      request.request.destroy(new Error("tunneling socket could not be established, " + "cause=" + cause.message));
+      request.clientReq.destroy(new Error("tunneling socket could not be established, " + "cause=" + cause.message));
       self.processPending();
     }
-  }
-
-  removeSocket(socket: net.Socket) {
-    var pos = this.sockets.indexOf(socket);
-    if (pos === -1) {
-      return;
-    }
-    this.sockets.splice(pos, 1);
-    this.processPending();
   }
 
   processPending() {
@@ -280,7 +312,7 @@ export class TunnelingAgent extends EventEmitter {
   createSecureSocket(request: Request) {
     var self = this;
     self.createSocketInternal(request, function (socket: net.Socket) {
-      let hostHeader = request.request.getHeader("host") as string;
+      let hostHeader = request.clientReq.getHeader("host") as string;
       let tlsOptions: tls.ConnectionOptions = {
         ...omit(self.options, "host", "path", "port"),
         socket: socket,
@@ -296,27 +328,16 @@ export class TunnelingAgent extends EventEmitter {
       }
 
       var secureSocket = tls.connect(0, tlsOptions);
-      self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+      self.sockets.replace(request.socketKey, socket, secureSocket);
       self.executeRequest(request, secureSocket);
     });
   }
 
   destroy() {
-    let self = this;
-    self.debugLog("destroying agent");
-    this.sockets.forEach((socket) => {
-      socket.destroy();
-      self.debugLog("s destroy");
-    });
-    for (const property in this.freeSockets) {
-      if (this.freeSockets.hasOwnProperty(property)) {
-        const sockets = this.freeSockets[property];
-        sockets.forEach((socket) => {
-          socket.destroy();
-          self.debugLog("f destroy");
-        });
-      }
-    }
+    this.debugLog("destroying agent");
+    this.destroyPending = true;
+    this.sockets.destroy();
+    this.freeSockets.destroy();
   }
 }
 

@@ -17,6 +17,7 @@ export class ConnectionContext implements IConnectionContext {
   private _clientSocket?: Socket;
   private _socketCloseListener: any;
   private _configApiConnection = false;
+  private _useUpstreamProxy = false;
 
   get agent(): any {
     return this._agent;
@@ -70,9 +71,16 @@ export class ConnectionContext implements IConnectionContext {
     this._configApiConnection = val;
   }
 
+  get useUpstreamProxy(): boolean {
+    return this._useUpstreamProxy;
+  }
+  set useUpstreamProxy(val: boolean) {
+    this._useUpstreamProxy = val;
+  }
+
   /**
    * If the connection is new or a handshake has been completed (successful or failed),
-   * a new handshake can be intiated
+   * a new handshake can be initiated
    * @param ntlmHostUrl The target url
    */
   canStartAuthHandshake(ntlmHostUrl: URL): boolean {

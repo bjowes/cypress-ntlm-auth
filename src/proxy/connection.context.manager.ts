@@ -49,12 +49,15 @@ export class ConnectionContextManager implements IConnectionContextManager {
       return this._connectionContexts[clientAddress];
     }
 
-    const agent = this.getAgent(isSSL, targetHost);
+    const useUpstreamProxy = this._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost);
+    const agent = this.getAgent(isSSL, targetHost, useUpstreamProxy);
     //agent._cyAgentId = this._agentCount++;
     const context = new this.ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
     context.clientSocket = clientSocket;
+    context.useUpstreamProxy = useUpstreamProxy;
+
     this._connectionContexts[clientAddress] = context;
     context.socketCloseListener = this.removeAgentOnClose.bind(this, clientAddress);
     clientSocket.once("close", context.socketCloseListener);
@@ -81,7 +84,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return true;
   }
 
-  getAgent(isSSL: boolean, targetHost: URL) {
+  private getAgent(isSSL: boolean, targetHost: URL, useUpstreamProxy: boolean) {
     const agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
@@ -90,7 +93,9 @@ export class ConnectionContextManager implements IConnectionContextManager {
         this.nodeTlsRejectUnauthorized() &&
         !(targetHost.hostname === "localhost" || targetHost.hostname === "127.0.0.1"),
     };
-    const useUpstreamProxy = this._upstreamProxyManager.setUpstreamProxyConfig(targetHost, isSSL, agentOptions);
+    if (useUpstreamProxy) {
+      this._upstreamProxyManager.setUpstreamProxyConfig(targetHost, isSSL, agentOptions);
+    }
     let agent;
     if (useUpstreamProxy && isSSL) {
       agent = httpsTunnel(agentOptions as TunnelAgentOptions);

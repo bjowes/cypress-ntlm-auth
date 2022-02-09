@@ -42,6 +42,9 @@ export class NegotiateManager implements INegotiateManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = requestToken;
     requestOptions.headers["connection"] = "keep-alive";
+    if (context.useUpstreamProxy) {
+      requestOptions.headers["proxy-connection"] = "keep-alive";
+    }
     const proto = ctx.isSSL ? https : http;
     const req = proto.request(requestOptions, (res) =>
       this.handshakeResponse(res, ntlmHostUrl, context, originalRequestOptions, ctx.isSSL, callback)
