@@ -8,6 +8,7 @@ import { TYPES } from "./dependency.injection.types.js";
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.js";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class NtlmProxyServer implements INtlmProxyServer {
@@ -51,7 +52,7 @@ export class NtlmProxyServer implements INtlmProxyServer {
       }
       await this._httpMitmProxy.listen(port);
       this._debug.log("NTLM auth proxy listening on port:", port);
-      this._portsConfigStore.ntlmProxyUrl = new URL("http://127.0.0.1:" + port);
+      this._portsConfigStore.ntlmProxyUrl = new URLExt("http://127.0.0.1:" + port);
       return this._portsConfigStore.ntlmProxyUrl.origin;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth proxy");

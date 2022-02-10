@@ -12,6 +12,7 @@ import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
 import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
+import { URLExt } from "../../../src/util/url.ext";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -158,12 +159,12 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
 
     let agent1 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -173,7 +174,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let agent2 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -207,11 +208,11 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -250,11 +251,11 @@ describe("Proxy for HTTPS host with NTLM", function () {
   });
 
   it("should terminate client socket on server socket error for NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -431,12 +432,12 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
 
     let agent1 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -446,7 +447,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let agent2 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -492,12 +493,12 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
 
     let agent1 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -507,7 +508,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let agent2 = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -551,11 +552,11 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 
   it("should terminate client socket on server socket error for non NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -578,11 +579,11 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 
   it("should terminate client socket on server CONNECT error for non NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -710,12 +711,12 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
 
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,

@@ -1,24 +1,25 @@
 import { injectable } from "inversify";
+import { URLExt } from "../util/url.ext.js";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
 
 @injectable()
 export class PortsConfigStore implements IPortsConfigStore {
-  private _configApiUrl?: URL = undefined;
-  private _ntlmProxyUrl?: URL = undefined;
+  private _configApiUrl?: URLExt = undefined;
+  private _ntlmProxyUrl?: URLExt = undefined;
 
-  get configApiUrl(): URL | undefined {
+  get configApiUrl(): URLExt | undefined {
     return this._configApiUrl;
   }
 
-  set configApiUrl(configApiUrl: URL | undefined) {
+  set configApiUrl(configApiUrl: URLExt | undefined) {
     this._configApiUrl = configApiUrl;
   }
 
-  get ntlmProxyUrl(): URL | undefined {
+  get ntlmProxyUrl(): URLExt | undefined {
     return this._ntlmProxyUrl;
   }
 
-  set ntlmProxyUrl(ntlmProxyUrl: URL | undefined) {
+  set ntlmProxyUrl(ntlmProxyUrl: URLExt | undefined) {
     this._ntlmProxyUrl = ntlmProxyUrl;
   }
 }

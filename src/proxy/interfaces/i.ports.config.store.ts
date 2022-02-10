@@ -1,4 +1,6 @@
+import { URLExt } from "../../util/url.ext.js";
+
 export interface IPortsConfigStore {
-  configApiUrl?: URL;
-  ntlmProxyUrl?: URL;
+  configApiUrl?: URLExt;
+  ntlmProxyUrl?: URLExt;
 }

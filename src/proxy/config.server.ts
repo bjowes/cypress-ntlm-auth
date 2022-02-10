@@ -7,6 +7,7 @@ import { IExpressServerFacade } from "./interfaces/i.express.server.facade.js";
 import { TYPES } from "./dependency.injection.types.js";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class ConfigServer implements IConfigServer {
@@ -47,7 +48,7 @@ export class ConfigServer implements IConfigServer {
           throw new Error("Cannot find free port");
         }
       }
-      this._portsConfigStore.configApiUrl = new URL(await this._expressServer.listen(port));
+      this._portsConfigStore.configApiUrl = new URLExt(await this._expressServer.listen(port));
       this._debug.log("NTLM auth config API listening on port:", port);
       return this._portsConfigStore.configApiUrl.origin;
     } catch (err) {

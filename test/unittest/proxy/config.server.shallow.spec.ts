@@ -9,6 +9,7 @@ import { IExpressServerFacade } from "../../../src/proxy/interfaces/i.express.se
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { PortsConfigStoreMock } from "./ports.config.store.mock";
+import { URLExt } from "../../../src/util/url.ext";
 
 describe("ConfigServer", () => {
   let configServer: ConfigServer;
@@ -36,7 +37,7 @@ describe("ConfigServer", () => {
 
     await configServer.start();
     expressServerMock.received(1).listen(Arg.any());
-    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URL("http://127.0.0.1:" + listenPort).href);
+    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URLExt("http://127.0.0.1:" + listenPort).href);
     assert.ok(listenPort > 0);
   });
 

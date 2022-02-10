@@ -8,18 +8,19 @@ import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { PortsConfig } from "../../../src/models/ports.config.model";
+import { URLExt } from "../../../src/util/url.ext";
 
 async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
-  const configUrl = new URL(ports.configApiUrl);
-  const proxyUrl = new URL(ports.ntlmProxyUrl);
+  const configUrl = new URLExt(ports.configApiUrl);
+  const proxyUrl = new URLExt(ports.ntlmProxyUrl);
 
-  let reachable = await isPortReachable(+proxyUrl.port, {
+  let reachable = await isPortReachable(proxyUrl.portOrDefault, {
     host: proxyUrl.hostname,
   });
   if (!reachable) {
     return false;
   }
-  reachable = await isPortReachable(+configUrl.port, {
+  reachable = await isPortReachable(configUrl.portOrDefault, {
     host: configUrl.hostname,
   });
   if (!reachable) {
