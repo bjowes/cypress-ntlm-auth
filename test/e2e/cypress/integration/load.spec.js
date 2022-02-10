@@ -10,6 +10,10 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     cy.ntlmReset();
   });
 
+  it("external", function () {
+    cy.visit("https://example.cypress.io/todo");
+  });
+
   context("NTLM authentication", function () {
     it("100 HTTP GET requests", function () {
       let iteration = 100;
@@ -66,25 +70,25 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     it("HTTP page with 100 random API calls", function () {
       cy.ntlm([httpNtlmHost.host, httpsNtlmHost.host], "nisse", "manpower", "mpatst");
       cy.visit(httpHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("Authenticated HTTP page with 100 random API calls", function () {
       cy.ntlm([httpNtlmHost.host, httpsNtlmHost.host], "nisse", "manpower", "mpatst");
       cy.visit(httpNtlmHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("HTTPS page with 100 random API calls", function () {
       cy.ntlm([httpNtlmHost.host, httpsNtlmHost.host], "nisse", "manpower", "mpatst");
       cy.visit(httpsHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("Authenticated HTTPS page with 100 random API calls", function () {
       cy.ntlm([httpNtlmHost.host, httpsNtlmHost.host], "nisse", "manpower", "mpatst");
       cy.visit(httpsNtlmHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
   });
 
@@ -98,25 +102,25 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     it("HTTP page with 100 random API calls", function () {
       cy.ntlmSso([httpNtlmHost.hostname]);
       cy.visit(httpHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("Authenticated HTTP page with 100 random API calls", function () {
       cy.ntlmSso([httpNtlmHost.hostname]);
       cy.visit(httpNtlmHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("HTTPS page with 100 random API calls", function () {
       cy.ntlmSso([httpNtlmHost.hostname]);
       cy.visit(httpsHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
 
     it("Authenticated HTTPS page with 100 random API calls", function () {
       cy.ntlmSso([httpNtlmHost.hostname]);
       cy.visit(httpsNtlmHost.origin + "/load-test.html");
-      cy.get("#error-count").should("contain.text", "No errors!");
+      cy.get("#error-count", { timeout: 10000 }).should("contain.text", "No errors!");
     });
   });
 });
