@@ -10,10 +10,6 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     cy.ntlmReset();
   });
 
-  it("external", function () {
-    cy.visit("https://example.cypress.io/todo");
-  });
-
   context("NTLM authentication", function () {
     it("100 HTTP GET requests", function () {
       let iteration = 100;
