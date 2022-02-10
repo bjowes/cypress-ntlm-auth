@@ -1,6 +1,10 @@
 # Changelog
 
-## 3.2.4 - released 2022-02-09
+## 3.2.5 - released 2022-02-10
+
+- Fix issue in 3.2.4 with SSL tunnels
+
+## 3.2.4 - released 2022-02-09 *deprecated*
 
 - Migrated to ESM
 - Bump dependencies

@@ -6,6 +6,7 @@ import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { ConfigStore } from "../../../src/proxy/config.store";
+import { URLExt } from "../../../src/util/url.ext";
 
 describe("ConfigStore", () => {
   let configStore: IConfigStore;
@@ -45,7 +46,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.get(new URL("http://www.acme.org:5000"));
+      let res = configStore.get(new URLExt("http://www.acme.org:5000"));
 
       // Assert
       assert.equal(res!.password, "dummy");
@@ -79,7 +80,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.get(new URL("http://www.acme.org:5000"));
+      let res = configStore.get(new URLExt("http://www.acme.org:5000"));
 
       // Assert
       assert.ok(res);
@@ -114,7 +115,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.get(new URL("http://www.acme.org:5000"));
+      let res = configStore.get(new URLExt("http://www.acme.org:5000"));
 
       // Assert
       assert.ok(res);
@@ -135,7 +136,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://localhost:5000"));
+      let res = configStore.existsOrUseSso(new URLExt("http://localhost:5000"));
 
       // Assert
       assert.equal(res, true);
@@ -153,7 +154,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://localhost:5001"));
+      let res = configStore.existsOrUseSso(new URLExt("http://localhost:5001"));
 
       // Assert
       assert.equal(res, false);
@@ -171,7 +172,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://localhosty:5000"));
+      let res = configStore.existsOrUseSso(new URLExt("http://localhosty:5000"));
 
       // Assert
       assert.equal(res, false);
@@ -185,7 +186,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://localhost:5000"));
+      let res = configStore.existsOrUseSso(new URLExt("http://localhost:5000"));
 
       // Assert
       assert.equal(res, true);
@@ -199,7 +200,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://localhostt:5000"));
+      let res = configStore.existsOrUseSso(new URLExt("http://localhostt:5000"));
 
       // Assert
       assert.equal(res, false);
@@ -213,7 +214,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://api.google.com"));
+      let res = configStore.existsOrUseSso(new URLExt("http://api.google.com"));
 
       // Assert
       assert.equal(res, true);
@@ -227,7 +228,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://a.google.more.b.nothing.com"));
+      let res = configStore.existsOrUseSso(new URLExt("http://a.google.more.b.nothing.com"));
 
       // Assert
       assert.equal(res, true);
@@ -241,7 +242,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://a.google.more.b.com"));
+      let res = configStore.existsOrUseSso(new URLExt("http://a.google.more.b.com"));
 
       // Assert
       assert.equal(res, false);
@@ -261,7 +262,7 @@ describe("ConfigStore", () => {
       configStore.updateConfig(hostConfig);
 
       // Act
-      let res = configStore.useSso(new URL("http://localhost:5000"));
+      let res = configStore.useSso(new URLExt("http://localhost:5000"));
 
       // Assert
       assert.equal(res, false);
@@ -283,7 +284,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.useSso(new URL("http://localhost:5000"));
+      let res = configStore.useSso(new URLExt("http://localhost:5000"));
 
       // Assert
       assert.equal(res, false);
@@ -305,7 +306,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.useSso(new URL("http://localhost:5000"));
+      let res = configStore.useSso(new URLExt("http://localhost:5000"));
 
       // Assert
       assert.equal(res, true);
@@ -327,7 +328,7 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.useSso(new URL("http://api.google.com:5000"));
+      let res = configStore.useSso(new URLExt("http://api.google.com:5000"));
 
       // Assert
       assert.equal(res, true);

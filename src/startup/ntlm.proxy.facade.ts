@@ -7,6 +7,7 @@ import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.js";
 import { PortsConfig } from "../models/ports.config.model.js";
 import { NtlmConfig } from "../models/ntlm.config.model.js";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class NtlmProxyFacade implements INtlmProxyFacade {
@@ -19,10 +20,10 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
   private async request(configApiUrl: string, path: string, method: string, body: any) {
     return new Promise<any>((resolve, reject) => {
       this._debug.log("Sending " + path + " request to NTLM proxy " + configApiUrl);
-      const configApiUrlParsed = new URL(configApiUrl);
+      const configApiUrlParsed = new URLExt(configApiUrl);
       const options: http.RequestOptions = {
         hostname: configApiUrlParsed.hostname,
-        port: configApiUrlParsed.port,
+        port: configApiUrlParsed.portOrDefault,
         path: "/" + path,
         method: method,
         timeout: 3000,

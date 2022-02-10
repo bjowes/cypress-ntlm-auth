@@ -7,6 +7,7 @@ import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
 import { TYPES } from "./dependency.injection.types.js";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class NegotiateManager implements INegotiateManager {
@@ -18,7 +19,7 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: URL,
+    ntlmHostUrl: URLExt,
     context: IConnectionContext,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
   ) {
@@ -34,7 +35,7 @@ export class NegotiateManager implements INegotiateManager {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
-      port: ctx.proxyToServerRequestOptions.port as unknown as string,
+      port: ctx.proxyToServerRequestOptions.port,
       agent: ctx.proxyToServerRequestOptions.agent,
       headers: ctx.proxyToServerRequestOptions.headers,
     };
@@ -62,7 +63,7 @@ export class NegotiateManager implements INegotiateManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: URL,
+    ntlmHostUrl: URLExt,
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,
@@ -121,7 +122,7 @@ export class NegotiateManager implements INegotiateManager {
       method: originalRequestOptions.method,
       path: originalRequestOptions.path,
       host: originalRequestOptions.host,
-      port: originalRequestOptions.port as unknown as string,
+      port: originalRequestOptions.port,
       agent: originalRequestOptions.agent,
       headers: originalRequestOptions.headers,
     };

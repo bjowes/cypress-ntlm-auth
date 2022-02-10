@@ -12,6 +12,7 @@ import { INtlm } from "../ntlm/interfaces/i.ntlm.js";
 import { Type2Message } from "../ntlm/type2.message.js";
 import { NtlmMessage } from "../ntlm/ntlm.message.js";
 import { NtlmHost } from "../models/ntlm.host.model.js";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class NtlmManager implements INtlmManager {
@@ -31,7 +32,7 @@ export class NtlmManager implements INtlmManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: URL,
+    ntlmHostUrl: URLExt,
     context: IConnectionContext,
     useSso: boolean,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
@@ -61,7 +62,7 @@ export class NtlmManager implements INtlmManager {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
-      port: ctx.proxyToServerRequestOptions.port as unknown as string,
+      port: ctx.proxyToServerRequestOptions.port,
       agent: ctx.proxyToServerRequestOptions.agent,
     };
     requestOptions.headers = {};
@@ -128,7 +129,7 @@ export class NtlmManager implements INtlmManager {
         method: ctx.proxyToServerRequestOptions.method,
         path: ctx.proxyToServerRequestOptions.path,
         host: ctx.proxyToServerRequestOptions.host,
-        port: ctx.proxyToServerRequestOptions.port as unknown as string,
+        port: ctx.proxyToServerRequestOptions.port,
         agent: ctx.proxyToServerRequestOptions.agent,
         headers: ctx.proxyToServerRequestOptions.headers,
       };
@@ -169,7 +170,7 @@ export class NtlmManager implements INtlmManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: URL,
+    ntlmHostUrl: URLExt,
     context: IConnectionContext,
     callback: () => void
   ) {

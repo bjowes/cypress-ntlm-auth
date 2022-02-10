@@ -1,5 +1,6 @@
 import { injectable } from "inversify";
 import { PortsConfig } from "../models/ports.config.model.js";
+import { URLExt } from "../util/url.ext.js";
 import { IEnvironment } from "./interfaces/i.environment.js";
 
 @injectable()
@@ -70,10 +71,7 @@ export class Environment implements IEnvironment {
     if (!value) {
       return undefined;
     }
-    const parsed = new URL(value);
-    if (!parsed.port) {
-      return undefined;
-    }
-    return +parsed.port;
+    const parsed = new URLExt(value);
+    return parsed.portOrDefault;
   }
 }

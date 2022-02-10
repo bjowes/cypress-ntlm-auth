@@ -383,7 +383,7 @@ describe("ConfigValidator", function () {
 
       // Assert
       assert.equal(result.ok, false);
-      assert.equal(result.message, "Invalid ntlmHost, must be a valid URL (like https://www.google.com)");
+      assert.equal(result.message, "Invalid ntlmHost, must be a valid URLExt (like https://www.google.com)");
     });
   });
 

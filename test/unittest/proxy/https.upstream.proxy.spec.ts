@@ -12,6 +12,7 @@ import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
 import { httpsTunnel } from "../../../src/proxy/tunnel.agent";
+import { URLExt } from "../../../src/util/url.ext";
 
 let configApiUrl: string;
 let ntlmProxyUrl: string;
@@ -181,11 +182,11 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server socket error for NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -380,11 +381,11 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server socket error for non NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -403,11 +404,11 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server CONNECT error for non NTLM host", async function () {
-    let proxyUrl = new URL(ntlmProxyUrl);
+    let proxyUrl = new URLExt(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,

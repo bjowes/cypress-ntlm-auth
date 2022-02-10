@@ -15,6 +15,7 @@ import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
 import { Socket } from "node:net";
 
 import debugInit from "debug";
+import { URLExt } from "../../../src/util/url.ext";
 const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
 
 export class ProxyFacade {
@@ -201,7 +202,7 @@ export class ProxyFacade {
     caCert?: Buffer,
     agent?: http.Agent | TunnelAgent
   ): Promise<AxiosResponse<any>> {
-    const remoteHostUrl = new URL(remoteHostWithPort);
+    const remoteHostUrl = new URLExt(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
@@ -217,8 +218,8 @@ export class ProxyFacade {
     body: any,
     agent?: http.Agent | TunnelAgent
   ) {
-    const proxyUrl = new URL(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.port) {
+    const proxyUrl = new URLExt(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !proxyUrl.portOrDefault) {
       throw new Error("Invalid proxy url");
     }
 
@@ -229,7 +230,7 @@ export class ProxyFacade {
       url: path,
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: proxyUrl.portOrDefault,
       },
       timeout: 5000,
       data: body,
@@ -247,8 +248,8 @@ export class ProxyFacade {
     agent?: http.Agent | TunnelAgent,
     caCert?: Buffer
   ) {
-    const proxyUrl = new URL(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.port) {
+    const proxyUrl = new URLExt(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !proxyUrl.portOrDefault) {
       throw new Error("Invalid proxy url");
     }
 
@@ -262,7 +263,7 @@ export class ProxyFacade {
       httpsTunnel({
         proxy: {
           host: proxyUrl.hostname,
-          port: +proxyUrl.port,
+          port: proxyUrl.portOrDefault,
           secureProxy: proxyUrl.protocol === "https:",
           headers: {
             "User-Agent": "Node",

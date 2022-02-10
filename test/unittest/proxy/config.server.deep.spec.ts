@@ -12,6 +12,7 @@ import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store";
 import { describeIfNotWindows, describeIfWindows } from "../conditions";
+import { URLExt } from "../../../src/util/url.ext";
 
 describe("Config API (ConfigServer deep tests)", () => {
   let configApiUrl: string;
@@ -53,7 +54,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(res.data, "Config parse error. Username contains invalid characters or is too long.");
-      assert.equal(configStore.exists(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.exists(new URLExt("http://localhost:5000")), false);
     });
 
     it("should return bad request if the domain contains backslash", async function () {
@@ -70,7 +71,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(res.data, "Config parse error. Domain contains invalid characters or is too long.");
-      assert.equal(configStore.exists(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.exists(new URLExt("http://localhost:5000")), false);
     });
 
     it("should return bad request if the ntlmHost includes a path", async function () {
@@ -90,7 +91,7 @@ describe("Config API (ConfigServer deep tests)", () => {
         res.data,
         "Config parse error. Invalid host [localhost:5000/search] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
       );
-      assert.equal(configStore.exists(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.exists(new URLExt("http://localhost:5000")), false);
     });
 
     it("should return bad request if the ntlmHost includes a protocol", async function () {
@@ -110,7 +111,7 @@ describe("Config API (ConfigServer deep tests)", () => {
         res.data,
         "Config parse error. Invalid host [http://localhost:5000] in ntlmHosts, must be one of: 1) a hostname or FQDN, wildcards accepted. 2) hostname or FQDN with port, wildcards not accepted (localhost:8080 or www.google.com or *.acme.com are ok, https://www.google.com:443/search is not ok)."
       );
-      assert.equal(configStore.exists(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.exists(new URLExt("http://localhost:5000")), false);
     });
 
     it("should return ok if the config is ok", async function () {
@@ -127,9 +128,9 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 200);
       assert.equal(res.data, "OK");
-      assert.equal(configStore.exists(new URL("http://localhost:5000")), true);
-      assert.equal(configStore.exists(new URL("http://www.acme.org")), true);
-      assert.equal(configStore.exists(new URL("http://google.com")), true);
+      assert.equal(configStore.exists(new URLExt("http://localhost:5000")), true);
+      assert.equal(configStore.exists(new URLExt("http://www.acme.org")), true);
+      assert.equal(configStore.exists(new URLExt("http://google.com")), true);
     });
 
     it("should allow reconfiguration", async function () {
@@ -141,7 +142,7 @@ describe("Config API (ConfigServer deep tests)", () => {
         domain: "mptest",
         ntlmVersion: 2,
       };
-      let completeUrl = new URL("http://localhost:5000");
+      let completeUrl = new URLExt("http://localhost:5000");
 
       // Act
       let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
@@ -170,7 +171,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 200);
       assert.equal(res.data, "OK");
-      assert.equal(configStore.useSso(new URL("http://localhost:5000")), true);
+      assert.equal(configStore.useSso(new URLExt("http://localhost:5000")), true);
     });
 
     it("should return bad request if the ntlmHosts includes anything else than hostnames / FQDNs", async function () {
@@ -186,8 +187,8 @@ describe("Config API (ConfigServer deep tests)", () => {
         res.data,
         "SSO config parse error. Invalid host [https://google.com] in ntlmHosts, must be only a hostname or FQDN (localhost or www.google.com is ok, https://www.google.com:443/search is not ok). Wildcards are accepted."
       );
-      assert.equal(configStore.useSso(new URL("http://localhost:5000")), false);
-      assert.equal(configStore.useSso(new URL("https://google.com")), false);
+      assert.equal(configStore.useSso(new URLExt("http://localhost:5000")), false);
+      assert.equal(configStore.useSso(new URLExt("https://google.com")), false);
     });
 
     it("should allow reconfiguration", async function () {
@@ -203,13 +204,13 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 200);
       assert.equal(res.data, "OK");
-      assert.equal(configStore.useSso(new URL("http://localhost:5000")), true);
+      assert.equal(configStore.useSso(new URLExt("http://localhost:5000")), true);
 
       res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig2);
       assert.equal(res.status, 200);
       assert.equal(res.data, "OK");
-      assert.equal(configStore.useSso(new URL("http://assa.com:5000")), true);
-      assert.equal(configStore.useSso(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.useSso(new URLExt("http://assa.com:5000")), true);
+      assert.equal(configStore.useSso(new URLExt("http://localhost:5000")), false);
     });
   });
 
@@ -224,7 +225,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 400);
       assert.equal(res.data, "SSO is not supported on this platform. Only Windows OSs are supported.");
-      assert.equal(configStore.useSso(new URL("http://localhost:5000")), false);
+      assert.equal(configStore.useSso(new URLExt("http://localhost:5000")), false);
     });
   });
 
@@ -239,7 +240,7 @@ describe("Config API (ConfigServer deep tests)", () => {
 
   describe("alive", function () {
     it("should return response", async function () {
-      portsConfigStore.ntlmProxyUrl = new URL("http://localhost:8012");
+      portsConfigStore.ntlmProxyUrl = new URLExt("http://localhost:8012");
       // Act
       let res = await ProxyFacade.sendAliveRequest(configApiUrl);
       assert.equal(res.status, 200);

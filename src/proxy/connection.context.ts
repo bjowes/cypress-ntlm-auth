@@ -4,11 +4,12 @@ import { IConnectionContext } from "./interfaces/i.connection.context.js";
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
 import { Socket } from "net";
+import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
   private _agent: any;
-  private _ntlmHost?: URL;
+  private _ntlmHost?: URLExt;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _winSso?: IWinSsoFacade;
@@ -82,10 +83,10 @@ export class ConnectionContext implements IConnectionContext {
    * If the connection is new or a handshake has been completed (successful or failed),
    * a new handshake can be initiated
    *
-   * @param {URL} ntlmHostUrl The target url
+   * @param {URLExt} ntlmHostUrl The target url
    * @returns {boolean} True if the connection is new or a handshake has been completed
    */
-  canStartAuthHandshake(ntlmHostUrl: URL): boolean {
+  canStartAuthHandshake(ntlmHostUrl: URLExt): boolean {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
@@ -93,18 +94,18 @@ export class ConnectionContext implements IConnectionContext {
     return auth;
   }
 
-  matchHostOrNew(ntlmHostUrl: URL): boolean {
+  matchHostOrNew(ntlmHostUrl: URLExt): boolean {
     return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
   }
 
-  getState(ntlmHostUrl: URL): NtlmStateEnum {
+  getState(ntlmHostUrl: URLExt): NtlmStateEnum {
     if (this._ntlmHost && ntlmHostUrl.href === this._ntlmHost.href) {
       return this._ntlmState;
     }
     return NtlmStateEnum.NotAuthenticated;
   }
 
-  setState(ntlmHostUrl: URL, authState: NtlmStateEnum) {
+  setState(ntlmHostUrl: URLExt, authState: NtlmStateEnum) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
   }
