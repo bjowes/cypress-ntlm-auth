@@ -4,7 +4,6 @@ import http from "node:http";
 import https from "node:https";
 import { EventEmitter } from "node:events";
 import debugInit from "debug";
-import { URLExt } from "../util/url.ext.js";
 
 const debug = debugInit("cypress:plugin:ntlm-auth:tunnelagent");
 
@@ -140,7 +139,7 @@ export class TunnelAgent extends EventEmitter {
     super();
     const self = this;
     this.options = options;
-    this.proxyOptions = options.proxy || {};
+    this.proxyOptions = options.proxy || ({} as TunnelAgentProxyOptions);
     this.maxSockets = options.maxSockets || 1;
     this.keepAlive = options.keepAlive || false;
     this.requests = [];
@@ -338,7 +337,7 @@ export class TunnelAgent extends EventEmitter {
       };
       let servername = "";
       if (hostHeader) {
-        servername = new URLExt("https://" + hostHeader).hostname;
+        servername = new URL("https://" + hostHeader).hostname;
       } else if (request.options.host) {
         servername = request.options.host;
       }

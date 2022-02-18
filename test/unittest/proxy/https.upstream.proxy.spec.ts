@@ -182,11 +182,11 @@ describe("Proxy for HTTPS host with NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server socket error for NTLM host", async function () {
-    let proxyUrl = new URLExt(ntlmProxyUrl);
+    let proxyUrl = new URL(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: proxyUrl.portOrDefault,
+        port: URLExt.portOrDefault(proxyUrl),
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -381,11 +381,11 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server socket error for non NTLM host", async function () {
-    let proxyUrl = new URLExt(ntlmProxyUrl);
+    let proxyUrl = new URL(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: proxyUrl.portOrDefault,
+        port: URLExt.portOrDefault(proxyUrl),
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,
@@ -404,11 +404,11 @@ describe("Proxy for HTTPS host without NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server CONNECT error for non NTLM host", async function () {
-    let proxyUrl = new URLExt(ntlmProxyUrl);
+    let proxyUrl = new URL(ntlmProxyUrl);
     let agent = httpsTunnel({
       proxy: {
         host: proxyUrl.hostname,
-        port: proxyUrl.portOrDefault,
+        port: URLExt.portOrDefault(proxyUrl),
         headers: { "User-Agent": "Node" },
       },
       keepAlive: true,

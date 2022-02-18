@@ -1,16 +1,16 @@
 import { Router, Request, Response } from "express";
-import { ConfigValidator } from "../util/config.validator.js";
-import { NtlmConfig } from "../models/ntlm.config.model.js";
+import { ConfigValidator } from "../util/config.validator";
+import { NtlmConfig } from "../models/ntlm.config.model";
 import { injectable, inject } from "inversify";
 import { EventEmitter } from "events";
-import { IConfigController } from "./interfaces/i.config.controller.js";
-import { IConfigStore } from "./interfaces/i.config.store.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { SsoConfigValidator } from "../util/sso.config.validator.js";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
-import { PortsConfig } from "../models/ports.config.model.js";
+import { IConfigController } from "./interfaces/i.config.controller";
+import { IConfigStore } from "./interfaces/i.config.store";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { SsoConfigValidator } from "../util/sso.config.validator";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { PortsConfig } from "../models/ports.config.model";
 import { osSupported } from "win-sso";
 
 @injectable()

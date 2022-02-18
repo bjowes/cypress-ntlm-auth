@@ -1,11 +1,10 @@
 import { Socket } from "net";
-import { URLExt } from "../../util/url.ext.js";
-import { IConnectionContext } from "./i.connection.context.js";
+import { IConnectionContext } from "./i.connection.context";
 
 export interface IConnectionContextManager {
-  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URLExt): IConnectionContext;
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URL): IConnectionContext;
   getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined;
-  getUntrackedAgent(targetHost: URLExt): any;
+  getUntrackedAgent(targetHost: URL): any;
   removeAllConnectionContexts(event: string): void;
   removeAgent(event: string, clientAddress: string): void;
   addTunnel(client: Socket, target: Socket): void;

@@ -1,7 +1,6 @@
-import { NtlmConfig } from "../models/ntlm.config.model.js";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.js";
-import { HostnameValidator } from "./hostname.validator.js";
-import { URLExt } from "./url.ext.js";
+import { NtlmConfig } from "../models/ntlm.config.model";
+import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
+import { HostnameValidator } from "./hostname.validator";
 
 export class ConfigValidator {
   static validate(config: NtlmConfig): NtlmConfigValidateResult {
@@ -63,9 +62,9 @@ export class ConfigValidator {
 
   static validateLegacy(ntlmHost: string): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
-    const urlTest = new URLExt(ntlmHost);
+    const urlTest = new URL(ntlmHost);
     if (!urlTest.hostname || !urlTest.protocol) {
-      result.message = "Invalid ntlmHost, must be a valid URLExt (like https://www.google.com)";
+      result.message = "Invalid ntlmHost, must be a valid URL (like https://www.google.com)";
       return result;
     }
     if (urlTest.pathname && urlTest.pathname !== "" && urlTest.pathname !== "/") {
@@ -79,7 +78,7 @@ export class ConfigValidator {
   }
 
   static convertLegacy(ntlmHost: string): string[] {
-    const urlTest = new URLExt(ntlmHost);
+    const urlTest = new URL(ntlmHost);
     return [urlTest.host || ""];
   }
 

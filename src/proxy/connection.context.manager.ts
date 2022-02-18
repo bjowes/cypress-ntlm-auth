@@ -3,14 +3,13 @@ import { injectable, interfaces, inject } from "inversify";
 import http from "http";
 import https from "https";
 
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
-import { IConnectionContext } from "./interfaces/i.connection.context.js";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { SslTunnel } from "../models/ssl.tunnel.model.js";
-import { httpsTunnel, TunnelAgentOptions } from "./tunnel.agent.js";
-import { URLExt } from "../util/url.ext.js";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
+import { IConnectionContext } from "./interfaces/i.connection.context";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { SslTunnel } from "../models/ssl.tunnel.model";
+import { httpsTunnel, TunnelAgentOptions } from "./tunnel.agent";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -44,7 +43,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ":" + clientSocket.remotePort;
   }
 
-  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URLExt): IConnectionContext {
+  createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URL): IConnectionContext {
     const clientAddress = this.getClientAddress(clientSocket);
     if (clientAddress in this._connectionContexts) {
       return this._connectionContexts[clientAddress];
@@ -84,7 +83,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return true;
   }
 
-  private getAgent(isSSL: boolean, targetHost: URLExt, useUpstreamProxy: boolean) {
+  private getAgent(isSSL: boolean, targetHost: URL, useUpstreamProxy: boolean) {
     const agentOptions: https.AgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
@@ -107,7 +106,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   // Untracked agents are used for requests to the config API.
   // These should not be destroyed on reset since that breaks the config API response.
-  getUntrackedAgent(targetHost: URLExt) {
+  getUntrackedAgent(targetHost: URL) {
     let agent: any;
     // eslint-disable-next-line prefer-const
     agent = new http.Agent();

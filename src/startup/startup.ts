@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
-import { IStartup } from "./interfaces/i.startup.js";
-import { TYPES } from "../proxy/dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.js";
-import { IMain } from "../proxy/interfaces/i.main.js";
-import { ICypressFacade } from "./interfaces/i.cypress.facade.js";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.js";
-import { IEnvironment } from "./interfaces/i.environment.js";
-import { PortsConfig } from "../models/ports.config.model.js";
+import { IStartup } from "./interfaces/i.startup";
+import { TYPES } from "../proxy/dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
+import { IMain } from "../proxy/interfaces/i.main";
+import { ICypressFacade } from "./interfaces/i.cypress.facade";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
+import { IEnvironment } from "./interfaces/i.environment";
+import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class Startup implements IStartup {

@@ -1,9 +1,9 @@
-export class URLExt extends URL {
-  get portOrDefault(): number {
-    if (this.port) {
-      return +this.port;
+export class URLExt {
+  static portOrDefault(url: URL): number {
+    if (url.port) {
+      return +url.port;
     }
-    switch (this.protocol) {
+    switch (url.protocol) {
       case "http:":
         return 80;
       case "https:":
@@ -15,6 +15,6 @@ export class URLExt extends URL {
       case "ftp:":
         return 21;
     }
-    throw new Error("Cannot return default port for unknown protocol " + this.protocol);
+    throw new Error("Cannot return default port for unknown protocol " + url.protocol);
   }
 }

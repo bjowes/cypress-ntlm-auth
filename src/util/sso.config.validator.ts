@@ -1,6 +1,6 @@
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.js";
-import { HostnameValidator } from "./hostname.validator.js";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
+import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
+import { HostnameValidator } from "./hostname.validator";
 
 export class SsoConfigValidator {
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {

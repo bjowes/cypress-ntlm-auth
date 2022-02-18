@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { PeerCertificate } from "tls";
 import { WinSso } from "win-sso";
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.js";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
+import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 
 @injectable()
 export class WinSsoFacadeFactory implements IWinSsoFacadeFactory {

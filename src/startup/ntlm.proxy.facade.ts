@@ -1,13 +1,13 @@
 import * as http from "http";
 import { inject, injectable } from "inversify";
 
-import { TYPES } from "../proxy/dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.js";
-import { PortsConfig } from "../models/ports.config.model.js";
-import { NtlmConfig } from "../models/ntlm.config.model.js";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model.js";
-import { URLExt } from "../util/url.ext.js";
+import { TYPES } from "../proxy/dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
+import { PortsConfig } from "../models/ports.config.model";
+import { NtlmConfig } from "../models/ntlm.config.model";
+import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
+import { URLExt } from "../util/url.ext";
 
 @injectable()
 export class NtlmProxyFacade implements INtlmProxyFacade {
@@ -20,10 +20,10 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
   private async request(configApiUrl: string, path: string, method: string, body: any) {
     return new Promise<any>((resolve, reject) => {
       this._debug.log("Sending " + path + " request to NTLM proxy " + configApiUrl);
-      const configApiUrlParsed = new URLExt(configApiUrl);
+      const configApiUrlParsed = new URL(configApiUrl);
       const options: http.RequestOptions = {
         hostname: configApiUrlParsed.hostname,
-        port: configApiUrlParsed.portOrDefault,
+        port: URLExt.portOrDefault(configApiUrlParsed),
         path: "/" + path,
         method: method,
         timeout: 3000,

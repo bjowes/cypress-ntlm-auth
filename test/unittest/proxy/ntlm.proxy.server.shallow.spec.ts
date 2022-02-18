@@ -27,16 +27,16 @@ describe("NtlmProxyServer shallow", () => {
     ntlmProxyServer = new NtlmProxyServer(ntlmProxyMitmMock, httpMitmProxyMock, portsConfigStoreMock, debugMock);
   });
 
-  it("start should use a free port if undefined", async function () {
+  it("start should use port 0 (any free port) if undefined", async function () {
     let listenPort: any;
     httpMitmProxyMock.listen(Arg.all()).mimicks((port: any) => {
-      listenPort = port;
-      return Promise.resolve("http://127.0.0.1:" + port);
+      listenPort = port === 0 ? 123 : port;
+      return Promise.resolve("http://127.0.0.1:" + listenPort);
     });
 
     await ntlmProxyServer.start();
-    httpMitmProxyMock.received(1).listen(Arg.any());
-    assert.ok(listenPort > 0);
+    httpMitmProxyMock.received(1).listen(0);
+    assert.equal(123, listenPort);
     assert.equal(portsConfigStoreMock.ntlmProxyUrl!.href, `http://127.0.0.1:${listenPort}/`);
   });
 

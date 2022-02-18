@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Type2Message } from "./type2.message.js";
+import { Type2Message } from "./type2.message";
 
 export class Hash {
   static createLMResponse(challenge: Buffer, lmhash: Buffer) {

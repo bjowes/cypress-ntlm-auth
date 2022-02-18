@@ -1,5 +1,5 @@
-import { NtlmConfig } from "../../models/ntlm.config.model.js";
-import { NtlmSsoConfig } from "../../models/ntlm.sso.config.model.js";
+import { NtlmConfig } from "../../models/ntlm.config.model";
+import { NtlmSsoConfig } from "../../models/ntlm.sso.config.model";
 
 export interface INtlmProxyFacade {
   alive(configApiUrl?: string): Promise<any>;

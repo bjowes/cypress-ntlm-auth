@@ -1,74 +1,74 @@
 import { Container, interfaces } from "inversify";
 import "reflect-metadata";
 
-import { TYPES } from "./dependency.injection.types.js";
+import { TYPES } from "./dependency.injection.types";
 
-import { IConfigController } from "./interfaces/i.config.controller.js";
-import { ConfigController } from "./config.controller.js";
+import { IConfigController } from "./interfaces/i.config.controller";
+import { ConfigController } from "./config.controller";
 
-import { IConnectionContext } from "./interfaces/i.connection.context.js";
-import { ConnectionContext } from "./connection.context.js";
+import { IConnectionContext } from "./interfaces/i.connection.context";
+import { ConnectionContext } from "./connection.context";
 
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
-import { ConnectionContextManager } from "./connection.context.manager.js";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
+import { ConnectionContextManager } from "./connection.context.manager";
 
-import { IConfigStore } from "./interfaces/i.config.store.js";
-import { ConfigStore } from "./config.store.js";
+import { IConfigStore } from "./interfaces/i.config.store";
+import { ConfigStore } from "./config.store";
 
-import { IConfigServer } from "./interfaces/i.config.server.js";
-import { ConfigServer } from "./config.server.js";
+import { IConfigServer } from "./interfaces/i.config.server";
+import { ConfigServer } from "./config.server";
 
-import { ICoreServer } from "./interfaces/i.core.server.js";
-import { CoreServer } from "./core.server.js";
+import { ICoreServer } from "./interfaces/i.core.server";
+import { CoreServer } from "./core.server";
 
-import { IStartup } from "../startup/interfaces/i.startup.js";
-import { Startup } from "../startup/startup.js";
+import { IStartup } from "../startup/interfaces/i.startup";
+import { Startup } from "../startup/startup";
 
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
-import { UpstreamProxyManager } from "./upstream.proxy.manager.js";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+import { UpstreamProxyManager } from "./upstream.proxy.manager";
 
-import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator.js";
-import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator.js";
+import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
+import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator";
 
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.js";
-import { WinSsoFacadeFactory } from "./win-sso.facade.factory.js";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
+import { WinSsoFacadeFactory } from "./win-sso.facade.factory";
 
-import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
-import { NegotiateManager } from "./negotiate.manager.js";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager";
+import { NegotiateManager } from "./negotiate.manager";
 
-import { INtlm } from "../ntlm/interfaces/i.ntlm.js";
-import { Ntlm } from "../ntlm/ntlm.js";
+import { INtlm } from "../ntlm/interfaces/i.ntlm";
+import { Ntlm } from "../ntlm/ntlm";
 
-import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
-import { NtlmManager } from "./ntlm.manager.js";
+import { INtlmManager } from "./interfaces/i.ntlm.manager";
+import { NtlmManager } from "./ntlm.manager";
 
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
-import { NtlmProxyMitm } from "./ntlm.proxy.mitm.js";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
+import { NtlmProxyMitm } from "./ntlm.proxy.mitm";
 
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.js";
-import { NtlmProxyServer } from "./ntlm.proxy.server.js";
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
+import { NtlmProxyServer } from "./ntlm.proxy.server";
 
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade.js";
-import { ExpressServerFacade } from "./express.server.facade.js";
+import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
+import { ExpressServerFacade } from "./express.server.facade";
 
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.js";
-import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade.js";
+import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
+import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { DebugLogger } from "../util/debug.logger.js";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { DebugLogger } from "../util/debug.logger";
 
-import { INtlmProxyFacade } from "../startup/interfaces/i.ntlm.proxy.facade.js";
-import { NtlmProxyFacade } from "../startup/ntlm.proxy.facade.js";
+import { INtlmProxyFacade } from "../startup/interfaces/i.ntlm.proxy.facade";
+import { NtlmProxyFacade } from "../startup/ntlm.proxy.facade";
 
-import { IMain } from "./interfaces/i.main.js";
-import { Main } from "./main.js";
+import { IMain } from "./interfaces/i.main";
+import { Main } from "./main";
 
-import { ICypressFacade } from "../startup/interfaces/i.cypress.facade.js";
-import { CypressFacade } from "../startup/cypress.facade.js";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
-import { PortsConfigStore } from "./ports.config.store.js";
-import { IEnvironment } from "../startup/interfaces/i.environment.js";
-import { Environment } from "../startup/environment.js";
+import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
+import { CypressFacade } from "../startup/cypress.facade";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { PortsConfigStore } from "./ports.config.store";
+import { IEnvironment } from "../startup/interfaces/i.environment";
+import { Environment } from "../startup/environment";
 
 export class DependencyInjection {
   private _container: Container;

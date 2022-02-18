@@ -1,6 +1,5 @@
 {
-	"node-option": [
-		"experimental-specifier-resolution=node",
-		"loader=ts-node/esm"
-	]
+  "extension": ["ts"],
+  "spec": "test/unittest/**/*.spec.ts",
+  "require": ["ts-node/register", "source-map-support/register"]
 }

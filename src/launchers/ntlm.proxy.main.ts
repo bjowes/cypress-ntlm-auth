@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { startNtlmProxy } from "../index.js";
+import { startNtlmProxy } from "../index";
 
 /**
  *

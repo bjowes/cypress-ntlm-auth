@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
-import { ICypressFacade } from "./interfaces/i.cypress.facade.js";
-import cypressLoader from "./cypress.loader.cjs";
+import { ICypressFacade } from "./interfaces/i.cypress.facade";
+import cypressLoader from "./cypress.loader.js";
 
 @injectable()
 export class CypressFacade implements ICypressFacade {

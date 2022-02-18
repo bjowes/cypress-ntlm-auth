@@ -1,15 +1,14 @@
-import { NtlmConfig } from "../../models/ntlm.config.model.js";
-import { NtlmSsoConfig } from "../../models/ntlm.sso.config.model.js";
-import { NtlmWildcardHost } from "../../models/ntlm.wildcard.host.model.js";
-import { NtlmHost } from "../../models/ntlm.host.model.js";
-import { URLExt } from "../../util/url.ext.js";
+import { NtlmConfig } from "../../models/ntlm.config.model";
+import { NtlmSsoConfig } from "../../models/ntlm.sso.config.model";
+import { NtlmWildcardHost } from "../../models/ntlm.wildcard.host.model";
+import { NtlmHost } from "../../models/ntlm.host.model";
 
 export interface IConfigStore {
   updateConfig(config: NtlmConfig): void;
-  exists(ntlmHostUrl: URLExt): boolean;
-  get(ntlmHostUrl: URLExt): NtlmHost | NtlmWildcardHost | undefined;
+  exists(ntlmHostUrl: URL): boolean;
+  get(ntlmHostUrl: URL): NtlmHost | NtlmWildcardHost | undefined;
   setSsoConfig(ntlmSsoConfig: NtlmSsoConfig): void;
-  useSso(ntlmHostUrl: URLExt): boolean;
-  existsOrUseSso(ntlmHostUrl: URLExt): boolean;
+  useSso(ntlmHostUrl: URL): boolean;
+  existsOrUseSso(ntlmHostUrl: URL): boolean;
   clear(): void;
 }

@@ -3,7 +3,6 @@ import * as https from "https";
 
 import httpMitmProxy from "http-mitm-proxy";
 
-import getPort from "get-port";
 import axios, { AxiosResponse, Method } from "axios";
 import * as fs from "fs";
 import * as path from "path";
@@ -55,8 +54,7 @@ export class ProxyFacade {
 
     this._mitmProxy = httpMitmProxy();
 
-    let port = await getPort();
-    mitmOptions.port = port;
+    mitmOptions.port = 0;
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
       let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
@@ -99,16 +97,14 @@ export class ProxyFacade {
       return cb();
     });
 
-    await new Promise<void>((resolve, reject) =>
+    return new Promise<string>((resolve, reject) =>
       this._mitmProxy!.listen(mitmOptions, (err: Error) => {
         if (err) {
           reject(err);
         }
-        resolve();
+        resolve("http://localhost:" + this._mitmProxy!.httpPort);
       })
     );
-
-    return "http://localhost:" + port;
   }
 
   stopMitmProxy() {
@@ -202,7 +198,7 @@ export class ProxyFacade {
     caCert?: Buffer,
     agent?: http.Agent | TunnelAgent
   ): Promise<AxiosResponse<any>> {
-    const remoteHostUrl = new URLExt(remoteHostWithPort);
+    const remoteHostUrl = new URL(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
@@ -218,8 +214,8 @@ export class ProxyFacade {
     body: any,
     agent?: http.Agent | TunnelAgent
   ) {
-    const proxyUrl = new URLExt(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.portOrDefault) {
+    const proxyUrl = new URL(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
       throw new Error("Invalid proxy url");
     }
 
@@ -230,7 +226,7 @@ export class ProxyFacade {
       url: path,
       proxy: {
         host: proxyUrl.hostname,
-        port: proxyUrl.portOrDefault,
+        port: URLExt.portOrDefault(proxyUrl),
       },
       timeout: 5000,
       data: body,
@@ -248,8 +244,8 @@ export class ProxyFacade {
     agent?: http.Agent | TunnelAgent,
     caCert?: Buffer
   ) {
-    const proxyUrl = new URLExt(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.portOrDefault) {
+    const proxyUrl = new URL(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
       throw new Error("Invalid proxy url");
     }
 
@@ -263,7 +259,7 @@ export class ProxyFacade {
       httpsTunnel({
         proxy: {
           host: proxyUrl.hostname,
-          port: proxyUrl.portOrDefault,
+          port: URLExt.portOrDefault(proxyUrl),
           secureProxy: proxyUrl.protocol === "https:",
           headers: {
             "User-Agent": "Node",

@@ -1,6 +1,5 @@
 import assert from "assert";
-
-import isPortReachable from "is-port-reachable";
+import net from "node:net";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -10,19 +9,37 @@ import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { URLExt } from "../../../src/util/url.ext";
 
-async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
-  const configUrl = new URLExt(ports.configApiUrl);
-  const proxyUrl = new URLExt(ports.ntlmProxyUrl);
-
-  let reachable = await isPortReachable(proxyUrl.portOrDefault, {
-    host: proxyUrl.hostname,
+async function isPortReachable(host: string, port: number) {
+  return new Promise<boolean>((resolve, reject) => {
+    const connectOptions: net.NetConnectOpts = {
+      host: host,
+      port: port,
+      timeout: 2000,
+    };
+    const socket = net.connect(connectOptions, () => {
+      socket.destroy();
+      return resolve(true);
+    });
+    socket.once("timeout", () => {
+      socket.destroy();
+      return resolve(false);
+    });
+    socket.once("error", () => {
+      socket.destroy();
+      return resolve(false);
+    });
   });
+}
+
+async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
+  const configUrl = new URL(ports.configApiUrl);
+  const proxyUrl = new URL(ports.ntlmProxyUrl);
+
+  let reachable = await isPortReachable(proxyUrl.hostname, URLExt.portOrDefault(proxyUrl));
   if (!reachable) {
     return false;
   }
-  reachable = await isPortReachable(configUrl.portOrDefault, {
-    host: configUrl.hostname,
-  });
+  reachable = await isPortReachable(configUrl.hostname, URLExt.portOrDefault(configUrl));
   if (!reachable) {
     return false;
   }

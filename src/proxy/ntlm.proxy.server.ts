@@ -1,14 +1,11 @@
-import getPort from "get-port";
-
 import { injectable, inject } from "inversify";
 
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.js";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
-import { URLExt } from "../util/url.ext.js";
+import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
+import { TYPES } from "./dependency.injection.types";
+import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 @injectable()
 export class NtlmProxyServer implements INtlmProxyServer {
@@ -43,16 +40,9 @@ export class NtlmProxyServer implements INtlmProxyServer {
     this.init();
 
     try {
-      if (!port) {
-        port = await getPort();
-        if (port === undefined) {
-          this._debug.log("Cannot find free port");
-          throw new Error("Cannot find free port");
-        }
-      }
-      await this._httpMitmProxy.listen(port);
-      this._debug.log("NTLM auth proxy listening on port:", port);
-      this._portsConfigStore.ntlmProxyUrl = new URLExt("http://127.0.0.1:" + port);
+      const proxyUrl = await this._httpMitmProxy.listen(port ?? 0);
+      this._debug.log("NTLM auth proxy listening on :", proxyUrl);
+      this._portsConfigStore.ntlmProxyUrl = new URL(proxyUrl);
       return this._portsConfigStore.ntlmProxyUrl.origin;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth proxy");

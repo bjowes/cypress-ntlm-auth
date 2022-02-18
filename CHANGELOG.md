@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.6 - released 2022-02-19
+
+- Fix issue #194 - went back to commonjs for wider compatibility
+
 ## 3.2.5 - released 2022-02-10
 
 - Fix issue in 3.2.4 with SSL tunnels
