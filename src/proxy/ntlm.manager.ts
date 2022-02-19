@@ -2,17 +2,16 @@ import { IContext } from "http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
-import { IConfigStore } from "./interfaces/i.config.store.js";
-import { IConnectionContext } from "./interfaces/i.connection.context.js";
-import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { INtlm } from "../ntlm/interfaces/i.ntlm.js";
-import { Type2Message } from "../ntlm/type2.message.js";
-import { NtlmMessage } from "../ntlm/ntlm.message.js";
-import { NtlmHost } from "../models/ntlm.host.model.js";
-import { URLExt } from "../util/url.ext.js";
+import { NtlmStateEnum } from "../models/ntlm.state.enum";
+import { IConfigStore } from "./interfaces/i.config.store";
+import { IConnectionContext } from "./interfaces/i.connection.context";
+import { INtlmManager } from "./interfaces/i.ntlm.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { INtlm } from "../ntlm/interfaces/i.ntlm";
+import { Type2Message } from "../ntlm/type2.message";
+import { NtlmMessage } from "../ntlm/ntlm.message";
+import { NtlmHost } from "../models/ntlm.host.model";
 
 @injectable()
 export class NtlmManager implements INtlmManager {
@@ -32,7 +31,7 @@ export class NtlmManager implements INtlmManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: URLExt,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     useSso: boolean,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
@@ -170,7 +169,7 @@ export class NtlmManager implements INtlmManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: URLExt,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: () => void
   ) {

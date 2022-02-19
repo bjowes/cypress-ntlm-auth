@@ -1,9 +1,9 @@
-import { ICoreServer } from "./interfaces/i.core.server.js";
+import { ICoreServer } from "./interfaces/i.core.server";
 import { inject, injectable } from "inversify";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { IMain } from "./interfaces/i.main.js";
-import { PortsConfig } from "../models/ports.config.model.js";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IMain } from "./interfaces/i.main";
+import { PortsConfig } from "../models/ports.config.model";
 
 @injectable()
 export class Main implements IMain {

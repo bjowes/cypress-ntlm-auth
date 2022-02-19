@@ -1,6 +1,6 @@
 import debugInit from "debug";
 import { injectable } from "inversify";
-import { IDebugLogger } from "./interfaces/i.debug.logger.js";
+import { IDebugLogger } from "./interfaces/i.debug.logger";
 
 const debug = debugInit("cypress:plugin:ntlm-auth");
 

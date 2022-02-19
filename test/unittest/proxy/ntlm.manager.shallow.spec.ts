@@ -52,7 +52,7 @@ describe("NtlmManager", () => {
     it("Invalid credentials shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode!.returns!(401);
-      const ntlmHostUrl = new URLExt("http://www.google.com:8081");
+      const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
@@ -68,7 +68,7 @@ describe("NtlmManager", () => {
     it("Valid credentials shall set authenticated state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode!.returns!(200);
-      const ntlmHostUrl = new URLExt("http://www.google.com:8081");
+      const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
@@ -81,7 +81,7 @@ describe("NtlmManager", () => {
     it("Unexpected NTLM message shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
       message.statusCode!.returns!(200);
-      const ntlmHostUrl = new URLExt("http://www.google.com:8081");
+      const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
 
@@ -107,7 +107,7 @@ describe("NtlmManager", () => {
         workstation: "mpw",
         domain: "",
       } as NtlmHost;
-      const ntlmHostUrl = new URLExt(httpUrl);
+      const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
@@ -117,12 +117,12 @@ describe("NtlmManager", () => {
         method: "GET",
         headers: {},
         path: "/get",
-        port: ntlmHostUrl.portOrDefault as any,
+        port: URLExt.portOrDefault(ntlmHostUrl) as any,
         agent: agent,
       });
       ctx.isSSL.returns!(false);
 
-      ntlmManager.handshake(ctx, new URLExt(httpUrl), connectionContext, false, (err) => {
+      ntlmManager.handshake(ctx, new URL(httpUrl), connectionContext, false, (err) => {
         assert.equal(err!.message, "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
         assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
         agent.destroy();
@@ -142,7 +142,7 @@ describe("NtlmManager", () => {
         workstation: "mpw",
         domain: "",
       } as NtlmHost;
-      const ntlmHostUrl = new URLExt(httpUrl);
+      const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
@@ -152,12 +152,12 @@ describe("NtlmManager", () => {
         method: "GET",
         headers: {},
         path: "/get",
-        port: ntlmHostUrl.portOrDefault as any,
+        port: URLExt.portOrDefault(ntlmHostUrl) as any,
         agent: agent,
       });
       ctx.isSSL.returns!(false);
 
-      ntlmManager.handshake(ctx, new URLExt(httpUrl), connectionContext, false, (err) => {
+      ntlmManager.handshake(ctx, new URL(httpUrl), connectionContext, false, (err) => {
         assert.equal(err!.message, "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
         assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
         agent.destroy();

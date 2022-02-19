@@ -358,9 +358,9 @@ describe("NtlmProxyMitm CONNECT", () => {
   it("should send 502 response if target is unreachable", async function () {
     let req = Substitute.for<http.IncomingMessage>();
     let freePort = await getFreePort();
-    socketMock.end(Arg.any(), Arg.any()).mimicks((data, enc) => {
+    socketMock.end(Arg.any(), Arg.any()).mimicks(() => {
       socketMock.received(1).end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
-      return true;
+      return socketMock;
     });
     req.url!.returns!("localhost:" + freePort);
     ntlmProxyMitm.onConnect(req, socketMock, "", (err) => {

@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import httpMitmProxy from "http-mitm-proxy";
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.js";
+import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
 
 @injectable()
 export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
@@ -23,7 +23,7 @@ export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
           reject(err);
         }
         this._ntlmProxyListening = true;
-        const url = "http://127.0.0.1:" + port;
+        const url = "http://127.0.0.1:" + this._ntlmProxy.httpPort;
         resolve(url);
       })
     );

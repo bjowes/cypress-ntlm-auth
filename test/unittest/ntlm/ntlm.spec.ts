@@ -1,9 +1,9 @@
 import assert from "assert";
 
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.js";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.js";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection";
+import { TYPES } from "../../../src/proxy/dependency.injection.types";
 
-import { INtlm } from "../../../src/ntlm/interfaces/i.ntlm.js";
+import { INtlm } from "../../../src/ntlm/interfaces/i.ntlm";
 
 describe("NTLM hashes", function () {
   let dependencyInjection = new DependencyInjection();

@@ -2,12 +2,11 @@ import { IContext } from "http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
-import { IConnectionContext } from "./interfaces/i.connection.context.js";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { URLExt } from "../util/url.ext.js";
+import { NtlmStateEnum } from "../models/ntlm.state.enum";
+import { IConnectionContext } from "./interfaces/i.connection.context";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 
 @injectable()
 export class NegotiateManager implements INegotiateManager {
@@ -19,7 +18,7 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: URLExt,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
   ) {
@@ -63,7 +62,7 @@ export class NegotiateManager implements INegotiateManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: URLExt,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,

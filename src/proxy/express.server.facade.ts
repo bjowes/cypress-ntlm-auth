@@ -2,8 +2,9 @@ import express from "express";
 import http from "http";
 import bodyParser from "body-parser";
 import { injectable } from "inversify";
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade.js";
+import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
 import { PathParams } from "express-serve-static-core";
+import { AddressInfo } from "net";
 
 @injectable()
 export class ExpressServerFacade implements IExpressServerFacade {
@@ -21,10 +22,10 @@ export class ExpressServerFacade implements IExpressServerFacade {
 
   listen(port: number): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const url = "http://127.0.0.1:" + port;
-      this._listener = this._app.listen(port);
+      this._listener = this._app.listen(port, "127.0.0.1");
       this._listener.on("listening", () => {
-        resolve(url);
+        const address = this._listener!.address() as AddressInfo;
+        resolve(`http://${address.address}:${address.port}`);
       });
       this._listener.on("error", reject);
     });

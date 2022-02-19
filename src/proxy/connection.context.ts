@@ -1,15 +1,14 @@
-import { NtlmStateEnum } from "../models/ntlm.state.enum.js";
+import { NtlmStateEnum } from "../models/ntlm.state.enum";
 import { injectable } from "inversify";
-import { IConnectionContext } from "./interfaces/i.connection.context.js";
+import { IConnectionContext } from "./interfaces/i.connection.context";
 import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade.js";
+import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { Socket } from "net";
-import { URLExt } from "../util/url.ext.js";
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
   private _agent: any;
-  private _ntlmHost?: URLExt;
+  private _ntlmHost?: URL;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _winSso?: IWinSsoFacade;
@@ -83,10 +82,10 @@ export class ConnectionContext implements IConnectionContext {
    * If the connection is new or a handshake has been completed (successful or failed),
    * a new handshake can be initiated
    *
-   * @param {URLExt} ntlmHostUrl The target url
+   * @param {URL} ntlmHostUrl The target url
    * @returns {boolean} True if the connection is new or a handshake has been completed
    */
-  canStartAuthHandshake(ntlmHostUrl: URLExt): boolean {
+  canStartAuthHandshake(ntlmHostUrl: URL): boolean {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
@@ -94,18 +93,18 @@ export class ConnectionContext implements IConnectionContext {
     return auth;
   }
 
-  matchHostOrNew(ntlmHostUrl: URLExt): boolean {
+  matchHostOrNew(ntlmHostUrl: URL): boolean {
     return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
   }
 
-  getState(ntlmHostUrl: URLExt): NtlmStateEnum {
+  getState(ntlmHostUrl: URL): NtlmStateEnum {
     if (this._ntlmHost && ntlmHostUrl.href === this._ntlmHost.href) {
       return this._ntlmState;
     }
     return NtlmStateEnum.NotAuthenticated;
   }
 
-  setState(ntlmHostUrl: URLExt, authState: NtlmStateEnum) {
+  setState(ntlmHostUrl: URL, authState: NtlmStateEnum) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
   }

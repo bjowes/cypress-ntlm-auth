@@ -1,7 +1,7 @@
-import { PortsConfig } from "./models/ports.config.model.js";
-import { NtlmConfig } from "./models/ntlm.config.model.js";
-import { NtlmSsoConfig } from "./models/ntlm.sso.config.model.js";
-import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.js";
+import { PortsConfig } from "./models/ports.config.model";
+import { NtlmConfig } from "./models/ntlm.config.model";
+import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
+import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
 
 export class NtlmProxy {
   ports: PortsConfig;

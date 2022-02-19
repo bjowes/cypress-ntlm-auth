@@ -5,18 +5,18 @@ import { injectable, inject } from "inversify";
 import net from "net";
 import http from "node:http";
 
-import { IConfigStore } from "./interfaces/i.config.store.js";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager.js";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.js";
-import { INtlmManager } from "./interfaces/i.ntlm.manager.js";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.js";
-import { TYPES } from "./dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { AuthModeEnum } from "../models/auth.mode.enum.js";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager.js";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store.js";
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.js";
-import { URLExt } from "../util/url.ext.js";
+import { IConfigStore } from "./interfaces/i.config.store";
+import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
+import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
+import { INtlmManager } from "./interfaces/i.ntlm.manager";
+import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { AuthModeEnum } from "../models/auth.mode.enum";
+import { INegotiateManager } from "./interfaces/i.negotiate.manager";
+import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
+import { URLExt } from "../util/url.ext";
 
 let self: NtlmProxyMitm;
 const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
@@ -95,7 +95,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private isConfigApiRequest(targetHost: URLExt) {
+  private isConfigApiRequest(targetHost: URL) {
     if (!self._portsConfigStore.configApiUrl) {
       return false;
     }
@@ -160,20 +160,20 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private isNtlmProxyAddress(hostUrl: URLExt): boolean {
+  private isNtlmProxyAddress(hostUrl: URL): boolean {
     if (!self._portsConfigStore.ntlmProxyUrl) {
       return false;
     }
     return hostUrl.host === self._portsConfigStore.ntlmProxyUrl.host;
   }
 
-  private getTargetHost(ctx: IContext): URLExt | null {
+  private getTargetHost(ctx: IContext): URL | null {
     if (!ctx.clientToProxyRequest.headers.host) {
       self._debug.log('Invalid request - Could not read "host" header from incoming request to proxy');
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
-    const hostUrl = new URLExt((ctx.isSSL ? "https://" : "http://") + host);
+    const hostUrl = new URL((ctx.isSSL ? "https://" : "http://") + host);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
       return null;
@@ -319,7 +319,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return callback();
     }
 
-    const targetHost = new URLExt(`https://${req.url}`); // On CONNECT the req.url includes target host
+    const targetHost = new URL(`https://${req.url}`); // On CONNECT the req.url includes target host
     if (self._configStore.existsOrUseSso(targetHost)) {
       return callback();
     }
@@ -337,7 +337,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     };
     const conn = net.connect(
       {
-        port: targetHost.portOrDefault,
+        port: URLExt.portOrDefault(targetHost),
         host: targetHost.hostname,
         allowHalfOpen: true,
       },

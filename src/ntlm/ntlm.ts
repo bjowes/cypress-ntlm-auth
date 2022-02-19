@@ -25,13 +25,13 @@
 // ----------------------------------------------------------------------------
 
 import { injectable } from "inversify";
-import { INtlm } from "./interfaces/i.ntlm.js";
-import { NtlmFlags } from "./ntlm.flags.js";
-import { NtlmConstants } from "./ntlm.constants.js";
-import { Hash } from "./hash.js";
+import { INtlm } from "./interfaces/i.ntlm";
+import { NtlmFlags } from "./ntlm.flags";
+import { NtlmConstants } from "./ntlm.constants";
+import { Hash } from "./hash";
 import os from "os";
-import { Type2Message } from "./type2.message.js";
-import { NtlmMessage } from "./ntlm.message.js";
+import { Type2Message } from "./type2.message";
+import { NtlmMessage } from "./ntlm.message";
 
 @injectable()
 export class Ntlm implements INtlm {

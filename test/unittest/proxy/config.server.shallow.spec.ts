@@ -9,7 +9,6 @@ import { IExpressServerFacade } from "../../../src/proxy/interfaces/i.express.se
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { PortsConfigStoreMock } from "./ports.config.store.mock";
-import { URLExt } from "../../../src/util/url.ext";
 
 describe("ConfigServer", () => {
   let configServer: ConfigServer;
@@ -28,17 +27,17 @@ describe("ConfigServer", () => {
     configServer = new ConfigServer(expressServerMock, configControllerMock, portsConfigStoreMock, debugMock);
   });
 
-  it("start should use a free port if undefined", async function () {
+  it("start should use port 0 (any free port) if undefined", async function () {
     let listenPort: any;
     expressServerMock.listen(Arg.all()).mimicks((port: any) => {
-      listenPort = port;
-      return Promise.resolve("http://127.0.0.1:" + port);
+      listenPort = port === 0 ? 123 : port;
+      return Promise.resolve("http://127.0.0.1:" + listenPort);
     });
 
     await configServer.start();
-    expressServerMock.received(1).listen(Arg.any());
-    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URLExt("http://127.0.0.1:" + listenPort).href);
-    assert.ok(listenPort > 0);
+    expressServerMock.received(1).listen(0);
+    assert.equal(123, listenPort);
+    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URL("http://127.0.0.1:" + listenPort).href);
   });
 
   it("start should call init", async function () {

@@ -8,14 +8,12 @@
     "cypress-ntlm:run": "npx cypress-ntlm run",
     "test": "npm-run-all -p -r webserver cypress-ntlm:run"
   },
-  "type": "module",
   "author": "Björn Weström",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "cypress": "^9.0.0",
-    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-3.2.3.tgz",
     "cypress-terminal-report": "^3.4.0",
     "debug": "^4.3.2",
     "express": "^4.17.1",

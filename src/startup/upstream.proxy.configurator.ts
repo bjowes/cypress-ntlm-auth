@@ -1,10 +1,10 @@
 import os from "os";
 import { inject, injectable } from "inversify";
 
-import { TYPES } from "../proxy/dependency.injection.types.js";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger.js";
-import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.js";
-import { IEnvironment } from "./interfaces/i.environment.js";
+import { TYPES } from "../proxy/dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
+import { IEnvironment } from "./interfaces/i.environment";
 
 @injectable()
 export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {

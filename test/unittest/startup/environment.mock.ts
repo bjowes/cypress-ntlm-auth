@@ -34,7 +34,7 @@ export class EnvironmentMock implements IEnvironment {
     if (!value) {
       return undefined;
     }
-    const parsed = new URLExt(value);
-    return parsed.portOrDefault;
+    const parsed = new URL(value);
+    return URLExt.portOrDefault(parsed);
   }
 }

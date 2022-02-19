@@ -1,4 +1,4 @@
-import http from "http";
+const http = require("http");
 const serverUrl = "http://localhost:5002/api/quit";
 
 var post_options = {

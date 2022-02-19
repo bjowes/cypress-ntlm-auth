@@ -1,4 +1,4 @@
-import { NtlmHost } from "./ntlm.host.model.js";
+import { NtlmHost } from "./ntlm.host.model";
 
 export interface NtlmWildcardHost extends NtlmHost {
   ntlmHostRegex: RegExp;
