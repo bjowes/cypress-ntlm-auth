@@ -1,8 +1,9 @@
-import { TYPES } from "../proxy/dependency.injection.types";
+import os from "os";
 import { inject, injectable } from "inversify";
+
+import { TYPES } from "../proxy/dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
-import os from "os";
 import { IEnvironment } from "./interfaces/i.environment";
 
 @injectable()
@@ -13,10 +14,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   private readonly _noProxyLocalhost = "localhost";
   private readonly _noProxyLoopback = "127.0.0.1";
 
-  constructor(
-    @inject(TYPES.IEnvironment) environment: IEnvironment,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
-  ) {
+  constructor(@inject(TYPES.IEnvironment) environment: IEnvironment, @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._environment = environment;
     this._debug = debug;
   }
@@ -38,9 +36,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
     if (this._environment.httpProxy) {
       const envNoProxy = this._environment.noProxy?.trim();
       if (envNoProxy && envNoProxy.indexOf(this._loopbackDisable) !== -1) {
-        this._debug.log(
-          "NO_PROXY contains '<-loopback>', will not disable localhost proxying"
-        );
+        this._debug.log("NO_PROXY contains '<-loopback>', will not disable localhost proxying");
       } else {
         this._environment.noProxy = this.addLoopbackToNoProxy(envNoProxy);
       }
@@ -53,19 +49,11 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       noProxyParts = noProxy.split(",").map((s) => s.trim());
     }
     if (noProxyParts.indexOf(this._noProxyLocalhost) === -1) {
-      this._debug.log(
-        "Adding " +
-          this._noProxyLocalhost +
-          " to NO_PROXY to disable localhost proxying"
-      );
+      this._debug.log("Adding " + this._noProxyLocalhost + " to NO_PROXY to disable localhost proxying");
       noProxyParts.push(this._noProxyLocalhost);
     }
     if (noProxyParts.indexOf(this._noProxyLoopback) === -1) {
-      this._debug.log(
-        "Adding " +
-          this._noProxyLoopback +
-          " to NO_PROXY to disable loopback proxying"
-      );
+      this._debug.log("Adding " + this._noProxyLoopback + " to NO_PROXY to disable loopback proxying");
       noProxyParts.push(this._noProxyLoopback);
     }
     return noProxyParts.join(",");

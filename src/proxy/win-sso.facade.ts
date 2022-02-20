@@ -1,7 +1,7 @@
-import { injectable } from 'inversify';
+import { injectable } from "inversify";
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { WinSso } from 'win-sso';
+import { WinSso } from "win-sso";
 
 @injectable()
 export class WinSsoFacade implements IWinSsoFacade {
@@ -16,7 +16,7 @@ export class WinSsoFacade implements IWinSsoFacade {
   }
 
   createAuthResponseHeader(challengeHeader: string | undefined): string {
-    return this._winSso.createAuthResponseHeader(challengeHeader || '');
+    return this._winSso.createAuthResponseHeader(challengeHeader || "");
   }
 
   freeAuthContext(): void {

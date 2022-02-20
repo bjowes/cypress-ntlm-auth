@@ -22,6 +22,6 @@ export const TYPES = {
   ITlsCertValidator: Symbol.for("ITlsCertValidator"),
   IUpstreamProxyConfigurator: Symbol.for("IUpstreamProxyConfigurator"),
   IUpstreamProxyManager: Symbol.for("IUpstreamProxyManager"),
-  NewableIWinSsoFacade: Symbol.for("Newable<IWinSsoFacade>"),
+  IWinSsoFacadeFactory: Symbol.for("IWinSsoFacadeFactory"),
   NewableIConnectionContext: Symbol.for("Newable<IConnectionContext>"),
 };

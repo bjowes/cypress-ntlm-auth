@@ -1,15 +1,27 @@
 # Changelog
 
-## 4.0.0-beta.1 - released 2021-08-28
+## 4.0.0 - released 2022-02-21
 
 - Refactored HTTPS validation. By default, the validation will only warn of errors but not break the test. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
-- Bump dependencies
 - Improved error logging
-- Dropped Node 10 support
+
+## 3.2.6 - released 2022-02-19
+
+- Fix issue #194 - went back to commonjs for wider compatibility
+
+## 3.2.5 - released 2022-02-10
+
+- Fix issue in 3.2.4 with SSL tunnels
+
+## 3.2.4 - released 2022-02-09 *deprecated*
+
+- Migrated to ESM
+- Bump dependencies
+- Implemented internal tunnelling agent
 
 ## 3.2.3 - released 2021-06-23
 
-- Fix #175: Pass on custom status phrases in response 
+- Fix #175: Pass on custom status phrases in response
 
 ## 3.2.2 - released 2021-05-10
 

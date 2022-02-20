@@ -1,10 +1,10 @@
 import { IContext } from "http-mitm-proxy";
+import { TLSSocket } from "tls";
+import { injectable, inject } from "inversify";
 
 import net from "net";
-import http from "http";
-import { toCompleteUrl } from "../util/url.converter";
-import { CompleteUrl } from "../models/complete.url.model";
-import { injectable, inject, interfaces } from "inversify";
+import http from "node:http";
+
 import { IConfigStore } from "./interfaces/i.config.store";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
 import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
@@ -12,23 +12,22 @@ import { INtlmManager } from "./interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { TLSSocket } from "tls";
 import { AuthModeEnum } from "../models/auth.mode.enum";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
+import { URLExt } from "../util/url.ext";
 import { IHttpsValidation } from "./interfaces/i.https.validation";
 
-const nodeCommon = require("_http_common");
-
 let self: NtlmProxyMitm;
+const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
   private _portsConfigStore: IPortsConfigStore;
   private _connectionContextManager: IConnectionContextManager;
-  private WinSsoFacade: interfaces.Newable<IWinSsoFacade>;
+  private _winSsoFacadeFactory: IWinSsoFacadeFactory;
   private _negotiateManager: INegotiateManager;
   private _ntlmManager: INtlmManager;
   private _upstreamProxyManager: IUpstreamProxyManager;
@@ -40,8 +39,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
     @inject(TYPES.IConnectionContextManager)
     connectionContextManager: IConnectionContextManager,
-    @inject(TYPES.NewableIWinSsoFacade)
-    winSsoFacade: interfaces.Newable<IWinSsoFacade>,
+    @inject(TYPES.IWinSsoFacadeFactory)
+    winSsoFacadeFactory: IWinSsoFacadeFactory,
     @inject(TYPES.INegotiateManager) negotiateManager: INegotiateManager,
     @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
     @inject(TYPES.IUpstreamProxyManager)
@@ -52,7 +51,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;
     this._connectionContextManager = connectionContextManager;
-    this.WinSsoFacade = winSsoFacade;
+    this._winSsoFacadeFactory = winSsoFacadeFactory;
     this._negotiateManager = negotiateManager;
     this._ntlmManager = ntlmManager;
     this._upstreamProxyManager = upstreamProxyManager;
@@ -64,7 +63,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     self = this;
   }
 
-  private filterChromeStartup(ctx: IContext, errno: string | undefined, errorKind: string) {
+  private filterChromeStartup(
+    ctx: IContext,
+    errno: string | undefined,
+    errorKind: string
+  ) {
     if (!ctx || !ctx.clientToProxyRequest || !errno) {
       return false;
     }
@@ -74,13 +77,16 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       req.url === "/" &&
       req.headers.host &&
       req.headers.host.indexOf(".") === -1 &&
-      (req.headers.host.indexOf(":") === -1 || req.headers.host.indexOf(":80") !== -1) &&
+      (req.headers.host.indexOf(":") === -1 ||
+        req.headers.host.indexOf(":80") !== -1) &&
       req.headers.host.indexOf("/") === -1 &&
       errorKind === "PROXY_TO_SERVER_REQUEST_ERROR" &&
       errno === "ENOTFOUND"
     ) {
       self._debug.log(
-        "Chrome startup HEAD request detected (host: " + req.headers.host + "). Ignoring connection error."
+        "Chrome startup HEAD request detected (host: " +
+          req.headers.host +
+          "). Ignoring connection error."
       );
       return true;
     }
@@ -90,30 +96,36 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     if (self.filterChromeStartup(ctx, error.code, errorKind)) {
       return;
     }
-    const url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
+    const url =
+      ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
     if (errorKind === "PROXY_TO_SERVER_REQUEST_ERROR") {
       // Act transparent - client will receive a network error instead of a 504
-      self._debug.log(errorKind + " on " + url + ":", error, "Destroying client socket.");
+      self._debug.log(
+        errorKind + " on " + url + ":",
+        error,
+        "Destroying client socket."
+      );
       ctx.proxyToClientResponse.socket?.destroy();
     } else {
       self._debug.log(errorKind + " on " + url + ":", error);
     }
   }
 
-  private isConfigApiRequest(targetHost: CompleteUrl) {
+  private isConfigApiRequest(targetHost: URL) {
     if (!self._portsConfigStore.configApiUrl) {
       return false;
     }
-    return targetHost.href.startsWith(self._portsConfigStore.configApiUrl);
+    return targetHost.host === self._portsConfigStore.configApiUrl.host;
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     const targetHost = self.getTargetHost(ctx);
     if (targetHost) {
       self._httpsValidation.validateRequest(targetHost);
-      let context = self._connectionContextManager.getConnectionContextFromClientSocket(
-        ctx.clientToProxyRequest.socket
-      );
+      let context =
+        self._connectionContextManager.getConnectionContextFromClientSocket(
+          ctx.clientToProxyRequest.socket
+        );
       const useSso = self._configStore.useSso(targetHost);
       const useNtlm = useSso || self._configStore.exists(targetHost);
       if (context) {
@@ -123,7 +135,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
               context.clientAddress +
               " received request to a different target, remove existing context"
           );
-          self._connectionContextManager.removeAgent("reuse", context.clientAddress);
+          self._connectionContextManager.removeAgent(
+            "reuse",
+            context.clientAddress
+          );
           context = undefined;
         }
       }
@@ -134,9 +149,19 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           targetHost
         );
       }
+      if (self._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost)) {
+        self._upstreamProxyManager.setUpstreamProxyHeaders(
+          ctx.proxyToServerRequestOptions.headers
+        );
+      }
 
       if (useNtlm) {
-        self._debug.log("Request to " + targetHost.href + " in registered NTLM Hosts" + (useSso ? " (using SSO)" : ""));
+        self._debug.log(
+          "Request to " +
+            targetHost.href +
+            " in registered NTLM Hosts" +
+            (useSso ? " (using SSO)" : "")
+        );
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
         ctx.onRequestData(function (ctx, chunk, callback) {
@@ -146,7 +171,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       } else {
         if (self.isConfigApiRequest(targetHost)) {
           self._debug.log("Request to config API");
-          ctx.proxyToServerRequestOptions.agent = self._connectionContextManager.getUntrackedAgent(targetHost);
+          ctx.proxyToServerRequestOptions.agent =
+            self._connectionContextManager.getUntrackedAgent(targetHost);
           context.configApiConnection = true;
         } else {
           self._debug.log("Request to " + targetHost.href + " - pass on");
@@ -158,25 +184,29 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       // The http-mitm-proxy cannot handle this scenario, if no target host header
       // is set it will get stuck in an infinite loop
       return callback(
-        new Error('Invalid request - Could not read "host" header or "host" header refers to this proxy')
+        new Error(
+          'Invalid request - Could not read "host" header or "host" header refers to this proxy'
+        )
       );
     }
   }
 
-  private isNtlmProxyAddress(hostUrl: CompleteUrl): boolean {
-    if (!self._portsConfigStore.ntlmProxyPort) {
+  private isNtlmProxyAddress(hostUrl: URL): boolean {
+    if (!self._portsConfigStore.ntlmProxyUrl) {
       return false;
     }
-    return hostUrl.isLocalhost && hostUrl.port === self._portsConfigStore.ntlmProxyPort;
+    return hostUrl.host === self._portsConfigStore.ntlmProxyUrl.host;
   }
 
-  private getTargetHost(ctx: IContext): CompleteUrl | null {
+  private getTargetHost(ctx: IContext): URL | null {
     if (!ctx.clientToProxyRequest.headers.host) {
-      self._debug.log('Invalid request - Could not read "host" header from incoming request to proxy');
+      self._debug.log(
+        'Invalid request - Could not read "host" header from incoming request to proxy'
+      );
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
-    const hostUrl = toCompleteUrl(host, ctx.isSSL, ctx.isSSL);
+    const hostUrl = new URL((ctx.isSSL ? "https://" : "http://") + host);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
       return null;
@@ -184,11 +214,22 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return hostUrl;
   }
 
-  private getAuthMode(serverToProxyResponse: http.IncomingMessage, useSso: boolean): AuthModeEnum {
-    if (serverToProxyResponse.statusCode !== 401 || !serverToProxyResponse.headers["www-authenticate"]) {
+  private getAuthMode(
+    serverToProxyResponse: http.IncomingMessage,
+    useSso: boolean
+  ): AuthModeEnum {
+    if (
+      serverToProxyResponse.statusCode !== 401 ||
+      !serverToProxyResponse.headers["www-authenticate"]
+    ) {
       return AuthModeEnum.NotApplicable;
     }
-    if (useSso && self._negotiateManager.acceptsNegotiateAuthentication(serverToProxyResponse)) {
+    if (
+      useSso &&
+      self._negotiateManager.acceptsNegotiateAuthentication(
+        serverToProxyResponse
+      )
+    ) {
       return AuthModeEnum.Negotiate;
     }
     if (self._ntlmManager.acceptsNtlmAuthentication(serverToProxyResponse)) {
@@ -209,9 +250,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return callback();
     }
 
-    const context = self._connectionContextManager.getConnectionContextFromClientSocket(
-      ctx.clientToProxyRequest.socket
-    );
+    const context =
+      self._connectionContextManager.getConnectionContextFromClientSocket(
+        ctx.clientToProxyRequest.socket
+      );
 
     if (context && context.canStartAuthHandshake(targetHost)) {
       const authMode = self.getAuthMode(ctx.serverToProxyResponse, useSso);
@@ -236,33 +278,49 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         if ((peerCert as any).fingerprint256) {
           context.peerCert = peerCert;
         } else {
-          self._debug.log("Could not retrieve PeerCertificate for NTLM channel binding.");
+          self._debug.log(
+            "Could not retrieve PeerCertificate for NTLM channel binding."
+          );
         }
       }
 
       if (authMode === AuthModeEnum.Negotiate) {
-        self._debug.log("Received 401 with Negotiate in www-authenticate header. Starting handshake.");
+        self._debug.log(
+          "Received 401 with Negotiate in www-authenticate header. Starting handshake."
+        );
         if (useSso) {
-          context.winSso = new self.WinSsoFacade("Negotiate", ctx.proxyToServerRequestOptions.host, context.peerCert);
+          context.winSso = self._winSsoFacadeFactory.create(
+            "Negotiate",
+            ctx.proxyToServerRequestOptions.host,
+            context.peerCert
+          );
         }
         self._negotiateManager.handshake(
           ctx,
           targetHost,
           context,
-          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res)
+          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) =>
+            self.handshakeCallback(ctx, err, res)
         );
       }
       if (authMode === AuthModeEnum.NTLM) {
-        self._debug.log("Received 401 with NTLM in www-authenticate header. Starting handshake.");
+        self._debug.log(
+          "Received 401 with NTLM in www-authenticate header. Starting handshake."
+        );
         if (useSso) {
-          context.winSso = new self.WinSsoFacade("NTLM", ctx.proxyToServerRequestOptions.host, context.peerCert);
+          context.winSso = self._winSsoFacadeFactory.create(
+            "NTLM",
+            ctx.proxyToServerRequestOptions.host,
+            context.peerCert
+          );
         }
         self._ntlmManager.handshake(
           ctx,
           targetHost,
           context,
           useSso,
-          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) => self.handshakeCallback(ctx, err, res)
+          (err?: NodeJS.ErrnoException, res?: http.IncomingMessage) =>
+            self.handshakeCallback(ctx, err, res)
         );
       }
     } else {
@@ -270,7 +328,11 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private handshakeCallback(ctx: IContext, err?: NodeJS.ErrnoException, res?: http.IncomingMessage) {
+  private handshakeCallback(
+    ctx: IContext,
+    err?: NodeJS.ErrnoException,
+    res?: http.IncomingMessage
+  ) {
     if (err) {
       self._debug.log("Cannot perform handshake.", err);
     }
@@ -284,9 +346,16 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         }
       }
       if (res.statusCode) {
-        ctx.proxyToClientResponse.writeHead(res.statusCode, res.statusMessage, self.filterAndCanonizeHeaders(res.headers));
+        ctx.proxyToClientResponse.writeHead(
+          res.statusCode,
+          res.statusMessage,
+          self.filterAndCanonizeHeaders(res.headers)
+        );
       } else {
-        ctx.proxyToClientResponse.writeHead(401, self.filterAndCanonizeHeaders(res.headers));
+        ctx.proxyToClientResponse.writeHead(
+          401,
+          self.filterAndCanonizeHeaders(res.headers)
+        );
       }
       res.on("data", (chunk) => ctx.proxyToClientResponse.write(chunk));
       res.on("end", () => ctx.proxyToClientResponse.end());
@@ -310,7 +379,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return callback();
     }
 
-    const targetHost = toCompleteUrl(req.url, true, true);
+    const targetHost = new URL(`https://${req.url}`); // On CONNECT the req.url includes target host
     if (self._configStore.existsOrUseSso(targetHost)) {
       return callback();
     }
@@ -329,7 +398,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     };
     const conn = net.connect(
       {
-        port: +targetHost.port,
+        port: URLExt.portOrDefault(targetHost),
         host: targetHost.hostname,
         allowHalfOpen: true,
       },
@@ -366,11 +435,23 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
     // eslint-disable-next-line jsdoc/require-jsdoc
-    function filterSocketConnReset(err: NodeJS.ErrnoException, socketDescription: string, url: string | undefined) {
+    function filterSocketConnReset(
+      err: NodeJS.ErrnoException,
+      socketDescription: string,
+      url: string | undefined
+    ) {
       if (err.code === "ECONNRESET") {
-        self._debug.log("Got ECONNRESET on " + socketDescription + ", ignoring. Target: " + url);
+        self._debug.log(
+          "Got ECONNRESET on " +
+            socketDescription +
+            ", ignoring. Target: " +
+            url
+        );
       } else {
-        self._debug.log("Got unexpected error on " + socketDescription + ". Target: " + url, err);
+        self._debug.log(
+          "Got unexpected error on " + socketDescription + ". Target: " + url,
+          err
+        );
       }
     }
   }
@@ -385,7 +466,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           continue;
         }
 
-        if (!nodeCommon._checkInvalidHeaderChar(originalHeaders[key])) {
+        if (httpTokenRegExp.test(canonizedKey)) {
           headers[canonizedKey] = originalHeaders[key];
         }
       }
@@ -394,7 +475,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return headers;
   }
 
-  onWebSocketClose(ctx: IContext, code: number, message: string, callback: (error?: NodeJS.ErrnoException) => void) {
+  onWebSocketClose(
+    ctx: IContext,
+    code: number,
+    message: string,
+    callback: (error?: NodeJS.ErrnoException) => void
+  ) {
     // The default behavior of http-mitm-proxy causes exceptions on network errors on websockets
     // so we need to override it
     if (code === 1005 || code === 1006) {

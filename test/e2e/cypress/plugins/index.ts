@@ -12,6 +12,8 @@
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
 
+import installLogsPrinter from "cypress-terminal-report/src/installLogsPrinter";
+
 /**
  * @type {Cypress.PluginConfig}
  */
@@ -25,5 +27,6 @@ module.exports = (on, config) => {
     },
   };
   //require("cypress-terminal-report/src/installLogsPrinter")(on, options);
-  require("cypress-terminal-report/src/installLogsPrinter")(on);
+  installLogsPrinter(on);
+  //require("cypress-terminal-report/src/installLogsPrinter")(on);
 };

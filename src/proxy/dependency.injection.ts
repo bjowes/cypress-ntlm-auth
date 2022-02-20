@@ -1,6 +1,7 @@
 import { Container, interfaces } from "inversify";
-import { TYPES } from "./dependency.injection.types";
 import "reflect-metadata";
+
+import { TYPES } from "./dependency.injection.types";
 
 import { IConfigController } from "./interfaces/i.config.controller";
 import { ConfigController } from "./config.controller";
@@ -29,8 +30,8 @@ import { UpstreamProxyManager } from "./upstream.proxy.manager";
 import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
 import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator";
 
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
-import { WinSsoFacade } from "./win-sso.facade";
+import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
+import { WinSsoFacadeFactory } from "./win-sso.facade.factory";
 
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { NegotiateManager } from "./negotiate.manager";
@@ -53,7 +54,8 @@ import { ExpressServerFacade } from "./express.server.facade";
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
 import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
 
-
+import { IConsoleLogger } from "../util/interfaces/i.console.logger";
+import { ConsoleLogger } from "../util/console.logger";
 
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { DebugLogger } from "../util/debug.logger";
@@ -100,6 +102,10 @@ export class DependencyInjection {
       .bind<IDebugLogger>(TYPES.IDebugLogger)
       .to(DebugLogger)
       .inSingletonScope();
+    this._container
+      .bind<IConsoleLogger>(TYPES.IConsoleLogger)
+      .to(ConsoleLogger)
+      .inSingletonScope();
     this._container.bind<IEnvironment>(TYPES.IEnvironment).to(Environment);
     this._container
       .bind<IExpressServerFacade>(TYPES.IExpressServerFacade)
@@ -107,7 +113,7 @@ export class DependencyInjection {
     this._container
       .bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade)
       .to(HttpMitmProxyFacade);
-      this._container
+    this._container
       .bind<IHttpsValidation>(TYPES.IHttpsValidation)
       .to(HttpsValidation);
     this._container.bind<IMain>(TYPES.IMain).to(Main);
@@ -141,8 +147,8 @@ export class DependencyInjection {
       )
       .toConstructor<IConnectionContext>(ConnectionContext);
     this._container
-      .bind<interfaces.Newable<IWinSsoFacade>>(TYPES.NewableIWinSsoFacade)
-      .toConstructor<IWinSsoFacade>(WinSsoFacade);
+      .bind<IWinSsoFacadeFactory>(TYPES.IWinSsoFacadeFactory)
+      .to(WinSsoFacadeFactory);
   }
 
   get<T>(typename: symbol): T {

@@ -30,21 +30,11 @@ export class ConfigController implements IConfigController {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;
     this._debug = debug;
-    this.router.post("/ntlm-config", (req: Request, res: Response) =>
-      this.ntlmConfig(req, res)
-    );
-    this.router.post("/ntlm-sso", (req: Request, res: Response) =>
-      this.ntlmSso(req, res)
-    );
-    this.router.post("/reset", (req: Request, res: Response) =>
-      this.reset(req, res)
-    );
-    this.router.get("/alive", (req: Request, res: Response) =>
-      this.alive(req, res)
-    );
-    this.router.post("/quit", (req: Request, res: Response) =>
-      this.quit(req, res)
-    );
+    this.router.post("/ntlm-config", (req: Request, res: Response) => this.ntlmConfig(req, res));
+    this.router.post("/ntlm-sso", (req: Request, res: Response) => this.ntlmSso(req, res));
+    this.router.post("/reset", (req: Request, res: Response) => this.reset(req, res));
+    this.router.get("/alive", (req: Request, res: Response) => this.alive(req, res));
+    this.router.post("/quit", (req: Request, res: Response) => this.quit(req, res));
   }
 
   private ntlmConfig(req: Request, res: Response) {
@@ -67,11 +57,7 @@ export class ConfigController implements IConfigController {
       return;
     }
     if (!osSupported()) {
-      res
-        .status(400)
-        .send(
-          "SSO is not supported on this platform. Only Windows OSs are supported."
-        );
+      res.status(400).send("SSO is not supported on this platform. Only Windows OSs are supported.");
       return;
     }
     this._debug.log("Received valid NTLM SSO config");
@@ -88,10 +74,10 @@ export class ConfigController implements IConfigController {
 
   private alive(req: Request, res: Response) {
     this._debug.log("Received alive");
-    if (this._portsConfigStore.ntlmProxyUrl) {
+    if (this._portsConfigStore.ntlmProxyUrl && this._portsConfigStore.configApiUrl) {
       const ports: PortsConfig = {
-        configApiUrl: this._portsConfigStore.configApiUrl,
-        ntlmProxyUrl: this._portsConfigStore.ntlmProxyUrl,
+        configApiUrl: this._portsConfigStore.configApiUrl.origin,
+        ntlmProxyUrl: this._portsConfigStore.ntlmProxyUrl.origin,
       };
       res.status(200).send(ports);
     } else {

@@ -26,8 +26,8 @@ async function execute() {
       // Required on windows since Cypress hangs after the run call
       process.exit(result.totalFailed);
     }
-  } catch (err: any) {
-    console.error(err.message);
+  } catch (err) {
+    console.error((err as NodeJS.ErrnoException).message);
     console.error(err);
     process.exit(1);
   }

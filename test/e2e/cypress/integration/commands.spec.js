@@ -13,23 +13,17 @@ context("Commands", function () {
     });
 
     it("NTLM should fail without plugin env", function () {
-      expectFail(
-        "The cypress-ntlm-auth plugin must be loaded before using this method"
-      );
+      expectFail("The cypress-ntlm-auth plugin must be loaded before using this method");
       cy.ntlm();
     });
 
     it("NTLM SSO should fail without plugin env", function () {
-      expectFail(
-        "The cypress-ntlm-auth plugin must be loaded before using this method"
-      );
+      expectFail("The cypress-ntlm-auth plugin must be loaded before using this method");
       cy.ntlmSso();
     });
 
     it("NTLM Reset should fail without plugin env", function () {
-      expectFail(
-        "The cypress-ntlm-auth plugin must be loaded before using this method"
-      );
+      expectFail("The cypress-ntlm-auth plugin must be loaded before using this method");
       cy.ntlmReset();
     });
 
@@ -63,9 +57,7 @@ context("Commands", function () {
     });
 
     it("cy.ntlm with missing password shall not succeed", function () {
-      expectFail(
-        "Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields."
-      );
+      expectFail("Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields.");
       cy.ntlm(httpHost, "nisse", null, "mpatst");
     });
 
@@ -124,9 +116,7 @@ context("Commands", function () {
       if (Cypress.platform === "win32") {
         this.skip();
       }
-      expectFail(
-        "SSO is not supported on this platform. Only Windows OSs are supported."
-      );
+      expectFail("SSO is not supported on this platform. Only Windows OSs are supported.");
       cy.ntlmSso(["nisse.com", "google.com"]);
     });
   });
@@ -139,9 +129,7 @@ context("Commands", function () {
     });
 
     it("cy.ntlmSso on non windows shall not succeed", function () {
-      expectFail(
-        "SSO is not supported on this platform. Only Windows OSs are supported."
-      );
+      expectFail("SSO is not supported on this platform. Only Windows OSs are supported.");
       cy.ntlmSso(["nisse.com", "google.com"]);
     });
   });

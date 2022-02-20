@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
 import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
 import { IConnectionContext } from "./interfaces/i.connection.context";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { TYPES } from "./dependency.injection.types";
@@ -19,7 +18,7 @@ export class NegotiateManager implements INegotiateManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: (
       error?: NodeJS.ErrnoException,
@@ -30,15 +29,15 @@ export class NegotiateManager implements INegotiateManager {
     let requestToken: string;
     try {
       requestToken = context.winSso.createAuthRequestHeader();
-    } catch (err: any) {
-      return callback(err, ctx.serverToProxyResponse);
+    } catch (err) {
+      return callback(err as NodeJS.ErrnoException, ctx.serverToProxyResponse);
     }
     this.dropOriginalResponse(ctx);
     const originalRequestOptions: https.RequestOptions = {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
-      port: (ctx.proxyToServerRequestOptions.port as unknown) as string,
+      port: ctx.proxyToServerRequestOptions.port,
       agent: ctx.proxyToServerRequestOptions.agent,
       headers: ctx.proxyToServerRequestOptions.headers,
     };
@@ -46,6 +45,9 @@ export class NegotiateManager implements INegotiateManager {
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = requestToken;
     requestOptions.headers["connection"] = "keep-alive";
+    if (context.useUpstreamProxy) {
+      requestOptions.headers["proxy-connection"] = "keep-alive";
+    }
     const proto = ctx.isSSL ? https : http;
     const req = proto.request(requestOptions, (res) =>
       this.handshakeResponse(
@@ -73,7 +75,7 @@ export class NegotiateManager implements INegotiateManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,
@@ -122,9 +124,9 @@ export class NegotiateManager implements INegotiateManager {
       responseToken = context.winSso.createAuthResponseHeader(
         res.headers["www-authenticate"] || ""
       );
-    } catch (err: any) {
+    } catch (err) {
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-      return callback(err, res);
+      return callback(err as NodeJS.ErrnoException, res);
     }
 
     if (!responseToken && res.statusCode !== 401) {
@@ -149,7 +151,7 @@ export class NegotiateManager implements INegotiateManager {
       method: originalRequestOptions.method,
       path: originalRequestOptions.path,
       host: originalRequestOptions.host,
-      port: (originalRequestOptions.port as unknown) as string,
+      port: originalRequestOptions.port,
       agent: originalRequestOptions.agent,
       headers: originalRequestOptions.headers,
     };

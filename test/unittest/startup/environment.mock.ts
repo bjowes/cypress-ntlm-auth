@@ -1,7 +1,7 @@
-import url from "url";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { HttpsValidationLevel } from "../../../src/proxy/https.validation";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
+import { URLExt } from "../../../src/util/url.ext";
 
 export class EnvironmentMock implements IEnvironment {
   private readonly _loopbackDisable = "<-loopback>";
@@ -38,10 +38,7 @@ export class EnvironmentMock implements IEnvironment {
     if (!value) {
       return undefined;
     }
-    const parsed = url.parse(value);
-    if (!parsed.port) {
-      return undefined;
-    }
-    return +parsed.port;
+    const parsed = new URL(value);
+    return URLExt.portOrDefault(parsed);
   }
 }

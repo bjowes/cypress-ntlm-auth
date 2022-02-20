@@ -1,72 +1,125 @@
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 
-import url from "url";
 import httpMitmProxy from "http-mitm-proxy";
-const CA = require("http-mitm-proxy/lib/ca");
 
-const getPort = require("get-port");
 import axios, { AxiosResponse, Method } from "axios";
-const kapAgent = require("keepalive-proxy-agent");
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { PortsConfig } from "../../../src/models/ports.config.model";
+import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
+import { Socket } from "node:net";
+
+import debugInit from "debug";
+import { URLExt } from "../../../src/util/url.ext";
+const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
 
 export class ProxyFacade {
   // The MITM proxy takes a significant time to start the first time
   // due to cert generation, so we ensure this is done before the
   // tests are executed to avoid timeouts
   private _mitmProxyInit = false;
-  private _mitmProxy: httpMitmProxy.IProxy = httpMitmProxy();
+  private _mitmProxy?: httpMitmProxy.IProxy = undefined;
+  private _httpAgent?: http.Agent;
+  private _httpsAgent?: https.Agent;
+  private _trackedSockets: {
+    [key: string]: boolean;
+  } = {};
 
   async startMitmProxy(
     rejectUnauthorized: boolean,
     requestCallback?: (ctx: httpMitmProxy.IContext, callback: (error?: Error) => void) => void
   ): Promise<string> {
+    this._httpAgent = new http.Agent({
+      keepAlive: true,
+      maxSockets: 1,
+    });
+    this._httpsAgent = new https.Agent({
+      keepAlive: true,
+      maxSockets: 1,
+      rejectUnauthorized: rejectUnauthorized,
+    });
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: "localhost",
       port: undefined,
       keepAlive: true,
       forceSNI: false,
-      httpAgent: new http.Agent({
-        keepAlive: true,
-      }),
-      httpsAgent: new https.Agent({
-        keepAlive: true,
-        rejectUnauthorized: rejectUnauthorized,
-      }),
+      httpAgent: this._httpAgent,
+      httpsAgent: this._httpsAgent,
     };
+    this._trackedSockets = {};
 
     this._mitmProxy = httpMitmProxy();
-    let port = await getPort();
-    mitmOptions.port = port;
+
+    mitmOptions.port = 0;
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
       let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
-      console.log("proxyFacade: " + errorKind + " on " + url + ":", err);
+      debug(errorKind + " on " + url + ":", err);
     });
 
-    if (requestCallback) {
-      this._mitmProxy.onRequest(requestCallback);
-    }
+    let self = this;
+    this._mitmProxy.onRequest(function (ctx, cb) {
+      const targetHost = (ctx.clientToProxyRequest.headers.host as string) + ":";
+      if (!self._trackedSockets[targetHost]) {
+        self._trackedSockets[targetHost] = true;
+        ctx.clientToProxyRequest.socket.once("close", function (hadError) {
+          let destroyed = 0;
+          function destroySocket(sockets: NodeJS.ReadOnlyDict<Socket[]>) {
+            for (let key in sockets) {
+              debug(key, targetHost);
+              if (key.startsWith(targetHost)) {
+                debug("match");
+                sockets[key]!.forEach((socket) => {
+                  socket.destroy();
+                  destroyed++;
+                });
+              }
+            }
+          }
+          function destroyAll(agent: http.Agent | https.Agent | undefined) {
+            if (!agent) return;
+            destroySocket(agent.sockets);
+            destroySocket(agent.freeSockets);
+          }
+          destroyAll(self._httpAgent);
+          destroyAll(self._httpsAgent);
+          debug("detect client socket close " + targetHost + ", removed " + destroyed + " sockets from agents.");
+          delete self._trackedSockets[targetHost];
+        });
+      }
+      if (requestCallback) {
+        return requestCallback(ctx, cb);
+      }
+      return cb();
+    });
 
-    await new Promise<void>((resolve, reject) =>
-      this._mitmProxy.listen(mitmOptions, (err: Error) => {
+    return new Promise<string>((resolve, reject) =>
+      this._mitmProxy!.listen(mitmOptions, (err: Error) => {
         if (err) {
           reject(err);
         }
-        resolve();
+        resolve("http://localhost:" + this._mitmProxy!.httpPort);
       })
     );
-
-    return "http://localhost:" + port;
   }
 
   stopMitmProxy() {
-    this._mitmProxy.close();
+    if (this._mitmProxy) {
+      this._mitmProxy.close();
+      this._mitmProxy = undefined;
+    }
+    if (this._httpAgent) {
+      this._httpAgent.destroy();
+      this._httpAgent = undefined;
+    }
+    if (this._httpsAgent) {
+      this._httpsAgent.destroy();
+      this._httpsAgent = undefined;
+    }
   }
 
   async initMitmProxy() {
@@ -76,27 +129,7 @@ export class ProxyFacade {
 
     await this.startMitmProxy(false);
     this.stopMitmProxy();
-
-    // This generates the localhost cert and key before starting the tests,
-    // since this step is fairly slow on Node 8 the runtime of the actual tests are
-    // more predictable this way.
-    await this.preGenerateCertificate("localhost");
-
     this._mitmProxyInit = true;
-  }
-
-  private preGenerateCertificate(host: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const sslCaDir = path.resolve(process.cwd(), ".http-mitm-proxy");
-      CA.create(sslCaDir, function (err: NodeJS.ErrnoException, ca: any) {
-        if (err) {
-          return reject(err);
-        }
-        ca.generateServerCertificateKeys([host], function (key: string, cert: string) {
-          return resolve();
-        });
-      });
-    });
   }
 
   get mitmCaCert(): Buffer {
@@ -163,9 +196,9 @@ export class ProxyFacade {
     path: string,
     body: any,
     caCert?: Buffer,
-    agent?: http.Agent
+    agent?: http.Agent | TunnelAgent
   ): Promise<AxiosResponse<any>> {
-    const remoteHostUrl = url.parse(remoteHostWithPort);
+    const remoteHostUrl = new URL(remoteHostWithPort);
     if (remoteHostUrl.protocol === "http:") {
       return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
     } else {
@@ -179,10 +212,10 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent
+    agent?: http.Agent | TunnelAgent
   ) {
-    const proxyUrl = url.parse(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.port) {
+    const proxyUrl = new URL(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
       throw new Error("Invalid proxy url");
     }
 
@@ -193,7 +226,7 @@ export class ProxyFacade {
       url: path,
       proxy: {
         host: proxyUrl.hostname,
-        port: +proxyUrl.port,
+        port: URLExt.portOrDefault(proxyUrl),
       },
       timeout: 5000,
       data: body,
@@ -208,11 +241,11 @@ export class ProxyFacade {
     method: Method,
     path: string,
     body: any,
-    agent?: http.Agent,
+    agent?: http.Agent | TunnelAgent,
     caCert?: Buffer
   ) {
-    const proxyUrl = url.parse(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !proxyUrl.port) {
+    const proxyUrl = new URL(ntlmProxyUrl);
+    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
       throw new Error("Invalid proxy url");
     }
 
@@ -223,10 +256,11 @@ export class ProxyFacade {
 
     const tunnelAgent =
       agent ||
-      new kapAgent({
+      httpsTunnel({
         proxy: {
-          hostname: proxyUrl.hostname,
-          port: +proxyUrl.port,
+          host: proxyUrl.hostname,
+          port: URLExt.portOrDefault(proxyUrl),
+          secureProxy: proxyUrl.protocol === "https:",
           headers: {
             "User-Agent": "Node",
           },
@@ -246,6 +280,11 @@ export class ProxyFacade {
 
       validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
     });
+
+    if (!agent) {
+      // Clean up internally created agent
+      tunnelAgent.destroy();
+    }
     return res;
   }
 }

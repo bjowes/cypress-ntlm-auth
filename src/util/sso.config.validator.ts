@@ -7,8 +7,7 @@ export class SsoConfigValidator {
     const result = { ok: false } as NtlmConfigValidateResult;
 
     if (!config.ntlmHosts) {
-      result.message =
-        "Incomplete configuration. ntlmHosts is an required field.";
+      result.message = "Incomplete configuration. ntlmHosts is an required field.";
       return result;
     }
 

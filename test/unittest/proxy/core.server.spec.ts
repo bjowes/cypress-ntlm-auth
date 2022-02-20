@@ -1,10 +1,5 @@
-import "mocha";
-
-import { expect } from "chai";
-
-import url from "url";
-
-const isPortReachable = require("is-port-reachable");
+import assert from "assert";
+import net from "node:net";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -12,20 +7,39 @@ import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { PortsConfig } from "../../../src/models/ports.config.model";
+import { URLExt } from "../../../src/util/url.ext";
+
+async function isPortReachable(host: string, port: number) {
+  return new Promise<boolean>((resolve, reject) => {
+    const connectOptions: net.NetConnectOpts = {
+      host: host,
+      port: port,
+      timeout: 2000,
+    };
+    const socket = net.connect(connectOptions, () => {
+      socket.destroy();
+      return resolve(true);
+    });
+    socket.once("timeout", () => {
+      socket.destroy();
+      return resolve(false);
+    });
+    socket.once("error", () => {
+      socket.destroy();
+      return resolve(false);
+    });
+  });
+}
 
 async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
-  const configUrl = url.parse(ports.configApiUrl);
-  const proxyUrl = url.parse(ports.ntlmProxyUrl);
+  const configUrl = new URL(ports.configApiUrl);
+  const proxyUrl = new URL(ports.ntlmProxyUrl);
 
-  let reachable = await isPortReachable(proxyUrl.port, {
-    host: proxyUrl.hostname,
-  });
+  let reachable = await isPortReachable(proxyUrl.hostname, URLExt.portOrDefault(proxyUrl));
   if (!reachable) {
     return false;
   }
-  reachable = await isPortReachable(configUrl.port, {
-    host: configUrl.hostname,
-  });
+  reachable = await isPortReachable(configUrl.hostname, URLExt.portOrDefault(configUrl));
   if (!reachable) {
     return false;
   }
@@ -61,10 +75,10 @@ describe("Core server startup and shutdown", () => {
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
-    expect(ports.configApiUrl.length).to.be.greaterThan(5);
-    expect(ports.ntlmProxyUrl.length).to.be.greaterThan(5);
+    assert.ok(ports.configApiUrl.length > 5);
+    assert.ok(ports.ntlmProxyUrl.length > 5);
     let reachable = await isProxyReachable(ports);
-    expect(reachable, "Proxy should be reachable").to.be.true;
+    assert.equal(reachable, true);
   });
 
   it("quit command shuts down the proxy, keep portsFile", async function () {
@@ -76,6 +90,6 @@ describe("Core server startup and shutdown", () => {
     _configApiUrl = undefined;
 
     let reachable = await isProxyReachable(ports);
-    expect(reachable, "Proxy should not be reachable").to.be.false;
+    assert.equal(reachable, false);
   });
 });

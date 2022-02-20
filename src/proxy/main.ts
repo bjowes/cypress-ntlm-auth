@@ -10,10 +10,7 @@ export class Main implements IMain {
   private _coreServer: ICoreServer;
   private _debug: IDebugLogger;
 
-  constructor(
-    @inject(TYPES.ICoreServer) coreServer: ICoreServer,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
-  ) {
+  constructor(@inject(TYPES.ICoreServer) coreServer: ICoreServer, @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._coreServer = coreServer;
     this._debug = debug;
   }
@@ -26,13 +23,7 @@ export class Main implements IMain {
     ntlmProxyPort?: number
   ): Promise<PortsConfig> {
     try {
-      const ports = await this._coreServer.start(
-        httpProxy,
-        httpsProxy,
-        noProxy,
-        configApiPort,
-        ntlmProxyPort
-      );
+      const ports = await this._coreServer.start(httpProxy, httpsProxy, noProxy, configApiPort, ntlmProxyPort);
       this._debug.log("Startup done!");
       this._debug.log(ports);
       return ports;

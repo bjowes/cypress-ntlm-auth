@@ -48,9 +48,7 @@ export class NtlmProxy {
    * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
    */
   async stop(): Promise<boolean> {
-    const result = await this.ntlmProxyFacade.quitIfRunning(
-      this.ports.configApiUrl
-    );
+    const result = await this.ntlmProxyFacade.quitIfRunning(this.ports.configApiUrl);
     this.ports.configApiUrl = "";
     this.ports.ntlmProxyUrl = "";
     return result;

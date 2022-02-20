@@ -62,15 +62,10 @@ export class Startup implements IStartup {
 
   argumentsToCypressMode(args: string[]) {
     const cliArguments = this.getArgsAfterCypressNtlm(args);
-    if (
-      cliArguments.length > 0 &&
-      (cliArguments[0] === "run" || cliArguments[0] === "open")
-    ) {
+    if (cliArguments.length > 0 && (cliArguments[0] === "run" || cliArguments[0] === "open")) {
       return cliArguments[0];
     }
-    throw new Error(
-      "Unsupported command, use cypress-ntlm open or cypress-ntlm run."
-    );
+    throw new Error("Unsupported command, use cypress-ntlm open or cypress-ntlm run.");
   }
 
   async prepareOptions(args: string[]) {
@@ -96,12 +91,8 @@ export class Startup implements IStartup {
   private async prepareExternalNtlmProxy(): Promise<PortsConfig> {
     this._internalNtlmProxy = false;
     this._upstreamProxyConfigurator.processNoProxyLoopback();
-    this._debug.log(
-      "Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy"
-    );
-    return await this._externalNtlmProxyFacade.alive(
-      this._environment.configApiUrl
-    );
+    this._debug.log("Detected CYPRESS_NTLM_AUTH_API environment variable, using existing ntlm-proxy");
+    return await this._externalNtlmProxyFacade.alive(this._environment.configApiUrl);
   }
 
   async startNtlmProxy(): Promise<PortsConfig> {

@@ -3,31 +3,22 @@ import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
 @injectable()
 export class PortsConfigStore implements IPortsConfigStore {
-  private _configApiUrl = "";
-  private _ntlmProxyUrl = "";
-  private _ntlmProxyPort = "";
+  private _configApiUrl?: URL = undefined;
+  private _ntlmProxyUrl?: URL = undefined;
 
-  get configApiUrl(): string {
+  get configApiUrl(): URL | undefined {
     return this._configApiUrl;
   }
 
-  set configApiUrl(configApiUrl: string) {
+  set configApiUrl(configApiUrl: URL | undefined) {
     this._configApiUrl = configApiUrl;
   }
 
-  get ntlmProxyUrl(): string {
+  get ntlmProxyUrl(): URL | undefined {
     return this._ntlmProxyUrl;
   }
 
-  set ntlmProxyUrl(ntlmProxyUrl: string) {
+  set ntlmProxyUrl(ntlmProxyUrl: URL | undefined) {
     this._ntlmProxyUrl = ntlmProxyUrl;
-  }
-
-  get ntlmProxyPort(): string {
-    return this._ntlmProxyPort;
-  }
-
-  set ntlmProxyPort(ntlmProxyPort: string) {
-    this._ntlmProxyPort = ntlmProxyPort;
   }
 }

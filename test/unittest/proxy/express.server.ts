@@ -1,13 +1,17 @@
 // cSpell:ignore Legoland, Bricksburg, objsign
 
-import http from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 import express from "express";
-const ntlm = require("express-ntlm");
-import stream from "stream";
+import ntlm from "express-ntlm";
+import * as net from "net";
 import bodyParser from "body-parser";
-import { pki } from "node-forge";
+import forge from "node-forge";
 import { AddressInfo } from "net";
+import * as stream from "stream";
+
+import debugInit from "debug";
+const debug = debugInit("cypress:plugin:ntlm-auth:express-ntlm");
 
 interface ExpressError extends Error {
   status?: number;
@@ -29,15 +33,15 @@ export class ExpressServer {
   private httpServer: http.Server;
   private httpsServer: https.Server;
 
-  private httpServerSockets = new Set<stream.Duplex>();
+  private httpServerSockets = new Set<net.Socket>();
   private httpsServerSockets = new Set<stream.Duplex>();
 
-  private lastRequestHeaders: http.IncomingHttpHeaders;
-  private sendNtlmType2Header: string = null;
+  private lastRequestHeaders: http.IncomingHttpHeaders | null = null;
+  private sendNtlmType2Header: string | null = null;
   private sendWwwAuthHeader: AuthResponeHeader[] = [];
   private closeConnectionOnNextRequestState = false;
 
-  private customStatusPhrase: string = null;
+  private customStatusPhrase: string | null = null;
 
   private connectCount = 0;
 
@@ -58,7 +62,7 @@ export class ExpressServer {
   private createResponse(res: express.Response, body: any) {
     if (this.closeConnectionOnNextRequestState) {
       this.closeConnectionOnNextRequestState = false;
-      res.connection.destroy();
+      res.socket?.destroy();
       return;
     }
 
@@ -70,8 +74,8 @@ export class ExpressServer {
     }
     if (this.sendWwwAuthHeader.length > 0) {
       const auth = this.sendWwwAuthHeader.shift();
-      res.setHeader("www-authenticate", auth.header);
-      res.sendStatus(auth.status);
+      res.setHeader("www-authenticate", auth!.header);
+      res.sendStatus(auth!.status);
       return;
     }
 
@@ -85,7 +89,12 @@ export class ExpressServer {
   private initExpress(app: express.Application, useNtlm: boolean) {
     app.use(bodyParser.json());
 
-    app.use(function (err: ExpressError, req: express.Request, res: express.Response, next: express.NextFunction) {
+    app.use(function (
+      err: ExpressError,
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) {
       if (res.headersSent) {
         return next(err);
       }
@@ -97,7 +106,18 @@ export class ExpressServer {
     });
 
     if (useNtlm) {
-      app.use(ntlm({})); // Enables NTLM without check of user/pass
+      app.use(
+        ntlm({
+          // Enables NTLM without check of user/pass
+          debug: function () {
+            const args = Array.prototype.slice.apply(arguments);
+            debug.apply(
+              null,
+              args.slice(1) as [formatter: any, ...args: any[]]
+            );
+          },
+        })
+      );
     }
 
     app.get("/get", (req, res) => {
@@ -156,12 +176,17 @@ export class ExpressServer {
     // generate random 16 bytes hex string
     let sn = "";
     for (let i = 0; i < 4; i++) {
-      sn += ("00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)).slice(-8);
+      sn += (
+        "00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)
+      ).slice(-8);
     }
     return sn;
   }
 
-  private configureCert(certServer: pki.Certificate, publicKey: pki.rsa.PublicKey) {
+  private configureCert(
+    certServer: forge.pki.Certificate,
+    publicKey: forge.pki.rsa.PublicKey
+  ) {
     certServer.publicKey = publicKey;
     certServer.serialNumber = this.randomSerialNumber();
     certServer.validity.notBefore = this.yesterday();
@@ -247,13 +272,13 @@ export class ExpressServer {
   }
 
   private generateSelfSignedCert() {
-    let keysServer = pki.rsa.generateKeyPair(1024);
-    let certServer = pki.createCertificate();
+    let keysServer = forge.pki.rsa.generateKeyPair(1024);
+    let certServer = forge.pki.createCertificate();
     this.configureCert(certServer, keysServer.publicKey);
     certServer.sign(keysServer.privateKey);
-    this.certPem = pki.certificateToPem(certServer);
-    this.privateKeyPem = pki.privateKeyToPem(keysServer.privateKey);
-    this.publicKeyPem = pki.publicKeyToPem(keysServer.publicKey);
+    this.certPem = forge.pki.certificateToPem(certServer);
+    this.privateKeyPem = forge.pki.privateKeyToPem(keysServer.privateKey);
+    this.publicKeyPem = forge.pki.publicKeyToPem(keysServer.publicKey);
   }
 
   async startHttpServer(useNtlm: boolean, port?: number): Promise<string> {
@@ -373,10 +398,14 @@ export class ExpressServer {
   }
 
   lastRequestContainedAuthHeader(): boolean {
-    return this.lastRequestHeaders.authorization !== undefined && this.lastRequestHeaders.authorization.length > 0;
+    return (
+      this.lastRequestHeaders != null &&
+      this.lastRequestHeaders.authorization !== undefined &&
+      this.lastRequestHeaders.authorization.length > 0
+    );
   }
 
-  sendNtlmType2(fakeHeader: string) {
+  sendNtlmType2(fakeHeader: string | null) {
     this.sendNtlmType2Header = fakeHeader;
   }
 

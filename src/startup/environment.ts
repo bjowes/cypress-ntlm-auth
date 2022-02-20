@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { PortsConfig } from "../models/ports.config.model";
+import { URLExt } from "../util/url.ext";
 import { IEnvironment } from "./interfaces/i.environment";
-import url from "url";
 import { HttpsValidationLevel } from "../proxy/https.validation";
 
 @injectable()
@@ -76,11 +76,8 @@ export class Environment implements IEnvironment {
     if (!value) {
       return undefined;
     }
-    const parsed = url.parse(value);
-    if (!parsed.port) {
-      return undefined;
-    }
-    return +parsed.port;
+    const parsed = new URL(value);
+    return URLExt.portOrDefault(parsed);
   }
 
   private nodeTlsRejectUnauthorized(): boolean {
@@ -90,20 +87,31 @@ export class Environment implements IEnvironment {
     return true;
   }
 
-  private parseHttpsValidation(httpsValidationEnv: string | undefined): HttpsValidationLevel {
+  private parseHttpsValidation(
+    httpsValidationEnv: string | undefined
+  ): HttpsValidationLevel {
     if (!this.nodeTlsRejectUnauthorized()) {
-      console.warn('cypress-ntlm-auth: NODE_TLS_REJECT_UNAUTHORIZED is set to 0. This disables all certificate checks and overrides any HTTPS_VALIDATION setting.');
+      console.warn(
+        "cypress-ntlm-auth: NODE_TLS_REJECT_UNAUTHORIZED is set to 0. This disables all certificate checks and overrides any HTTPS_VALIDATION setting."
+      );
       return HttpsValidationLevel.Unsafe;
     }
     if (!httpsValidationEnv) {
       return HttpsValidationLevel.Warn;
     }
     switch (httpsValidationEnv.toLowerCase()) {
-      case 'strict': return HttpsValidationLevel.Strict;
-      case 'warn': return HttpsValidationLevel.Warn;
-      case 'unsafe': return HttpsValidationLevel.Unsafe;
+      case "strict":
+        return HttpsValidationLevel.Strict;
+      case "warn":
+        return HttpsValidationLevel.Warn;
+      case "unsafe":
+        return HttpsValidationLevel.Unsafe;
       default: {
-        console.error('cypress-ntlm-auth: Invalid HTTPS_VALIDATION value (' + httpsValidationEnv + '). Valid values are "strict", "warn" or "unsafe". Applying default value "warn"');
+        console.error(
+          "cypress-ntlm-auth: Invalid HTTPS_VALIDATION value (" +
+            httpsValidationEnv +
+            '). Valid values are "strict", "warn" or "unsafe". Applying default value "warn"'
+        );
         return HttpsValidationLevel.Warn;
       }
     }

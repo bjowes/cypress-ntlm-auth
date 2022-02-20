@@ -1,5 +1,4 @@
 import { NtlmStateEnum } from "../../models/ntlm.state.enum";
-import { CompleteUrl } from "../../models/complete.url.model";
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./i.win-sso.facade";
 import { Socket } from "net";
@@ -12,11 +11,12 @@ export interface IConnectionContext {
   clientSocket: Socket | undefined;
   socketCloseListener: any;
   configApiConnection: boolean;
+  useUpstreamProxy: boolean;
 
-  canStartAuthHandshake(ntlmHostUrl: CompleteUrl): boolean;
-  matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean;
-  getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum;
-  setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum): void;
+  canStartAuthHandshake(ntlmHostUrl: URL): boolean;
+  matchHostOrNew(ntlmHostUrl: URL): boolean;
+  getState(ntlmHostUrl: URL): NtlmStateEnum;
+  setState(ntlmHostUrl: URL, authState: NtlmStateEnum): void;
 
   clearRequestBody(): void;
   addToRequestBody(chunk: Buffer): void;

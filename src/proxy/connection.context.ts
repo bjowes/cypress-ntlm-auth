@@ -1,5 +1,4 @@
 import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
 import { injectable } from "inversify";
 import { IConnectionContext } from "./interfaces/i.connection.context";
 import { PeerCertificate } from "tls";
@@ -9,7 +8,7 @@ import { Socket } from "net";
 @injectable()
 export class ConnectionContext implements IConnectionContext {
   private _agent: any;
-  private _ntlmHost?: CompleteUrl;
+  private _ntlmHost?: URL;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _winSso?: IWinSsoFacade;
@@ -18,6 +17,7 @@ export class ConnectionContext implements IConnectionContext {
   private _clientSocket?: Socket;
   private _socketCloseListener: any;
   private _configApiConnection = false;
+  private _useUpstreamProxy = false;
 
   get agent(): any {
     return this._agent;
@@ -71,34 +71,40 @@ export class ConnectionContext implements IConnectionContext {
     this._configApiConnection = val;
   }
 
+  get useUpstreamProxy(): boolean {
+    return this._useUpstreamProxy;
+  }
+  set useUpstreamProxy(val: boolean) {
+    this._useUpstreamProxy = val;
+  }
+
   /**
    * If the connection is new or a handshake has been completed (successful or failed),
-   * a new handshake can be intiated
-   * @param ntlmHostUrl The target url
+   * a new handshake can be initiated
+   *
+   * @param {URL} ntlmHostUrl The target url
+   * @returns {boolean} True if the connection is new or a handshake has been completed
    */
-  canStartAuthHandshake(ntlmHostUrl: CompleteUrl): boolean {
+  canStartAuthHandshake(ntlmHostUrl: URL): boolean {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
-        (this._ntlmState === NtlmStateEnum.Authenticated ||
-          this._ntlmState === NtlmStateEnum.NotAuthenticated));
+        (this._ntlmState === NtlmStateEnum.Authenticated || this._ntlmState === NtlmStateEnum.NotAuthenticated));
     return auth;
   }
 
-  matchHostOrNew(ntlmHostUrl: CompleteUrl): boolean {
-    return (
-      this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href
-    );
+  matchHostOrNew(ntlmHostUrl: URL): boolean {
+    return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
   }
 
-  getState(ntlmHostUrl: CompleteUrl): NtlmStateEnum {
+  getState(ntlmHostUrl: URL): NtlmStateEnum {
     if (this._ntlmHost && ntlmHostUrl.href === this._ntlmHost.href) {
       return this._ntlmState;
     }
     return NtlmStateEnum.NotAuthenticated;
   }
 
-  setState(ntlmHostUrl: CompleteUrl, authState: NtlmStateEnum) {
+  setState(ntlmHostUrl: URL, authState: NtlmStateEnum) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
   }

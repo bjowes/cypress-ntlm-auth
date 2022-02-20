@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
 import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { CompleteUrl } from "../models/complete.url.model";
 import { IConfigStore } from "./interfaces/i.config.store";
 import { IConnectionContext } from "./interfaces/i.connection.context";
 import { INtlmManager } from "./interfaces/i.ntlm.manager";
@@ -32,7 +31,7 @@ export class NtlmManager implements INtlmManager {
 
   handshake(
     ctx: IContext,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     useSso: boolean,
     callback: (
@@ -47,8 +46,11 @@ export class NtlmManager implements INtlmManager {
     if (useSso) {
       try {
         type1header = context.winSso.createAuthRequestHeader();
-      } catch (err: any) {
-        return callback(err, ctx.serverToProxyResponse);
+      } catch (err) {
+        return callback(
+          err as NodeJS.ErrnoException,
+          ctx.serverToProxyResponse
+        );
       }
     } else {
       const configLookup = this._configStore.get(ntlmHostUrl);
@@ -72,12 +74,15 @@ export class NtlmManager implements INtlmManager {
       method: ctx.proxyToServerRequestOptions.method,
       path: ctx.proxyToServerRequestOptions.path,
       host: ctx.proxyToServerRequestOptions.host,
-      port: (ctx.proxyToServerRequestOptions.port as unknown) as string,
+      port: ctx.proxyToServerRequestOptions.port,
       agent: ctx.proxyToServerRequestOptions.agent,
     };
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = type1header;
     requestOptions.headers["connection"] = "keep-alive";
+    if (context.useUpstreamProxy) {
+      requestOptions.headers["proxy-connection"] = "keep-alive";
+    }
     const proto = ctx.isSSL ? https : http;
     const type1req = proto.request(requestOptions, (type1res) => {
       type1res.pause();
@@ -120,9 +125,9 @@ export class NtlmManager implements INtlmManager {
           type3header = context.winSso.createAuthResponseHeader(
             type1res.headers["www-authenticate"] || ""
           );
-        } catch (err: any) {
+        } catch (err) {
           this._debug.log("Error while creating SSO Auth response");
-          return callback(err, type1res);
+          return callback(err as NodeJS.ErrnoException, type1res);
         }
       } else {
         type3msg = this._ntlm.createType3Message(
@@ -141,7 +146,7 @@ export class NtlmManager implements INtlmManager {
         method: ctx.proxyToServerRequestOptions.method,
         path: ctx.proxyToServerRequestOptions.path,
         host: ctx.proxyToServerRequestOptions.host,
-        port: (ctx.proxyToServerRequestOptions.port as unknown) as string,
+        port: ctx.proxyToServerRequestOptions.port,
         agent: ctx.proxyToServerRequestOptions.agent,
         headers: ctx.proxyToServerRequestOptions.headers,
       };
@@ -184,7 +189,7 @@ export class NtlmManager implements INtlmManager {
 
   private handshakeResponse(
     res: http.IncomingMessage,
-    ntlmHostUrl: CompleteUrl,
+    ntlmHostUrl: URL,
     context: IConnectionContext,
     callback: () => void
   ) {

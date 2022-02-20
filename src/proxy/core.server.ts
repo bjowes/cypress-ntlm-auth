@@ -36,13 +36,8 @@ export class CoreServer implements ICoreServer {
     this._connectionContextManager = connectionContextManager;
     this._configController = configController;
 
-    this._configController.configApiEvent.addListener("reset", () =>
-      this.ntlmConfigReset("reset")
-    );
-    this._configController.configApiEvent.addListener(
-      "quit",
-      async () => await this.stop()
-    );
+    this._configController.configApiEvent.addListener("reset", () => this.ntlmConfigReset("reset"));
+    this._configController.configApiEvent.addListener("quit", async () => await this.stop());
   }
 
   async start(

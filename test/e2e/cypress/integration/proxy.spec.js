@@ -15,7 +15,7 @@ context("Proxy for HTTP host", function () {
       method: "GET",
       url: httpHostBaseUrl + "/get",
     }).should((response) => {
-      expect(response.status).to.eq(200);
+      expect(response.status).to.equal(200);
       expect(response.body).to.have.length.at.least(500);
     });
   });
@@ -27,7 +27,7 @@ context("Proxy for HTTP host", function () {
       method: "GET",
       url: httpHostBaseUrl + "/get",
     }).should((response) => {
-      expect(response.status).to.eq(200);
+      expect(response.status).to.equal(200);
       expect(response.body).to.have.length.at.least(500);
     });
   });
@@ -38,7 +38,7 @@ context("Proxy for HTTP host", function () {
       url: httpHostBaseUrl + "/get",
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -54,11 +54,8 @@ context("Proxy for HTTP host", function () {
       url: httpHostBaseUrl + "/post",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.have.property(
-        "ntlmHost",
-        "https://my.test.host/"
-      );
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property("ntlmHost", "https://my.test.host/");
       expect(response.body).to.have.property("reply", "OK ÅÄÖéß");
     });
   });
@@ -74,7 +71,7 @@ context("Proxy for HTTP host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -90,11 +87,8 @@ context("Proxy for HTTP host", function () {
       url: httpHostBaseUrl + "/put",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.have.property(
-        "ntlmHost",
-        "https://my.test.host/"
-      );
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property("ntlmHost", "https://my.test.host/");
       expect(response.body).to.have.property("reply", "OK ÅÄÖéß");
     });
   });
@@ -110,7 +104,7 @@ context("Proxy for HTTP host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -126,7 +120,7 @@ context("Proxy for HTTP host", function () {
       url: httpHostBaseUrl + "/delete",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
+      expect(response.status).to.equal(200);
       expect(response.body).to.have.length.at.least(500);
     });
   });
@@ -142,7 +136,7 @@ context("Proxy for HTTP host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 });
@@ -162,7 +156,7 @@ context("Proxy for HTTPS host", function () {
       method: "GET",
       url: httpsHostBaseUrl + "/get",
     }).should((response) => {
-      expect(response.status).to.eq(200);
+      expect(response.status).to.equal(200);
       expect(response.body).to.have.length.at.least(500);
     });
   });
@@ -173,7 +167,7 @@ context("Proxy for HTTPS host", function () {
       url: httpsHostBaseUrl + "/get",
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -189,11 +183,8 @@ context("Proxy for HTTPS host", function () {
       url: httpsHostBaseUrl + "/post",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.have.property(
-        "ntlmHost",
-        "https://my.test.host/"
-      );
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property("ntlmHost", "https://my.test.host/");
       expect(response.body).to.have.property("reply", "OK ÅÄÖéß");
     });
   });
@@ -209,7 +200,7 @@ context("Proxy for HTTPS host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -225,11 +216,8 @@ context("Proxy for HTTPS host", function () {
       url: httpsHostBaseUrl + "/put",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.have.property(
-        "ntlmHost",
-        "https://my.test.host/"
-      );
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property("ntlmHost", "https://my.test.host/");
       expect(response.body).to.have.property("reply", "OK ÅÄÖéß");
     });
   });
@@ -245,7 +233,7 @@ context("Proxy for HTTPS host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 
@@ -261,7 +249,7 @@ context("Proxy for HTTPS host", function () {
       url: httpsHostBaseUrl + "/delete",
       body: body,
     }).should((response) => {
-      expect(response.status).to.eq(200);
+      expect(response.status).to.equal(200);
       expect(response.body).to.have.length.at.least(500);
     });
   });
@@ -277,7 +265,7 @@ context("Proxy for HTTPS host", function () {
       body: body,
       failOnStatusCode: false,
     }).should((response) => {
-      expect(response.status).to.eq(401);
+      expect(response.status).to.equal(401);
     });
   });
 });
