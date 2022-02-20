@@ -1,21 +1,18 @@
-import { expect } from "chai";
-import { CompleteUrl } from "../../../src/models/complete.url.model";
 import { TlsCertValidator } from "../../../src/util/tls.cert.validator";
 import { ExpressServer } from "../proxy/express.server";
-import { toCompleteUrl } from "../../../src/util/url.converter";
-import { fail } from "assert";
+import assert from "assert";
 import { osSupported } from "win-sso";
 
 describe("TlsCertValidator", function () {
   let expressServer = new ExpressServer();
-  let localhostUrl: CompleteUrl;
-  let badUrl = { hostname: "localhost", port: "0" } as CompleteUrl;
-  let googleUrl = { hostname: "google.com", port: "443" } as CompleteUrl;
+  let localhostUrl: URL;
+  let badUrl = new URL("http://localhost:0");
+  let googleUrl = new URL("https://google.com:443");
 
   before("Start HttpsServer", async function () {
     this.timeout(30000);
     let expressUrl = await expressServer.startHttpsServer(false, undefined);
-    localhostUrl = toCompleteUrl(expressUrl, false, true);
+    localhostUrl = new URL(expressUrl);
     this.timeout(2000);
   });
 
@@ -28,34 +25,34 @@ describe("TlsCertValidator", function () {
   });
 
   it("should resolve after checking cert by connection to host using TLS", async function () {
-    var tlsCertValidator = new TlsCertValidator();
+    const tlsCertValidator = new TlsCertValidator();
     try {
       await tlsCertValidator.validate(googleUrl);
     } catch (err: any) {
-      fail(err);
+      assert.fail(err);
     }
   });
 
   it("should reject self signed cert", async function () {
-    var tlsCertValidator = new TlsCertValidator();
+    const tlsCertValidator = new TlsCertValidator();
     try {
       await tlsCertValidator.validate(localhostUrl);
-      fail();
+      assert.fail();
     } catch (err: any) {
-      expect(expressServer.getConnectCount()).to.eq(1);
-      expect(err.code).to.eq("DEPTH_ZERO_SELF_SIGNED_CERT");
+      assert.equal(1, expressServer.getConnectCount());
+      assert.equal("DEPTH_ZERO_SELF_SIGNED_CERT", err.code);
     }
   });
 
   it("should reject if host does not exist", async function () {
-    var tlsCertValidator = new TlsCertValidator();
+    const tlsCertValidator = new TlsCertValidator();
     try {
       await tlsCertValidator.validate(badUrl);
-      fail();
+      assert.fail();
     } catch (err: any) {
-      expect(expressServer.getConnectCount()).to.eq(0);
+      assert.equal(0, expressServer.getConnectCount());
       if (osSupported) {
-        expect(["EADDRNOTAVAIL", "ECONNREFUSED"]).to.contain(err.code);
+        assert.ok(["EADDRNOTAVAIL", "ECONNREFUSED"].indexOf(err.code) !== -1);
       }
     }
   });

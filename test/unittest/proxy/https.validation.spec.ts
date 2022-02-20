@@ -1,27 +1,28 @@
 import "reflect-metadata";
 import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
-import sinon from "sinon";
-
-import { expect } from "chai";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
-import { HttpsValidation, HttpsValidationLevel } from "../../../src/proxy/https.validation";
+import {
+  HttpsValidation,
+  HttpsValidationLevel,
+} from "../../../src/proxy/https.validation";
+import assert from "assert";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
-import { CompleteUrl } from "../../../src/models/complete.url.model";
 import { ITlsCertValidator } from "../../../src/util/interfaces/i.tls.cert.validator";
+import { IConsoleLogger } from "../../../src/util/interfaces/i.console.logger";
 
-describe("HTTPS Validation", function() {
+describe("HTTPS Validation", function () {
   let environmentMock: SubstituteOf<IEnvironment>;
   let tlsCertValidatorMock: SubstituteOf<ITlsCertValidator>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
-  let consoleWarnStub: sinon.SinonStub;
+  let consoleMock: SubstituteOf<IConsoleLogger>;
 
-  let localhostUrl = { hostname: 'localhost', port: '8080', isLocalhost: true, protocol: 'https:' } as CompleteUrl;
-  let externalUrl = { hostname: 'external', port: '443', href: 'external:443', isLocalhost: false, protocol: 'https:' } as CompleteUrl;
-  let rawIpUrl = { hostname: '10.20.30.40', port: '8081', isLocalhost: false, protocol: 'https:' } as CompleteUrl;
-  let externalNonSslUrl = { hostname: 'external', port: '80', isLocalhost: false, protocol: 'http:' } as CompleteUrl;
+  let localhostUrl = new URL("https://localhost:8080");
+  let externalUrl = new URL("https://external:443");
+  let rawIpUrl = new URL("https://10.20.30.40:8081");
+  let externalNonSslUrl = new URL("http://external:80");
 
   beforeEach(function () {
     environmentMock = Substitute.for<IEnvironment>();
@@ -29,40 +30,39 @@ describe("HTTPS Validation", function() {
     tlsCertValidatorMock.validate(Arg.all()).resolves();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
+    consoleMock = Substitute.for<IConsoleLogger>();
   });
 
-  afterEach(function() {
-    if (consoleWarnStub) {
-      consoleWarnStub.restore();
-    }
-  })
-
   function getHttpsValidator() {
-    return new HttpsValidation(environmentMock, tlsCertValidatorMock, debugMock);
+    return new HttpsValidation(
+      environmentMock,
+      tlsCertValidatorMock,
+      debugMock,
+      consoleMock
+    );
   }
 
   describe("useRequestHttpsValidation", () => {
-
     it("should return true in strict mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
       let res = getHttpsValidator().useRequestHttpsValidation();
-      expect(res).to.be.true;
+      assert.ok(res);
     });
 
     it("should return false in warn mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
       let res = getHttpsValidator().useRequestHttpsValidation();
-      expect(res).to.be.false;
+      assert.ok(!res);
     });
 
     it("should return false in unsafe mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
       let res = getHttpsValidator().useRequestHttpsValidation();
-      expect(res).to.be.false;
+      assert.ok(!res);
     });
   });
 
-  describe("validateRequest", function() {
+  describe("validateRequest", function () {
     it("should not validate localhost request in strict mode (validation done by the request itself)", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
       getHttpsValidator().validateRequest(localhostUrl);
@@ -88,7 +88,6 @@ describe("HTTPS Validation", function() {
     });
 
     it("should write warn if external request validation fails", (done) => {
-      consoleWarnStub = sinon.stub(console, "warn"); // Don't show the console.warn output
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
       tlsCertValidatorMock = Substitute.for<ITlsCertValidator>();
       const error: NodeJS.ErrnoException = {
@@ -99,9 +98,16 @@ describe("HTTPS Validation", function() {
       tlsCertValidatorMock.validate(Arg.any()).rejects(error);
       getHttpsValidator().validateRequest(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
-      setTimeout(() => { // Make sure the promise rejection has been processed
-        debugMock.received(1).log('WARN: Certificate validation failed for "external:443".', error);
-        expect(consoleWarnStub.called).to.be.true;
+      setTimeout(() => {
+        // Make sure the promise rejection has been processed
+        debugMock
+          .received(1)
+          .log('WARN: Certificate validation failed for "external".', error);
+        consoleMock
+          .received(1)
+          .warn(
+            'cypress-ntlm-auth: Certificate validation failed for "external". ERR_INVALID_CERT'
+          );
         done();
       }, 1);
     });
@@ -132,12 +138,19 @@ describe("HTTPS Validation", function() {
     });
 
     it("should not validate request to raw IP in warn mode", () => {
-      consoleWarnStub = sinon.stub(console, "warn"); // Don't show the console.warn output
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(rawIpUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
-      debugMock.received(1).log('Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support.')
-      expect(consoleWarnStub.called).to.be.true;
+      debugMock
+        .received(1)
+        .log(
+          "Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
+      consoleMock
+        .received(1)
+        .warn(
+          "cypress-ntlm-auth: Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
     });
 
     it("should not validate localhost request in unsafe mode", () => {
@@ -188,7 +201,6 @@ describe("HTTPS Validation", function() {
     });
 
     it("should write warn if external connect validation fails", (done) => {
-      consoleWarnStub = sinon.stub(console, "warn"); // Don't show the console.warn output
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
       tlsCertValidatorMock = Substitute.for<ITlsCertValidator>();
       const error: NodeJS.ErrnoException = {
@@ -199,9 +211,16 @@ describe("HTTPS Validation", function() {
       tlsCertValidatorMock.validate(Arg.any()).rejects(error);
       getHttpsValidator().validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
-      setTimeout(() => { // Make sure the promise rejection has been processed
-        debugMock.received(1).log('WARN: Certificate validation failed for "external:443".', error);
-        expect(consoleWarnStub.called).to.be.true;
+      setTimeout(() => {
+        // Make sure the promise rejection has been processed
+        debugMock
+          .received(1)
+          .log('WARN: Certificate validation failed for "external".', error);
+        consoleMock
+          .received(1)
+          .warn(
+            'cypress-ntlm-auth: Certificate validation failed for "external". ERR_INVALID_CERT'
+          );
         done();
       }, 1);
     });
@@ -232,12 +251,19 @@ describe("HTTPS Validation", function() {
     });
 
     it("should not validate connect to raw IP in warn mode", () => {
-      consoleWarnStub = sinon.stub(console, "warn"); // Don't show the console.warn output
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(rawIpUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
-      debugMock.received(1).log('Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support.')
-      expect(consoleWarnStub.called).to.be.true;
+      debugMock
+        .received(1)
+        .log(
+          "Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
+      consoleMock
+        .received(1)
+        .warn(
+          "cypress-ntlm-auth: Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
     });
 
     it("should not validate localhost connect in unsafe mode", () => {
@@ -251,7 +277,5 @@ describe("HTTPS Validation", function() {
       getHttpsValidator().validateConnect(externalUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
-
   });
-
 });

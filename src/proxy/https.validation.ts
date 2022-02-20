@@ -1,21 +1,22 @@
-import { inject, injectable } from 'inversify';
-import { CompleteUrl } from '../models/complete.url.model';
-import { IEnvironment } from '../startup/interfaces/i.environment';
-import { IDebugLogger } from '../util/interfaces/i.debug.logger';
-import { ITlsCertValidator } from '../util/interfaces/i.tls.cert.validator';
-import { TYPES } from './dependency.injection.types';
-import { IHttpsValidation } from './interfaces/i.https.validation';
+import { inject, injectable } from "inversify";
+import { IEnvironment } from "../startup/interfaces/i.environment";
+import { IConsoleLogger } from "../util/interfaces/i.console.logger";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
+import { TYPES } from "./dependency.injection.types";
+import { IHttpsValidation } from "./interfaces/i.https.validation";
 
 export enum HttpsValidationLevel {
   Unsafe = 0,
   Warn = 1,
-  Strict = 2
+  Strict = 2,
 }
 
 @injectable()
 export class HttpsValidation implements IHttpsValidation {
   private _debug: IDebugLogger;
   private _tlsCertValidator: ITlsCertValidator;
+  private _console: IConsoleLogger;
 
   private validationLevel: HttpsValidationLevel;
   private validated: string[] = [];
@@ -23,18 +24,20 @@ export class HttpsValidation implements IHttpsValidation {
   constructor(
     @inject(TYPES.IEnvironment) environment: IEnvironment,
     @inject(TYPES.ITlsCertValidator) tlsCertValidator: ITlsCertValidator,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    @inject(TYPES.IDebugLogger) debug: IDebugLogger,
+    @inject(TYPES.IConsoleLogger) consoleLogger: IConsoleLogger
   ) {
     this.validationLevel = environment.httpsValidation;
     this._tlsCertValidator = tlsCertValidator;
     this._debug = debug;
+    this._console = consoleLogger;
   }
 
   useRequestHttpsValidation(): boolean {
     return this.validationLevel === HttpsValidationLevel.Strict;
   }
 
-  validateRequest(targetHost: CompleteUrl) {
+  validateRequest(targetHost: URL) {
     if (!this.isSSL(targetHost)) {
       return;
     }
@@ -44,23 +47,26 @@ export class HttpsValidation implements IHttpsValidation {
     this.validatePeerCert(targetHost);
   }
 
-  validateConnect(targetHost: CompleteUrl) {
+  validateConnect(targetHost: URL) {
     if (!this.isSSL(targetHost)) {
       return;
     }
     this.validatePeerCert(targetHost);
   }
 
-  private isSSL(targetHost: CompleteUrl) {
-    return targetHost.protocol === 'https:';
+  private isSSL(targetHost: URL) {
+    return targetHost.protocol === "https:";
   }
 
-  private validatePeerCert(targetHost: CompleteUrl) {
+  private validatePeerCert(targetHost: URL) {
     if (this.validationLevel === HttpsValidationLevel.Unsafe) {
       return; // no validation
     }
     if (this.validationLevel === HttpsValidationLevel.Warn) {
-      if (targetHost.isLocalhost) {
+      if (
+        targetHost.hostname === "localhost" ||
+        targetHost.hostname === "127.0.0.1"
+      ) {
         // Don't validate localhost targets on level Warn
         return;
       }
@@ -71,15 +77,30 @@ export class HttpsValidation implements IHttpsValidation {
       this.validated.push(targetHost.href);
     }
     if (this.isIP(targetHost.hostname)) {
-      this._debug.log('Target for HTTPS request is an IP address (' + targetHost.hostname +'). Will not validate the certificate. Use hostnames for validation support.');
-      console.warn('cypress-ntlm-auth: Target for HTTPS request is an IP address (' + targetHost.hostname +'). Will not validate the certificate. Use hostnames for validation support.');
+      this._debug.log(
+        "Target for HTTPS request is an IP address (" +
+          targetHost.hostname +
+          "). Will not validate the certificate. Use hostnames for validation support."
+      );
+      this._console.warn(
+        "cypress-ntlm-auth: Target for HTTPS request is an IP address (" +
+          targetHost.hostname +
+          "). Will not validate the certificate. Use hostnames for validation support."
+      );
       return;
     }
-    this._tlsCertValidator.validate(targetHost)
-    .catch(err => {
-      console.warn('cypress-ntlm-auth: Certificate validation failed for "' + targetHost.href + '". ' + err.code);
-      this._debug.log('WARN: Certificate validation failed for "' + targetHost.href + '".', err);
-    })
+    this._tlsCertValidator.validate(targetHost).catch((err) => {
+      this._console.warn(
+        'cypress-ntlm-auth: Certificate validation failed for "' +
+          targetHost.host +
+          '". ' +
+          err.code
+      );
+      this._debug.log(
+        'WARN: Certificate validation failed for "' + targetHost.host + '".',
+        err
+      );
+    });
   }
 
   reset() {

@@ -6,6 +6,7 @@ export const TYPES = {
   IConnectionContextManager: Symbol.for("IConnectionContextManager"),
   ICoreServer: Symbol.for("ICoreServer"),
   ICypressFacade: Symbol.for("ICypressFacade"),
+  IConsoleLogger: Symbol.for("IConsoleLogger"),
   IDebugLogger: Symbol.for("IDebugLogger"),
   IEnvironment: Symbol.for("IEnvironment"),
   IExpressServerFacade: Symbol.for("IExpressServerFacade"),
