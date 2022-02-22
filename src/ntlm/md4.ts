@@ -23,16 +23,6 @@ export function md4(buf: Buffer): Buffer {
 }
 
 /*
- * Perform a simple self-test to see if the VM is working
- */
-function md4_vm_test() {
-  return (
-    md4(Buffer.from("abc")).toString("hex") ==
-    "a448017aaf21d8525fc10ae87aa6729d"
-  );
-}
-
-/*
  * Calculate the MD4 of an array of little-endian words, and a bit length
  */
 function coreMd4(x: Array<number>, len: number) {
