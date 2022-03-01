@@ -303,7 +303,10 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpServer.on("listening", () => {
         const addressInfo = this.httpServer.address() as AddressInfo;
+        debug("http webserver listening");
+        debug(addressInfo);
         const url = `http://${addressInfo.address}:${addressInfo.port}`;
+        debug(url);
         this.httpServer.removeListener("error", reject);
         resolve(url);
       });
@@ -366,7 +369,10 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
         const addressInfo = this.httpsServer.address() as AddressInfo;
+        debug("https webserver listening");
+        debug(addressInfo);
         const url = `http://${addressInfo.address}:${addressInfo.port}`;
+        debug(url);
         this.httpsServer.removeListener("error", reject);
         resolve(url);
       });
