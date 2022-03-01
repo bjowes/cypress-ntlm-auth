@@ -56,7 +56,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
-  it.only("should handle authentication for GET requests", async function () {
+  it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
     res = await ProxyFacade.sendRemoteRequest(

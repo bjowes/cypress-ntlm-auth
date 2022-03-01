@@ -76,7 +76,7 @@ describe("Core server startup and shutdown", () => {
     }
   });
 
-  it.only("starting proxy should return URLs", async function () {
+  it("starting proxy should return URLs", async function () {
     // Act
     const ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
