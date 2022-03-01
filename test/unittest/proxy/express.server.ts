@@ -303,10 +303,8 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpServer.on("listening", () => {
         const addressInfo = this.httpServer.address() as AddressInfo;
-        debug("http webserver listening");
-        debug(addressInfo);
-        const url = `http://${addressInfo.address}:${addressInfo.port}`;
-        debug(url);
+        const url = this.addressInfoToUrl(addressInfo);
+        debug("http webserver listening: ", url);
         this.httpServer.removeListener("error", reject);
         resolve(url);
       });
@@ -317,11 +315,13 @@ export class ExpressServer {
 
   async stopHttpServer() {
     await new Promise<void>((resolve, reject) => {
-      this.httpServer.on("close", () => resolve()); // Called when all connections have been closed
-      this.httpServer.close((err) => {
+      this.httpsServer.close((err) => {
         if (err) {
-          reject(err);
+          debug("https webserver closed with error: ", err);
+          return reject(err);
         }
+        debug("https webserver closed");
+        resolve();
       });
     });
   }
@@ -331,6 +331,13 @@ export class ExpressServer {
       socket.destroy();
     }
     this.httpServerSockets = new Set();
+  }
+
+  private addressInfoToUrl(addressInfo: AddressInfo) {
+    if (addressInfo.family === "IPv6") {
+      return `http://[${addressInfo.address}]:${addressInfo.port}`;
+    }
+    return `http://${addressInfo.address}:${addressInfo.port}`;
   }
 
   async startHttpsServer(useNtlm: boolean, port?: number): Promise<string> {
@@ -369,10 +376,8 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
         const addressInfo = this.httpsServer.address() as AddressInfo;
-        debug("https webserver listening");
-        debug(addressInfo);
-        const url = `http://${addressInfo.address}:${addressInfo.port}`;
-        debug(url);
+        const url = this.addressInfoToUrl(addressInfo);
+        debug("https webserver listening: ", url);
         this.httpsServer.removeListener("error", reject);
         resolve(url);
       });
@@ -383,11 +388,13 @@ export class ExpressServer {
 
   async stopHttpsServer() {
     await new Promise<void>((resolve, reject) => {
-      this.httpsServer.on("close", () => resolve()); // Called when all connections have been closed
       this.httpsServer.close((err) => {
         if (err) {
-          reject(err);
+          debug("https webserver closed with error: ", err);
+          return reject(err);
         }
+        debug("https webserver closed");
+        resolve();
       });
     });
   }
