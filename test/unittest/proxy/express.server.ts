@@ -302,13 +302,13 @@ export class ExpressServer {
     });
     return await new Promise<string>((resolve, reject) => {
       this.httpServer.on("listening", () => {
-        let addressInfo = this.httpServer.address() as AddressInfo;
+        const addressInfo = this.httpServer.address() as AddressInfo;
         const url = "http://localhost:" + addressInfo.port;
         this.httpServer.removeListener("error", reject);
         resolve(url);
       });
       this.httpServer.on("error", reject);
-      this.httpServer.listen(port);
+      this.httpServer.listen(port, "127.0.0.1");
     });
   }
 
@@ -365,13 +365,13 @@ export class ExpressServer {
 
     return await new Promise<string>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
-        let addressInfo = this.httpsServer.address() as AddressInfo;
+        const addressInfo = this.httpsServer.address() as AddressInfo;
         const url = "https://localhost:" + addressInfo.port;
         this.httpsServer.removeListener("error", reject);
         resolve(url);
       });
       this.httpsServer.on("error", reject);
-      this.httpsServer.listen(port);
+      this.httpsServer.listen(port, "127.0.0.1");
     });
   }
 
