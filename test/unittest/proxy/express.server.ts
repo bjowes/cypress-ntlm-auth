@@ -303,7 +303,7 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpServer.on("listening", () => {
         const addressInfo = this.httpServer.address() as AddressInfo;
-        const url = this.addressInfoToUrl(addressInfo);
+        const url = this.addressInfoToUrl(addressInfo, "http:");
         debug("http webserver listening: ", url);
         this.httpServer.removeListener("error", reject);
         resolve(url);
@@ -315,12 +315,12 @@ export class ExpressServer {
 
   async stopHttpServer() {
     await new Promise<void>((resolve, reject) => {
-      this.httpsServer.close((err) => {
+      this.httpServer.close((err) => {
         if (err) {
-          debug("https webserver closed with error: ", err);
+          debug("http webserver closed with error: ", err);
           return reject(err);
         }
-        debug("https webserver closed");
+        debug("http webserver closed");
         resolve();
       });
     });
@@ -333,11 +333,11 @@ export class ExpressServer {
     this.httpServerSockets = new Set();
   }
 
-  private addressInfoToUrl(addressInfo: AddressInfo) {
+  private addressInfoToUrl(addressInfo: AddressInfo, protocol: string) {
     if (addressInfo.family === "IPv6") {
-      return `http://[${addressInfo.address}]:${addressInfo.port}`;
+      return `${protocol}//[${addressInfo.address}]:${addressInfo.port}`;
     }
-    return `http://${addressInfo.address}:${addressInfo.port}`;
+    return `${protocol}//${addressInfo.address}:${addressInfo.port}`;
   }
 
   async startHttpsServer(useNtlm: boolean, port?: number): Promise<string> {
@@ -376,7 +376,7 @@ export class ExpressServer {
     return await new Promise<string>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
         const addressInfo = this.httpsServer.address() as AddressInfo;
-        const url = this.addressInfoToUrl(addressInfo);
+        const url = this.addressInfoToUrl(addressInfo, "https:");
         debug("https webserver listening: ", url);
         this.httpsServer.removeListener("error", reject);
         resolve(url);
