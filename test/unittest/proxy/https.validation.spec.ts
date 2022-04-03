@@ -21,7 +21,10 @@ describe("HTTPS Validation", function () {
 
   let localhostUrl = new URL("https://localhost:8080");
   let externalUrl = new URL("https://external:443");
-  let rawIpUrl = new URL("https://10.20.30.40:8081");
+  let rawIpv4Url = new URL("https://10.20.30.40:8081");
+  let rawIpv6Url = new URL(
+    "https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8081"
+  );
   let externalNonSslUrl = new URL("http://external:80");
 
   beforeEach(function () {
@@ -137,9 +140,9 @@ describe("HTTPS Validation", function () {
       tlsCertValidatorMock.received(2).validate(externalUrl);
     });
 
-    it("should not validate request to raw IP in warn mode", () => {
+    it("should not validate request to raw IPv4 in warn mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
-      getHttpsValidator().validateRequest(rawIpUrl);
+      getHttpsValidator().validateRequest(rawIpv4Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
         .received(1)
@@ -150,6 +153,22 @@ describe("HTTPS Validation", function () {
         .received(1)
         .warn(
           "cypress-ntlm-auth: Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
+    });
+
+    it("should not validate request to raw IPv6 in warn mode", () => {
+      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      getHttpsValidator().validateRequest(rawIpv6Url);
+      tlsCertValidatorMock.didNotReceive().validate(Arg.any());
+      debugMock
+        .received(1)
+        .log(
+          "Target for HTTPS request is an IP address ([2001:db8:85a3::8a2e:370:7334]). Will not validate the certificate. Use hostnames for validation support."
+        );
+      consoleMock
+        .received(1)
+        .warn(
+          "cypress-ntlm-auth: Target for HTTPS request is an IP address ([2001:db8:85a3::8a2e:370:7334]). Will not validate the certificate. Use hostnames for validation support."
         );
     });
 
@@ -250,9 +269,9 @@ describe("HTTPS Validation", function () {
       tlsCertValidatorMock.received(2).validate(externalUrl);
     });
 
-    it("should not validate connect to raw IP in warn mode", () => {
+    it("should not validate connect to raw IPv4 in warn mode", () => {
       environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
-      getHttpsValidator().validateConnect(rawIpUrl);
+      getHttpsValidator().validateConnect(rawIpv4Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
         .received(1)
@@ -263,6 +282,22 @@ describe("HTTPS Validation", function () {
         .received(1)
         .warn(
           "cypress-ntlm-auth: Target for HTTPS request is an IP address (10.20.30.40). Will not validate the certificate. Use hostnames for validation support."
+        );
+    });
+
+    it("should not validate connect to raw IPv6 in warn mode", () => {
+      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      getHttpsValidator().validateConnect(rawIpv6Url);
+      tlsCertValidatorMock.didNotReceive().validate(Arg.any());
+      debugMock
+        .received(1)
+        .log(
+          "Target for HTTPS request is an IP address ([2001:db8:85a3::8a2e:370:7334]). Will not validate the certificate. Use hostnames for validation support."
+        );
+      consoleMock
+        .received(1)
+        .warn(
+          "cypress-ntlm-auth: Target for HTTPS request is an IP address ([2001:db8:85a3::8a2e:370:7334]). Will not validate the certificate. Use hostnames for validation support."
         );
     });
 

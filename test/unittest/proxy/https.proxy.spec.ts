@@ -2,7 +2,6 @@
 
 import { ExpressServer } from "./express.server";
 import { ProxyFacade } from "./proxy.facade";
-import * as http from "http";
 import assert from "assert";
 
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
@@ -11,12 +10,11 @@ import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
-import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
-import { URLExt } from "../../../src/util/url.ext";
+import { TunnelAgent } from "../../../src/proxy/tunnel.agent";
 
-let configApiUrl: string;
-let ntlmProxyUrl: string;
-let httpsUrl: string;
+let configApiUrl: URL;
+let ntlmProxyUrl: URL;
+let httpsUrl: URL;
 
 describe("Proxy for HTTPS host with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
@@ -31,7 +29,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
     ntlmHostConfig = {
-      ntlmHosts: [httpsUrl.replace("https://", "")],
+      ntlmHosts: [httpsUrl.host],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
@@ -39,8 +37,8 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   after(async function () {
@@ -55,24 +53,24 @@ describe("Proxy for HTTPS host with NTLM", function () {
       this.timeout(30000);
       coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
       let ports = await coreServer.start(undefined, undefined, undefined);
-      configApiUrl = ports.configApiUrl;
-      ntlmProxyUrl = ports.ntlmProxyUrl;
+      configApiUrl = new URL(ports.configApiUrl);
+      ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
     } else {
       await ProxyFacade.sendNtlmReset(configApiUrl);
     }
     this.timeout(2000);
   });
 
-  it.only("should handle authentication for GET requests", async function () {
+  it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -81,13 +79,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 401);
   });
@@ -98,13 +96,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -116,13 +114,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 401);
   });
@@ -133,13 +131,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "PUT",
       "/put",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -151,13 +149,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "PUT",
       "/put",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 401);
   });
@@ -168,13 +166,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "DELETE",
       "/delete",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -186,13 +184,13 @@ describe("Proxy for HTTPS host with NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "DELETE",
       "/delete",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 401);
   });
@@ -203,30 +201,20 @@ describe("Proxy for HTTPS host with NTLM", function () {
     };
     let proxyUrl = new URL(ntlmProxyUrl);
 
-    let agent1 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
-    });
+    let agent1 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+      proxyFacade.mitmCaCert,
+    ]);
 
-    let agent2 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
-    });
+    let agent2 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+      proxyFacade.mitmCaCert,
+    ]);
 
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
@@ -240,7 +228,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     assert.equal(resBody.ntlmHost, body.ntlmHost);
     assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
@@ -267,19 +255,14 @@ describe("Proxy for HTTPS host with NTLM", function () {
       ntlmHost: "https://my.test.host/",
     };
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
-    });
+    let agent = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+      proxyFacade.mitmCaCert,
+    ]);
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
@@ -294,7 +277,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
@@ -313,7 +296,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     assert.equal(res.status, 200);
     expressServer.sendWwwAuthOnce("NTLM");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
@@ -334,19 +317,14 @@ describe("Proxy for HTTPS host with NTLM", function () {
 
   it("should terminate client socket on server socket error for NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert, proxyFacade.mitmCaCert],
-    });
+    let agent = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+      proxyFacade.mitmCaCert,
+    ]);
 
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
@@ -359,7 +337,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     assert.equal(res.status, 200);
     expressServer.closeConnectionOnNextRequest(true);
     try {
-      await ProxyFacade.sendRemoteRequest(
+      await ProxyFacade.sendProxiedHttpsRequest(
         ntlmProxyUrl,
         httpsUrl,
         "GET",
@@ -396,8 +374,8 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   after(async function () {
@@ -417,13 +395,13 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
   it("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -432,13 +410,13 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 401);
   });
@@ -449,13 +427,13 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
     };
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -477,8 +455,8 @@ describe("Proxy for HTTPS host without NTLM", function () {
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   beforeEach(async function () {
@@ -487,8 +465,8 @@ describe("Proxy for HTTPS host without NTLM", function () {
       this.timeout(30000);
       coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
       let ports = await coreServer.start(undefined, undefined, undefined);
-      configApiUrl = ports.configApiUrl;
-      ntlmProxyUrl = ports.ntlmProxyUrl;
+      configApiUrl = new URL(ports.configApiUrl);
+      ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
     }
     this.timeout(2000);
   });
@@ -500,13 +478,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
   });
 
   it("should pass through GET requests for non NTLM host", async function () {
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -518,13 +496,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -536,13 +514,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "PUT",
       "/put",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -554,13 +532,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "DELETE",
       "/delete",
       body,
-      expressServer.caCert
+      [expressServer.caCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
@@ -574,33 +552,21 @@ describe("Proxy for HTTPS host without NTLM", function () {
     };
     let proxyUrl = new URL(ntlmProxyUrl);
 
-    let agent1 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent1 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
-    let agent2 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent2 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert,
+      null,
       agent1
     );
     assert.equal(res.status, 200);
@@ -608,13 +574,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
     assert.equal(resBody.ntlmHost, body.ntlmHost);
     assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert,
+      null,
       agent2
     );
     assert.equal(res.status, 200);
@@ -635,33 +601,21 @@ describe("Proxy for HTTPS host without NTLM", function () {
     };
     let proxyUrl = new URL(ntlmProxyUrl);
 
-    let agent1 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent1 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
-    let agent2 = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent2 = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert,
+      [expressServer.caCert],
       agent1
     );
     assert.equal(res.status, 200);
@@ -669,13 +623,13 @@ describe("Proxy for HTTPS host without NTLM", function () {
     assert.equal(resBody.ntlmHost, body.ntlmHost);
     assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "POST",
       "/post",
       body,
-      expressServer.caCert,
+      [expressServer.caCert],
       agent2
     );
     assert.equal(res.status, 200);
@@ -693,36 +647,30 @@ describe("Proxy for HTTPS host without NTLM", function () {
 
   it("should terminate client socket on server socket error for non NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
-    let res = await ProxyFacade.sendRemoteRequest(
+    let res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
       "/get",
       null,
-      undefined,
+      [expressServer.caCert],
       agent
     );
     // "first req should return 200"
     assert.equal(res.status, 200);
     expressServer.closeConnectionOnNextRequest(true);
     try {
-      await ProxyFacade.sendRemoteRequest(
+      await ProxyFacade.sendProxiedHttpsRequest(
         ntlmProxyUrl,
         httpsUrl,
         "GET",
         "/get",
         null,
-        undefined,
+        [expressServer.caCert],
         agent
       );
       throw new Error("Should throw on closed connection");
@@ -736,25 +684,19 @@ describe("Proxy for HTTPS host without NTLM", function () {
 
   it("should terminate client socket on server CONNECT error for non NTLM host", async function () {
     let proxyUrl = new URL(ntlmProxyUrl);
-    let agent = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [expressServer.caCert],
-    });
+    let agent = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer.caCert,
+    ]);
 
     expressServer.closeConnectionOnNextRequest(true);
     try {
-      await ProxyFacade.sendRemoteRequest(
+      await ProxyFacade.sendProxiedHttpsRequest(
         ntlmProxyUrl,
         httpsUrl,
         "GET",
         "/get",
         null,
-        undefined,
+        [expressServer.caCert],
         agent
       );
       throw new Error("Should throw on closed connection");
@@ -801,8 +743,8 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
   let expressServer2 = new ExpressServer();
   let coreServer: ICoreServer;
   let dependencyInjection = new DependencyInjection();
-  let httpsUrl1: string;
-  let httpsUrl2: string;
+  let httpsUrl1: URL;
+  let httpsUrl2: URL;
 
   before(async function () {
     // Start HTTP server and proxy
@@ -811,14 +753,14 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
     httpsUrl1 = await expressServer1.startHttpsServer(true, undefined);
     httpsUrl2 = await expressServer2.startHttpsServer(true, undefined);
     ntlmHostConfig1 = {
-      ntlmHosts: [httpsUrl1.replace("https://", "")],
+      ntlmHosts: [httpsUrl1.host],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
       ntlmVersion: 2,
     };
     ntlmHostConfig2 = {
-      ntlmHosts: [httpsUrl2.replace("https://", "")],
+      ntlmHosts: [httpsUrl2.host],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
@@ -826,8 +768,8 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   after(async function () {
@@ -853,26 +795,26 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
       ntlmHost: "https://my.test.host/",
     };
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl1,
       "POST",
       "/post",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     let resBody = res.data as any;
     assert.equal(resBody.ntlmHost, body.ntlmHost);
     assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl2,
       "POST",
       "/post",
       body,
-      proxyFacade.mitmCaCert
+      [proxyFacade.mitmCaCert]
     );
     assert.equal(res.status, 200);
     resBody = res.data as any;
@@ -891,27 +833,19 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
     };
     let proxyUrl = new URL(ntlmProxyUrl);
 
-    let agent = httpsTunnel({
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
-        headers: { "User-Agent": "Node" },
-      },
-      keepAlive: true,
-      ca: [
-        expressServer1.caCert,
-        expressServer2.caCert,
-        proxyFacade.mitmCaCert,
-      ],
-    });
+    let agent = ProxyFacade.getHttpsProxyAgent(proxyUrl, true, [
+      expressServer1.caCert,
+      expressServer2.caCert,
+      proxyFacade.mitmCaCert,
+    ]);
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl1,
       "POST",
       "/post",
       body,
-      undefined,
+      [expressServer1.caCert, expressServer2.caCert, proxyFacade.mitmCaCert],
       agent
     );
     assert.equal(res.status, 200);
@@ -919,13 +853,13 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
     assert.equal(resBody.ntlmHost, body.ntlmHost);
     assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-    res = await ProxyFacade.sendRemoteRequest(
+    res = await ProxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl2,
       "POST",
       "/post",
       body,
-      undefined,
+      [expressServer1.caCert, expressServer2.caCert, proxyFacade.mitmCaCert],
       agent
     );
     assert.equal(res.status, 200);

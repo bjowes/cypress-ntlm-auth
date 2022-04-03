@@ -5,7 +5,7 @@ import assert from "assert";
 
 import * as http from "http";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { NtlmManager } from "../../../src/proxy/ntlm.manager";
@@ -25,7 +25,7 @@ describe("NtlmManager", () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
-  let httpUrl: string;
+  let httpUrl: URL;
   let ntlm = new Ntlm();
 
   before(async function () {
@@ -134,7 +134,7 @@ describe("NtlmManager", () => {
       expressServer.sendNtlmType2("ÅÄÖåäö");
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl.replace("http://", ""),
+        ntlmHost: httpUrl.host,
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
@@ -146,7 +146,7 @@ describe("NtlmManager", () => {
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
       let agent = new http.Agent({ keepAlive: true });
       ctx.proxyToServerRequestOptions.returns!({
-        host: ntlmHostUrl.hostname,
+        host: URLExt.unescapeHostname(ntlmHostUrl),
         method: "GET",
         headers: {},
         path: "/get",
@@ -184,7 +184,7 @@ describe("NtlmManager", () => {
       );
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl.replace("http://", ""),
+        ntlmHost: httpUrl.host,
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
@@ -196,7 +196,7 @@ describe("NtlmManager", () => {
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
       let agent = new http.Agent({ keepAlive: true });
       ctx.proxyToServerRequestOptions.returns!({
-        host: ntlmHostUrl.hostname,
+        host: URLExt.unescapeHostname(ntlmHostUrl),
         method: "GET",
         headers: {},
         path: "/get",

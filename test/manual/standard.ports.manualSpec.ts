@@ -1,9 +1,9 @@
 // cSpell:ignore nisse, mptst
 
 // This test binds to the default HTTP and HTTPS ports (80 and 443),
-// which requires admin priveliges on many platforms. Hence it must
+// which requires admin privileges on many platforms. Hence it must
 // be run manually. On OS X, you can use (from the project root)
-// sudo node_modules/.bin/mocha --require ./test/ts.hooks.js --require source-map-support/register test/manual/standard.ports.manual.test.ts
+// sudo node_modules/.bin/mocha test/manual/standard.ports.manual.test.ts
 
 import { ProxyFacade } from "../unittest/proxy/proxy.facade";
 import { DependencyInjection } from "../../src/proxy/dependency.injection";
@@ -11,10 +11,10 @@ import { TYPES } from "../../src/proxy/dependency.injection.types";
 import { ExpressServer } from "../unittest/proxy/express.server";
 import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
 import { NtlmConfig } from "../../src/models/ntlm.config.model";
-import { jest } from "@jest/globals";
+import assert from "assert";
 
-let configApiUrl: string;
-let ntlmProxyUrl: string;
+let configApiUrl: URL;
+let ntlmProxyUrl: URL;
 
 describe("Proxy for HTTP host on port 80 with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
@@ -22,15 +22,15 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
-  let httpUrl: string;
+  let httpUrl: URL;
 
-  beforeAll(async function () {
+  before(async function () {
     // Start HTTP server and proxy
-    jest.setTimeout(30000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, 80);
     ntlmHostConfig = {
-      ntlmHosts: [httpUrl],
+      ntlmHosts: [httpUrl.host],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
@@ -38,8 +38,8 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   after(async function () {
@@ -50,29 +50,41 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
 
   beforeEach(async function () {
     // Reset NTLM config
-    jest.setTimeout(5000);
+    this.timeout(5000);
     await ProxyFacade.sendNtlmReset(configApiUrl);
-    ntlmHostConfig.ntlmHosts = [httpUrl];
+    ntlmHostConfig.ntlmHosts = [httpUrl.host];
   });
 
   it("should handle authentication for GET requests when config includes port", async function () {
-    ntlmHostConfig.ntlmHosts = ["http://localhost:80"];
+    ntlmHostConfig.ntlmHosts = [httpUrl.hostname + ":80"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).to.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
-    expect(res.status).to.equal(200);
+    assert.equal(res.status, 200);
+    res = await ProxyFacade.sendProxiedHttpRequest(
+      ntlmProxyUrl,
+      httpUrl,
+      "GET",
+      "/get",
+      null
+    );
+    assert.equal(res.status, 200);
     let resBody = res.data as any;
-    expect(resBody.reply).to.equal("OK ÅÄÖéß");
+    assert.equal(resBody.reply, "OK ÅÄÖéß");
   });
 
   it("should handle authentication for GET requests when config excludes port", async function () {
-    ntlmHostConfig.ntlmHosts = ["http://localhost"];
+    ntlmHostConfig.ntlmHosts = [httpUrl.hostname];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).to.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpUrl, "GET", "/get", null);
-    expect(res.status).to.equal(200);
+    assert.equal(res.status, 200);
+    res = await ProxyFacade.sendProxiedHttpRequest(
+      ntlmProxyUrl,
+      httpUrl,
+      "GET",
+      "/get",
+      null
+    );
+    assert.equal(res.status, 200);
     let resBody = res.data as any;
-    expect(resBody.reply).to.equal("OK ÅÄÖéß");
+    assert.equal(resBody.reply, "OK ÅÄÖéß");
   });
 });
 
@@ -82,15 +94,15 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
-  let httpsUrl: string;
+  let httpsUrl: URL;
 
-  beforeAll(async function () {
+  before(async function () {
     // Start HTTPS server and proxy
-    jest.setTimeout(30000);
+    this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, 443);
     ntlmHostConfig = {
-      ntlmHosts: [httpsUrl],
+      ntlmHosts: [httpsUrl.host],
       username: "nisse",
       password: "manpower",
       domain: "mptst",
@@ -98,8 +110,8 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
-    configApiUrl = ports.configApiUrl;
-    ntlmProxyUrl = ports.ntlmProxyUrl;
+    configApiUrl = new URL(ports.configApiUrl);
+    ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
   });
 
   after(async function () {
@@ -110,28 +122,42 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
 
   beforeEach(async function () {
     // Reset NTLM config
-    jest.setTimeout(5000);
+    this.timeout(5000);
     ProxyFacade.sendNtlmReset(configApiUrl);
-    ntlmHostConfig.ntlmHosts = [httpsUrl];
+    ntlmHostConfig.ntlmHosts = [httpsUrl.host];
   });
 
   it("should handle authentication for GET requests when config includes port", async function () {
-    ntlmHostConfig.ntlmHosts = ["https://localhost:443"];
+    ntlmHostConfig.ntlmHosts = [httpsUrl.hostname + ":443"];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).to.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
-    expect(res.status).to.equal(200);
+    assert.equal(res.status, 200);
+    res = await ProxyFacade.sendProxiedHttpsRequest(
+      ntlmProxyUrl,
+      httpsUrl,
+      "GET",
+      "/get",
+      null,
+      [proxyFacade.mitmCaCert]
+    );
+    assert.equal(res.status, 200);
     let resBody = res.data as any;
-    expect(resBody.reply).to.equal("OK ÅÄÖéß");
+    assert.equal(resBody.reply, "OK ÅÄÖéß");
   });
 
   it("should handle authentication for GET requests when config excludes port", async function () {
-    ntlmHostConfig.ntlmHosts = ["https://localhost"];
+    ntlmHostConfig.ntlmHosts = [httpsUrl.hostname];
     let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
-    expect(res.status).to.equal(200);
-    res = await ProxyFacade.sendRemoteRequest(ntlmProxyUrl, httpsUrl, "GET", "/get", null, proxyFacade.mitmCaCert);
-    expect(res.status).to.equal(200);
+    assert.equal(res.status, 200);
+    res = await ProxyFacade.sendProxiedHttpsRequest(
+      ntlmProxyUrl,
+      httpsUrl,
+      "GET",
+      "/get",
+      null,
+      [proxyFacade.mitmCaCert]
+    );
+    assert.equal(res.status, 200);
     let resBody = res.data as any;
-    expect(resBody.reply).to.equal("OK ÅÄÖéß");
+    assert.equal(resBody.reply, "OK ÅÄÖéß");
   });
 });

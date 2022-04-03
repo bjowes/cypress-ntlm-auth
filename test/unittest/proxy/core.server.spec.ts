@@ -1,5 +1,5 @@
 import assert from "assert";
-import net from "node:net";
+import net from "net";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -92,7 +92,7 @@ describe("Core server startup and shutdown", () => {
     const ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
-    await ProxyFacade.sendQuitCommand(ports.configApiUrl, true);
+    await ProxyFacade.sendQuitCommand(new URL(ports.configApiUrl), true);
     _configApiUrl = undefined;
 
     const reachable = await isProxyReachable(ports);

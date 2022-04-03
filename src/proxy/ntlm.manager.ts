@@ -1,4 +1,4 @@
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";

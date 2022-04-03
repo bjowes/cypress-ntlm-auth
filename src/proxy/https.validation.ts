@@ -65,7 +65,8 @@ export class HttpsValidation implements IHttpsValidation {
     if (this.validationLevel === HttpsValidationLevel.Warn) {
       if (
         targetHost.hostname === "localhost" ||
-        targetHost.hostname === "127.0.0.1"
+        targetHost.hostname === "127.0.0.1" ||
+        targetHost.hostname === "[::]"
       ) {
         // Don't validate localhost targets on level Warn
         return;
@@ -108,7 +109,15 @@ export class HttpsValidation implements IHttpsValidation {
   }
 
   private isIP(hostname: string) {
-    const rx = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
-    return rx.test(hostname);
+    const ipv4ValidatorRegex =
+      /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
+    const ipv6ValidatorRegex = new RegExp(
+      // eslint-disable-next-line max-len
+      /^\[(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\]$/
+    );
+
+    return (
+      ipv4ValidatorRegex.test(hostname) || ipv6ValidatorRegex.test(hostname)
+    );
   }
 }

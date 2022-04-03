@@ -63,22 +63,6 @@ export class Hash {
       CryptoJS.enc.Base64.parse(desKey.toString("base64")),
       { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 }
     );
-    //console.log(des);
-    //console.log(Buffer.from(des.toString(), "base64"));
-    //console.log(des.stringify());
-    //console.log("new des");
-    /*
-    console.log(
-      Buffer.from(CryptoJS.enc.Hex.stringify(des.ciphertext), "hex").slice(
-        0,
-        message.length
-      )
-    );
-
-    const desOld = crypto.createCipheriv("DES-ECB", desKey, null);
-    console.log("old des");
-    console.log(desOld.update(message));
-*/
     // cipher-js returns a larger encrypted buffer than expected, slice to message length
     return Buffer.from(des.toString(), "base64").slice(0, message.length);
   }
@@ -97,31 +81,7 @@ export class Hash {
   }
 
   static createNTLMHash(password: string) {
-    //console.log("new md4");
-    //console.log(md4(passbuf));
-    /*
-    let hash1 = require("js-md4").create();
-    hash1.update(passbuf.buffer);
-    console.log(Buffer.from(hash1.hex(), "hex"));
-
-    console.log("new 2 md4");
-    let hash2 = require("js-md4").create();
-    hash2.update(passbuf.buffer);
-    console.log(hash2.digest());
-
-    console.log("new 3 md4");
-    let hash3 = require("js-md4").create();
-    hash3.update(passbuf.buffer);
-    console.log(Buffer.from(hash3.digest()));
-*/
-    //console.log("old md4");
-    //const md4sum = crypto.createHash("md4");
-    //md4sum.update(passbuf); // lgtm[js/insufficient-password-hash]
-    //console.log(md4sum.digest());
     return md4(Buffer.from(password, "ucs2"));
-    //const md4sum = crypto.createHash("md4");
-    //md4sum.update(Buffer.from(password, "ucs2")); // lgtm[js/insufficient-password-hash]
-    //return md4sum.digest();
   }
 
   static createNTLMv2Hash(

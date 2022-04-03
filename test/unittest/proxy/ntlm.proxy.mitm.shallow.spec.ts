@@ -11,7 +11,7 @@ import { IConnectionContextManager } from "../../../src/proxy/interfaces/i.conne
 import { INtlmManager } from "../../../src/proxy/interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "../../../src/proxy/interfaces/i.upstream.proxy.manager";
 import { NtlmProxyMitm } from "../../../src/proxy/ntlm.proxy.mitm";
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { ExpressServer } from "./express.server";
@@ -225,7 +225,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
-  let httpsUrl: string;
+  let httpsUrl: URL;
   let urlNoProtocol: string;
   let socketMock: SubstituteOf<net.Socket>;
   let expressServer = new ExpressServer();
@@ -235,7 +235,7 @@ describe("NtlmProxyMitm CONNECT", () => {
 
   before(async function () {
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    urlNoProtocol = httpsUrl.substring(httpsUrl.indexOf("localhost"));
+    urlNoProtocol = httpsUrl.host;
   });
 
   beforeEach(async function () {

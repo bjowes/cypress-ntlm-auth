@@ -1,9 +1,9 @@
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { TLSSocket } from "tls";
 import { injectable, inject } from "inversify";
 
 import net from "net";
-import http from "node:http";
+import http from "http";
 
 import { IConfigStore } from "./interfaces/i.config.store";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
@@ -165,6 +165,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
         ctx.onRequestData(function (ctx, chunk, callback) {
+          self._debug.log("got body part");
           context!.addToRequestBody(chunk);
           return callback(undefined, chunk);
         });
@@ -206,6 +207,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
+    self._debug.log("getTargetHost - host header ", host);
     const hostUrl = new URL((ctx.isSSL ? "https://" : "http://") + host);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
@@ -396,22 +398,36 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       self._debug.log("cannot establish connection to server, CONNECT failed");
       socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n", "utf8");
     };
+    const connClosed = function (socket: net.Socket) {
+      self._debug.log("server closed tunnel socket to ", req.url);
+      self._connectionContextManager.removeTunnel(socket);
+      if (!socket.readableFlowing && socket.writable) {
+        // Pipe not established, signal close to server
+        self._debug.log("closing client tunnel to ", req.url);
+        socket.end();
+      }
+    };
+
+    const socketClosed = function (conn: net.Socket) {
+      self._debug.log("client closed tunnel socket to ", req.url);
+      if (!conn.readableFlowing && conn.writable) {
+        // Pipe not established, signal close to server
+        self._debug.log("closing server tunnel to ", req.url);
+        conn.end();
+      }
+    };
+
     const conn = net.connect(
       {
         port: URLExt.portOrDefault(targetHost),
-        host: targetHost.hostname,
-        allowHalfOpen: true,
+        host: URLExt.unescapeHostname(targetHost),
       },
       function () {
-        conn.on("finish", () => {
-          self._connectionContextManager.removeTunnel(socket);
-          socket.destroy();
-        });
-        socket.on("close", () => {
-          self._debug.log("client closed socket, closing tunnel to ", req.url);
-          conn.end();
-        });
         conn.removeListener("close", onPrematureClose);
+        conn.once("finish", () => connClosed(socket));
+        conn.once("close", () => connClosed(socket));
+        socket.once("close", () => socketClosed(conn));
+        socket.once("finish", () => socketClosed(conn));
 
         socket.write("HTTP/1.1 200 OK\r\n\r\n", "utf8", function () {
           conn.write(head);

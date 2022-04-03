@@ -9,7 +9,7 @@ export class TlsCertValidator implements ITlsCertValidator {
     return new Promise<void>((resolve, reject) => {
       const socket = tls.connect(
         {
-          host: targetHost.hostname,
+          host: URLExt.unescapeHostname(targetHost),
           port: URLExt.portOrDefault(targetHost),
           servername: targetHost.hostname,
         },

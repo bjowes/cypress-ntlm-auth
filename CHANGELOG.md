@@ -4,6 +4,9 @@
 
 - Refactored HTTPS validation. By default, the validation will only warn of errors but not break the test. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
 - Improved error logging
+- Support Node 17
+- Fixed support from 14.3.1
+- HTTPS stability improvements
 
 ## 3.2.6 - released 2022-02-19
 

@@ -4,7 +4,7 @@ import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
 import * as http from "http";
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { ConnectionContext } from "../../../src/proxy/connection.context";
@@ -23,7 +23,7 @@ describe("NegotiateManager", () => {
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
   let resetServer = new ResetServer();
-  let httpUrl: string;
+  let httpUrl: URL;
   let resetUrl: string;
 
   before(async function () {
@@ -68,15 +68,25 @@ describe("NegotiateManager", () => {
           return;
         },
       } as any);
-      expressServer.sendWwwAuth([{ header: "Negotiate TestResponse1", status: 200 }]);
+      expressServer.sendWwwAuth([
+        { header: "Negotiate TestResponse1", status: 200 },
+      ]);
 
-      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext, (err, res) => {
-        assert.equal(err, undefined);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.Authenticated);
-        assert.notEqual(res!.statusCode, 401);
-        res!.resume();
-        return done();
-      });
+      negotiateManager.handshake(
+        ctx,
+        ntlmHostUrl,
+        connectionContext,
+        (err, res) => {
+          assert.equal(err, undefined);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.Authenticated
+          );
+          assert.notEqual(res!.statusCode, 401);
+          res!.resume();
+          return done();
+        }
+      );
     });
 
     it("Successful auth with 2 roundtrips", (done) => {
@@ -85,7 +95,9 @@ describe("NegotiateManager", () => {
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
-      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("Negotiate TEST", "");
+      winSsoFacadeMock
+        .createAuthResponseHeader(Arg.any())
+        .returns("Negotiate TEST", "");
       const ctx = Substitute.for<IContext>();
       ctx.proxyToServerRequestOptions.returns!({
         protocol: "http:",
@@ -106,13 +118,21 @@ describe("NegotiateManager", () => {
         { header: "Negotiate TestResponse2", status: 200 },
       ]);
 
-      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext, (err, res) => {
-        assert.equal(err, undefined);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.Authenticated);
-        assert.notEqual(res!.statusCode, 401);
-        res!.resume();
-        return done();
-      });
+      negotiateManager.handshake(
+        ctx,
+        ntlmHostUrl,
+        connectionContext,
+        (err, res) => {
+          assert.equal(err, undefined);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.Authenticated
+          );
+          assert.notEqual(res!.statusCode, 401);
+          res!.resume();
+          return done();
+        }
+      );
     });
 
     it("Successful auth with 3 roundtrips", (done) => {
@@ -121,7 +141,9 @@ describe("NegotiateManager", () => {
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
-      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("Negotiate TEST", "Negotiate TEST2", "");
+      winSsoFacadeMock
+        .createAuthResponseHeader(Arg.any())
+        .returns("Negotiate TEST", "Negotiate TEST2", "");
       const ctx = Substitute.for<IContext>();
       ctx.proxyToServerRequestOptions.returns!({
         protocol: "http:",
@@ -143,13 +165,21 @@ describe("NegotiateManager", () => {
         { header: "Negotiate TestResponse3", status: 200 },
       ]);
 
-      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext, (err, res) => {
-        assert.equal(err, undefined);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.Authenticated);
-        assert.notEqual(res!.statusCode, 401);
-        res!.resume();
-        return done();
-      });
+      negotiateManager.handshake(
+        ctx,
+        ntlmHostUrl,
+        connectionContext,
+        (err, res) => {
+          assert.equal(err, undefined);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.Authenticated
+          );
+          assert.notEqual(res!.statusCode, 401);
+          res!.resume();
+          return done();
+        }
+      );
     });
   });
 
@@ -164,13 +194,26 @@ describe("NegotiateManager", () => {
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
-      negotiateManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, {}, false, () => {
-        return;
-      });
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        () => {
+          return;
+        }
+      );
       debugMock
         .received(1)
-        .log("Negotiate authentication failed (invalid credentials) with host", "http://www.google.com:8081/");
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+        .log(
+          "Negotiate authentication failed (invalid credentials) with host",
+          "http://www.google.com:8081/"
+        );
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Valid credentials shall set authenticated state", async function () {
@@ -183,11 +226,26 @@ describe("NegotiateManager", () => {
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
-      negotiateManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, {}, false, () => {
-        return;
-      });
-      debugMock.received(1).log("Negotiate authentication successful with host", "http://www.google.com:8081/");
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.Authenticated);
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        () => {
+          return;
+        }
+      );
+      debugMock
+        .received(1)
+        .log(
+          "Negotiate authentication successful with host",
+          "http://www.google.com:8081/"
+        );
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.Authenticated
+      );
     });
 
     it("Response with empty Negotiate token shall be logged and clear auth state", async function () {
@@ -200,16 +258,26 @@ describe("NegotiateManager", () => {
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
-      negotiateManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, {}, false, () => {
-        return;
-      });
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        () => {
+          return;
+        }
+      );
       debugMock
         .received(1)
         .log(
           "Negotiate authentication failed (server responded without token) with host",
           "http://www.google.com:8081/"
         );
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Response without Negotiate header shall be logged and clear auth state", async function () {
@@ -222,20 +290,30 @@ describe("NegotiateManager", () => {
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
-      negotiateManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, {}, false, (err, res) => {
-        assert.notEqual(err, null);
-        assert.equal(
-          err!.message,
-          "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
-        );
-      });
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        (err, res) => {
+          assert.notEqual(err, null);
+          assert.equal(
+            err!.message,
+            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
+          );
+        }
+      );
       debugMock
         .received(1)
         .log(
           "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
           "http://www.google.com:8081/"
         );
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Response without www-authenticate header shall be logged and clear auth state", async function () {
@@ -248,20 +326,30 @@ describe("NegotiateManager", () => {
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
-      negotiateManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, {}, false, (err, res) => {
-        assert.notEqual(err, null);
-        assert.equal(
-          err!.message,
-          "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
-        );
-      });
+      negotiateManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        {},
+        false,
+        (err, res) => {
+          assert.notEqual(err, null);
+          assert.equal(
+            err!.message,
+            "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host http://www.google.com:8081/"
+          );
+        }
+      );
       debugMock
         .received(1)
         .log(
           "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
           "http://www.google.com:8081/"
         );
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Cannot create Negotiate request token", function (done) {
@@ -277,12 +365,20 @@ describe("NegotiateManager", () => {
       ctx.isSSL.returns!(false);
       ctx.serverToProxyResponse.returns!({ statusCode: 999 } as any);
 
-      negotiateManager.handshake(ctx, new URL(httpUrl), connectionContext, (err, res) => {
-        assert.equal(err!.message, "Negotiate test");
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
-        assert.equal(res!.statusCode, 999);
-        return done();
-      });
+      negotiateManager.handshake(
+        ctx,
+        new URL(httpUrl),
+        connectionContext,
+        (err, res) => {
+          assert.equal(err!.message, "Negotiate test");
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
+          assert.equal(res!.statusCode, 999);
+          return done();
+        }
+      );
     });
 
     it("Error sending Negotiate request message", function (done) {
@@ -306,15 +402,26 @@ describe("NegotiateManager", () => {
         },
       } as any);
 
-      negotiateManager.handshake(ctx, ntlmHostUrl, connectionContext, (err, res) => {
-        const linuxErrorExpect = "read ECONNRESET";
-        const winMacErrorExpect = "socket hang up";
-        const errorMatch = err != null && (err.message === linuxErrorExpect || err.message === winMacErrorExpect);
-        assert.equal(errorMatch, true);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
-        assert.equal(res, undefined);
-        return done();
-      });
+      negotiateManager.handshake(
+        ctx,
+        ntlmHostUrl,
+        connectionContext,
+        (err, res) => {
+          const linuxErrorExpect = "read ECONNRESET";
+          const winMacErrorExpect = "socket hang up";
+          const errorMatch =
+            err != null &&
+            (err.message === linuxErrorExpect ||
+              err.message === winMacErrorExpect);
+          assert.equal(errorMatch, true);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
+          assert.equal(res, undefined);
+          return done();
+        }
+      );
     });
 
     it("Cannot create Negotiate response message", function (done) {
@@ -339,7 +446,10 @@ describe("NegotiateManager", () => {
         false,
         (err, res) => {
           assert.equal(err!.message, "Negotiate test");
-          assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
           assert.equal(res!.statusCode, 999);
           return done();
         }
@@ -363,7 +473,9 @@ describe("NegotiateManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
-      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("Negotiate TestResponse");
+      winSsoFacadeMock
+        .createAuthResponseHeader(Arg.any())
+        .returns("Negotiate TestResponse");
       const ctx = Substitute.for<IContext>();
       ctx.proxyToServerRequestOptions.returns!({
         protocol: "http:",
@@ -388,9 +500,15 @@ describe("NegotiateManager", () => {
         (err, res) => {
           const linuxErrorExpect = "read ECONNRESET";
           const winMacErrorExpect = "socket hang up";
-          const errorMatch = err != null && (err.message === linuxErrorExpect || err.message === winMacErrorExpect);
+          const errorMatch =
+            err != null &&
+            (err.message === linuxErrorExpect ||
+              err.message === winMacErrorExpect);
           assert.equal(errorMatch, true);
-          assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
           assert.equal(res, undefined);
           return done();
         }

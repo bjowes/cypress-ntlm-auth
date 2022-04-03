@@ -120,6 +120,129 @@ describe("ConfigStore", () => {
       assert.ok(res);
       assert.equal(res!.password, "dummy3");
     });
+
+    it("should return match with port for http default port", function () {
+      // Arrange
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:80"],
+        username: "nisse\\nisse",
+        password: "dummy",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:443"],
+        username: "nisse\\nisse",
+        password: "dummy2",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org"],
+        username: "nisse\\nisse",
+        password: "dummy3",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+
+      // Act
+      let res = configStore.get(new URL("http://www.acme.org"));
+
+      // Assert
+      assert.ok(res);
+      assert.equal(res!.password, "dummy");
+    });
+
+    it("should return match with port for https default port", function () {
+      // Arrange
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:80"],
+        username: "nisse\\nisse",
+        password: "dummy",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:443"],
+        username: "nisse\\nisse",
+        password: "dummy2",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org"],
+        username: "nisse\\nisse",
+        password: "dummy3",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+
+      // Act
+      let res = configStore.get(new URL("https://www.acme.org"));
+
+      // Assert
+      assert.ok(res);
+      assert.equal(res!.password, "dummy2");
+    });
+
+    it("should return match without port for non-default port", function () {
+      // Arrange
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:80"],
+        username: "nisse\\nisse",
+        password: "dummy",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:443"],
+        username: "nisse\\nisse",
+        password: "dummy2",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+      hostConfig = {
+        ntlmHosts: ["www.acme.org"],
+        username: "nisse\\nisse",
+        password: "dummy3",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+
+      // Act
+      let res = configStore.get(new URL("https://www.acme.org:81"));
+
+      // Assert
+      assert.ok(res);
+      assert.equal(res!.password, "dummy3");
+    });
+
+    it("should return undefined if no matches exists in ntlmHosts", function () {
+      // Arrange
+      hostConfig = {
+        ntlmHosts: ["www.acme.org:5001"],
+        username: "nisse\\nisse",
+        password: "dummy",
+        domain: "mptest",
+        ntlmVersion: 2,
+      };
+      configStore.updateConfig(hostConfig);
+
+      // Act
+      const res = configStore.get(new URL("http://www.acme.org:5000"));
+
+      // Assert
+      assert.ok(res === undefined);
+    });
   });
 
   describe("existsOrUseSso", function () {
@@ -227,7 +350,9 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://a.google.more.b.nothing.com"));
+      let res = configStore.existsOrUseSso(
+        new URL("http://a.google.more.b.nothing.com")
+      );
 
       // Assert
       assert.equal(res, true);
@@ -241,7 +366,9 @@ describe("ConfigStore", () => {
       configStore.setSsoConfig(ssoConfig);
 
       // Act
-      let res = configStore.existsOrUseSso(new URL("http://a.google.more.b.com"));
+      let res = configStore.existsOrUseSso(
+        new URL("http://a.google.more.b.com")
+      );
 
       // Assert
       assert.equal(res, false);

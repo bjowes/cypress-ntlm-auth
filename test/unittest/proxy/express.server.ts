@@ -59,30 +59,37 @@ export class ExpressServer {
     );
   }
 
-  private createResponse(res: express.Response, body: any) {
+  private overrideNtlm(res: express.Response): boolean {
     if (this.closeConnectionOnNextRequestState) {
+      debug("closeConnectionOnNextRequestState - closing!");
       this.closeConnectionOnNextRequestState = false;
       res.socket?.destroy();
-      return;
+      return true;
     }
-
-    res.setHeader("Content-Type", "application/json");
     if (this.sendNtlmType2Header !== null) {
+      debug("sendNtlmType2Header - sending header!");
       res.setHeader("www-authenticate", "NTLM " + this.sendNtlmType2Header);
       res.sendStatus(401);
-      return;
+      return true;
     }
     if (this.sendWwwAuthHeader.length > 0) {
       const auth = this.sendWwwAuthHeader.shift();
-      res.setHeader("www-authenticate", auth!.header);
-      res.sendStatus(auth!.status);
-      return;
+      if (auth!.header !== "PASS-ON") {
+        debug("sendWwwAuthHeader - sending header!");
+        res.setHeader("www-authenticate", auth!.header);
+        res.sendStatus(auth!.status);
+        return true;
+      }
     }
+    return false;
+  }
 
+  private createResponse(res: express.Response, body: any) {
     if (this.customStatusPhrase) {
       res.statusMessage = this.customStatusPhrase;
       this.customStatusPhrase = null;
     }
+    res.setHeader("Content-Type", "application/json");
     res.status(200).send(JSON.stringify(body));
   }
 
@@ -105,6 +112,19 @@ export class ExpressServer {
       });
     });
 
+    app.use(
+      (
+        req: express.Request,
+        res: express.Response,
+        next: express.NextFunction
+      ) => {
+        this.lastRequestHeaders = req.headers;
+        if (!this.overrideNtlm(res)) {
+          return next();
+        }
+      }
+    );
+
     if (useNtlm) {
       app.use(
         ntlm({
@@ -121,7 +141,6 @@ export class ExpressServer {
     }
 
     app.get("/get", (req, res) => {
-      this.lastRequestHeaders = req.headers;
       let body = {
         message: "Expecting larger payload on GET",
         reply: "OK ÅÄÖéß",
@@ -130,9 +149,8 @@ export class ExpressServer {
     });
 
     app.post("/post", (req, res) => {
-      this.lastRequestHeaders = req.headers;
       if (!req.body || !("ntlmHost" in req.body)) {
-        res.status(400).send("Invalid body");
+        return res.status(400).send("Invalid body");
       }
 
       req.body.reply = "OK ÅÄÖéß";
@@ -140,9 +158,8 @@ export class ExpressServer {
     });
 
     app.put("/put", (req, res) => {
-      this.lastRequestHeaders = req.headers;
       if (!req.body || !("ntlmHost" in req.body)) {
-        res.status(400).send("Invalid body");
+        return res.status(400).send("Invalid body");
       }
 
       req.body.reply = "OK ÅÄÖéß";
@@ -150,9 +167,8 @@ export class ExpressServer {
     });
 
     app.delete("/delete", (req, res) => {
-      this.lastRequestHeaders = req.headers;
       if (!req.body || !("ntlmHost" in req.body)) {
-        res.status(400).send("Invalid body");
+        return res.status(400).send("Invalid body");
       }
 
       req.body.reply = "OK ÅÄÖéß";
@@ -259,6 +275,10 @@ export class ExpressServer {
             value: "localhost",
           },
           {
+            type: 2, // hostname
+            value: "[::]",
+          },
+          {
             type: 7, // IP
             ip: "127.0.0.1",
           },
@@ -281,7 +301,7 @@ export class ExpressServer {
     this.publicKeyPem = forge.pki.publicKeyToPem(keysServer.publicKey);
   }
 
-  async startHttpServer(useNtlm: boolean, port?: number): Promise<string> {
+  async startHttpServer(useNtlm: boolean, port?: number): Promise<URL> {
     if (!port) {
       port = 0;
     }
@@ -300,11 +320,11 @@ export class ExpressServer {
         this.httpServerSockets.delete(socket);
       });
     });
-    return await new Promise<string>((resolve, reject) => {
+    return await new Promise<URL>((resolve, reject) => {
       this.httpServer.on("listening", () => {
         const addressInfo = this.httpServer.address() as AddressInfo;
         const url = this.addressInfoToUrl(addressInfo, "http:");
-        debug("http webserver listening: ", url);
+        debug("http webserver listening: ", url.origin);
         this.httpServer.removeListener("error", reject);
         resolve(url);
       });
@@ -335,12 +355,14 @@ export class ExpressServer {
 
   private addressInfoToUrl(addressInfo: AddressInfo, protocol: string) {
     if (addressInfo.family === "IPv6") {
-      return `${protocol}//[${addressInfo.address}]:${addressInfo.port}`;
+      return new URL(
+        `${protocol}//[${addressInfo.address}]:${addressInfo.port}`
+      );
     }
-    return `${protocol}//${addressInfo.address}:${addressInfo.port}`;
+    return new URL(`${protocol}//${addressInfo.address}:${addressInfo.port}`);
   }
 
-  async startHttpsServer(useNtlm: boolean, port?: number): Promise<string> {
+  async startHttpsServer(useNtlm: boolean, port?: number): Promise<URL> {
     if (!port) {
       port = 0;
     }
@@ -373,11 +395,11 @@ export class ExpressServer {
       });
     });
 
-    return await new Promise<string>((resolve, reject) => {
+    return await new Promise<URL>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
         const addressInfo = this.httpsServer.address() as AddressInfo;
         const url = this.addressInfoToUrl(addressInfo, "https:");
-        debug("https webserver listening: ", url);
+        debug("https webserver listening: ", url.origin);
         this.httpsServer.removeListener("error", reject);
         resolve(url);
       });
