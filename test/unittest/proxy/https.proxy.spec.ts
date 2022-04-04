@@ -370,7 +370,7 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
     httpsUrl = await expressServer.startHttpsServer(true, undefined);
 
     ntlmSsoConfig = {
-      ntlmHosts: [httpsUrl.host],
+      ntlmHosts: [httpsUrl.hostname],
     };
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);

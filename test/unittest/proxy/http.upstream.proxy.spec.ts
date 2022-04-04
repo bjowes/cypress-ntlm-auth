@@ -246,7 +246,7 @@ describeIfWindows(
       );
       httpUrl = await expressServer.startHttpServer(true, undefined);
       ntlmSsoConfig = {
-        ntlmHosts: [httpUrl.host],
+        ntlmHosts: [httpUrl.hostname],
       };
       coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
       let ports = await coreServer.start(

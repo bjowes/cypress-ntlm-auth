@@ -11,7 +11,14 @@ describe("SsoConfigValidator", function () {
 
     beforeEach(function () {
       config = {
-        ntlmHosts: ["localhost"],
+        ntlmHosts: [
+          "*.acme.org",
+          "www.google.com",
+          "localhost",
+          "127.0.0.1",
+          "[::]",
+          "[2001:0db8:85a3:0000:0000:8a2e:0370:7334]",
+        ],
       };
     });
 
@@ -36,7 +43,13 @@ describe("SsoConfigValidator", function () {
 
     it("Mix of valid hostnames and FQDNs in ntlmHosts succeeds", function () {
       // Arrange
-      config.ntlmHosts = ["localhost", "nisse", "bavaria", "www.google.com", "dn.se"];
+      config.ntlmHosts = [
+        "localhost",
+        "nisse",
+        "bavaria",
+        "www.google.com",
+        "dn.se",
+      ];
 
       // Act
       const result = SsoConfigValidator.validate(config);
@@ -47,7 +60,14 @@ describe("SsoConfigValidator", function () {
 
     it("Mix of valid hostnames, FQDNs and wildcard FQDNs in ntlmHosts succeeds", function () {
       // Arrange
-      config.ntlmHosts = ["localhost", "nisse", "bavaria", "github.com", "*.google.com", "*.dn.*.se"];
+      config.ntlmHosts = [
+        "localhost",
+        "nisse",
+        "bavaria",
+        "github.com",
+        "*.google.com",
+        "*.dn.*.se",
+      ];
 
       // Act
       const result = SsoConfigValidator.validate(config);

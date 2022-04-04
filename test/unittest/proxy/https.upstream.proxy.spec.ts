@@ -280,7 +280,7 @@ describeIfWindows(
       );
       httpsUrl = await expressServer.startHttpsServer(true, undefined);
       ntlmSsoConfig = {
-        ntlmHosts: [httpsUrl.host],
+        ntlmHosts: [httpsUrl.hostname],
       };
 
       coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
