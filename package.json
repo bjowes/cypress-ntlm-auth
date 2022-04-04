@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/bjowes/cypress-ntlm-auth#readme",
   "dependencies": {
-    "@bjowes/http-mitm-proxy": "^0.9.2",
+    "@bjowes/http-mitm-proxy": "^0.9.3",
     "body-parser": "^1.19.0",
     "crypto-js": "^4.1.1",
     "express": "^4.17.0",
