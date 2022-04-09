@@ -12,6 +12,7 @@ import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { DependencyInjection } from "../../../src/proxy/dependency.injection";
 import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { TYPES } from "../../../src/proxy/dependency.injection.types";
+import { URLExt } from "../../../src/util/url.ext";
 
 let _configApiUrl: URL | undefined;
 
@@ -45,8 +46,8 @@ async function initRemoteHost() {
     resolve(listener);
   });
   if (remoteHostListener) {
-    let addressInfo = remoteHostListener.address() as AddressInfo;
-    remoteHostWithPort = new URL("http://localhost:" + addressInfo.port);
+    const addressInfo = remoteHostListener.address() as AddressInfo;
+    remoteHostWithPort = URLExt.addressInfoToUrl(addressInfo, "http:");
   } else {
     throw new Error("Could not start test server");
   }

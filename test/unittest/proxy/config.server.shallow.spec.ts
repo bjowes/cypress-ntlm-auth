@@ -24,24 +24,34 @@ describe("ConfigServer", () => {
     expressServerMock = Substitute.for<IExpressServerFacade>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
-    configServer = new ConfigServer(expressServerMock, configControllerMock, portsConfigStoreMock, debugMock);
+    configServer = new ConfigServer(
+      expressServerMock,
+      configControllerMock,
+      portsConfigStoreMock,
+      debugMock
+    );
   });
 
   it("start should use port 0 (any free port) if undefined", async function () {
     let listenPort: any;
     expressServerMock.listen(Arg.all()).mimicks((port: any) => {
       listenPort = port === 0 ? 123 : port;
-      return Promise.resolve("http://127.0.0.1:" + listenPort);
+      return Promise.resolve(new URL("http://127.0.0.1:" + listenPort));
     });
 
     await configServer.start();
     expressServerMock.received(1).listen(0);
     assert.equal(123, listenPort);
-    assert.equal(portsConfigStoreMock.configApiUrl!.href, new URL("http://127.0.0.1:" + listenPort).href);
+    assert.equal(
+      portsConfigStoreMock.configApiUrl!.href,
+      new URL("http://127.0.0.1:" + listenPort).href
+    );
   });
 
   it("start should call init", async function () {
-    expressServerMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
+    expressServerMock
+      .listen(Arg.any())
+      .returns(Promise.resolve(new URL("http://127.0.0.1:2000")));
 
     await configServer.start();
 
@@ -65,7 +75,9 @@ describe("ConfigServer", () => {
   });
 
   it("stop should close server listener", async function () {
-    expressServerMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
+    expressServerMock
+      .listen(Arg.any())
+      .returns(Promise.resolve(new URL("http://127.0.0.1:2000")));
     expressServerMock.close().returns(Promise.resolve());
     await configServer.start();
     await configServer.stop();
@@ -74,7 +86,9 @@ describe("ConfigServer", () => {
   });
 
   it("stop should throw if close fail", async function () {
-    expressServerMock.listen(Arg.any()).returns(Promise.resolve("http://127.0.0.1:2000"));
+    expressServerMock
+      .listen(Arg.any())
+      .returns(Promise.resolve(new URL("http://127.0.0.1:2000")));
     expressServerMock.close().returns(Promise.reject(new Error("test")));
     await configServer.start();
     await assert.rejects(configServer.stop(), /test$/);

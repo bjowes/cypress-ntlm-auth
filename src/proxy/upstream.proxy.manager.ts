@@ -1,7 +1,10 @@
 import { injectable } from "inversify";
 import { URLExt } from "../util/url.ext";
 
-import { HttpHeaders, IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
+import {
+  HttpHeaders,
+  IUpstreamProxyManager,
+} from "./interfaces/i.upstream.proxy.manager";
 
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
@@ -30,7 +33,11 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
 
   private validateUpstreamProxy(proxyUrl: string, parameterName: string) {
     const proxyParsed = new URL(proxyUrl);
-    if (!proxyParsed.protocol || !proxyParsed.hostname || proxyParsed.pathname !== "/") {
+    if (
+      !proxyParsed.protocol ||
+      !proxyParsed.hostname ||
+      proxyParsed.pathname !== "/"
+    ) {
       throw new Error(
         "Invalid " +
           parameterName +
@@ -74,12 +81,12 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     if (proxyUrl) {
       if (isSSL) {
         agentOptions.proxy = {
-          host: proxyUrl.hostname,
+          host: URLExt.unescapeHostname(proxyUrl),
           port: URLExt.portOrDefault(proxyUrl),
           secureProxy: proxyUrl.protocol === "https:",
         };
       } else {
-        agentOptions.host = proxyUrl.hostname;
+        agentOptions.host = URLExt.unescapeHostname(proxyUrl);
         agentOptions.port = URLExt.portOrDefault(proxyUrl);
         agentOptions.secureProxy = proxyUrl.protocol === "https:";
       }

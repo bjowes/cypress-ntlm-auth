@@ -36,14 +36,14 @@ async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
   const proxyUrl = new URL(ports.ntlmProxyUrl);
 
   let reachable = await isPortReachable(
-    proxyUrl.hostname,
+    URLExt.unescapeHostname(proxyUrl),
     URLExt.portOrDefault(proxyUrl)
   );
   if (!reachable) {
     return false;
   }
   reachable = await isPortReachable(
-    configUrl.hostname,
+    URLExt.unescapeHostname(configUrl),
     URLExt.portOrDefault(configUrl)
   );
   if (!reachable) {

@@ -40,8 +40,8 @@ export class NtlmProxyServer implements INtlmProxyServer {
     this.init();
 
     try {
-      this._portsConfigStore.ntlmProxyUrl = new URL(
-        await this._httpMitmProxy.listen(port ?? 0)
+      this._portsConfigStore.ntlmProxyUrl = await this._httpMitmProxy.listen(
+        port ?? 0
       );
       this._debug.log(
         "NTLM auth proxy listening on :",

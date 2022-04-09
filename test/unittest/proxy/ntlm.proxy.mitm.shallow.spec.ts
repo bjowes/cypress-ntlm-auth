@@ -437,7 +437,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   function getFreePort(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
       let server = http.createServer();
-      server.listen(0);
+      server.listen(0, "localhost");
       server.on("listening", function () {
         let port = (server.address() as net.AddressInfo).port;
         server.close();

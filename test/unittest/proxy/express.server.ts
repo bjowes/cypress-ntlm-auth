@@ -11,6 +11,7 @@ import { AddressInfo } from "net";
 import * as stream from "stream";
 
 import debugInit from "debug";
+import { URLExt } from "../../../src/util/url.ext";
 const debug = debugInit("cypress:plugin:ntlm-auth:express-ntlm");
 
 interface ExpressError extends Error {
@@ -276,7 +277,7 @@ export class ExpressServer {
           },
           {
             type: 2, // hostname
-            value: "[::]",
+            value: "[::1]",
           },
           {
             type: 7, // IP
@@ -323,13 +324,13 @@ export class ExpressServer {
     return await new Promise<URL>((resolve, reject) => {
       this.httpServer.on("listening", () => {
         const addressInfo = this.httpServer.address() as AddressInfo;
-        const url = this.addressInfoToUrl(addressInfo, "http:");
+        const url = URLExt.addressInfoToUrl(addressInfo, "http:");
         debug("http webserver listening: ", url.origin);
         this.httpServer.removeListener("error", reject);
         resolve(url);
       });
       this.httpServer.on("error", reject);
-      this.httpServer.listen(port); // , "127.0.0.1");
+      this.httpServer.listen(port, "localhost");
     });
   }
 
@@ -351,15 +352,6 @@ export class ExpressServer {
       socket.destroy();
     }
     this.httpServerSockets = new Set();
-  }
-
-  private addressInfoToUrl(addressInfo: AddressInfo, protocol: string) {
-    if (addressInfo.family === "IPv6") {
-      return new URL(
-        `${protocol}//[${addressInfo.address}]:${addressInfo.port}`
-      );
-    }
-    return new URL(`${protocol}//${addressInfo.address}:${addressInfo.port}`);
   }
 
   async startHttpsServer(useNtlm: boolean, port?: number): Promise<URL> {
@@ -398,13 +390,13 @@ export class ExpressServer {
     return await new Promise<URL>((resolve, reject) => {
       this.httpsServer.on("listening", () => {
         const addressInfo = this.httpsServer.address() as AddressInfo;
-        const url = this.addressInfoToUrl(addressInfo, "https:");
+        const url = URLExt.addressInfoToUrl(addressInfo, "https:");
         debug("https webserver listening: ", url.origin);
         this.httpsServer.removeListener("error", reject);
         resolve(url);
       });
       this.httpsServer.on("error", reject);
-      this.httpsServer.listen(port); // , "127.0.0.1");
+      this.httpsServer.listen(port, "localhost");
     });
   }
 

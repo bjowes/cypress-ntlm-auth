@@ -1,3 +1,5 @@
+import { AddressInfo } from "net";
+
 export class URLExt {
   static portOrDefault(url: URL): number {
     if (url.port) {
@@ -25,8 +27,22 @@ export class URLExt {
    * @param url {URL} Url
    * @returns Hostname without IPv6 quotes
    */
-
   static unescapeHostname(url: URL) {
     return url.hostname.replace("[", "").replace("]", "");
+  }
+
+  /**
+   * Converts an AddressInfo object (from a listen callback) to an URL
+   * @param addressInfo {AddressInfo} AddressInfo
+   * @param protocol {string} Communication protocol, such as http:
+   * @returns {URL} URL
+   */
+  static addressInfoToUrl(addressInfo: AddressInfo, protocol: string): URL {
+    if (addressInfo.family === "IPv6") {
+      return new URL(
+        `${protocol}//[${addressInfo.address}]:${addressInfo.port}`
+      );
+    }
+    return new URL(`${protocol}//${addressInfo.address}:${addressInfo.port}`);
   }
 }

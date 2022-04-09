@@ -115,7 +115,9 @@ function configureCert(certServer, publicKey) {
     // generate random 16 bytes hex string
     let sn = "";
     for (let i = 0; i < 4; i++) {
-      sn += ("00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)).slice(-8);
+      sn += (
+        "00000000" + Math.floor(Math.random() * Math.pow(256, 4)).toString(16)
+      ).slice(-8);
     }
     return sn;
   }
@@ -268,15 +270,28 @@ const allServers = [httpServer, httpsServer, ntlmHttpServer, ntlmHttpsServer];
 addQuitApi(app, allServers);
 addQuitApi(appNtlm, allServers);
 
-httpsServer.listen(HTTPS_PORT, () => {
-  console.log(`listening on https://localhost:${HTTPS_PORT}!`);
+function addressInfoToUrl(addressInfo, protocol) {
+  if (addressInfo.family === "IPv6") {
+    return new URL(`${protocol}//[${addressInfo.address}]:${addressInfo.port}`);
+  }
+  return new URL(`${protocol}//${addressInfo.address}:${addressInfo.port}`);
+}
+
+const serverAddress = process.env.E2E_SERVER_ADDRESS ?? "127.0.0.1";
+
+httpsServer.listen(HTTPS_PORT, serverAddress, () => {
+  const url = addressInfoToUrl(httpsServer.address(), "https:");
+  console.log(`listening on ${url.origin}`);
 });
-httpServer.listen(HTTP_PORT, () => {
-  console.log(`listening on http://localhost:${HTTP_PORT}!`);
+httpServer.listen(HTTP_PORT, serverAddress, () => {
+  const url = addressInfoToUrl(httpServer.address(), "http:");
+  console.log(`listening on ${url.origin}`);
 });
-ntlmHttpServer.listen(NTLM_HTTP_PORT, () => {
-  console.log(`listening with NTLM on http://localhost:${NTLM_HTTP_PORT}!`);
+ntlmHttpServer.listen(NTLM_HTTP_PORT, serverAddress, () => {
+  const url = addressInfoToUrl(ntlmHttpServer.address(), "http:");
+  console.log(`listening on ${url.origin}`);
 });
-ntlmHttpsServer.listen(NTLM_HTTPS_PORT, () => {
-  console.log(`listening with NTLM on https://localhost:${NTLM_HTTPS_PORT}!`);
+ntlmHttpsServer.listen(NTLM_HTTPS_PORT, serverAddress, () => {
+  const url = addressInfoToUrl(ntlmHttpsServer.address(), "https:");
+  console.log(`listening on ${url.origin}`);
 });

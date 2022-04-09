@@ -46,7 +46,7 @@ export class ProxyFacade {
     });
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: "localhost",
-      port: undefined,
+      port: 0,
       keepAlive: true,
       forceSNI: false,
       httpAgent: this._httpAgent,
@@ -55,8 +55,6 @@ export class ProxyFacade {
     this._trackedSockets = {};
 
     this._mitmProxy = httpMitmProxy();
-
-    mitmOptions.port = 0;
 
     this._mitmProxy.onError(function (ctx, err, errorKind) {
       let url =
@@ -115,9 +113,8 @@ export class ProxyFacade {
         if (err) {
           reject(err);
         }
-        const listenUrl = new URL(
-          "http://localhost:" + this._mitmProxy!.httpPort
-        );
+        const addressInfo = this._mitmProxy!.address();
+        const listenUrl = URLExt.addressInfoToUrl(addressInfo, "http:");
         debug("listening on " + listenUrl.origin);
         resolve(listenUrl);
       })
@@ -230,7 +227,7 @@ export class ProxyFacade {
   static getHttpProxyAgent(proxyUrl: URL, keepAlive: boolean) {
     return new http.Agent({
       keepAlive: keepAlive,
-      host: proxyUrl.hostname,
+      host: URLExt.unescapeHostname(proxyUrl),
       port: URLExt.portOrDefault(proxyUrl),
     });
   }
@@ -262,7 +259,7 @@ export class ProxyFacade {
   ) {
     return httpsTunnel({
       proxy: {
-        host: proxyUrl.hostname,
+        host: URLExt.unescapeHostname(proxyUrl),
         port: URLExt.portOrDefault(proxyUrl),
         secureProxy: proxyUrl.protocol === "https:",
         headers: {

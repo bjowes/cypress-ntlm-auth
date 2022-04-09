@@ -5,10 +5,16 @@ function initWs(wsUri, elementId, closeAfterFirstMessage) {
 }
 
 function initAllWs() {
-  initWs("ws://localhost:5002/ws/echo", "ws-output");
-  initWs("ws://localhost:5000/ws/echo", "ws-ntlm-output");
-  initWs("wss://localhost:5003/ws/echo", "wss-output");
-  initWs("wss://localhost:5001/ws/echo", "wss-ntlm-output");
+  initWs("ws://" + document.location.hostname + ":5002/ws/echo", "ws-output");
+  initWs(
+    "ws://" + document.location.hostname + ":5000/ws/echo",
+    "ws-ntlm-output"
+  );
+  initWs("wss://" + document.location.hostname + ":5003/ws/echo", "wss-output");
+  initWs(
+    "wss://" + document.location.hostname + ":5001/ws/echo",
+    "wss-ntlm-output"
+  );
 }
 
 function testWebSocket(wsUri, outputElement, closeAfterFirstMessage) {

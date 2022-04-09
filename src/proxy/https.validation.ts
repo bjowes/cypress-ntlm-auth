@@ -66,7 +66,7 @@ export class HttpsValidation implements IHttpsValidation {
       if (
         targetHost.hostname === "localhost" ||
         targetHost.hostname === "127.0.0.1" ||
-        targetHost.hostname === "[::]"
+        targetHost.hostname === "[::1]"
       ) {
         // Don't validate localhost targets on level Warn
         return;

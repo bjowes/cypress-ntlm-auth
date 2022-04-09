@@ -1,11 +1,8 @@
 /// <reference types="Cypress" />
 
-context("Load test with mixed HTTP/HTTPS hosts", function () {
-  const httpHost = new URL("http://localhost:5002");
-  const httpsHost = new URL("https://localhost:5003");
-  const httpNtlmHost = new URL("http://localhost:5000");
-  const httpsNtlmHost = new URL("https://localhost:5001");
+const server = require("../support/serverAddress");
 
+context("Load test with mixed HTTP/HTTPS hosts", function () {
   beforeEach("Reset NTLM config", function () {
     cy.ntlmReset();
   });
@@ -17,7 +14,7 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
         const id = iteration;
         cy.request({
           method: "GET",
-          url: httpHost.origin + "/api/get" + "?id=" + id,
+          url: server.httpHost.origin + "/api/get" + "?id=" + id,
         }).should((response) => {
           expect(response.status).to.equal(200);
           console.log(response.body);
@@ -27,13 +24,13 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("100 NTLM HTTP GET requests", function () {
-      cy.ntlm([httpNtlmHost.host], "nisse", "manpower", "mpatst");
+      cy.ntlm([server.httpNtlmHost.host], "nisse", "manpower", "mpatst");
       let iteration = 100;
       while (iteration--) {
         const id = iteration;
         cy.request({
           method: "GET",
-          url: httpNtlmHost.origin + "/api/get" + "?id=" + id,
+          url: server.httpNtlmHost.origin + "/api/get" + "?id=" + id,
         }).should((response) => {
           expect(response.status).to.equal(200);
           console.log(response.body);
@@ -43,7 +40,7 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("100 NTLM HTTP POST requests", function () {
-      cy.ntlm([httpNtlmHost.host], "nisse", "manpower", "mpatst");
+      cy.ntlm([server.httpNtlmHost.host], "nisse", "manpower", "mpatst");
 
       let iteration = 100;
       while (iteration--) {
@@ -53,7 +50,7 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
 
         cy.request({
           method: "POST",
-          url: httpNtlmHost.origin + "/api/post",
+          url: server.httpNtlmHost.origin + "/api/post",
           body: body,
         }).should((response) => {
           expect(response.status).to.equal(200);
@@ -65,12 +62,12 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
 
     it("HTTP page with 100 random API calls", function () {
       cy.ntlm(
-        [httpNtlmHost.host, httpsNtlmHost.host],
+        [server.httpNtlmHost.host, server.httpsNtlmHost.host],
         "nisse",
         "manpower",
         "mpatst"
       );
-      cy.visit(httpHost.origin + "/load-test.html");
+      cy.visit(server.httpHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -79,12 +76,12 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
 
     it("Authenticated HTTP page with 100 random API calls", function () {
       cy.ntlm(
-        [httpNtlmHost.host, httpsNtlmHost.host],
+        [server.httpNtlmHost.host, server.httpsNtlmHost.host],
         "nisse",
         "manpower",
         "mpatst"
       );
-      cy.visit(httpNtlmHost.origin + "/load-test.html");
+      cy.visit(server.httpNtlmHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -93,12 +90,12 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
 
     it("HTTPS page with 100 random API calls", function () {
       cy.ntlm(
-        [httpNtlmHost.host, httpsNtlmHost.host],
+        [server.httpNtlmHost.host, server.httpsNtlmHost.host],
         "nisse",
         "manpower",
         "mpatst"
       );
-      cy.visit(httpsHost.origin + "/load-test.html");
+      cy.visit(server.httpsHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -107,12 +104,12 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
 
     it("Authenticated HTTPS page with 100 random API calls", function () {
       cy.ntlm(
-        [httpNtlmHost.host, httpsNtlmHost.host],
+        [server.httpNtlmHost.host, server.httpsNtlmHost.host],
         "nisse",
         "manpower",
         "mpatst"
       );
-      cy.visit(httpsNtlmHost.origin + "/load-test.html");
+      cy.visit(server.httpsNtlmHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -128,8 +125,8 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("HTTP page with 100 random API calls", function () {
-      cy.ntlmSso([httpNtlmHost.hostname]);
-      cy.visit(httpHost.origin + "/load-test.html");
+      cy.ntlmSso([server.httpNtlmHost.hostname]);
+      cy.visit(server.httpHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -137,8 +134,8 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("Authenticated HTTP page with 100 random API calls", function () {
-      cy.ntlmSso([httpNtlmHost.hostname]);
-      cy.visit(httpNtlmHost.origin + "/load-test.html");
+      cy.ntlmSso([server.httpNtlmHost.hostname]);
+      cy.visit(server.httpNtlmHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -146,8 +143,8 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("HTTPS page with 100 random API calls", function () {
-      cy.ntlmSso([httpNtlmHost.hostname]);
-      cy.visit(httpsHost.origin + "/load-test.html");
+      cy.ntlmSso([server.httpNtlmHost.hostname]);
+      cy.visit(server.httpsHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
@@ -155,8 +152,8 @@ context("Load test with mixed HTTP/HTTPS hosts", function () {
     });
 
     it("Authenticated HTTPS page with 100 random API calls", function () {
-      cy.ntlmSso([httpNtlmHost.hostname]);
-      cy.visit(httpsNtlmHost.origin + "/load-test.html");
+      cy.ntlmSso([server.httpNtlmHost.hostname]);
+      cy.visit(server.httpsNtlmHost.origin + "/load-test.html");
       cy.get("#error-count", { timeout: 20000 }).should(
         "contain.text",
         "No errors!"
