@@ -1,12 +1,13 @@
 # Changelog
 
-## 4.0.0 - released 2022-02-21
+## 4.0.0 - released 2022-04-13
 
 - Refactored HTTPS validation. By default, the validation will only warn of errors but not break the test. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
 - Improved error logging
 - Support Node 17
 - Fixed support from 14.13.1
 - HTTPS stability improvements
+- IPv6 support. Cypress does not fully support IPv6 yet though.
 
 ## 3.2.6 - released 2022-02-19
 
