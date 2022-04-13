@@ -1,8 +1,8 @@
-import net from "node:net";
-import tls from "node:tls";
-import http from "node:http";
-import https from "node:https";
-import { EventEmitter } from "node:events";
+import net from "net";
+import tls from "tls";
+import http from "http";
+import https from "https";
+import { EventEmitter } from "events";
 import debugInit from "debug";
 
 const debug = debugInit("cypress:plugin:ntlm-auth:tunnelagent");
@@ -135,7 +135,11 @@ export class TunnelAgent extends EventEmitter {
     debug("[" + this.agentId + "]: " + message);
   }
 
-  constructor(options: CombinedAgentOptions, proxyOverHttps: boolean = false, targetUsesHttps: boolean = false) {
+  constructor(
+    options: CombinedAgentOptions,
+    proxyOverHttps: boolean = false,
+    targetUsesHttps: boolean = false
+  ) {
     super();
     const self = this;
     this.options = options;
@@ -146,12 +150,17 @@ export class TunnelAgent extends EventEmitter {
     this.sockets = new SocketStore();
     this.freeSockets = new SocketStore();
     this.request = proxyOverHttps ? https.request : http.request;
-    this.createSocket = targetUsesHttps ? this.createSecureSocket : this.createTcpSocket;
+    this.createSocket = targetUsesHttps
+      ? this.createSecureSocket
+      : this.createTcpSocket;
     this.defaultPort = targetUsesHttps ? 443 : 80;
     this.agentId = agentCount++;
 
     // attempt to negotiate http/1.1 for proxy servers that support http/2
-    if (this.proxyOptions.secureProxy && !("ALPNProtocols" in this.proxyOptions)) {
+    if (
+      this.proxyOptions.secureProxy &&
+      !("ALPNProtocols" in this.proxyOptions)
+    ) {
       this.proxyOptions.ALPNProtocols = ["http 1.1"];
     }
 
@@ -254,14 +263,25 @@ export class TunnelAgent extends EventEmitter {
     }
   }
 
-  private createSocketInternal(request: Request, cb: (socket: net.Socket) => void) {
+  private escapeHost(hostname: string, port: string | number) {
+    if (hostname.indexOf(":") === -1) {
+      return `${hostname}:${port}`;
+    }
+    return `[${hostname}]:${port}`;
+  }
+
+  private createSocketInternal(
+    request: Request,
+    cb: (socket: net.Socket) => void
+  ) {
     const self = this;
+    const host = this.escapeHost(request.options.host!, request.options.port!);
     const connectOptions: http.RequestOptions = {
       ...self.proxyOptions,
       method: "CONNECT",
-      path: request.options.host + ":" + request.options.port,
+      path: host,
       headers: {
-        host: request.options.host + ":" + request.options.port,
+        host: host,
       },
     };
     if (request.options.localAddress) {
@@ -279,15 +299,26 @@ export class TunnelAgent extends EventEmitter {
     connectReq.end();
 
     // eslint-disable-next-line jsdoc/require-jsdoc
-    function onConnect(res: http.IncomingMessage, socket: net.Socket, head: string): void {
+    function onConnect(
+      res: http.IncomingMessage,
+      socket: net.Socket,
+      head: string
+    ): void {
       connectReq.removeAllListeners();
       socket.removeAllListeners();
 
       if (res.statusCode !== 200) {
-        self.debugLog("tunneling socket could not be established, statusCode=" + res.statusCode);
+        self.debugLog(
+          "tunneling socket could not be established, statusCode=" +
+            res.statusCode
+        );
         socket.destroy();
         request.clientReq.destroy(
-          new Error("tunneling socket could not be established, " + "statusCode=" + res.statusCode)
+          new Error(
+            "tunneling socket could not be established, " +
+              "statusCode=" +
+              res.statusCode
+          )
         );
         self.processPending();
         return;
@@ -295,7 +326,9 @@ export class TunnelAgent extends EventEmitter {
       if (head.length > 0) {
         self.debugLog("got illegal response body from proxy");
         socket.destroy();
-        request.clientReq.destroy(new Error("got illegal response body from proxy"));
+        request.clientReq.destroy(
+          new Error("got illegal response body from proxy")
+        );
         self.processPending();
         return;
       }
@@ -307,8 +340,19 @@ export class TunnelAgent extends EventEmitter {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function onError(cause: Error): void {
       connectReq.removeAllListeners();
-      self.debugLog("tunneling socket could not be established, cause=" + cause.message + "\n" + cause.stack);
-      request.clientReq.destroy(new Error("tunneling socket could not be established, " + "cause=" + cause.message));
+      self.debugLog(
+        "tunneling socket could not be established, cause=" +
+          cause.message +
+          "\n" +
+          cause.stack
+      );
+      request.clientReq.destroy(
+        new Error(
+          "tunneling socket could not be established, " +
+            "cause=" +
+            cause.message
+        )
+      );
       self.processPending();
     }
   }
@@ -324,7 +368,9 @@ export class TunnelAgent extends EventEmitter {
 
   private createTcpSocket(request: Request) {
     const self = this;
-    self.createSocketInternal(request, (socket: net.Socket) => self.executeRequest(request, socket));
+    self.createSocketInternal(request, (socket: net.Socket) =>
+      self.executeRequest(request, socket)
+    );
   }
 
   private createSecureSocket(request: Request) {

@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { md4 } from "./md4";
+import CryptoJS from "crypto-js";
 import { Type2Message } from "./type2.message";
 
 export class Hash {
@@ -56,8 +58,13 @@ export class Hash {
       desKey[i] |= parity % 2 === 0 ? 1 : 0;
     }
 
-    const des = crypto.createCipheriv("DES-ECB", desKey, "");
-    return des.update(message);
+    const des = CryptoJS.DES.encrypt(
+      CryptoJS.enc.Base64.parse(message.toString("base64")),
+      CryptoJS.enc.Base64.parse(desKey.toString("base64")),
+      { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 }
+    );
+    // cipher-js returns a larger encrypted buffer than expected, slice to message length
+    return Buffer.from(des.toString(), "base64").slice(0, message.length);
   }
 
   static createNTLMResponse(challenge: Buffer, ntlmhash: Buffer) {
@@ -74,12 +81,14 @@ export class Hash {
   }
 
   static createNTLMHash(password: string) {
-    const md4sum = crypto.createHash("md4");
-    md4sum.update(Buffer.from(password, "ucs2")); // lgtm[js/insufficient-password-hash]
-    return md4sum.digest();
+    return md4(Buffer.from(password, "ucs2"));
   }
 
-  static createNTLMv2Hash(ntlmhash: Buffer, username: string, authTargetName: string) {
+  static createNTLMv2Hash(
+    ntlmhash: Buffer,
+    username: string,
+    authTargetName: string
+  ) {
     const hmac = crypto.createHmac("md5", ntlmhash);
     hmac.update(Buffer.from(username.toUpperCase() + authTargetName, "ucs2")); // lgtm[js/weak-cryptographic-algorithm]
     return hmac.digest();
@@ -140,8 +149,12 @@ export class Hash {
     buf.writeUInt32LE(0, 20);
 
     // timestamp
-    const timestampLow = Number("0x" + timestamp.substring(Math.max(0, timestamp.length - 8)));
-    const timestampHigh = Number("0x" + timestamp.substring(0, Math.max(0, timestamp.length - 8)));
+    const timestampLow = Number(
+      "0x" + timestamp.substring(Math.max(0, timestamp.length - 8))
+    );
+    const timestampHigh = Number(
+      "0x" + timestamp.substring(0, Math.max(0, timestamp.length - 8))
+    );
 
     buf.writeUInt32LE(timestampLow, 24);
     buf.writeUInt32LE(timestampHigh, 28);

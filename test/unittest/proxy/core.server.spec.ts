@@ -1,5 +1,5 @@
 import assert from "assert";
-import net from "node:net";
+import net from "net";
 
 import { ProxyFacade } from "./proxy.facade";
 
@@ -35,11 +35,17 @@ async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
   const configUrl = new URL(ports.configApiUrl);
   const proxyUrl = new URL(ports.ntlmProxyUrl);
 
-  let reachable = await isPortReachable(proxyUrl.hostname, URLExt.portOrDefault(proxyUrl));
+  let reachable = await isPortReachable(
+    URLExt.unescapeHostname(proxyUrl),
+    URLExt.portOrDefault(proxyUrl)
+  );
   if (!reachable) {
     return false;
   }
-  reachable = await isPortReachable(configUrl.hostname, URLExt.portOrDefault(configUrl));
+  reachable = await isPortReachable(
+    URLExt.unescapeHostname(configUrl),
+    URLExt.portOrDefault(configUrl)
+  );
   if (!reachable) {
     return false;
   }
@@ -70,26 +76,26 @@ describe("Core server startup and shutdown", () => {
     }
   });
 
-  it("starting proxy should write portsFile", async function () {
+  it("starting proxy should return URLs", async function () {
     // Act
-    let ports = await coreServer.start(undefined, undefined, undefined);
+    const ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
     assert.ok(ports.configApiUrl.length > 5);
     assert.ok(ports.ntlmProxyUrl.length > 5);
-    let reachable = await isProxyReachable(ports);
+    const reachable = await isProxyReachable(ports);
     assert.equal(reachable, true);
   });
 
-  it("quit command shuts down the proxy, keep portsFile", async function () {
+  it("quit command shuts down the proxy", async function () {
     // Act
-    let ports = await coreServer.start(undefined, undefined, undefined);
+    const ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
-    await ProxyFacade.sendQuitCommand(ports.configApiUrl, true);
+    await ProxyFacade.sendQuitCommand(new URL(ports.configApiUrl), true);
     _configApiUrl = undefined;
 
-    let reachable = await isProxyReachable(ports);
+    const reachable = await isProxyReachable(ports);
     assert.equal(reachable, false);
   });
 });

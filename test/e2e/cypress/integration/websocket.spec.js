@@ -1,17 +1,14 @@
 /// <reference types="Cypress" />
 
-context("Proxy websocket on HTTP server", function () {
-  const httpHost = "http://localhost:5002";
-  const httpsHost = "https://localhost:5003";
-  const httpNtlmHost = "http://localhost:5000";
-  const httpsNtlmHost = "https://localhost:5001";
+const server = require("../support/serverAddress");
 
+context("Proxy websocket on HTTP server", function () {
   beforeEach("Reset NTLM config", function () {
     cy.ntlmReset();
   });
 
   it("should handle HTTP websocket", function () {
-    cy.visit(httpHost + "/websocket.html");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP WebSocket").click();
     cy.get("#ws-output")
       .should("contain", "CONNECTED")
@@ -21,7 +18,7 @@ context("Proxy websocket on HTTP server", function () {
   });
 
   it("should handle open HTTP websocket", function () {
-    cy.visit(httpHost + "/websocket.html");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP WebSocket - stay open").click();
     cy.get("#ws-output")
       .should("contain", "CONNECTED")
@@ -31,8 +28,8 @@ context("Proxy websocket on HTTP server", function () {
   });
 
   it.skip("should handle HTTP websocket with NTLM - NOT SUPPORTED", function () {
-    cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
-    cy.visit(httpHost + "/websocket.html");
+    cy.ntlm([server.httpNtlmHost.host], "nisse", "manpower", "mpatst");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP NTLM WebSocket").click();
     cy.get("#ws-ntlm-output")
       .should("contain", "CONNECTED")
@@ -42,7 +39,7 @@ context("Proxy websocket on HTTP server", function () {
   });
 
   it("should handle HTTPS websocket", function () {
-    cy.visit(httpHost + "/websocket.html");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS WebSocket").click();
     cy.get("#wss-output")
       .should("contain", "CONNECTED")
@@ -52,7 +49,7 @@ context("Proxy websocket on HTTP server", function () {
   });
 
   it("should handle open HTTPS websocket", function () {
-    cy.visit(httpHost + "/websocket.html");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS WebSocket - stay open").click();
     cy.get("#wss-output")
       .should("contain", "CONNECTED")
@@ -62,8 +59,8 @@ context("Proxy websocket on HTTP server", function () {
   });
 
   it.skip("should handle HTTPS websocket with NTLM - NOT SUPPORTED", function () {
-    cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
-    cy.visit(httpHost + "/websocket.html");
+    cy.ntlm([server.httpsNtlmHost.host], "nisse", "manpower", "mpatst");
+    cy.visit(server.httpHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS NTLM WebSocket").click();
     cy.get("#wss-ntlm-output")
       .should("contain", "CONNECTED")
@@ -74,16 +71,12 @@ context("Proxy websocket on HTTP server", function () {
 });
 
 context("Proxy websocket on HTTPS server", function () {
-  const httpsHost = "https://localhost:5003";
-  const httpNtlmHost = "http://localhost:5000";
-  const httpsNtlmHost = "https://localhost:5001";
-
   beforeEach("Reset NTLM config", function () {
     cy.ntlmReset();
   });
 
   it("should handle HTTP websocket", function () {
-    cy.visit(httpsHost + "/websocket.html");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP WebSocket").click();
     cy.get("#ws-output")
       .should("contain", "CONNECTED")
@@ -93,7 +86,7 @@ context("Proxy websocket on HTTPS server", function () {
   });
 
   it("should handle open HTTP websocket", function () {
-    cy.visit(httpsHost + "/websocket.html");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP WebSocket - stay open").click();
     cy.get("#ws-output")
       .should("contain", "CONNECTED")
@@ -103,8 +96,8 @@ context("Proxy websocket on HTTPS server", function () {
   });
 
   it.skip("should handle HTTP websocket with NTLM - NOT SUPPORTED", function () {
-    cy.ntlm(httpNtlmHost, "nisse", "manpower", "mpatst");
-    cy.visit(httpsHost + "/websocket.html");
+    cy.ntlm([server.httpNtlmHost.host], "nisse", "manpower", "mpatst");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTP NTLM WebSocket").click();
     cy.get("#ws-ntlm-output")
       .should("contain", "CONNECTED")
@@ -114,7 +107,7 @@ context("Proxy websocket on HTTPS server", function () {
   });
 
   it("should handle HTTPS websocket", function () {
-    cy.visit(httpsHost + "/websocket.html");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS WebSocket").click();
     cy.get("#wss-output")
       .should("contain", "CONNECTED")
@@ -124,7 +117,7 @@ context("Proxy websocket on HTTPS server", function () {
   });
 
   it("should handle open HTTPS websocket", function () {
-    cy.visit(httpsHost + "/websocket.html");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS WebSocket - stay open").click();
     cy.get("#wss-output")
       .should("contain", "CONNECTED")
@@ -134,8 +127,8 @@ context("Proxy websocket on HTTPS server", function () {
   });
 
   it.skip("should handle HTTPS websocket with NTLM - NOT SUPPORTED", function () {
-    cy.ntlm(httpsNtlmHost, "nisse", "manpower", "mpatst");
-    cy.visit(httpsHost + "/websocket.html");
+    cy.ntlm([server.httpsNtlmHost.host], "nisse", "manpower", "mpatst");
+    cy.visit(server.httpsHost.origin + "/websocket.html");
     cy.get("button").contains("HTTPS NTLM WebSocket").click();
     cy.get("#wss-ntlm-output")
       .should("contain", "CONNECTED")

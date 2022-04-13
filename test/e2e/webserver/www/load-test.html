@@ -29,7 +29,7 @@
         if (site === 1 || site === 3) {
           protocol = "https://";
         }
-        var url = protocol + "localhost:500" + site;
+        var url = protocol + document.location.hostname + ":500" + site;
         request(url, reqType, cb(url, reqType));
       }
 

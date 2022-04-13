@@ -11,13 +11,14 @@ import { IConnectionContextManager } from "../../../src/proxy/interfaces/i.conne
 import { INtlmManager } from "../../../src/proxy/interfaces/i.ntlm.manager";
 import { IUpstreamProxyManager } from "../../../src/proxy/interfaces/i.upstream.proxy.manager";
 import { NtlmProxyMitm } from "../../../src/proxy/ntlm.proxy.mitm";
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { ExpressServer } from "./express.server";
 import { INegotiateManager } from "../../../src/proxy/interfaces/i.negotiate.manager";
 import { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade";
 import { PortsConfigStoreMock } from "./ports.config.store.mock";
+import { IHttpsValidation } from "../../../src/proxy/interfaces/i.https.validation";
 import { IWinSsoFacadeFactory } from "../../../src/proxy/interfaces/i.win-sso.facade.factory";
 
 describe("NtlmProxyMitm error logging", () => {
@@ -30,6 +31,7 @@ describe("NtlmProxyMitm error logging", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -43,6 +45,7 @@ describe("NtlmProxyMitm error logging", () => {
     negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
@@ -53,6 +56,7 @@ describe("NtlmProxyMitm error logging", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -74,7 +78,9 @@ describe("NtlmProxyMitm error logging", () => {
       code: "code",
     };
     const ctx = Substitute.for<IContext>();
-    ctx.clientToProxyRequest.returns!(undefined as unknown as http.IncomingMessage);
+    ctx.clientToProxyRequest.returns!(
+      undefined as unknown as http.IncomingMessage
+    );
     ntlmProxyMitm.onError(ctx, error, "SOME");
     debugMock.received(1).log("SOME" + " on " + "" + ":", error);
   });
@@ -110,7 +116,11 @@ describe("NtlmProxyMitm error logging", () => {
     ntlmProxyMitm.onError(ctx, error, "PROXY_TO_SERVER_REQUEST_ERROR");
     debugMock
       .received(1)
-      .log("Chrome startup HEAD request detected (host: " + mockHost + "). Ignoring connection error.");
+      .log(
+        "Chrome startup HEAD request detected (host: " +
+          mockHost +
+          "). Ignoring connection error."
+      );
   });
 
   it("chrome startup connection tests (host with port) should not throw", function () {
@@ -130,7 +140,11 @@ describe("NtlmProxyMitm error logging", () => {
     ntlmProxyMitm.onError(ctx, error, "PROXY_TO_SERVER_REQUEST_ERROR");
     debugMock
       .received(1)
-      .log("Chrome startup HEAD request detected (host: " + mockHost + "). Ignoring connection error.");
+      .log(
+        "Chrome startup HEAD request detected (host: " +
+          mockHost +
+          "). Ignoring connection error."
+      );
   });
 });
 
@@ -144,6 +158,7 @@ describe("NtlmProxyMitm REQUEST", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -157,7 +172,7 @@ describe("NtlmProxyMitm REQUEST", () => {
     negotiateManagerMock = Substitute.for<INegotiateManager>();
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
-
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyMitm = new NtlmProxyMitm(
@@ -168,6 +183,7 @@ describe("NtlmProxyMitm REQUEST", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -205,10 +221,11 @@ describe("NtlmProxyMitm CONNECT", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
-  let httpsUrl: string;
+  let httpsUrl: URL;
   let urlNoProtocol: string;
   let socketMock: SubstituteOf<net.Socket>;
   let expressServer = new ExpressServer();
@@ -218,7 +235,7 @@ describe("NtlmProxyMitm CONNECT", () => {
 
   before(async function () {
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    urlNoProtocol = httpsUrl.substring(httpsUrl.indexOf("localhost"));
+    urlNoProtocol = httpsUrl.host;
   });
 
   beforeEach(async function () {
@@ -232,10 +249,12 @@ describe("NtlmProxyMitm CONNECT", () => {
       }
       return socketMock;
     });
-    socketMock.write(Arg.any(), Arg.any(), Arg.any()).mimicks((str, encoding, cb) => {
-      if (cb) cb();
-      return true;
-    });
+    socketMock
+      .write(Arg.any(), Arg.any(), Arg.any())
+      .mimicks((str, encoding, cb) => {
+        if (cb) cb();
+        return true;
+      });
     socketMock.pipe(Arg.all()).mimicks((stream) => {
       serverStream = stream;
       return socketMock;
@@ -253,6 +272,7 @@ describe("NtlmProxyMitm CONNECT", () => {
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -264,6 +284,7 @@ describe("NtlmProxyMitm CONNECT", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });
@@ -297,7 +318,14 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     socketEventListener!(error);
-    debugMock.received(1).log("Got unexpected error on " + "CLIENT_TO_PROXY_SOCKET. Target: " + urlNoProtocol, error);
+    debugMock
+      .received(1)
+      .log(
+        "Got unexpected error on " +
+          "CLIENT_TO_PROXY_SOCKET. Target: " +
+          urlNoProtocol,
+        error
+      );
     serverStream!.end();
   });
 
@@ -315,7 +343,14 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     socketEventListener!(error);
-    debugMock.received(1).log("Got ECONNRESET on " + "CLIENT_TO_PROXY_SOCKET" + ", ignoring. Target: " + urlNoProtocol);
+    debugMock
+      .received(1)
+      .log(
+        "Got ECONNRESET on " +
+          "CLIENT_TO_PROXY_SOCKET" +
+          ", ignoring. Target: " +
+          urlNoProtocol
+      );
     serverStream!.end();
   });
 
@@ -333,7 +368,14 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     serverStream!.emit("error", error);
-    debugMock.received(1).log("Got unexpected error on " + "PROXY_TO_SERVER_SOCKET. Target: " + urlNoProtocol, error);
+    debugMock
+      .received(1)
+      .log(
+        "Got unexpected error on " +
+          "PROXY_TO_SERVER_SOCKET. Target: " +
+          urlNoProtocol,
+        error
+      );
     serverStream!.end();
   });
 
@@ -351,7 +393,14 @@ describe("NtlmProxyMitm CONNECT", () => {
     });
     await waitForServerStream();
     serverStream!.emit("error", error);
-    debugMock.received(1).log("Got ECONNRESET on " + "PROXY_TO_SERVER_SOCKET" + ", ignoring. Target: " + urlNoProtocol);
+    debugMock
+      .received(1)
+      .log(
+        "Got ECONNRESET on " +
+          "PROXY_TO_SERVER_SOCKET" +
+          ", ignoring. Target: " +
+          urlNoProtocol
+      );
     serverStream!.end();
   });
 
@@ -388,7 +437,7 @@ describe("NtlmProxyMitm CONNECT", () => {
   function getFreePort(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
       let server = http.createServer();
-      server.listen(0);
+      server.listen(0, "localhost");
       server.on("listening", function () {
         let port = (server.address() as net.AddressInfo).port;
         server.close();
@@ -411,6 +460,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   let negotiateManagerMock: SubstituteOf<INegotiateManager>;
   let ntlmManagerMock: SubstituteOf<INtlmManager>;
   let upstreamProxyManagerMock: SubstituteOf<IUpstreamProxyManager>;
+  let httpsValidationMock: SubstituteOf<IHttpsValidation>;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
 
@@ -427,6 +477,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
     ntlmManagerMock = Substitute.for<INtlmManager>();
     upstreamProxyManagerMock = Substitute.for<IUpstreamProxyManager>();
     upstreamProxyManagerMock.hasHttpsUpstreamProxy(Arg.any()).returns(false);
+    httpsValidationMock = Substitute.for<IHttpsValidation>();
 
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -438,6 +489,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
       negotiateManagerMock,
       ntlmManagerMock,
       upstreamProxyManagerMock,
+      httpsValidationMock,
       debugMock
     );
   });

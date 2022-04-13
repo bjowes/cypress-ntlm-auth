@@ -1,4 +1,4 @@
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
@@ -20,7 +20,10 @@ export class NegotiateManager implements INegotiateManager {
     ctx: IContext,
     ntlmHostUrl: URL,
     context: IConnectionContext,
-    callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
+    callback: (
+      error?: NodeJS.ErrnoException,
+      res?: http.IncomingMessage
+    ) => void
   ) {
     context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
     let requestToken: string;
@@ -47,10 +50,20 @@ export class NegotiateManager implements INegotiateManager {
     }
     const proto = ctx.isSSL ? https : http;
     const req = proto.request(requestOptions, (res) =>
-      this.handshakeResponse(res, ntlmHostUrl, context, originalRequestOptions, ctx.isSSL, callback)
+      this.handshakeResponse(
+        res,
+        ntlmHostUrl,
+        context,
+        originalRequestOptions,
+        ctx.isSSL,
+        callback
+      )
     );
     req.on("error", (err) => {
-      this._debug.log("Error while sending Negotiate message token request:", err);
+      this._debug.log(
+        "Error while sending Negotiate message token request:",
+        err
+      );
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err);
     });
@@ -66,7 +79,10 @@ export class NegotiateManager implements INegotiateManager {
     context: IConnectionContext,
     originalRequestOptions: https.RequestOptions,
     isSSL: boolean,
-    callback: (error?: NodeJS.ErrnoException, res?: http.IncomingMessage) => void
+    callback: (
+      error?: NodeJS.ErrnoException,
+      res?: http.IncomingMessage
+    ) => void
   ) {
     res.pause();
 
@@ -86,11 +102,17 @@ export class NegotiateManager implements INegotiateManager {
           res
         );
       } else if (res.statusCode === 401) {
-        this._debug.log("Negotiate authentication failed (invalid credentials) with host", ntlmHostUrl.href);
+        this._debug.log(
+          "Negotiate authentication failed (invalid credentials) with host",
+          ntlmHostUrl.href
+        );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(undefined, res);
       } else {
-        this._debug.log("Negotiate authentication failed (server responded without token) with host", ntlmHostUrl.href);
+        this._debug.log(
+          "Negotiate authentication failed (server responded without token) with host",
+          ntlmHostUrl.href
+        );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(undefined, res);
       }
@@ -99,19 +121,27 @@ export class NegotiateManager implements INegotiateManager {
     context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
     let responseToken: string;
     try {
-      responseToken = context.winSso.createAuthResponseHeader(res.headers["www-authenticate"] || "");
+      responseToken = context.winSso.createAuthResponseHeader(
+        res.headers["www-authenticate"] || ""
+      );
     } catch (err) {
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(err as NodeJS.ErrnoException, res);
     }
 
     if (!responseToken && res.statusCode !== 401) {
-      this._debug.log("Negotiate authentication successful with host", ntlmHostUrl.href);
+      this._debug.log(
+        "Negotiate authentication successful with host",
+        ntlmHostUrl.href
+      );
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
       return callback(undefined, res);
     }
     if (!responseToken && res.statusCode === 401) {
-      this._debug.log("Negotiate authentication failed (invalid credentials) with host", ntlmHostUrl.href);
+      this._debug.log(
+        "Negotiate authentication failed (invalid credentials) with host",
+        ntlmHostUrl.href
+      );
       context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
       return callback(undefined, res);
     }
@@ -132,14 +162,26 @@ export class NegotiateManager implements INegotiateManager {
     res.on("end", () => {
       const proto = isSSL ? https : http;
       const req = proto.request(requestOptions, (res) =>
-        this.handshakeResponse(res, ntlmHostUrl, context, originalRequestOptions, isSSL, callback)
+        this.handshakeResponse(
+          res,
+          ntlmHostUrl,
+          context,
+          originalRequestOptions,
+          isSSL,
+          callback
+        )
       );
       req.on("error", (err) => {
-        this._debug.log("Error while sending Negotiate message token response:", err);
+        this._debug.log(
+          "Error while sending Negotiate message token response:",
+          err
+        );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
         return callback(err);
       });
-      this._debug.log("Sending Negotiate message token response with initial client request");
+      this._debug.log(
+        "Sending Negotiate message token response with initial client request"
+      );
       this.debugHeader(responseToken, true);
       context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
       req.write(context.getRequestBody());
@@ -161,7 +203,10 @@ export class NegotiateManager implements INegotiateManager {
   acceptsNegotiateAuthentication(res: http.IncomingMessage): boolean {
     // Ensure that we're talking Negotiate here
     const wwwAuthenticate = res.headers["www-authenticate"];
-    if (wwwAuthenticate && wwwAuthenticate.split(", ").indexOf("Negotiate") !== -1) {
+    if (
+      wwwAuthenticate &&
+      wwwAuthenticate.split(", ").indexOf("Negotiate") !== -1
+    ) {
       return true;
     }
     return false;
@@ -176,7 +221,10 @@ export class NegotiateManager implements INegotiateManager {
   }
 
   private debugHeader(obj: any, brackets: boolean) {
-    if (process.env.DEBUG_NTLM_HEADERS && process.env.DEBUG_NTLM_HEADERS === "1") {
+    if (
+      process.env.DEBUG_NTLM_HEADERS &&
+      process.env.DEBUG_NTLM_HEADERS === "1"
+    ) {
       if (brackets) {
         this._debug.log("[" + obj + "]");
       } else {

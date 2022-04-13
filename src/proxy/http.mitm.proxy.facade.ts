@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
-import httpMitmProxy from "http-mitm-proxy";
+import httpMitmProxy from "@bjowes/http-mitm-proxy";
 import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
+import { URLExt } from "../util/url.ext";
 
 @injectable()
 export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
@@ -16,16 +17,19 @@ export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
     return this;
   }
 
-  listen(port: number): Promise<string> {
-    return new Promise<string>((resolve, reject) =>
-      this._ntlmProxy.listen({ host: "localhost", port: port, keepAlive: true, forceSNI: false }, (err: Error) => {
-        if (err) {
-          reject(err);
+  listen(port: number): Promise<URL> {
+    return new Promise<URL>((resolve, reject) =>
+      this._ntlmProxy.listen(
+        { host: "127.0.0.1", port: port, keepAlive: true, forceSNI: false },
+        (err: Error) => {
+          if (err) {
+            return reject(err);
+          }
+          this._ntlmProxyListening = true;
+          const addressInfo = this._ntlmProxy.address();
+          resolve(URLExt.addressInfoToUrl(addressInfo, "http:"));
         }
-        this._ntlmProxyListening = true;
-        const url = "http://127.0.0.1:" + this._ntlmProxy.httpPort;
-        resolve(url);
-      })
+      )
     );
   }
 

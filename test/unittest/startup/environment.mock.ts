@@ -1,4 +1,5 @@
 import { PortsConfig } from "../../../src/models/ports.config.model";
+import { HttpsValidationLevel } from "../../../src/proxy/https.validation";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
 import { URLExt } from "../../../src/util/url.ext";
 
@@ -15,6 +16,9 @@ export class EnvironmentMock implements IEnvironment {
   }
   get ntlmProxyPort(): number | undefined {
     return this.portFromUrl(this.ntlmProxyUrl);
+  }
+  get httpsValidation(): HttpsValidationLevel {
+    return HttpsValidationLevel.Warn;
   }
 
   configureForCypress(ports: PortsConfig) {

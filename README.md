@@ -22,13 +22,9 @@ _Want to use NTLM or Negotiate authentication for something else?_
 
 Parts of this library should be readily reusable, the ntlm-proxy is application agnostic and should be usable with Selenium or other solutions - you'll have to provide the streamlining into your application yourself though.
 
-## BREAKING CHANGES from 3.0.0
+## BREAKING CHANGES from 4.0.0
 
-The launcher has been refactored to start the ntlm-proxy internally (not in a separate shell as before). This simplifies the setup a bit and makes it possible to run multiple instances of cypress with this plugin in parallel!
-To migrate to this version:
-
-- Remove any code referencing cypress-ntlm-auth in the `cypress/plugins/index.js` file
-- The scripts in `package.json` are no longer strictly needed, you can launch both the proxy and cypress with the single command `npx cypress-ntlm open`. Using scripts for different test setups can still be useful, so if you want to keep the scripts you need to modify them. Remove any references to `ntlm-proxy` and `ntlm-proxy-exit` - keep only the `cypress-ntlm` part.
+The HTTPS/SSL/TLS certificate validation has been refactored, and will now permit invalid certificates with a warning logged to the console. Previous versions would fail the test in this scenario. Most users won't need to update their test code, but if you require stricter validation, see [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
 
 ## Install
 
@@ -450,21 +446,15 @@ An example repository using method 1 above can be found here: [cypress-ntlm-auth
 
 The http-mitm-proxy library will create a .http-mitm-proxy folder with generated certificates. This improves performance when re-running tests using the same sites. It is recommended to add this folder to your .gitignore so the certificates don't end up in your repo.
 
+
+
 ### https on localhost
 
 The NTLM proxy will accept self-signed certificates for sites that are served from localhost. This is convenient for testing local development builds without requiring a full CA chain for the certificates, while still requiring proper certificates from external servers.
 
-### HTTPS/SSL/TLS issues
+### HTTPS/SSL/TLS validation
 
-Getting certificates right can be a burden. When accessing a HTTPS site, the site certificate is validated by ntlm-proxy (just like web browsers do). If the validation fails, the proxy will return an error code (504).
-
-#### Corporate CA certificates
-
-Many corporate intranets utilize SSL inspection, which means that your HTTPS traffic is decrypted, inspected, and then encrypted with an internal corporate certificate. Since Node doesn't trust the corporate certificates CA, it will raise an error. Download the certificate to your machine and set the environment variable `NODE_EXTRA_CA_CERTS` to the full path to the certificate file. This will make Node trust it as a CA.
-
-#### Disable TLS validation
-
-If you are unable to resolve the certificate issues you can use the standard Node workaround by setting the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0` before starting ntlm-proxy. If you are running Node 11 or later, you will (rightfully) get a warning when doing this, since disabling the certificate validation makes your machine more vulnerable to MITM attacks. When used only in a development environment and only for testing an internal site, the risk is significantly reduced - but I would still strongly recommend resolving the certificate issues instead of relying on the workaround.
+By default, the plugin will validate certs (except for localhost targets) and log any validation errors as warnings. The plugin can also be configured to a stricter mode, preventing connections to targets that do not pass the validation. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
 
 ## Build instructions
 
@@ -492,4 +482,4 @@ npm test
 - [ntlm-client](https://github.com/clncln1/node-ntlm-client) - Strong inspiration for the NTLM methods in this library.
 - [ntlm-auth](https://github.com/jborean93/ntlm-auth) - Python library for NTLM authentication. Used as a reference implementation to generate NTLM headers for unit tests.
 - [express-ntlm](https://github.com/einfallstoll/express-ntlm) - simplified local testing of cypress-ntlm-auth, since no real Windows server was required.
-- [Travis-CI](https://travis-ci.com/) - makes automated testing of multiple platforms and multiple node versions so much easier.
+- [Github Actions](https://docs.github.com/en/actions) - makes automated testing of multiple platforms and multiple node versions so much easier.

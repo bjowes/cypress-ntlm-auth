@@ -38,8 +38,13 @@ export class ConfigServer implements IConfigServer {
     this.init();
 
     try {
-      this._portsConfigStore.configApiUrl = new URL(await this._expressServer.listen(port ?? 0));
-      this._debug.log("NTLM auth config API listening on port:", port);
+      this._portsConfigStore.configApiUrl = await this._expressServer.listen(
+        port ?? 0
+      );
+      this._debug.log(
+        "NTLM auth config API listening on:",
+        this._portsConfigStore.configApiUrl.origin
+      );
       return this._portsConfigStore.configApiUrl.origin;
     } catch (err) {
       this._debug.log("Cannot start NTLM auth config API");

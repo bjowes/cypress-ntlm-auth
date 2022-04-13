@@ -1,20 +1,19 @@
 import * as http from "http";
 import * as https from "https";
 
-import httpMitmProxy from "http-mitm-proxy";
+import httpMitmProxy from "@bjowes/http-mitm-proxy";
 
-import axios, { AxiosResponse, Method } from "axios";
 import * as fs from "fs";
 import * as path from "path";
 
 import { NtlmConfig } from "../../../src/models/ntlm.config.model";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { PortsConfig } from "../../../src/models/ports.config.model";
 import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
-import { Socket } from "node:net";
+import { Socket } from "net";
 
 import debugInit from "debug";
 import { URLExt } from "../../../src/util/url.ext";
+import { HttpClient, HttpResponse } from "./http.client";
 const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
 
 export class ProxyFacade {
@@ -31,8 +30,11 @@ export class ProxyFacade {
 
   async startMitmProxy(
     rejectUnauthorized: boolean,
-    requestCallback?: (ctx: httpMitmProxy.IContext, callback: (error?: Error) => void) => void
-  ): Promise<string> {
+    requestCallback?: (
+      ctx: httpMitmProxy.IContext,
+      callback: (error?: Error) => void
+    ) => void
+  ): Promise<URL> {
     this._httpAgent = new http.Agent({
       keepAlive: true,
       maxSockets: 1,
@@ -44,7 +46,7 @@ export class ProxyFacade {
     });
     let mitmOptions: httpMitmProxy.IProxyOptions = {
       host: "localhost",
-      port: undefined,
+      port: 0,
       keepAlive: true,
       forceSNI: false,
       httpAgent: this._httpAgent,
@@ -54,16 +56,19 @@ export class ProxyFacade {
 
     this._mitmProxy = httpMitmProxy();
 
-    mitmOptions.port = 0;
-
     this._mitmProxy.onError(function (ctx, err, errorKind) {
-      let url = ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
+      let url =
+        ctx && ctx.clientToProxyRequest ? ctx.clientToProxyRequest.url : "";
       debug(errorKind + " on " + url + ":", err);
     });
 
     let self = this;
     this._mitmProxy.onRequest(function (ctx, cb) {
-      const targetHost = (ctx.clientToProxyRequest.headers.host as string) + ":";
+      function unescapeHost(host: string) {
+        return host.replace("[", "").replace("]", "");
+      }
+      const targetHost =
+        unescapeHost(ctx.clientToProxyRequest.headers.host!) + ":";
       if (!self._trackedSockets[targetHost]) {
         self._trackedSockets[targetHost] = true;
         ctx.clientToProxyRequest.socket.once("close", function (hadError) {
@@ -87,7 +92,13 @@ export class ProxyFacade {
           }
           destroyAll(self._httpAgent);
           destroyAll(self._httpsAgent);
-          debug("detect client socket close " + targetHost + ", removed " + destroyed + " sockets from agents.");
+          debug(
+            "detect client socket close " +
+              targetHost +
+              ", removed " +
+              destroyed +
+              " sockets from agents."
+          );
           delete self._trackedSockets[targetHost];
         });
       }
@@ -97,12 +108,15 @@ export class ProxyFacade {
       return cb();
     });
 
-    return new Promise<string>((resolve, reject) =>
+    return new Promise<URL>((resolve, reject) =>
       this._mitmProxy!.listen(mitmOptions, (err: Error) => {
         if (err) {
           reject(err);
         }
-        resolve("http://localhost:" + this._mitmProxy!.httpPort);
+        const addressInfo = this._mitmProxy!.address();
+        const listenUrl = URLExt.addressInfoToUrl(addressInfo, "http:");
+        debug("listening on " + listenUrl.origin);
+        resolve(listenUrl);
       })
     );
   }
@@ -133,20 +147,35 @@ export class ProxyFacade {
   }
 
   get mitmCaCert(): Buffer {
-    const caCertPath = path.join(process.cwd(), ".http-mitm-proxy", "certs", "ca.pem");
+    const caCertPath = path.join(
+      process.cwd(),
+      ".http-mitm-proxy",
+      "certs",
+      "ca.pem"
+    );
     return fs.readFileSync(caCertPath);
   }
 
-  static async sendQuitCommand(configApiUrl: string, keepPortsFile: boolean): Promise<AxiosResponse<string>> {
-    let res = await axios.post(configApiUrl + "/quit", { keepPortsFile: keepPortsFile }, { timeout: 15000 });
+  static async sendQuitCommand(
+    configApiUrl: URL,
+    keepPortsFile: boolean
+  ): Promise<HttpResponse> {
+    const res = await HttpClient.post(
+      new URL("/quit", configApiUrl),
+      { keepPortsFile: keepPortsFile },
+      {
+        timeout: 15000,
+      }
+    );
+
     if (res.status !== 200) {
       throw new Error("Unexpected response from NTLM proxy: " + res.status);
     }
     return res;
   }
 
-  static async sendAliveRequest(configApiUrl: string): Promise<AxiosResponse<PortsConfig>> {
-    let res = await axios.get<PortsConfig>(configApiUrl + "/alive", {
+  static async sendAliveRequest(configApiUrl: URL): Promise<HttpResponse> {
+    const res = await HttpClient.get(new URL("/alive", configApiUrl), {
       timeout: 15000,
     });
     if (res.status !== 200) {
@@ -156,31 +185,37 @@ export class ProxyFacade {
   }
 
   static async sendNtlmConfig(
-    configApiUrl: string,
+    configApiUrl: URL,
     hostConfig: NtlmConfig,
     timeout?: number
-  ): Promise<AxiosResponse<string>> {
-    let res = await axios.post(configApiUrl + "/ntlm-config", hostConfig, {
-      timeout: timeout,
-      validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
-    });
+  ): Promise<HttpResponse> {
+    const res = await HttpClient.post(
+      new URL("/ntlm-config", configApiUrl),
+      hostConfig,
+      {
+        timeout: timeout,
+      }
+    );
     return res;
   }
 
   static async sendNtlmSsoConfig(
-    configApiUrl: string,
+    configApiUrl: URL,
     ssoConfig: NtlmSsoConfig,
     timeout?: number
-  ): Promise<AxiosResponse<string>> {
-    let res = await axios.post(configApiUrl + "/ntlm-sso", ssoConfig, {
-      timeout: timeout,
-      validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
-    });
+  ): Promise<HttpResponse> {
+    const res = await HttpClient.post(
+      new URL("/ntlm-sso", configApiUrl),
+      ssoConfig,
+      {
+        timeout: timeout,
+      }
+    );
     return res;
   }
 
-  static async sendNtlmReset(configApiUrl: string): Promise<AxiosResponse<string>> {
-    let res = await axios.post(configApiUrl + "/reset", null, {
+  static async sendNtlmReset(configApiUrl: URL): Promise<HttpResponse> {
+    const res = await HttpClient.post(new URL("/reset", configApiUrl), null, {
       timeout: 15000,
     });
     if (res.status !== 200) {
@@ -189,97 +224,74 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendRemoteRequest(
-    ntlmProxyUrl: string,
-    remoteHostWithPort: string,
-    method: Method,
-    path: string,
-    body: any,
-    caCert?: Buffer,
-    agent?: http.Agent | TunnelAgent
-  ): Promise<AxiosResponse<any>> {
-    const remoteHostUrl = new URL(remoteHostWithPort);
-    if (remoteHostUrl.protocol === "http:") {
-      return await this.sendProxiedHttpRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent);
-    } else {
-      return await this.sendProxiedHttpsRequest(ntlmProxyUrl, remoteHostWithPort, method, path, body, agent, caCert);
-    }
+  static getHttpProxyAgent(proxyUrl: URL, keepAlive: boolean) {
+    return new http.Agent({
+      keepAlive: keepAlive,
+      host: URLExt.unescapeHostname(proxyUrl),
+      port: URLExt.portOrDefault(proxyUrl),
+    });
   }
 
-  private static async sendProxiedHttpRequest(
-    ntlmProxyUrl: string,
-    remoteHostWithPort: string,
-    method: Method,
+  static async sendProxiedHttpRequest(
+    proxyUrl: URL,
+    remoteHostUrl: URL,
+    method: string,
     path: string,
     body: any,
-    agent?: http.Agent | TunnelAgent
+    agent?: http.Agent
   ) {
-    const proxyUrl = new URL(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
-      throw new Error("Invalid proxy url");
-    }
-
-    let res = await axios.request({
-      method: method,
-      httpAgent: agent || new http.Agent({ keepAlive: false }),
-      baseURL: remoteHostWithPort,
-      url: path,
-      proxy: {
-        host: proxyUrl.hostname,
-        port: URLExt.portOrDefault(proxyUrl),
+    const res = await HttpClient.request(
+      new URL(path, remoteHostUrl),
+      {
+        method: method,
+        agent: agent || this.getHttpProxyAgent(proxyUrl, false),
+        timeout: 5000,
       },
-      timeout: 5000,
-      data: body,
-      validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
-    });
+      body
+    );
     return res;
   }
 
-  private static async sendProxiedHttpsRequest(
-    ntlmProxyUrl: string,
-    remoteHostWithPort: string,
-    method: Method,
+  static getHttpsProxyAgent(
+    proxyUrl: URL,
+    keepAlive: boolean,
+    caCert?: Buffer[]
+  ) {
+    return httpsTunnel({
+      proxy: {
+        host: URLExt.unescapeHostname(proxyUrl),
+        port: URLExt.portOrDefault(proxyUrl),
+        secureProxy: proxyUrl.protocol === "https:",
+        headers: {
+          "User-Agent": "Node",
+        },
+      },
+      ca: caCert,
+      keepAlive: keepAlive,
+    });
+  }
+
+  static async sendProxiedHttpsRequest(
+    proxyUrl: URL,
+    remoteHostUrl: URL,
+    method: string,
     path: string,
     body: any,
-    agent?: http.Agent | TunnelAgent,
-    caCert?: Buffer
+    caCert?: Buffer[],
+    agent?: TunnelAgent
   ) {
-    const proxyUrl = new URL(ntlmProxyUrl);
-    if (!proxyUrl.hostname || !URLExt.portOrDefault(proxyUrl)) {
-      throw new Error("Invalid proxy url");
-    }
-
-    let ca: Buffer[] = [];
-    if (caCert) {
-      ca = [caCert];
-    }
-
     const tunnelAgent =
-      agent ||
-      httpsTunnel({
-        proxy: {
-          host: proxyUrl.hostname,
-          port: URLExt.portOrDefault(proxyUrl),
-          secureProxy: proxyUrl.protocol === "https:",
-          headers: {
-            "User-Agent": "Node",
-          },
-        },
-        ca: ca,
-        keepAlive: false,
-      });
+      agent || this.getHttpsProxyAgent(proxyUrl, false, caCert);
 
-    let res = await axios.request({
-      method: method,
-      baseURL: remoteHostWithPort,
-      url: path,
-      httpsAgent: tunnelAgent,
-      proxy: false,
-      timeout: 5000,
-      data: body,
-
-      validateStatus: (status: number) => status > 0, // Allow errors to pass through for test validation
-    });
+    const res = await HttpClient.request(
+      new URL(path, remoteHostUrl),
+      {
+        method: method,
+        agent: tunnelAgent as unknown as http.Agent,
+        timeout: 5000,
+      },
+      body
+    );
 
     if (!agent) {
       // Clean up internally created agent

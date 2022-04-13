@@ -5,7 +5,7 @@ import assert from "assert";
 
 import * as http from "http";
 import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
-import { IContext } from "http-mitm-proxy";
+import { IContext } from "@bjowes/http-mitm-proxy";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { NtlmManager } from "../../../src/proxy/ntlm.manager";
@@ -25,7 +25,7 @@ describe("NtlmManager", () => {
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
   let expressServer = new ExpressServer();
-  let httpUrl: string;
+  let httpUrl: URL;
   let ntlm = new Ntlm();
 
   before(async function () {
@@ -35,8 +35,12 @@ describe("NtlmManager", () => {
   beforeEach(async function () {
     configStoreMock = Substitute.for<IConfigStore>();
     ntlmMock = Substitute.for<INtlm>();
-    ntlmMock.createType1Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
-    ntlmMock.createType3Message(Arg.all()).mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock
+      .createType1Message(Arg.all())
+      .mimicks(() => new NtlmMessage(Buffer.alloc(0)));
+    ntlmMock
+      .createType3Message(Arg.all())
+      .mimicks(() => new NtlmMessage(Buffer.alloc(0)));
     ntlmMock.decodeType2Message(Arg.all()).mimicks(ntlm.decodeType2Message);
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -56,13 +60,24 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
-        return;
-      });
+      ntlmManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        () => {
+          return;
+        }
+      );
       debugMock
         .received(1)
-        .log("NTLM authentication failed (invalid credentials) with host", "http://www.google.com:8081/");
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+        .log(
+          "NTLM authentication failed (invalid credentials) with host",
+          "http://www.google.com:8081/"
+        );
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Valid credentials shall set authenticated state", async function () {
@@ -72,10 +87,18 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
 
-      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
-        return;
-      });
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.Authenticated);
+      ntlmManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        () => {
+          return;
+        }
+      );
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.Authenticated
+      );
     });
 
     it("Unexpected NTLM message shall be logged and clear auth state", async function () {
@@ -85,23 +108,33 @@ describe("NtlmManager", () => {
       const connectionContext = new ConnectionContext();
       connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
 
-      ntlmManager["handshakeResponse"](message, ntlmHostUrl, connectionContext, () => {
-        return;
-      });
+      ntlmManager["handshakeResponse"](
+        message,
+        ntlmHostUrl,
+        connectionContext,
+        () => {
+          return;
+        }
+      );
       debugMock
         .received(1)
         .log(
-          "Response from server in unexpected NTLM state " + NtlmStateEnum.Type1Sent + ", resetting NTLM auth. Host",
+          "Response from server in unexpected NTLM state " +
+            NtlmStateEnum.Type1Sent +
+            ", resetting NTLM auth. Host",
           "http://www.google.com:8081/"
         );
-      assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
+      assert.equal(
+        connectionContext.getState(ntlmHostUrl),
+        NtlmStateEnum.NotAuthenticated
+      );
     });
 
     it("Non Base64 in NTLM message", function (done) {
       expressServer.sendNtlmType2("ÅÄÖåäö");
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl.replace("http://", ""),
+        ntlmHost: httpUrl.host,
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
@@ -113,7 +146,7 @@ describe("NtlmManager", () => {
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
       let agent = new http.Agent({ keepAlive: true });
       ctx.proxyToServerRequestOptions.returns!({
-        host: ntlmHostUrl.hostname,
+        host: URLExt.unescapeHostname(ntlmHostUrl),
         method: "GET",
         headers: {},
         path: "/get",
@@ -122,12 +155,27 @@ describe("NtlmManager", () => {
       });
       ctx.isSSL.returns!(false);
 
-      ntlmManager.handshake(ctx, new URL(httpUrl), connectionContext, false, (err) => {
-        assert.equal(err!.message, "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
-        agent.destroy();
-        return done();
-      });
+      ntlmManager.handshake(
+        ctx,
+        new URL(httpUrl),
+        connectionContext,
+        false,
+        (err) => {
+          debugMock
+            .received(1)
+            .log(
+              "Cannot parse NTLM message type 2 from host",
+              ntlmHostUrl.href
+            );
+          assert.equal("Invalid message signature", err.message);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
+          agent.destroy();
+          return done();
+        }
+      );
     });
 
     it("Not type 2 in NTLM message", function (done) {
@@ -136,7 +184,7 @@ describe("NtlmManager", () => {
       );
       const ctx = Substitute.for<IContext>();
       const ntlmConfig = {
-        ntlmHost: httpUrl.replace("http://", ""),
+        ntlmHost: httpUrl.host,
         username: "nisse",
         password: "pwd",
         workstation: "mpw",
@@ -148,7 +196,7 @@ describe("NtlmManager", () => {
       configStoreMock.get(Arg.all()).returns(ntlmConfig);
       let agent = new http.Agent({ keepAlive: true });
       ctx.proxyToServerRequestOptions.returns!({
-        host: ntlmHostUrl.hostname,
+        host: URLExt.unescapeHostname(ntlmHostUrl),
         method: "GET",
         headers: {},
         path: "/get",
@@ -157,12 +205,27 @@ describe("NtlmManager", () => {
       });
       ctx.isSSL.returns!(false);
 
-      ntlmManager.handshake(ctx, new URL(httpUrl), connectionContext, false, (err) => {
-        assert.equal(err!.message, "Cannot parse NTLM message type 2 from host " + ntlmHostUrl.href);
-        assert.equal(connectionContext.getState(ntlmHostUrl), NtlmStateEnum.NotAuthenticated);
-        agent.destroy();
-        return done();
-      });
+      ntlmManager.handshake(
+        ctx,
+        new URL(httpUrl),
+        connectionContext,
+        false,
+        (err) => {
+          debugMock
+            .received(1)
+            .log(
+              "Cannot parse NTLM message type 2 from host",
+              ntlmHostUrl.href
+            );
+          assert.equal("Invalid message signature", err.message);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
+          agent.destroy();
+          return done();
+        }
+      );
     });
 
     describe("NTLM detection", () => {
