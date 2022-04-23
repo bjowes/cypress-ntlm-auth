@@ -38,7 +38,10 @@ export class URLExt {
    * @returns {URL} URL
    */
   static addressInfoToUrl(addressInfo: AddressInfo, protocol: string): URL {
-    if (addressInfo.family === "IPv6") {
+    if (
+      (addressInfo.family as unknown as number) === 6 || // Node 18 uses numeric family value
+      addressInfo.family === "IPv6"
+    ) {
       return new URL(
         `${protocol}//[${addressInfo.address}]:${addressInfo.port}`
       );
