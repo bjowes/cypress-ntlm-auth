@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1 - released 2022-04-23
+
+- Support Node 18
+
 ## 4.0.0 - released 2022-04-13
 
 - Refactored HTTPS validation. By default, the validation will only warn of errors but not break the test. See [HTTPS/SSL/TLS Certificates](docs/tls_certificates.md) for details.
