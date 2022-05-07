@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.2 - released 2022-05-07
+
+- Bump dependencies
+
 ## 4.0.1 - released 2022-04-23
 
 - Support Node 18
