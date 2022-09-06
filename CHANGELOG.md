@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.4 - released 2022-09-06
+
+- Fix #210: Cannot call reset when NTLM host '*' is configured
+
 ## 4.0.3 - released 2022-09-06
 
 - Fix #208: Cannot set port for ntlm-proxy

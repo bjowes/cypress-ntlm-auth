@@ -20,6 +20,7 @@ import { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade";
 import { PortsConfigStoreMock } from "./ports.config.store.mock";
 import { IHttpsValidation } from "../../../src/proxy/interfaces/i.https.validation";
 import { IWinSsoFacadeFactory } from "../../../src/proxy/interfaces/i.win-sso.facade.factory";
+import { IConnectionContext } from "../../../src/proxy/interfaces/i.connection.context";
 
 describe("NtlmProxyMitm error logging", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
@@ -186,6 +187,31 @@ describe("NtlmProxyMitm REQUEST", () => {
       httpsValidationMock,
       debugMock
     );
+  });
+
+  it("config API url should not be treated as NTLM host (due to host wildcard)", async function () {
+    const message = Substitute.for<http.IncomingMessage>();
+    const ctx = Substitute.for<IContext>();
+    ctx.clientToProxyRequest.returns!(message);
+    message.headers.returns!({ host: "localhost:8888" });
+    configStoreMock.exists(Arg.any()).returns(true);
+    portsConfigStoreMock.configApiUrl = new URL("http://localhost:8888");
+    const context = Substitute.for<IConnectionContext>();
+    connectionContextManagerMock.createConnectionContext(Arg.all()).returns(context);
+    let callbackCount = 0;
+    let callbackWithErrorCount = 0;
+
+    ntlmProxyMitm.onRequest(ctx, (err) => {
+      callbackCount++;
+      if (err) {
+        callbackWithErrorCount++;
+        throw err;
+      }
+    });
+
+    connectionContextManagerMock.received(1).getUntrackedAgent(Arg.any());
+    assert.equal(callbackCount, 1);
+    assert.equal(callbackWithErrorCount, 0);
   });
 
   it("invalid url should throw", async function () {

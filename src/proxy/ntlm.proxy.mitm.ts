@@ -155,7 +155,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         );
       }
 
-      if (useNtlm) {
+      if (self.isConfigApiRequest(targetHost)) {
+        self._debug.log("Request to config API");
+        ctx.proxyToServerRequestOptions.agent =
+          self._connectionContextManager.getUntrackedAgent(targetHost);
+        context.configApiConnection = true;
+      } else if (useNtlm) {
         self._debug.log(
           "Request to " +
             targetHost.href +
@@ -165,20 +170,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         ctx.proxyToServerRequestOptions.agent = context.agent;
         context.clearRequestBody();
         ctx.onRequestData(function (ctx, chunk, callback) {
-          self._debug.log("got body part");
           context!.addToRequestBody(chunk);
           return callback(undefined, chunk);
         });
       } else {
-        if (self.isConfigApiRequest(targetHost)) {
-          self._debug.log("Request to config API");
-          ctx.proxyToServerRequestOptions.agent =
-            self._connectionContextManager.getUntrackedAgent(targetHost);
-          context.configApiConnection = true;
-        } else {
-          self._debug.log("Request to " + targetHost.href + " - pass on");
-          ctx.proxyToServerRequestOptions.agent = context.agent;
-        }
+        self._debug.log("Request to " + targetHost.href + " - pass on");
+        ctx.proxyToServerRequestOptions.agent = context.agent;
       }
       return callback();
     } else {
