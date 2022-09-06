@@ -102,7 +102,9 @@ export class Startup implements IStartup {
     return await this._proxyMain.run(
       this._environment.httpProxy,
       this._environment.httpsProxy,
-      this._environment.noProxy
+      this._environment.noProxy,
+      this._environment.configApiPort,
+      this._environment.ntlmProxyPort
     );
   }
 
