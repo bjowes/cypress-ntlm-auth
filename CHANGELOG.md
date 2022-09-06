@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.3 - released 2022-09-06
+
+- Fix #208: Cannot set port for ntlm-proxy
+
 ## 4.0.2 - released 2022-05-07
 
 - Bump dependencies
