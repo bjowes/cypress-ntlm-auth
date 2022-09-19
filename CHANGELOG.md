@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.5 - released 2022-09-19
+
+- Dependency bump
+- Update cypress in test suite, adapted to v10 and typescript
+
 ## 4.0.4 - released 2022-09-06
 
 - Fix #210: Cannot call reset when NTLM host '*' is configured

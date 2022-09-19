@@ -3,14 +3,12 @@ import "mocha";
 import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
-import {
-  HttpsValidation,
-  HttpsValidationLevel,
-} from "../../../src/proxy/https.validation";
+import { HttpsValidation } from "../../../src/proxy/https.validation";
 import assert from "assert";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
 import { ITlsCertValidator } from "../../../src/util/interfaces/i.tls.cert.validator";
 import { IConsoleLogger } from "../../../src/util/interfaces/i.console.logger";
+import { HttpsValidationLevel } from "../../../src/models/https.validation.level.enum";
 
 describe("HTTPS Validation", function () {
   let environmentMock: SubstituteOf<IEnvironment>;

@@ -1,16 +1,11 @@
 import { inject, injectable } from "inversify";
+import { HttpsValidationLevel } from "../models/https.validation.level.enum";
 import { IEnvironment } from "../startup/interfaces/i.environment";
 import { IConsoleLogger } from "../util/interfaces/i.console.logger";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
 import { TYPES } from "./dependency.injection.types";
 import { IHttpsValidation } from "./interfaces/i.https.validation";
-
-export enum HttpsValidationLevel {
-  Unsafe = 0,
-  Warn = 1,
-  Strict = 2,
-}
 
 @injectable()
 export class HttpsValidation implements IHttpsValidation {

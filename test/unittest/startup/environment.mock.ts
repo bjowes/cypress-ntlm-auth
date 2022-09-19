@@ -1,5 +1,5 @@
+import { HttpsValidationLevel } from "../../../src/models/https.validation.level.enum";
 import { PortsConfig } from "../../../src/models/ports.config.model";
-import { HttpsValidationLevel } from "../../../src/proxy/https.validation";
 import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
 import { URLExt } from "../../../src/util/url.ext";
 

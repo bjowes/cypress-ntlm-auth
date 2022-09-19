@@ -1,5 +1,5 @@
+import { HttpsValidationLevel } from "../../models/https.validation.level.enum";
 import { PortsConfig } from "../../models/ports.config.model";
-import { HttpsValidationLevel } from "../../proxy/https.validation";
 
 export interface IEnvironment {
   configApiUrl: string | undefined;
