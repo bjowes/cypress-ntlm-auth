@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
+import { HttpsValidationLevel } from "../models/https.validation.level.enum";
 import { PortsConfig } from "../models/ports.config.model";
 import { URLExt } from "../util/url.ext";
 import { IEnvironment } from "./interfaces/i.environment";
-import { HttpsValidationLevel } from "../proxy/https.validation";
 
 @injectable()
 export class Environment implements IEnvironment {
@@ -92,7 +92,8 @@ export class Environment implements IEnvironment {
   ): HttpsValidationLevel {
     if (!this.nodeTlsRejectUnauthorized()) {
       console.warn(
-        "cypress-ntlm-auth: NODE_TLS_REJECT_UNAUTHORIZED is set to 0. This disables all certificate checks and overrides any HTTPS_VALIDATION setting."
+        "cypress-ntlm-auth: NODE_TLS_REJECT_UNAUTHORIZED is set to 0. " +
+        "This disables all certificate checks and overrides any HTTPS_VALIDATION setting."
       );
       return HttpsValidationLevel.Unsafe;
     }

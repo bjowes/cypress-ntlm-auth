@@ -1,8 +1,6 @@
-/// <reference types="Cypress" />
-
 const server = require("../support/serverAddress");
 
-context("Proxy for HTTP NTLM host", function () {
+context("Proxy for HTTP NTLM host TS", function () {
   beforeEach("Reset NTLM config", function () {
     cy.ntlmReset();
   });

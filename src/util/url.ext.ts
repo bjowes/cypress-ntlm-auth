@@ -24,8 +24,9 @@ export class URLExt {
 
   /**
    * Removes IPv6 quotes from hostnames
-   * @param url {URL} Url
-   * @returns Hostname without IPv6 quotes
+   *
+   * @param {URL} url Url
+   * @returns {string} Hostname without IPv6 quotes
    */
   static unescapeHostname(url: URL) {
     return url.hostname.replace("[", "").replace("]", "");
@@ -33,8 +34,9 @@ export class URLExt {
 
   /**
    * Converts an AddressInfo object (from a listen callback) to an URL
-   * @param addressInfo {AddressInfo} AddressInfo
-   * @param protocol {string} Communication protocol, such as http:
+   *
+   * @param {AddressInfo} addressInfo AddressInfo
+   * @param {string} protocol Communication protocol, such as http:
    * @returns {URL} URL
    */
   static addressInfoToUrl(addressInfo: AddressInfo, protocol: string): URL {
