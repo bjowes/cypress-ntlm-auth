@@ -9,8 +9,9 @@ export class WinSsoFacadeFactory implements IWinSsoFacadeFactory {
   create(
     securityPackage: string,
     targetHost: string | undefined,
-    peerCert: PeerCertificate | undefined
+    peerCert: PeerCertificate | undefined,
+    delegate: boolean
   ): IWinSsoFacade {
-    return new WinSso(securityPackage, targetHost, peerCert);
+    return new WinSso(securityPackage, targetHost, peerCert, delegate);
   }
 }
