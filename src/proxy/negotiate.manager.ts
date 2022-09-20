@@ -7,7 +7,6 @@ import { IConnectionContext } from "./interfaces/i.connection.context";
 import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { resolveSoa } from "dns";
 
 @injectable()
 export class NegotiateManager implements INegotiateManager {
