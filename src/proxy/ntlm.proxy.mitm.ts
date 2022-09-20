@@ -292,7 +292,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
             "Negotiate",
             ctx.proxyToServerRequestOptions.host,
             context.peerCert,
-            false
+            undefined
           );
         }
         self._negotiateManager.handshake(
@@ -312,7 +312,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
             "NTLM",
             ctx.proxyToServerRequestOptions.host,
             context.peerCert,
-            false
+            undefined
           );
         }
         self._ntlmManager.handshake(

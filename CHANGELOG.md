@@ -3,6 +3,7 @@
 ## 4.1.0
 
 - Update win-sso for improved Negotiate/Kerberos support
+- Detect and reject invalid URL formats in environment variables
 
 ## 4.0.5 - released 2022-09-19
 

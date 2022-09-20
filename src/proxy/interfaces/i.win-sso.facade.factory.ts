@@ -6,6 +6,6 @@ export interface IWinSsoFacadeFactory {
     securityPackage: string,
     targetHost: string | undefined,
     peerCert: PeerCertificate | undefined,
-    delegate: boolean
+    flags: number | undefined
   ): IWinSsoFacade;
 }

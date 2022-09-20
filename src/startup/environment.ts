@@ -72,6 +72,25 @@ export class Environment implements IEnvironment {
     delete process.env[key];
   }
 
+  validateEnvironmentUrls() {
+    if (this.configApiUrl) {
+      try {
+        new URL(this.configApiUrl);
+      } catch (err) {
+        throw new Error("cypress-ntlm-auth: URLs in environment variables must be complete (start with http://)." +
+        " Invalid URL (CYPRESS_NTLM_AUTH_API): " + this.configApiUrl);
+      }
+    }
+    if (this.ntlmProxyUrl) {
+      try {
+        new URL(this.ntlmProxyUrl);
+      } catch (err) {
+        throw new Error("cypress-ntlm-auth: URLs in environment variables must be complete (start with http://)." +
+        " Invalid URL (CYPRESS_NTLM_AUTH_PROXY): " + this.ntlmProxyUrl);
+      }
+    }
+  }
+
   private portFromUrl(value: string | undefined): number | undefined {
     if (!value) {
       return undefined;
