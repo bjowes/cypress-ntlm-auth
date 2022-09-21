@@ -7,8 +7,9 @@ import { WinSso } from "win-sso";
 export class WinSsoFacade implements IWinSsoFacade {
   private _winSso: WinSso;
 
-  constructor(securityPackage: string, targetHost: string | undefined, peerCert: PeerCertificate | undefined) {
-    this._winSso = new WinSso(securityPackage, targetHost, peerCert);
+  constructor(securityPackage: string, targetHost: string | undefined,
+    peerCert: PeerCertificate | undefined, flags: number | undefined) {
+    this._winSso = new WinSso(securityPackage, targetHost, peerCert, flags);
   }
 
   createAuthRequestHeader(): string {

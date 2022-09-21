@@ -291,7 +291,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           context.winSso = self._winSsoFacadeFactory.create(
             "Negotiate",
             ctx.proxyToServerRequestOptions.host,
-            context.peerCert
+            context.peerCert,
+            undefined
           );
         }
         self._negotiateManager.handshake(
@@ -310,7 +311,8 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
           context.winSso = self._winSsoFacadeFactory.create(
             "NTLM",
             ctx.proxyToServerRequestOptions.host,
-            context.peerCert
+            context.peerCert,
+            undefined
           );
         }
         self._ntlmManager.handshake(

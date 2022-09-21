@@ -19,7 +19,7 @@ interface ExpressError extends Error {
 }
 
 export interface AuthResponeHeader {
-  header: string;
+  header?: string;
   status: number;
 }
 
@@ -76,8 +76,12 @@ export class ExpressServer {
     if (this.sendWwwAuthHeader.length > 0) {
       const auth = this.sendWwwAuthHeader.shift();
       if (auth!.header !== "PASS-ON") {
-        debug("sendWwwAuthHeader - sending header!");
-        res.setHeader("www-authenticate", auth!.header);
+        if (auth!.header) {
+          debug("sendWwwAuthHeader - sending header!");
+          res.setHeader("www-authenticate", auth!.header);
+        } else {
+          debug("sendWwwAuthHeader - sending without header!");
+        }
         res.sendStatus(auth!.status);
         return true;
       }

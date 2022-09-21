@@ -88,6 +88,14 @@ export class NegotiateManager implements INegotiateManager {
 
     if (this.containsNegotiateToken(res) === false) {
       if (this.acceptsNegotiateAuthentication(res) === false) {
+        if (res.statusCode !== 401) {
+          this._debug.log(
+            "Negotiate authentication successful with host (no more context received)",
+            ntlmHostUrl.href
+          );
+          context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
+          return callback(undefined, res);
+        }
         this._debug.log(
           "Negotiate authentication failed (www-authenticate with Negotiate not found in server response) with host",
           ntlmHostUrl.href
@@ -131,7 +139,7 @@ export class NegotiateManager implements INegotiateManager {
 
     if (!responseToken && res.statusCode !== 401) {
       this._debug.log(
-        "Negotiate authentication successful with host",
+        "Negotiate authentication successful with host (no more context to send)",
         ntlmHostUrl.href
       );
       context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);

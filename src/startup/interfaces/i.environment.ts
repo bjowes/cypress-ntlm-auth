@@ -12,4 +12,5 @@ export interface IEnvironment {
   httpsValidation: HttpsValidationLevel;
   configureForCypress(ports: PortsConfig): void;
   delete(key: string): void;
+  validateEnvironmentUrls(): void;
 }

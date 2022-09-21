@@ -78,6 +78,7 @@ export class Startup implements IStartup {
   }
 
   private async prepareProxy() {
+    this._environment.validateEnvironmentUrls();
     let ports: PortsConfig;
     if (this._environment.configApiUrl) {
       ports = await this.prepareExternalNtlmProxy();

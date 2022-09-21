@@ -34,6 +34,9 @@ export class EnvironmentMock implements IEnvironment {
     this.deletedKeys.push(key);
   }
 
+  validateEnvironmentUrls() {
+  }
+
   private portFromUrl(value: string | undefined): number | undefined {
     if (!value) {
       return undefined;

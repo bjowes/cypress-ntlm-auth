@@ -89,6 +89,50 @@ describe("NegotiateManager", () => {
       );
     });
 
+    it("Successful auth with 2.5 roundtrip", (done) => {
+      const ntlmHostUrl = new URL(httpUrl);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.winSso = winSsoFacadeMock;
+      winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
+      winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("Negotiate TEST");
+      const ctx = Substitute.for<IContext>();
+      ctx.proxyToServerRequestOptions.returns!({
+        protocol: ntlmHostUrl.protocol,
+        host: URLExt.unescapeHostname(ntlmHostUrl),
+        port: URLExt.portOrDefault(ntlmHostUrl),
+        method: "GET",
+        path: "/get",
+      } as any);
+      ctx.isSSL.returns!(false);
+      ctx.serverToProxyResponse.returns!({
+        statusCode: 999,
+        resume: () => {
+          return;
+        },
+      } as any);
+      expressServer.sendWwwAuth([
+        { header: "Negotiate TestResponse1", status: 401 },
+        { header: undefined, status: 200 },
+      ]);
+
+      negotiateManager.handshake(
+        ctx,
+        ntlmHostUrl,
+        connectionContext,
+        (err, res) => {
+          assert.equal(err, undefined);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.Authenticated
+          );
+          assert.notEqual(res!.statusCode, 401);
+          res!.resume();
+          return done();
+        }
+      );
+    });
+
     it("Successful auth with 2 roundtrips", (done) => {
       const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
@@ -239,7 +283,7 @@ describe("NegotiateManager", () => {
       debugMock
         .received(1)
         .log(
-          "Negotiate authentication successful with host",
+          "Negotiate authentication successful with host (no more context to send)",
           "http://www.google.com:8081/"
         );
       assert.equal(
@@ -282,7 +326,7 @@ describe("NegotiateManager", () => {
 
     it("Response without Negotiate header shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
-      message.statusCode!.returns!(200);
+      message.statusCode!.returns!(401);
       message.headers.returns!({ "www-authenticate": "Basic" });
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
@@ -318,7 +362,7 @@ describe("NegotiateManager", () => {
 
     it("Response without www-authenticate header shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
-      message.statusCode!.returns!(200);
+      message.statusCode!.returns!(401);
       message.headers.returns!({});
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
