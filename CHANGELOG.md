@@ -1,6 +1,12 @@
 # Changelog
 
-## 4.1.0
+## 4.1.1 - released 2022-11-04
+
+- Fix #220: Updated readme to reflect current file names used by Cypress
+- Added missing debug dependency
+- Dependency bump
+
+## 4.1.0 - released 2022-09-21
 
 - Update win-sso for improved Negotiate/Kerberos support
 - Detect and reject invalid URL formats in environment variables
