@@ -40,7 +40,7 @@ Follow these steps to configure Cypress to utilize this plugin:
 
 ### Commands
 
-In the file `cypress/support/index.js` add this line
+In the file `cypress/support/commands.js` (or `.ts`) add this line
 
 ```javascript
 import "cypress-ntlm-auth/dist/commands";
