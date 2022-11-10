@@ -20,13 +20,5 @@ import installLogsPrinter from "cypress-terminal-report/src/installLogsPrinter";
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-  const options = {
-    xhr: {
-      printHeaderData: true,
-      printRequestData: false,
-    },
-  };
-  //require("cypress-terminal-report/src/installLogsPrinter")(on, options);
   installLogsPrinter(on);
-  //require("cypress-terminal-report/src/installLogsPrinter")(on);
 };

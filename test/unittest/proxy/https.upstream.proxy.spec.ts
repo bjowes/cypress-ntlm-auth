@@ -11,8 +11,6 @@ import { TYPES } from "../../../src/proxy/dependency.injection.types";
 import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
 import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
 import { describeIfWindows } from "../conditions";
-import { httpsTunnel } from "../../../src/proxy/tunnel.agent";
-import { URLExt } from "../../../src/util/url.ext";
 
 let configApiUrl: URL;
 let ntlmProxyUrl: URL;
