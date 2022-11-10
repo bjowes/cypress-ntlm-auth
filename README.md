@@ -9,7 +9,9 @@ If you want to perform end-to-end testing against deployed sites that require Wi
 
 [![version](https://img.shields.io/npm/v/cypress-ntlm-auth.svg)](https://www.npmjs.com/package/cypress-ntlm-auth)
 [![downloads](https://img.shields.io/npm/dt/cypress-ntlm-auth.svg)](https://www.npmjs.com/package/cypress-ntlm-auth)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/bjowes/cypress-ntlm-auth.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/bjowes/cypress-ntlm-auth/context:javascript)
+![CodeQL](https://github.com/bjowes/cypress-ntlm-auth/actions/workflows/codeql.yml/badge.svg)
+![Unit tests](https://github.com/bjowes/cypress-ntlm-auth/actions/workflows/unit-test.yml/badge.svg)
+![E2E tests](https://github.com/bjowes/cypress-ntlm-auth/actions/workflows/e2e-test.yml/badge.svg)
 [![MIT License](https://img.shields.io/github/license/bjowes/cypress-ntlm-auth.svg)](https://github.com/bjowes/cypress-ntlm-auth/blob/master/LICENSE)
 
 [Changelog](https://github.com/bjowes/cypress-ntlm-auth/blob/master/CHANGELOG.md)
