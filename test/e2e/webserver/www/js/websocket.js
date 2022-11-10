@@ -1,5 +1,5 @@
 function initWs(wsUri, elementId, closeAfterFirstMessage) {
-  output = document.getElementById(elementId);
+  let output = document.getElementById(elementId);
   output.hidden = false;
   testWebSocket(wsUri, output, closeAfterFirstMessage);
 }
