@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.2 - released 2023-03-05
+
+- Fix #225: Client socket reuse combined with switching protocols (http/https) caused an invalid agent to be used.
+- Dependency bump
+
 ## 4.1.1 - released 2022-11-04
 
 - Fix #220: Updated readme to reflect current file names used by Cypress
