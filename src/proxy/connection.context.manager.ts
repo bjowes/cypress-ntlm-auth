@@ -64,6 +64,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     context.agent = agent;
     context.clientSocket = clientSocket;
     context.useUpstreamProxy = useUpstreamProxy;
+    context.isSSL = isSSL;
 
     this._connectionContexts[clientAddress] = context;
     context.socketCloseListener = this.removeAgentOnClose.bind(

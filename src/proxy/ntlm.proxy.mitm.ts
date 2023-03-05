@@ -129,7 +129,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
       const useSso = self._configStore.useSso(targetHost);
       const useNtlm = useSso || self._configStore.exists(targetHost);
       if (context) {
-        if (context.matchHostOrNew(targetHost) === false) {
+        if (context.matchHostOrNew(targetHost, ctx.isSSL) === false) {
           self._debug.log(
             "Existing client socket " +
               context.clientAddress +

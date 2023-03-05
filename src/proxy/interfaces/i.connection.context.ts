@@ -12,9 +12,10 @@ export interface IConnectionContext {
   socketCloseListener: any;
   configApiConnection: boolean;
   useUpstreamProxy: boolean;
+  isSSL: boolean;
 
   canStartAuthHandshake(ntlmHostUrl: URL): boolean;
-  matchHostOrNew(ntlmHostUrl: URL): boolean;
+  matchHostOrNew(ntlmHostUrl: URL, isSSL: boolean): boolean;
   getState(ntlmHostUrl: URL): NtlmStateEnum;
   setState(ntlmHostUrl: URL, authState: NtlmStateEnum): void;
 
