@@ -18,6 +18,7 @@ export class ConnectionContext implements IConnectionContext {
   private _socketCloseListener: any;
   private _configApiConnection = false;
   private _useUpstreamProxy = false;
+  private _isSSL = false;
 
   get agent(): any {
     return this._agent;
@@ -78,6 +79,13 @@ export class ConnectionContext implements IConnectionContext {
     this._useUpstreamProxy = val;
   }
 
+  get isSSL(): boolean {
+    return this._isSSL;
+  }
+  set isSSL(val: boolean) {
+    this._isSSL = val;
+  }
+
   /**
    * If the connection is new or a handshake has been completed (successful or failed),
    * a new handshake can be initiated
@@ -93,8 +101,8 @@ export class ConnectionContext implements IConnectionContext {
     return auth;
   }
 
-  matchHostOrNew(ntlmHostUrl: URL): boolean {
-    return this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href;
+  matchHostOrNew(ntlmHostUrl: URL, isSSL: boolean): boolean {
+    return this._isSSL == isSSL && (this._ntlmHost === undefined || this._ntlmHost.href === ntlmHostUrl.href);
   }
 
   getState(ntlmHostUrl: URL): NtlmStateEnum {
