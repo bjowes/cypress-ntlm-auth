@@ -193,11 +193,14 @@ describe("NtlmProxyMitm REQUEST", () => {
     const message = Substitute.for<http.IncomingMessage>();
     const ctx = Substitute.for<IContext>();
     ctx.clientToProxyRequest.returns!(message);
+    ctx.isSSL.returns!(false);
     message.headers.returns!({ host: "localhost:8888" });
     configStoreMock.exists(Arg.any()).returns(true);
     portsConfigStoreMock.configApiUrl = new URL("http://localhost:8888");
     const context = Substitute.for<IConnectionContext>();
-    connectionContextManagerMock.createConnectionContext(Arg.all()).returns(context);
+    connectionContextManagerMock
+      .createConnectionContext(Arg.all())
+      .returns(context);
     let callbackCount = 0;
     let callbackWithErrorCount = 0;
 
@@ -210,6 +213,33 @@ describe("NtlmProxyMitm REQUEST", () => {
     });
 
     connectionContextManagerMock.received(1).getUntrackedAgent(Arg.any());
+    assert.equal(callbackCount, 1);
+    assert.equal(callbackWithErrorCount, 0);
+  });
+
+  it("config API url should not be accepted on HTTPS connection", async function () {
+    const message = Substitute.for<http.IncomingMessage>();
+    const ctx = Substitute.for<IContext>();
+    ctx.clientToProxyRequest.returns!(message);
+    ctx.isSSL.returns!(true);
+    message.headers.returns!({ host: "localhost:8888" });
+    portsConfigStoreMock.configApiUrl = new URL("http://localhost:8888");
+    const context = Substitute.for<IConnectionContext>();
+    connectionContextManagerMock
+      .createConnectionContext(Arg.all())
+      .returns(context);
+    let callbackCount = 0;
+    let callbackWithErrorCount = 0;
+
+    ntlmProxyMitm.onRequest(ctx, (err) => {
+      callbackCount++;
+      if (err) {
+        callbackWithErrorCount++;
+        throw err;
+      }
+    });
+
+    connectionContextManagerMock.received(0).getUntrackedAgent(Arg.any());
     assert.equal(callbackCount, 1);
     assert.equal(callbackWithErrorCount, 0);
   });

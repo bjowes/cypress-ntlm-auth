@@ -111,11 +111,14 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  private isConfigApiRequest(targetHost: URL) {
+  private isConfigApiRequest(targetHost: URL, isSSL: boolean) {
     if (!self._portsConfigStore.configApiUrl) {
       return false;
     }
-    return targetHost.host === self._portsConfigStore.configApiUrl.host;
+    return (
+      isSSL === false &&
+      targetHost.host === self._portsConfigStore.configApiUrl.host
+    );
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
@@ -155,7 +158,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         );
       }
 
-      if (self.isConfigApiRequest(targetHost)) {
+      if (self.isConfigApiRequest(targetHost, ctx.isSSL)) {
         self._debug.log("Request to config API");
         ctx.proxyToServerRequestOptions.agent =
           self._connectionContextManager.getUntrackedAgent(targetHost);
