@@ -12,6 +12,7 @@ import { INtlm } from "../ntlm/interfaces/i.ntlm";
 import { Type2Message } from "../ntlm/type2.message";
 import { NtlmMessage } from "../ntlm/ntlm.message";
 import { NtlmHost } from "../models/ntlm.host.model";
+import { PeerCertificate } from "tls";
 
 @injectable()
 export class NtlmManager implements INtlmManager {
@@ -138,7 +139,11 @@ export class NtlmManager implements INtlmManager {
           config.workstation,
           config.domain,
           undefined,
-          undefined
+          undefined,
+          ntlmHostUrl.hostname,
+          context.peerCert
+            ? this.getChannelBindingsStruct(context.peerCert)
+            : undefined
         );
         type3header = type3msg.header();
       }
@@ -266,5 +271,26 @@ export class NtlmManager implements INtlmManager {
         this._debug.log(obj);
       }
     }
+  }
+
+  /**
+   * Transforms target TLS certificate into a channel binding struct buffer
+   * See https://specifications486.rssing.com/chan-58023329/article11.html
+   *
+   * @param {PeerCertificate} peerCert Target TLS certificate
+   * @returns {Buffer} Channel binding struct buffer
+   */
+  private getChannelBindingsStruct(peerCert: PeerCertificate): Buffer {
+    const cert: any = peerCert;
+    const hash = cert.fingerprint256.replace(/:/g, "");
+    const hashBuf = Buffer.from(hash, "hex");
+    const tlsServerEndPoint = "tls-server-end-point:";
+    const applicationDataBuffer = Buffer.alloc(
+      20 + tlsServerEndPoint.length + hashBuf.length
+    );
+    applicationDataBuffer.writeUInt8(16, 53);
+    applicationDataBuffer.write(tlsServerEndPoint, 20, "ascii");
+    hashBuf.copy(applicationDataBuffer, 20 + tlsServerEndPoint.length);
+    return applicationDataBuffer;
   }
 }

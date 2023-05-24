@@ -35,7 +35,11 @@ import { NtlmMessage } from "./ntlm.message";
 
 @injectable()
 export class Ntlm implements INtlm {
-  createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage {
+  createType1Message(
+    ntlmVersion: number,
+    workstation: string | undefined,
+    target: string | undefined
+  ): NtlmMessage {
     let dataPos = 40;
     let pos = 0;
     const buf = Buffer.alloc(256);
@@ -49,7 +53,12 @@ export class Ntlm implements INtlm {
     }
 
     // signature
-    buf.write(NtlmConstants.NTLM_SIGNATURE, pos, NtlmConstants.NTLM_SIGNATURE.length, "ascii");
+    buf.write(
+      NtlmConstants.NTLM_SIGNATURE,
+      pos,
+      NtlmConstants.NTLM_SIGNATURE.length,
+      "ascii"
+    );
     pos += NtlmConstants.NTLM_SIGNATURE.length;
 
     // message type
@@ -57,7 +66,10 @@ export class Ntlm implements INtlm {
     pos += 4;
 
     // flags
-    let messageFlags = NtlmFlags.NEGOTIATE_OEM | NtlmFlags.NEGOTIATE_ALWAYS_SIGN | NtlmFlags.NEGOTIATE_VERSION;
+    let messageFlags =
+      NtlmFlags.NEGOTIATE_OEM |
+      NtlmFlags.NEGOTIATE_ALWAYS_SIGN |
+      NtlmFlags.NEGOTIATE_VERSION;
 
     if (ntlmVersion == 1) {
       messageFlags |= NtlmFlags.NEGOTIATE_NTLM_KEY | NtlmFlags.NEGOTIATE_LM_KEY;
@@ -143,7 +155,9 @@ export class Ntlm implements INtlm {
     workstation: string | undefined,
     target: string | undefined,
     clientNonceOverride: string | undefined,
-    timestampOverride: string | undefined
+    timestampOverride: string | undefined,
+    spn: string,
+    channelBindingsStruct: Buffer | undefined
   ): NtlmMessage {
     let dataPos = 72;
     const buf = Buffer.alloc(1024);
@@ -157,20 +171,34 @@ export class Ntlm implements INtlm {
     }
 
     // signature
-    buf.write(NtlmConstants.NTLM_SIGNATURE, 0, NtlmConstants.NTLM_SIGNATURE.length, "ascii");
+    buf.write(
+      NtlmConstants.NTLM_SIGNATURE,
+      0,
+      NtlmConstants.NTLM_SIGNATURE.length,
+      "ascii"
+    );
 
     // message type
     buf.writeUInt32LE(3, 8);
 
-    const targetLen = type2message.encoding === "ascii" ? target.length : target.length * 2;
-    const usernameLen = type2message.encoding === "ascii" ? username.length : username.length * 2;
-    const workstationLen = type2message.encoding === "ascii" ? workstation.length : workstation.length * 2;
+    const targetLen =
+      type2message.encoding === "ascii" ? target.length : target.length * 2;
+    const usernameLen =
+      type2message.encoding === "ascii" ? username.length : username.length * 2;
+    const workstationLen =
+      type2message.encoding === "ascii"
+        ? workstation.length
+        : workstation.length * 2;
     const dataPosOffset = targetLen + usernameLen + workstationLen;
     let timestamp = "";
     let clientNonce = "";
     let withMic = false;
     let withServerTimestamp = false;
-    if (type2message.version === 2 && type2message.targetInfo && type2message.targetInfo.parsed["SERVER_TIMESTAMP"]) {
+    if (
+      type2message.version === 2 &&
+      type2message.targetInfo &&
+      type2message.targetInfo.parsed["SERVER_TIMESTAMP"]
+    ) {
       // Must include MIC, add room for it
       withServerTimestamp = true;
       withMic = true;
@@ -178,6 +206,7 @@ export class Ntlm implements INtlm {
     }
     let hashDataPos = dataPos + dataPosOffset;
     const ntlmHash = Hash.createNTLMHash(password);
+    let mic = Buffer.alloc(0);
 
     if (type2message.version === 2) {
       clientNonce = clientNonceOverride || Hash.createPseudoRandomValue(16);
@@ -192,7 +221,13 @@ export class Ntlm implements INtlm {
       if (withServerTimestamp) {
         lmv2 = Buffer.alloc(24); // zero-filled
       } else {
-        lmv2 = Hash.createLMv2Response(type2message, username, target, ntlmHash, clientNonce);
+        lmv2 = Hash.createLMv2Response(
+          type2message,
+          username,
+          target,
+          ntlmHash,
+          clientNonce
+        );
       }
 
       // lmv2 security buffer
@@ -203,14 +238,15 @@ export class Ntlm implements INtlm {
       lmv2.copy(buf, hashDataPos);
       hashDataPos += lmv2.length;
 
+      const ntlm2Hash = Hash.createNTLMv2Hash(ntlmHash, username, target);
       const ntlmv2 = Hash.createNTLMv2Response(
         type2message,
-        username,
-        target,
-        ntlmHash,
+        ntlm2Hash,
         clientNonce,
         timestamp,
-        withMic
+        withMic,
+        spn,
+        channelBindingsStruct
       );
 
       // ntlmv2 security buffer
@@ -220,6 +256,15 @@ export class Ntlm implements INtlm {
 
       ntlmv2.copy(buf, hashDataPos);
       hashDataPos += ntlmv2.length;
+
+      // Calculate MIC
+      mic = Hash.createMIC(
+        type1message.raw,
+        type2message,
+        buf.slice(0, hashDataPos),
+        ntlm2Hash,
+        ntlmv2
+      );
     } else {
       const lmHash = Hash.createLMHash(password);
       const lm = Hash.createLMResponse(type2message.challenge, lmHash);
@@ -267,7 +312,7 @@ export class Ntlm implements INtlm {
     const sessionKey = Buffer.alloc(0);
     // if (type2message.flags & NtlmFlags.NEGOTIATE_KEY_EXCHANGE) {
     //   sessionKey =
-    //      hash.createRandomSessionKey(type2message, username, target, ntlmHash, clientNonce, timestamp, withMic);
+    //      hash.createRandomSessionKey(ntlm2hash, ntlm2v2);
     // }
     buf.writeUInt16LE(sessionKey.length, 52);
     buf.writeUInt16LE(sessionKey.length, 54);
@@ -281,17 +326,6 @@ export class Ntlm implements INtlm {
     this.addVersionStruct(buf, 64);
 
     if (withMic) {
-      // Calculate and add MIC
-      const mic = Hash.createMIC(
-        type1message.raw,
-        type2message,
-        buf.slice(0, hashDataPos),
-        username,
-        target,
-        ntlmHash,
-        clientNonce,
-        timestamp
-      );
       mic.copy(buf, 72);
     }
 

@@ -119,7 +119,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    const targetHost = self.getTargetHost(ctx);
+    const targetHost = self.getTargetHost(ctx, "req");
     if (targetHost) {
       self._httpsValidation.validateRequest(targetHost);
       let context =
@@ -196,15 +196,17 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return hostUrl.host === self._portsConfigStore.ntlmProxyUrl.host;
   }
 
-  private getTargetHost(ctx: IContext): URL | null {
+  private getTargetHost(ctx: IContext, messageType: string): URL | null {
     if (!ctx.clientToProxyRequest.headers.host) {
       self._debug.log(
-        'Invalid request - Could not read "host" header from incoming request to proxy'
+        'Invalid request - Could not read "host" header from ' +
+          messageType +
+          " to proxy"
       );
       return null;
     }
     const host = ctx.clientToProxyRequest.headers.host;
-    self._debug.log("getTargetHost - host header ", host);
+    self._debug.log("getTargetHost - " + messageType + " host header ", host);
     const hostUrl = new URL((ctx.isSSL ? "https://" : "http://") + host);
     if (self.isNtlmProxyAddress(hostUrl)) {
       self._debug.log("Invalid request - host header refers to this proxy");
@@ -239,7 +241,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   }
 
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
-    const targetHost = self.getTargetHost(ctx);
+    const targetHost = self.getTargetHost(ctx, "res");
     if (!targetHost) {
       return callback();
     }

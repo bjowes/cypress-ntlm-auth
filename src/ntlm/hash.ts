@@ -122,19 +122,20 @@ export class Hash {
 
   static createNTLMv2Response(
     type2message: Type2Message,
-    username: string,
-    authTargetName: string,
-    ntlmhash: Buffer,
+    ntlm2hash: Buffer,
     nonce: string,
     timestamp: string,
-    withMic: boolean
+    withMic: boolean,
+    spn: string,
+    channelBindingsStruct: Buffer | undefined
   ) {
-    let bufferSize = 48 + type2message.targetInfo.buffer.length;
+    const spnUcs2 = Buffer.from("http/" + spn, "ucs2");
+    let bufferSize =
+      48 + 20 + type2message.targetInfo.buffer.length + (4 + spnUcs2.length);
     if (withMic) {
       bufferSize += 8;
     }
     const buf = Buffer.alloc(bufferSize);
-    const ntlm2hash = Hash.createNTLMv2Hash(ntlmhash, username, authTargetName);
     const hmac = crypto.createHmac("md5", ntlm2hash);
 
     // the first 8 bytes are spare to store the hashed value before the blob
@@ -169,15 +170,41 @@ export class Hash {
     type2message.targetInfo.buffer.copy(buf, 44);
 
     let bufferPos = 44 + type2message.targetInfo.buffer.length;
+    bufferPos -= 4; // will rewrite endblock later
     if (withMic) {
       // Should include MIC in response, indicate it in AV_FLAGS
-      buf.writeUInt16LE(0x06, bufferPos - 4);
-      buf.writeUInt16LE(0x04, bufferPos - 2);
-      buf.writeUInt32LE(0x02, bufferPos);
-      // Write new endblock
-      buf.writeUInt32LE(0, bufferPos + 4);
+      buf.writeUInt16LE(0x06, bufferPos);
+      buf.writeUInt16LE(0x04, bufferPos + 2);
+      buf.writeUInt32LE(0x02, bufferPos + 4);
       bufferPos += 8;
     }
+
+    // Add service principal name
+    buf.writeUInt16LE(0x09, bufferPos);
+    buf.writeUInt16LE(spnUcs2.length, bufferPos + 2);
+    spnUcs2.copy(buf, bufferPos + 4);
+    bufferPos += 4 + spnUcs2.length;
+
+    // Add channel bindings
+    buf.writeUInt16LE(0x0a, bufferPos);
+    buf.writeUInt16LE(0x10, bufferPos + 2);
+    if (channelBindingsStruct) {
+      const channelBindingMD5 = crypto
+        .createHash("md5")
+        .update(channelBindingsStruct)
+        .digest();
+      channelBindingMD5.copy(buf, bufferPos + 4);
+    } else {
+      buf.writeUInt32LE(0, bufferPos + 4);
+      buf.writeUInt32LE(0, bufferPos + 8);
+      buf.writeUInt32LE(0, bufferPos + 12);
+      buf.writeUInt32LE(0, bufferPos + 16);
+    }
+    bufferPos += 20;
+
+    // Write endblock
+    buf.writeUInt32LE(0, bufferPos);
+    bufferPos += 4;
 
     // zero
     buf.writeUInt32LE(0, bufferPos);
@@ -194,22 +221,9 @@ export class Hash {
     type1message: Buffer,
     type2message: Type2Message,
     type3message: Buffer,
-    username: string,
-    authTargetName: string,
-    ntlmhash: Buffer,
-    nonce: string,
-    timestamp: string
+    ntlm2hash: Buffer,
+    ntlm2response: Buffer
   ) {
-    const ntlm2hash = Hash.createNTLMv2Hash(ntlmhash, username, authTargetName);
-    const ntlm2response = Hash.createNTLMv2Response(
-      type2message,
-      username,
-      authTargetName,
-      ntlmhash,
-      nonce,
-      timestamp,
-      true
-    );
     let hmac = crypto.createHmac("md5", ntlm2hash);
     const sessionBaseKey = hmac.update(ntlm2response.slice(0, 16)).digest();
     const keyExchangeKey = sessionBaseKey;
@@ -222,25 +236,7 @@ export class Hash {
     return hashedBuffer;
   }
 
-  static createRandomSessionKey(
-    type2message: Type2Message,
-    username: string,
-    authTargetName: string,
-    ntlmhash: Buffer,
-    nonce: string,
-    timestamp: string,
-    withMic: boolean
-  ) {
-    const ntlm2hash = Hash.createNTLMv2Hash(ntlmhash, username, authTargetName);
-    const ntlm2response = Hash.createNTLMv2Response(
-      type2message,
-      username,
-      authTargetName,
-      ntlmhash,
-      nonce,
-      timestamp,
-      withMic
-    );
+  static createRandomSessionKey(ntlm2hash: Buffer, ntlm2response: Buffer) {
     const hmac = crypto.createHmac("md5", ntlm2hash);
     const sessionBaseKey = hmac.update(ntlm2response.slice(0, 16)).digest();
     const keyExchangeKey = sessionBaseKey;
