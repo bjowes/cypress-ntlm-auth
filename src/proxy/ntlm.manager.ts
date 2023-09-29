@@ -79,6 +79,10 @@ export class NtlmManager implements INtlmManager {
     };
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = type1header;
+    if (ctx.proxyToServerRequestOptions.headers?.cookie) {
+      requestOptions.headers["cookie"] =
+        ctx.proxyToServerRequestOptions.headers.cookie;
+    }
     requestOptions.headers["connection"] = "keep-alive";
     if (context.useUpstreamProxy) {
       requestOptions.headers["proxy-connection"] = "keep-alive";

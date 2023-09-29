@@ -13,8 +13,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "cypress": "^12.7.0",
-    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-4.1.1.tgz",
+    "cypress": "^13.3.0",
     "cypress-terminal-report": "^5.0.2",
     "debug": "^4.3.1",
     "express": "^4.17.1",

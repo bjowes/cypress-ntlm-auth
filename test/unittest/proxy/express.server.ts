@@ -436,6 +436,14 @@ export class ExpressServer {
     );
   }
 
+  lastRequestContainedHeader(header: string, content: string): boolean {
+    return (
+      this.lastRequestHeaders != null &&
+      this.lastRequestHeaders[header] !== undefined &&
+      this.lastRequestHeaders[header] === content
+    );
+  }
+
   sendNtlmType2(fakeHeader: string | null) {
     this.sendNtlmType2Header = fakeHeader;
   }

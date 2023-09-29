@@ -60,6 +60,10 @@ describe("NegotiateManager", () => {
         port: URLExt.portOrDefault(ntlmHostUrl),
         method: "GET",
         path: "/get",
+        headers: {
+          "cookie": "strange cookie",
+          "other": "not sent"
+        }
       } as any);
       ctx.isSSL.returns!(false);
       ctx.serverToProxyResponse.returns!({
@@ -82,6 +86,10 @@ describe("NegotiateManager", () => {
             connectionContext.getState(ntlmHostUrl),
             NtlmStateEnum.Authenticated
           );
+          // Ensure cookie is passed on
+          assert.equal(true, expressServer.lastRequestContainedHeader("cookie", "strange cookie"));
+          // But not other headers
+          assert.equal(false, expressServer.lastRequestContainedHeader("other", "not sent"));
           assert.notEqual(res!.statusCode, 401);
           res!.resume();
           return done();

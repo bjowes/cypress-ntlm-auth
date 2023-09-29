@@ -44,6 +44,10 @@ export class NegotiateManager implements INegotiateManager {
     const requestOptions = { ...originalRequestOptions };
     requestOptions.headers = {};
     requestOptions.headers["authorization"] = requestToken;
+    if (ctx.proxyToServerRequestOptions.headers?.cookie) {
+      requestOptions.headers["cookie"] =
+        ctx.proxyToServerRequestOptions.headers.cookie;
+    }
     requestOptions.headers["connection"] = "keep-alive";
     if (context.useUpstreamProxy) {
       requestOptions.headers["proxy-connection"] = "keep-alive";
