@@ -52,6 +52,61 @@ describe("NtlmManager", () => {
     await expressServer.stopHttpServer();
   });
 
+  describe("handshake", () => {
+    it("Should send type 1 message with cookie", function (done) {
+      expressServer.sendWwwAuthOnce("NTLM");
+      const ctx = Substitute.for<IContext>();
+      const ntlmConfig = {
+        ntlmHost: httpUrl.host,
+        username: "nisse",
+        password: "pwd",
+        workstation: "mpw",
+        domain: "",
+      } as NtlmHost;
+      const ntlmHostUrl = new URL(httpUrl);
+      const connectionContext = new ConnectionContext();
+      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      configStoreMock.get(Arg.all()).returns(ntlmConfig);
+      const agent = new http.Agent({ keepAlive: true });
+      ctx.proxyToServerRequestOptions.returns!({
+        host: URLExt.unescapeHostname(ntlmHostUrl),
+        method: "GET",
+        headers: {
+          "cookie": "simple cookie",
+          "other": "not sent"
+        },
+        path: "/get",
+        port: URLExt.portOrDefault(ntlmHostUrl) as any,
+        agent: agent,
+      });
+      ctx.isSSL.returns!(false);
+
+      ntlmManager.handshake(
+        ctx,
+        new URL(httpUrl),
+        connectionContext,
+        false,
+        (err) => {
+          debugMock
+            .received(1)
+            .log(
+              "Sending  NTLM message type 1"
+            );
+          assert.equal("NTLM authentication failed " + 
+            "(www-authenticate with NTLM not found in server response) with host " + ntlmHostUrl.href, err?.message);
+          assert.equal(
+            connectionContext.getState(ntlmHostUrl),
+            NtlmStateEnum.NotAuthenticated
+          );
+          assert.equal(true, expressServer.lastRequestContainedHeader("cookie", "simple cookie"));
+          assert.equal(false, expressServer.lastRequestContainedHeader("other", "not sent"));
+          agent.destroy();
+          return done();
+        }
+      );
+    });
+  });
+
   describe("NTLM errors", () => {
     it("Invalid credentials shall be logged and clear auth state", async function () {
       const message = Substitute.for<http.IncomingMessage>();
