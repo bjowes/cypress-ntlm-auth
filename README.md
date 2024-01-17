@@ -172,7 +172,11 @@ npx cypress-ntlm open
 
 ## Upstream proxy
 
-If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
+If your network environment enforces proxy usage for internet access (quite likely given that you are using NTLM) and the host you are testing uses resources on the internet (e.g. loading bootstrap or jQuery from a CDN), you need to make the ntlm-proxy aware of the internet proxy. 
+
+*NOTE* cypress-ntlm will autodetect proxy settings from Internet Options on Windows OS, providing the same behavior as when running cypress without this plugin. As such, you don't need to set the environment variables below if the proxy is already configured globally in Windows. If you need to override those settings (or if you are on another OS), use the environment variables below.
+
+This is done by setting the (standardized) environment variables below before starting the ntlm-proxy (with either the `ntlm-proxy` binary or the `cypress-ntlm` binary):
 
 - `HTTP_PROXY` - The URL to the proxy for accessing external HTTP/HTTPS resources. Example: `http://proxy.acme.com:8080`
 - `HTTPS_PROXY` - (optional) The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`

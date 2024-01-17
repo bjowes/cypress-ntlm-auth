@@ -13,6 +13,7 @@ import { fail } from "assert";
 import { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade";
 import { PortsConfig } from "../../../src/models/ports.config.model";
 import { EnvironmentMock } from "./environment.mock";
+import { IWindowsProxySettingsFacade } from "../../../src/startup/interfaces/i.windows.proxy.settings.facade";
 
 describe("Startup shallow", () => {
   let startup: Startup;
@@ -20,6 +21,7 @@ describe("Startup shallow", () => {
   let proxyMainMock: SubstituteOf<IMain>;
   let cypressFacadeMock: SubstituteOf<ICypressFacade>;
   let externalNtlmProxyFacadeMock: SubstituteOf<INtlmProxyFacade>;
+  let windowsProxySettingsFacadeMock: SubstituteOf<IWindowsProxySettingsFacade>;
   let environmentMock: EnvironmentMock;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
@@ -30,6 +32,7 @@ describe("Startup shallow", () => {
     proxyMainMock = Substitute.for<IMain>();
     cypressFacadeMock = Substitute.for<ICypressFacade>();
     externalNtlmProxyFacadeMock = Substitute.for<INtlmProxyFacade>();
+    windowsProxySettingsFacadeMock = Substitute.for<IWindowsProxySettingsFacade>();
     environmentMock = new EnvironmentMock();
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
@@ -39,6 +42,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock,
       environmentMock,
       externalNtlmProxyFacadeMock,
+      windowsProxySettingsFacadeMock,
       debugMock
     );
   });
@@ -180,7 +184,10 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
+      windowsProxySettingsFacadeMock.get().returns(undefined);
+
       let res = await startup.run(options);
+
       assert.equal(res, fakeResult);
       proxyMainMock.received(1).run(undefined, undefined, undefined);
       cypressFacadeMock.received(1).run(options);
@@ -214,7 +221,57 @@ describe("Startup shallow", () => {
       environmentMock.httpProxy = "http-proxy";
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
+      windowsProxySettingsFacadeMock.get().returns(undefined);
+
       await startup.run(options);
+
+      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
+      upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
+      upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
+      proxyMainMock.received(1).stop();
+    });
+
+    it("should use os proxy if no proxy is defined in environment", async function () {
+      cypressFacadeMock.cypressLoaded().returns(true);
+      const fakeResult = {};
+      cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
+      const options = {};
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("win-http-proxy", "", "win-no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      windowsProxySettingsFacadeMock.get().returns({ httpProxy: "win-http-proxy", noProxy: "win-no-proxy"});
+      
+      await startup.run(options);
+      
+      proxyMainMock.received(1).run("win-http-proxy", undefined, "win-no-proxy");
+      upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
+      upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
+      proxyMainMock.received(1).stop();
+    });
+
+    it("should not use os proxy if proxy is defined in environment", async function () {
+      cypressFacadeMock.cypressLoaded().returns(true);
+      const fakeResult = {};
+      cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
+      const options = {};
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("http-proxy", "https-proxy", "no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      environmentMock.httpProxy = "http-proxy";
+      environmentMock.httpsProxy = "https-proxy";
+      environmentMock.noProxy = "no-proxy";
+      windowsProxySettingsFacadeMock.get().returns({ httpProxy: "win-http-proxy", noProxy: "win-no-proxy"});
+
+      await startup.run(options);
+
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
@@ -275,7 +332,10 @@ describe("Startup shallow", () => {
       const fakeResult = {};
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
       const options = {};
+      windowsProxySettingsFacadeMock.get().returns(undefined);
+
       let res = await startup.open(options);
+
       assert.equal(res, fakeResult);
       proxyMainMock.received(1).run(Arg.any());
       cypressFacadeMock.received(1).open(options);
@@ -309,7 +369,57 @@ describe("Startup shallow", () => {
       environmentMock.httpProxy = "http-proxy";
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
+      windowsProxySettingsFacadeMock.get().returns(undefined);
+
       await startup.open(options);
+
+      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
+      upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
+      upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
+      proxyMainMock.received(1).stop();
+    });
+
+    it("should use os proxy if no proxy is defined in environment", async function () {
+      cypressFacadeMock.cypressLoaded().returns(true);
+      const fakeResult = {};
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
+      const options = {};
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("win-http-proxy", "", "win-no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      windowsProxySettingsFacadeMock.get().returns({ httpProxy: "win-http-proxy", noProxy: "win-no-proxy"});
+      
+      await startup.open(options);
+      
+      proxyMainMock.received(1).run("win-http-proxy", undefined, "win-no-proxy");
+      upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
+      upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
+      proxyMainMock.received(1).stop();
+    });
+
+    it("should not use os proxy if proxy is defined in environment", async function () {
+      cypressFacadeMock.cypressLoaded().returns(true);
+      const fakeResult = {};
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
+      const options = {};
+      const fakePorts: PortsConfig = {
+        ntlmProxyUrl: "ntlm-proxy",
+        configApiUrl: "config-api",
+      };
+      proxyMainMock
+        .run("http-proxy", "https-proxy", "no-proxy")
+        .returns(Promise.resolve(fakePorts));
+      environmentMock.httpProxy = "http-proxy";
+      environmentMock.httpsProxy = "https-proxy";
+      environmentMock.noProxy = "no-proxy";
+      windowsProxySettingsFacadeMock.get().returns({ httpProxy: "win-http-proxy", noProxy: "win-no-proxy"});
+
+      await startup.open(options);
+
       proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
