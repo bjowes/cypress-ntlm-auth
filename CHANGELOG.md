@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.2.0-beta.1 - released 2024-01-16
+
+- Autodetect proxy settings from Internet Options on Windows to simplify configuration behind corporate proxy
+- Bump dependencies
+
 ## 4.1.3 - released 2023-09-29
 
 - Fix #241: Include cookies in auth request

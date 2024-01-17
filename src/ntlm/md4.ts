@@ -16,7 +16,6 @@
 
 /**
  * Creates a MD4 hash from a buffer
- *
  * @param {Buffer} buf Bytes to hash
  * @returns {Buffer} Computed hash
  */

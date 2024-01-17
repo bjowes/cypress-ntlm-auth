@@ -25,9 +25,9 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       this._environment.delete("http_proxy");
       this._environment.delete("https_proxy");
       this._environment.delete("no_proxy");
+      this._environment.delete("npm_config_proxy");
+      this._environment.delete("npm_config_https_proxy");
     }
-    this._environment.delete("npm_config_proxy");
-    this._environment.delete("npm_config_https_proxy");
     this._environment.delete("NPM_CONFIG_PROXY");
     this._environment.delete("NPM_CONFIG_HTTPS_PROXY");
   }

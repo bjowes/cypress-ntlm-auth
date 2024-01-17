@@ -76,6 +76,8 @@ import { IHttpsValidation } from "./interfaces/i.https.validation";
 import { HttpsValidation } from "./https.validation";
 import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
 import { TlsCertValidator } from "../util/tls.cert.validator";
+import { IWindowsProxySettingsFacade } from "../startup/interfaces/i.windows.proxy.settings.facade";
+import { WindowsProxySettingsFacade } from "../startup/windows.proxy.settings.facade";
 
 export class DependencyInjection {
   private _container: Container;
@@ -149,6 +151,10 @@ export class DependencyInjection {
     this._container
       .bind<IWinSsoFacadeFactory>(TYPES.IWinSsoFacadeFactory)
       .to(WinSsoFacadeFactory);
+
+    this._container
+        .bind<IWindowsProxySettingsFacade>(TYPES.IWindowsProxySettingsFacade)
+        .to(WindowsProxySettingsFacade);
   }
 
   get<T>(typename: symbol): T {

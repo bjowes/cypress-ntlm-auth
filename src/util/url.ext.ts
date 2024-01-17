@@ -24,7 +24,6 @@ export class URLExt {
 
   /**
    * Removes IPv6 quotes from hostnames
-   *
    * @param {URL} url Url
    * @returns {string} Hostname without IPv6 quotes
    */
@@ -34,7 +33,6 @@ export class URLExt {
 
   /**
    * Converts an AddressInfo object (from a listen callback) to an URL
-   *
    * @param {AddressInfo} addressInfo AddressInfo
    * @param {string} protocol Communication protocol, such as http:
    * @returns {URL} URL

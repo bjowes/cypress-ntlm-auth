@@ -36,7 +36,6 @@ interface Request {
 
 /**
  * Create an agent for tunnelling HTTP requests through an upstream proxy
- *
  * @param {CombinedAgentOptions} options Agent options
  * @returns {TunnelAgent} the tunnel agent
  */
@@ -46,7 +45,6 @@ export function httpTunnel(options: CombinedAgentOptions) {
 
 /**
  * Create an agent for tunnelling HTTPS requests through an upstream proxy
- *
  * @param {CombinedAgentOptions} options Agent options
  * @returns {TunnelAgent} the tunnel agent
  */
@@ -198,7 +196,6 @@ export class TunnelAgent extends EventEmitter {
 
   /**
    * Counts all sockets active in requests and pending (keep-alive)
-   *
    * @returns {number} The number of sockets, free and in use
    */
   socketCount() {
