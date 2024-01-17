@@ -104,7 +104,8 @@ export class Startup implements IStartup {
   private readOsProxy() {
     const proxySettings = this._windowsProxySettingsFacade.get();
     if (proxySettings) {
-      this._debug.log("Read proxy settings from Windows registry: HTTP_PROXY=" + proxySettings.httpProxy + ", NO_PROXY=" + proxySettings.noProxy);
+      this._debug.log("Read proxy settings from Windows registry: HTTP_PROXY=" + 
+        proxySettings.httpProxy + ", NO_PROXY=" + proxySettings.noProxy);
       if (this._environment.httpProxy) {
         this._debug.log("HTTP_PROXY already defined as environment variable, settings from registry are ignored.");
         return;

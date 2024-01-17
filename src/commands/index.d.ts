@@ -7,7 +7,6 @@ declare namespace Cypress {
      * Adds NTLM authentication support to Cypress for a specific host.
      * You can call this multiple times to register several hosts or
      * change credentials.
-     *
      * @param {Array} ntlmHosts array of FQDNs or hostnames of the servers where NTLM authentication shall be
      * applied. The hosts must NOT include protocol or the rest of the url (path and query) - only host:port level
      * authentication is supported. In addition, wildcards are allowed to simplify specifying hosts for a whole
@@ -38,7 +37,6 @@ declare namespace Cypress {
      * Adds NTLM Single-sign-on authentication support to Cypress for
      * specific hosts. Wildcards are supported.
      * Calling this multiple times replaces previous SSO configuration.
-     *
      * @param {Array} ntlmHosts array of FQDNs or hostnames of the servers where NTLM or Negotiate authentication with
      * single sign on shall be applied. The hosts must NOT include protocol, port or the rest of the url
      * (path and query) - only host level authentication is supported. In addition, wildcards are allowed to simplify
@@ -52,7 +50,6 @@ declare namespace Cypress {
 
     /**
      * Reset NTLM authentication for all configured hosts. Recommended before/after tests.
-     *
      * @example
  ```js
   cy.ntlmReset();

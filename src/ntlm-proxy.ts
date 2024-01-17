@@ -14,7 +14,6 @@ export class NtlmProxy {
 
   /**
    * Add NTLM configuration
-   *
    * @param {NtlmConfig} config The NtlmConfig to apply, see the README for details
    */
   async ntlm(config: NtlmConfig) {
@@ -22,7 +21,6 @@ export class NtlmProxy {
   }
   /**
    * Add NTLM SSO configuration
-   *
    * @param {NtlmSsoConfig} config The NtlmSsoConfig to apply, see the README for details
    */
   async ntlmSso(config: NtlmSsoConfig) {
@@ -36,7 +34,6 @@ export class NtlmProxy {
   }
   /**
    * Check if proxy is alive
-   *
    * @returns {PortsConfig} The PortsConfig for the proxy
    */
   async alive(): Promise<PortsConfig> {
@@ -44,7 +41,6 @@ export class NtlmProxy {
   }
   /**
    * Stops ntlm-proxy
-   *
    * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
    */
   async stop(): Promise<boolean> {
