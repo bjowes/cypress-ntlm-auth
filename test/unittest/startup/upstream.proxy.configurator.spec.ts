@@ -119,9 +119,9 @@ describe("UpstreamProxyConfigurator", () => {
         assert.ok(environmentMock.deletedKeys.includes("http_proxy"));
         assert.ok(environmentMock.deletedKeys.includes("https_proxy"));
         assert.ok(environmentMock.deletedKeys.includes("no_proxy"));
+        assert.ok(environmentMock.deletedKeys.includes("npm_config_proxy"));
+        assert.ok(environmentMock.deletedKeys.includes("npm_config_https_proxy"));
       }
-      assert.ok(environmentMock.deletedKeys.includes("npm_config_proxy"));
-      assert.ok(environmentMock.deletedKeys.includes("npm_config_https_proxy"));
       assert.ok(environmentMock.deletedKeys.includes("NPM_CONFIG_PROXY"));
       assert.ok(environmentMock.deletedKeys.includes("NPM_CONFIG_HTTPS_PROXY"));
     });
