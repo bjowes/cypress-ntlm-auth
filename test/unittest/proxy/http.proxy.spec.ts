@@ -970,6 +970,23 @@ describe("Proxy for HTTP host without NTLM", function () {
       assert.equal((err as NodeJS.ErrnoException).message, "socket hang up");
     }
   });
+
+  it("should pass on custom status phrases in response", async function () {
+    expressServer.setCustomStatusPhrase("My fantastic status phrase");
+    let res = await ProxyFacade.sendProxiedHttpRequest(
+      ntlmProxyUrl,
+      httpUrl,
+      "GET",
+      "/get",
+      null
+    );
+    assert.equal(res.status, 200);
+    // "remote request should return custom status phrase"
+    assert.equal(res.statusText, "My fantastic status phrase");
+    const resBody = res.data as any;
+    assert.equal(resBody.message, "Expecting larger payload on GET");
+    assert.equal(resBody.reply, "OK ÅÄÖéß");
+  });
 });
 
 describe("Proxy for multiple HTTP hosts with NTLM", function () {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.4 - released 2024-03-27
+
+- Fix #249: Custom status messages for other requests than NTLM handshake
+- Dependency bump
+
 ## 4.1.3 - released 2023-09-29
 
 - Fix #241: Include cookies in auth request
