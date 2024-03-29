@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.5 - released 2024-03-28
+
+- Fix #249: Corrected dependency versions
+
 ## 4.1.4 - released 2024-03-27
 
 - Fix #249: Custom status messages for other requests than NTLM handshake
