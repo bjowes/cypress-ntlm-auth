@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.6 - released 2024-04-16
+
+- Fix #253: Improved TypeScript typings, updated docs for typings
+- Dependency bump
+
 ## 4.1.5 - released 2024-03-28
 
 - Fix #249: Corrected dependency versions
