@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.7 - released 2024-04-16
+
+- Fix #254: Handle IPv6 loopback ::1 in NO_PROXY
+- Improved error reporting on upstream proxy settings 
+
 ## 4.1.6 - released 2024-04-16
 
 - Fix #253: Improved TypeScript typings, updated docs for typings

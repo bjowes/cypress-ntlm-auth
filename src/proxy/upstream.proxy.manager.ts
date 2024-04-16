@@ -1,54 +1,77 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { URLExt } from "../util/url.ext";
 
 import {
   HttpHeaders,
   IUpstreamProxyManager,
 } from "./interfaces/i.upstream.proxy.manager";
+import { TYPES } from "./dependency.injection.types";
+import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _httpProxyUrl?: URL;
   private _httpsProxyUrl?: URL;
   private _noProxyUrls?: string[];
+  private _debug: IDebugLogger;
+
+  constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+    this._debug = debug;
+  }
 
   init(httpProxy?: string, httpsProxy?: string, noProxy?: string) {
     if (httpProxy && this.validateUpstreamProxy(httpProxy, "HTTP_PROXY")) {
       this._httpProxyUrl = new URL(httpProxy);
+      this._debug.log('Detected HTTP_PROXY:', httpProxy);
     }
     if (httpsProxy && this.validateUpstreamProxy(httpsProxy, "HTTPS_PROXY")) {
       this._httpsProxyUrl = new URL(httpsProxy);
+      this._debug.log('Detected HTTPS_PROXY:', httpsProxy);
     }
     if (noProxy) {
       // Might be a comma separated list of hosts
       this._noProxyUrls = noProxy.split(",").map((item) => {
         item = item.trim();
-        if (item.indexOf("*") === -1) {
+        if (item === '::1') item = '[::1]'; // Add quoting brackets for IPv6 loopback
+        if (item.indexOf("*") === -1 && this.validateNoProxyPart(item)) {          
           item = new URL(`http://${item}`).host; // Trim away default ports
         }
         return item;
       });
+      this._debug.log('Detected NO_PROXY, parsed:', this._noProxyUrls.join(','));
     }
   }
 
   private validateUpstreamProxy(proxyUrl: string, parameterName: string) {
-    const proxyParsed = new URL(proxyUrl);
-    if (
-      !proxyParsed.protocol ||
-      !proxyParsed.hostname ||
-      proxyParsed.pathname !== "/"
-    ) {
-      throw new Error(
-        "Invalid " +
-          parameterName +
-          " argument. " +
-          "It must be a complete URL without path. Example: http://proxy.acme.com:8080"
-      );
+    try {
+      const proxyParsed = new URL(proxyUrl);
+      if (proxyParsed.protocol && proxyParsed.hostname && proxyParsed.pathname === "/") return true;
+    } catch (err) {
+      this._debug.log("Cannot parse upstream proxy URL", err);
     }
-    return true;
+    throw new Error(
+      "Invalid " +
+        parameterName +
+        " argument '" + proxyUrl + "'. " +
+        "It must be a complete URL without path. Example: http://proxy.acme.com:8080"
+    );
+  }
+
+  private validateNoProxyPart(noProxyPart: string) {
+    try {
+      const proxyParsed = new URL(`http://${noProxyPart}`);
+      if (proxyParsed.hostname && proxyParsed.pathname === "/") return true;
+    } catch (err) {
+      this._debug.log("Cannot parse upstream proxy URL", err);
+    }
+    throw new Error( 
+      "Invalid NO_PROXY argument part '" + noProxyPart + "'. " +
+        "It must be a comma separated list of: valid IP, hostname[:port] or a wildcard prefixed hostname. Protocol shall not be included. IPv6 addresses must be quoted in []. Examples: localhost,127.0.0.1,[::1],noproxy.acme.com:8080,*.noproxy.com"
+    );
   }
 
   private matchWithWildcardRule(str: string, rule: string): boolean {
+    if (rule.indexOf('*') === -1) return str === rule;
     return new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
   }
 
