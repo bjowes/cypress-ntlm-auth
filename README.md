@@ -42,11 +42,15 @@ Follow these steps to configure Cypress to utilize this plugin:
 
 ### Commands
 
-In the file `cypress/support/commands.js` (or `.ts`) add this line
+In the file `cypress/support/e2e.js` (or `.ts`) add this line
 
 ```javascript
 import "cypress-ntlm-auth/dist/commands";
 ```
+
+### Types (Intellisense)
+
+For proper typings when using TypeScript, add `"cypress-ntlm-auth"` to the types block of `cypress/tsconfig.json`. By default, the types block only includes node and cypress. In that case, the updated block should be `"types": ["cypress", "node", "cypress-ntlm-auth"]`. If you use other plugins there may be other additions. 
 
 ## Startup
 
@@ -370,7 +374,7 @@ The cypress-ntlm API mimics the behavior of the [run and open methods in Cypress
 #### Example
 
 ```javascript
-const cypressNtlmAuth = require("cypress-ntlm-auth");
+const cypressNtlmAuth = require("cypress-ntlm-auth/dist");
 cypressNtlmAuth
   .run({
     spec: "./cypress/integration/test.spec.js",
@@ -400,7 +404,7 @@ All these methods mimic the corresponding Cypress commands, see [Usage](#Usage) 
 #### Example
 
 ```javascript
-const cypressNtlmAuth = require("cypress-ntlm-auth");
+const cypressNtlmAuth = require("cypress-ntlm-auth/dist");
 
 async function run() {
   let proxy = await cypressNtlmAuth.startNtlmProxy();

@@ -21,6 +21,7 @@
   "engines": {
     "node": "^14.13.1 || >=16.0.0"
   },
+  "types": "dist/commands/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjowes/cypress-ntlm-auth.git"
