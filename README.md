@@ -182,7 +182,7 @@ If your network environment enforces proxy usage for internet access (quite like
 - `HTTPS_PROXY` - (optional) The URL to the proxy for accessing external HTTPS resources. Overrides `HTTP_PROXY` for HTTPS resources. Example: `http://proxy.acme.com:8080`
 - `NO_PROXY` - A comma separated list of internal hosts to exclude from proxying. Add the host you are testing, and other local network resources used from the browser when accessing the host you are testing. Note that hosts that are located on the internet (not your intranet) must not be added, they should pass through the upstream proxy.
 
-Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: \*.acme.com
+Include only the hostname (or IP), not the protocol or port. Wildcards are supported. Example: \*.acme.com. IPv6 addresses shall be quoted in brackets like `[::1]`.
 
 Since the plugin requires traffic to localhost to be excluded from the corporate proxy, the plugin adds `localhost` and `127.0.0.1` to the `NO_PROXY` setting automatically unless they are already there. To disable this behavior (if you require an additional custom proxy), add `<-loopback>` to `NO_PROXY`.
 
