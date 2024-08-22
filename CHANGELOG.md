@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.8 - released 2024-08-22
+
+- Dependency bump
+
 ## 4.1.7 - released 2024-04-16
 
 - Fix #254: Handle IPv6 loopback ::1 in NO_PROXY
