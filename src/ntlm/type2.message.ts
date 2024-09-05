@@ -30,7 +30,7 @@ export class Type2Message {
     // read flags
     this.flags = buf.readUInt32LE(20);
 
-    this.encoding = this.flags & NtlmFlags.NEGOTIATE_OEM ? "ascii" : "ucs2";
+    this.encoding = this.flags & NtlmFlags.NEGOTIATE_UNICODE ?  "ucs2" :  "ascii";
 
     this.version = this.flags & NtlmFlags.NEGOTIATE_NTLM2_KEY ? 2 : 1;
 
