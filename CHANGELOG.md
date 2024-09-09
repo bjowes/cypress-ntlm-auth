@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.0 - released 2024-09-09
+
+- Fix: Corrected parsing of encoding flags in NTLM header. Thanks @culling
+
 ## 4.1.7 - released 2024-04-16
 
 - Fix #254: Handle IPv6 loopback ::1 in NO_PROXY
