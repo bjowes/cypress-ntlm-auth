@@ -76,7 +76,7 @@ export class Environment implements IEnvironment {
     if (this.configApiUrl) {
       try {
         new URL(this.configApiUrl);
-      } catch (err) {
+      } catch {
         throw new Error("cypress-ntlm-auth: URLs in environment variables must be complete (start with http://)." +
         " Invalid URL (CYPRESS_NTLM_AUTH_API): " + this.configApiUrl);
       }
@@ -84,7 +84,7 @@ export class Environment implements IEnvironment {
     if (this.ntlmProxyUrl) {
       try {
         new URL(this.ntlmProxyUrl);
-      } catch (err) {
+      } catch {
         throw new Error("cypress-ntlm-auth: URLs in environment variables must be complete (start with http://)." +
         " Invalid URL (CYPRESS_NTLM_AUTH_PROXY): " + this.ntlmProxyUrl);
       }

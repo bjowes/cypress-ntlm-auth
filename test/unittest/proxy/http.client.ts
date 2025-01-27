@@ -31,6 +31,7 @@ export class HttpClient {
   ) {
     return await new Promise<HttpResponse>((resolve, reject) => {
       const proto = url.protocol === "http:" ? http : https;
+      //http.request() // har interface till agent ändrats??
       const request = proto.request(url, options, (response) => {
         /*
         if (response.statusCode >= 400) {
@@ -79,6 +80,8 @@ export class HttpClient {
         request.write(bodyStr);
       }
       request.end();
+      console.warn("options", options);
+      console.warn("request", request);
     });
   }
   /*

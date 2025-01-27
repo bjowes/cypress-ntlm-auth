@@ -203,10 +203,10 @@ export class NegotiateManager implements INegotiateManager {
   }
 
   private dropOriginalResponse(ctx: IContext) {
-    ctx.onResponseData((ctx, chunk, callback) => {
+    ctx.onResponseData((/* ctx, chunk, callback */) => {
       return;
     });
-    ctx.onResponseEnd((ctx, callback) => {
+    ctx.onResponseEnd((/* ctx, callback */) => {
       return;
     });
     ctx.serverToProxyResponse.resume();
@@ -232,7 +232,7 @@ export class NegotiateManager implements INegotiateManager {
     return false;
   }
 
-  private debugHeader(obj: any, brackets: boolean) {
+  private debugHeader(obj: object | string | undefined, brackets: boolean) {
     if (
       process.env.DEBUG_NTLM_HEADERS &&
       process.env.DEBUG_NTLM_HEADERS === "1"

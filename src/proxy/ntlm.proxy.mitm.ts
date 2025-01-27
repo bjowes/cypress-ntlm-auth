@@ -60,6 +60,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     // Keep track of instance since methods will be triggered from HttpMitmProxy
     // events which means that 'this' is no longer the class instance
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     self = this;
   }
 
@@ -167,7 +168,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
             " in registered NTLM Hosts" +
             (useSso ? " (using SSO)" : "")
         );
-        ctx.proxyToServerRequestOptions.agent = context.agent;
+        ctx.proxyToServerRequestOptions.agent = context.agent as http.Agent;
         context.clearRequestBody();
         ctx.onRequestData(function (ctx, chunk, callback) {
           context!.addToRequestBody(chunk);
@@ -175,7 +176,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         });
       } else {
         self._debug.log("Request to " + targetHost.href + " - pass on");
-        ctx.proxyToServerRequestOptions.agent = context.agent;
+        ctx.proxyToServerRequestOptions.agent = context.agent as http.Agent;
       }
       return callback();
     } else {
@@ -274,7 +275,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         const peerCert = tlsSocket.getPeerCertificate();
         // getPeerCertificate may return an empty object.
         // Validate that it has fingerprint256 attribute (added in Node 9.8.0)
-        if ((peerCert as any).fingerprint256) {
+        if (peerCert?.fingerprint256) {
           context.peerCert = peerCert;
         } else {
           self._debug.log(
@@ -372,7 +373,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   onConnect(
     req: http.IncomingMessage,
     socket: net.Socket,
-    head: any,
+    head: Uint8Array | string,
     callback: (error?: NodeJS.ErrnoException) => void
   ) {
     if (!req.url) {
@@ -476,7 +477,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     for (const key in originalHeaders) {
       if (originalHeaders.hasOwnProperty(key)) {
         const canonizedKey = key.trim();
-        if (/^public\-key\-pins/i.test(canonizedKey)) {
+        if (/^public-key-pins/i.test(canonizedKey)) {
           // HPKP header => filter
           continue;
         }

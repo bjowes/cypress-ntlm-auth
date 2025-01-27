@@ -183,7 +183,7 @@ export class Ntlm implements INtlm {
       clientNonce = clientNonceOverride || Hash.createPseudoRandomValue(16);
       if (withServerTimestamp) {
         // Use server timestamp if provided
-        timestamp = type2message.targetInfo.parsed["SERVER_TIMESTAMP"];
+        timestamp = type2message.targetInfo.parsed["SERVER_TIMESTAMP"]!;
       } else {
         timestamp = timestampOverride || Hash.createTimestamp();
       }

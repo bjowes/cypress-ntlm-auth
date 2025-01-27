@@ -110,7 +110,6 @@ export class ConfigValidator {
     return true;
   }
 
-  // eslint-disable-next-line max-len
   // https://support.microsoft.com/sv-se/help/909264/naming-conventions-in-active-directory-for-computers-domains-sites-and
   // Max 15 chars, invalid chars: " / \ : | * ? < >
   private static validateDomainOrWorkstation(domain: string): boolean {

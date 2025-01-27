@@ -17,8 +17,8 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
     this._debug = debug;
   }
 
-  private async request(configApiUrl: string, path: string, method: string, body: any) {
-    return new Promise<any>((resolve, reject) => {
+  private async request(configApiUrl: string, path: string, method: string, body: object | undefined) {
+    return new Promise<object | undefined>((resolve, reject) => {
       this._debug.log("Sending " + path + " request to NTLM proxy " + configApiUrl);
       const configApiUrlParsed = new URL(configApiUrl);
       const options: http.RequestOptions = {

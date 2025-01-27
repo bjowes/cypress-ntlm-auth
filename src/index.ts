@@ -12,29 +12,26 @@ const ntlmProxyFacade = container.get<INtlmProxyFacade>(TYPES.INtlmProxyFacade);
 
 /**
  * Starts Cypress in headless mode with NTLM plugin
- *
- * @param {any} options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
- * @returns {any} Test results as defined by https://docs.cypress.io/guides/guides/module-api.html#Results
+ * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
+ * @returns Test results as defined by https://docs.cypress.io/guides/guides/module-api.html#Results
  */
-export async function run(options: any) {
+export async function run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
   return await startup.run(options);
 }
 
 /**
  * Starts Cypress in headed mode with NTLM plugin
- *
- * @param {any} options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options-1
- * @returns {any} Test results
+ * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options-1
+ * @returns Test results
  */
-export async function open(options: any) {
+export async function open(options: Partial<CypressCommandLine.CypressOpenOptions>) {
   return await startup.open(options);
 }
 
 /**
  * Converts command line arguments to Cypress mode ('run' or 'open')
- *
- * @param {string[]} args command line arguments
- * @returns {string} 'run' or 'open'
+ * @param args command line arguments
+ * @returns 'run' or 'open'
  */
 export function argumentsToCypressMode(args: string[]) {
   return startup.argumentsToCypressMode(args);
@@ -42,18 +39,16 @@ export function argumentsToCypressMode(args: string[]) {
 
 /**
  * Converts command line arguments to a Cypress options object.
- *
- * @param {string[]} args command line arguments
- * @returns {any} An options object for the run() or open() methods
+ * @param args command line arguments
+ * @returns An options object for the run() or open() methods
  */
-export async function argumentsToOptions(args: string[]) {
+export async function argumentsToOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
   return await startup.prepareOptions(args);
 }
 
 /**
  * Starts a new ntlm-proxy
- *
- * @returns {NtlmProxy} The created NtlmProxy
+ * @returns The created NtlmProxy
  */
 export async function startNtlmProxy(): Promise<NtlmProxy> {
   // Create a new root instance for each ntlm-proxy
@@ -64,8 +59,7 @@ export async function startNtlmProxy(): Promise<NtlmProxy> {
 
 /**
  * Stop a running ntlm-proxy, uses environment variable to find the config API url
- *
- * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
+ * @returns True if the proxy was stopped, false if there was not response or the proxy does not exist.
  */
 export async function stopNtlmProxy(): Promise<boolean> {
   if (!environment.configApiUrl) {

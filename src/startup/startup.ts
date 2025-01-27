@@ -68,7 +68,7 @@ export class Startup implements IStartup {
     throw new Error("Unsupported command, use cypress-ntlm open or cypress-ntlm run.");
   }
 
-  async prepareOptions(args: string[]) {
+  async prepareOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
     this.checkCypressIsInstalled();
     let cliArguments = this.getArgsAfterCypressNtlm(args);
     cliArguments = cliArguments.slice(1);
@@ -109,7 +109,7 @@ export class Startup implements IStartup {
     );
   }
 
-  async run(options: any) {
+  async run(options: CypressCommandLine.CypressRunOptions): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Running tests through Cypress...");
@@ -127,7 +127,7 @@ export class Startup implements IStartup {
     }
   }
 
-  async open(options: any) {
+  async open(options: CypressCommandLine.CypressOpenOptions) {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Opening Cypress...");

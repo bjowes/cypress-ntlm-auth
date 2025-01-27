@@ -8,8 +8,9 @@ import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { SslTunnel } from "../models/ssl.tunnel.model";
-import { httpsTunnel, TunnelAgentOptions } from "./tunnel.agent";
+import { httpsTunnel, TunnelAgent, TunnelAgentOptions } from "./tunnel.agent";
 import { IHttpsValidation } from "./interfaces/i.https.validation";
+import { ExtendedAgentOptions } from "../models/extended.agent.options";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -95,8 +96,9 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return undefined;
   }
 
-  getAgent(isSSL: boolean, targetHost: URL, useUpstreamProxy: boolean) {
-    const agentOptions: https.AgentOptions = {
+  getAgent(isSSL: boolean, targetHost: URL, useUpstreamProxy: boolean) 
+  : TunnelAgent | http.Agent | https.Agent {
+    const agentOptions: ExtendedAgentOptions = {
       keepAlive: true,
       maxSockets: 1, // Only one connection per peer -> 1:1 match between inbound and outbound socket
       rejectUnauthorized: this._httpsValidation.useRequestHttpsValidation(),
@@ -108,7 +110,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
         agentOptions
       );
     }
-    let agent;
+    let agent: TunnelAgent | http.Agent | https.Agent;
     if (useUpstreamProxy && isSSL) {
       agent = httpsTunnel(agentOptions as TunnelAgentOptions);
     } else {
@@ -121,8 +123,8 @@ export class ConnectionContextManager implements IConnectionContextManager {
 
   // Untracked agents are used for requests to the config API.
   // These should not be destroyed on reset since that breaks the config API response.
-  getUntrackedAgent(targetHost: URL) {
-    let agent: any;
+  getUntrackedAgent(targetHost: URL) : http.Agent {
+    let agent: http.Agent;
     // eslint-disable-next-line prefer-const
     agent = new http.Agent();
     this._debug.log("Created untracked agent for target " + targetHost.href);
@@ -140,7 +142,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
         } else {
           context.clientSocket?.removeListener(
             "close",
-            context.socketCloseListener
+            context.socketCloseListener!
           );
           this._debug.log("Destroying context for", context.clientAddress);
           context.destroy(event);
@@ -155,7 +157,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     if (clientAddress in this._connectionContexts) {
       this._connectionContexts[clientAddress].clientSocket?.removeListener(
         "close",
-        this._connectionContexts[clientAddress].socketCloseListener
+        this._connectionContexts[clientAddress].socketCloseListener!
       );
       this._connectionContexts[clientAddress].destroy(event);
       delete this._connectionContexts[clientAddress];

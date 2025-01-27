@@ -113,13 +113,13 @@ export class NtlmManager implements INtlmManager {
         );
         this.debugHeader(type1res.headers["www-authenticate"], true);
         this.debugHeader(type2msg, false);
-      } catch (err: any) {
+      } catch (err) {
         this._debug.log(
           "Cannot parse NTLM message type 2 from host",
           ntlmHostUrl.href
         );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-        return callback(err, type1res);
+        return callback(err as NodeJS.ErrnoException, type1res);
       }
 
       let type3msg: NtlmMessage;
@@ -227,10 +227,10 @@ export class NtlmManager implements INtlmManager {
   }
 
   private dropOriginalResponse(ctx: IContext) {
-    ctx.onResponseData((ctx, chunk, callback) => {
+    ctx.onResponseData((/* ctx, chunk, callback */) => {
       return;
     });
-    ctx.onResponseEnd((ctx, callback) => {
+    ctx.onResponseEnd((/* ctx, callback */) => {
       return;
     });
     ctx.serverToProxyResponse.resume();
@@ -259,7 +259,7 @@ export class NtlmManager implements INtlmManager {
     return false;
   }
 
-  private debugHeader(obj: any, brackets: boolean) {
+  private debugHeader(obj: object | string | undefined, brackets: boolean) {
     if (
       process.env.DEBUG_NTLM_HEADERS &&
       process.env.DEBUG_NTLM_HEADERS === "1"

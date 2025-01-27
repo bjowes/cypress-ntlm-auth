@@ -1,6 +1,6 @@
 export interface ICypressFacade {
   cypressLoaded(): boolean;
-  run(options: any): Promise<any>;
-  open(options: any): Promise<any>;
-  parseRunArguments(runArguments: string[]): Promise<any>;
+  run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult>;
+  open(options: Partial<CypressCommandLine.CypressOpenOptions>): Promise<void>;
+  parseRunArguments(runArguments: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>>;
 }

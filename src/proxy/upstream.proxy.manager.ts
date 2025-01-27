@@ -1,5 +1,6 @@
 import { inject, injectable } from "inversify";
 import { URLExt } from "../util/url.ext";
+import https from "https";
 
 import {
   HttpHeaders,
@@ -7,6 +8,7 @@ import {
 } from "./interfaces/i.upstream.proxy.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
+import { ExtendedAgentOptions } from "../models/extended.agent.options";
 
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
@@ -89,7 +91,7 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     return match;
   }
 
-  setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: any) {
+  setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: ExtendedAgentOptions) {
     let proxyUrl = null;
 
     if (this.targetInNoProxy(ntlmHostUrl)) {

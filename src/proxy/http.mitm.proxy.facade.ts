@@ -12,7 +12,7 @@ export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
     this._ntlmProxy = httpMitmProxy();
   }
 
-  use(mod: any): IHttpMitmProxyFacade {
+  use(mod: object): IHttpMitmProxyFacade {
     this._ntlmProxy.use(mod);
     return this;
   }

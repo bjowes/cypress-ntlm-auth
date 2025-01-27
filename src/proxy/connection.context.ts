@@ -4,10 +4,13 @@ import { IConnectionContext } from "./interfaces/i.connection.context";
 import { PeerCertificate } from "tls";
 import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
 import { Socket } from "net";
+import { TunnelAgent } from "./tunnel.agent";
+import http from "http";
+import https from "https";
 
 @injectable()
 export class ConnectionContext implements IConnectionContext {
-  private _agent: any;
+  private _agent!: TunnelAgent | http.Agent | https.Agent;
   private _ntlmHost?: URL;
   private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
@@ -15,15 +18,15 @@ export class ConnectionContext implements IConnectionContext {
   private _peerCert?: PeerCertificate;
   private _clientAddress = "";
   private _clientSocket?: Socket;
-  private _socketCloseListener: any;
+  private _socketCloseListener?: () => void;
   private _configApiConnection = false;
   private _useUpstreamProxy = false;
   private _isSSL = false;
 
-  get agent(): any {
+  get agent(): TunnelAgent | http.Agent | https.Agent {
     return this._agent;
   }
-  set agent(agent: any) {
+  set agent(agent: TunnelAgent | http.Agent | https.Agent) {
     this._agent = agent;
   }
 
@@ -58,10 +61,10 @@ export class ConnectionContext implements IConnectionContext {
     this._clientSocket = clientSocket;
   }
 
-  get socketCloseListener(): any {
+  get socketCloseListener(): (() => void) | undefined {
     return this._socketCloseListener;
   }
-  set socketCloseListener(listener: any) {
+  set socketCloseListener(listener: (() => void)) {
     this._socketCloseListener = listener;
   }
 
@@ -89,9 +92,8 @@ export class ConnectionContext implements IConnectionContext {
   /**
    * If the connection is new or a handshake has been completed (successful or failed),
    * a new handshake can be initiated
-   *
-   * @param {URL} ntlmHostUrl The target url
-   * @returns {boolean} True if the connection is new or a handshake has been completed
+   * @param ntlmHostUrl The target url
+   * @returns True if the connection is new or a handshake has been completed
    */
   canStartAuthHandshake(ntlmHostUrl: URL): boolean {
     const auth =

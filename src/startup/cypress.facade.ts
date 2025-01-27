@@ -4,7 +4,7 @@ import cypressLoader from "./cypress.loader.js";
 
 @injectable()
 export class CypressFacade implements ICypressFacade {
-  private _cypress: any;
+  private _cypress: CypressNpmModule.CypressNpmApi;
 
   constructor() {
     this._cypress = cypressLoader.cypress();
@@ -14,15 +14,15 @@ export class CypressFacade implements ICypressFacade {
     return this._cypress !== null && this._cypress !== undefined;
   }
 
-  async run(options: any) {
+  async run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
     return await this._cypress.run(options);
   }
 
-  async open(options: any) {
+  async open(options: Partial<CypressCommandLine.CypressOpenOptions>) {
     return await this._cypress.open(options);
   }
 
-  async parseRunArguments(runArguments: string[]) {
+  async parseRunArguments(runArguments: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
     return await this._cypress.cli.parseRunArguments(runArguments);
   }
 }

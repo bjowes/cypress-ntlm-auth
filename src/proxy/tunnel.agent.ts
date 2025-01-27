@@ -14,7 +14,7 @@ export interface TunnelAgentProxyOptions {
   port: number;
   secureProxy?: boolean;
   proxyAuth?: string;
-  headers?: {};
+  headers?: object;
   ALPNProtocols?: string[];
 }
 
@@ -36,9 +36,8 @@ interface Request {
 
 /**
  * Create an agent for tunnelling HTTP requests through an upstream proxy
- *
- * @param {CombinedAgentOptions} options Agent options
- * @returns {TunnelAgent} the tunnel agent
+ * @param options Agent options
+ * @returns the tunnel agent
  */
 export function httpTunnel(options: CombinedAgentOptions) {
   return new TunnelAgent(options, options.proxy.secureProxy, false);
@@ -46,9 +45,8 @@ export function httpTunnel(options: CombinedAgentOptions) {
 
 /**
  * Create an agent for tunnelling HTTPS requests through an upstream proxy
- *
- * @param {CombinedAgentOptions} options Agent options
- * @returns {TunnelAgent} the tunnel agent
+ * @param options Agent options
+ * @returns the tunnel agent
  */
 export function httpsTunnel(options: CombinedAgentOptions) {
   return new TunnelAgent(options, options.proxy.secureProxy, true);
@@ -141,6 +139,7 @@ export class TunnelAgent extends EventEmitter {
     targetUsesHttps: boolean = false
   ) {
     super();
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.options = options;
     this.proxyOptions = options.proxy || ({} as TunnelAgentProxyOptions);
@@ -186,7 +185,7 @@ export class TunnelAgent extends EventEmitter {
         socket.removeAllListeners();
         socket.unref();
         self.freeSockets.insert(request.socketKey, socket);
-        socket.once("close", (_) => {
+        socket.once("close", () => {
           if (self.destroyPending) return;
           self.debugLog("remove socket on socket close");
           self.freeSockets.remove(request.socketKey, socket);
@@ -198,14 +197,14 @@ export class TunnelAgent extends EventEmitter {
 
   /**
    * Counts all sockets active in requests and pending (keep-alive)
-   *
-   * @returns {number} The number of sockets, free and in use
+   * @returns The number of sockets, free and in use
    */
   socketCount() {
     return this.sockets.count() + this.freeSockets.count();
   }
 
   addRequest(req: http.ClientRequest, _opts: RequestOptions) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const request: Request = {
       clientReq: req,
@@ -237,6 +236,7 @@ export class TunnelAgent extends EventEmitter {
   }
 
   private executeRequest(request: Request, socket: net.Socket) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     socket.on("free", onFree);
     socket.on("close", onCloseOrRemove);
@@ -274,6 +274,7 @@ export class TunnelAgent extends EventEmitter {
     request: Request,
     cb: (socket: net.Socket) => void
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const host = this.escapeHost(request.options.host!, request.options.port!);
     const connectOptions: http.RequestOptions = {
@@ -367,6 +368,7 @@ export class TunnelAgent extends EventEmitter {
   }
 
   private createTcpSocket(request: Request) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     self.createSocketInternal(request, (socket: net.Socket) =>
       self.executeRequest(request, socket)
@@ -374,6 +376,7 @@ export class TunnelAgent extends EventEmitter {
   }
 
   private createSecureSocket(request: Request) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     self.createSocketInternal(request, function (socket: net.Socket) {
       const hostHeader = request.clientReq.getHeader("host") as string;

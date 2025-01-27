@@ -15,7 +15,6 @@ import { osSupported } from "win-sso";
 
 @injectable()
 export class ConfigController implements IConfigController {
-  // eslint-disable-next-line new-cap
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;

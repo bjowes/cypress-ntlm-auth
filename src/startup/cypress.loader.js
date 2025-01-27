@@ -1,5 +1,9 @@
 let _cypress = undefined;
 
+/**
+ * Dynamically resolve cypress to verify that it is installed
+ * @returns Resolved cypress module
+ */
 function cypress() {
   if (_cypress === undefined) {
     try {

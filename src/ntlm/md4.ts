@@ -1,5 +1,4 @@
 /* eslint-disable jsdoc/require-jsdoc */
-/* eslint-disable jsdoc/no-undefined-types */
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD4 Message
  * Digest Algorithm, as defined in RFC 1320.
@@ -16,9 +15,8 @@
 
 /**
  * Creates a MD4 hash from a buffer
- *
- * @param {Buffer} buf Bytes to hash
- * @returns {Buffer} Computed hash
+ * @param buf Bytes to hash
+ * @returns Computed hash
  */
 export function md4(buf: Buffer): Buffer {
   return binl2buf(coreMd4(buf2binl(buf), buf.length * 8));

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 export const enum AuthModeEnum {
   NotApplicable = 0,
   NotSupported = 1,

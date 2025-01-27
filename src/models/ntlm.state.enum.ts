@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 export const enum NtlmStateEnum {
   NotAuthenticated = 0,
   Type1Sent = 1,
