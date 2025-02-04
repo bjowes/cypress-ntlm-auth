@@ -15,7 +15,7 @@ export interface INtlmProxyMitm {
   onConnect(
     req: http.IncomingMessage,
     socket: net.Socket,
-    head: any,
+    head: Uint8Array | string,
     callback: (error?: NodeJS.ErrnoException) => void
   ): void;
 }

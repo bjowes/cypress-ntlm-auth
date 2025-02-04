@@ -3,10 +3,18 @@ import { NtlmConfig } from "./models/ntlm.config.model";
 import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
 import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
 
+/**
+ * NTLM Proxy module
+ */
 export class NtlmProxy {
   ports: PortsConfig;
   private ntlmProxyFacade: INtlmProxyFacade;
 
+  /**
+   * Constructor
+   * @param ports Ports config 
+   * @param ntlmProxyFacade NTLM proxy facade
+   */
   constructor(ports: PortsConfig, ntlmProxyFacade: INtlmProxyFacade) {
     this.ports = ports;
     this.ntlmProxyFacade = ntlmProxyFacade;
@@ -14,16 +22,14 @@ export class NtlmProxy {
 
   /**
    * Add NTLM configuration
-   *
-   * @param {NtlmConfig} config The NtlmConfig to apply, see the README for details
+   * @param config The NtlmConfig to apply, see the README for details
    */
   async ntlm(config: NtlmConfig) {
     await this.ntlmProxyFacade.ntlm(this.ports.configApiUrl, config);
   }
   /**
    * Add NTLM SSO configuration
-   *
-   * @param {NtlmSsoConfig} config The NtlmSsoConfig to apply, see the README for details
+   * @param config The NtlmSsoConfig to apply, see the README for details
    */
   async ntlmSso(config: NtlmSsoConfig) {
     await this.ntlmProxyFacade.ntlmSso(this.ports.configApiUrl, config);
@@ -36,16 +42,14 @@ export class NtlmProxy {
   }
   /**
    * Check if proxy is alive
-   *
-   * @returns {PortsConfig} The PortsConfig for the proxy
+   * @returns The PortsConfig for the proxy
    */
   async alive(): Promise<PortsConfig> {
     return await this.ntlmProxyFacade.alive(this.ports.configApiUrl);
   }
   /**
    * Stops ntlm-proxy
-   *
-   * @returns {boolean} True if the proxy was stopped, false if there was not response or the proxy does not exist.
+   * @returns True if the proxy was stopped, false if there was not response or the proxy does not exist.
    */
   async stop(): Promise<boolean> {
     const result = await this.ntlmProxyFacade.quitIfRunning(this.ports.configApiUrl);

@@ -13,15 +13,23 @@ import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 import { PortsConfig } from "../models/ports.config.model";
 import { osSupported } from "win-sso";
 
+/**
+ * Config controller
+ */
 @injectable()
 export class ConfigController implements IConfigController {
-  // eslint-disable-next-line new-cap
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private _configStore: IConfigStore;
   private _portsConfigStore: IPortsConfigStore;
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param configStore Config store
+   * @param portsConfigStore Ports config store
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,

@@ -3,7 +3,16 @@ import { md4 } from "./md4";
 import CryptoJS from "crypto-js";
 import { Type2Message } from "./type2.message";
 
+/**
+ * Hash utilities for NTLM
+ */
 export class Hash {
+  /**
+   * Create LM response
+   * @param challenge Challenge buffer
+   * @param lmhash LM hash buffer
+   * @returns LM response
+   */
   static createLMResponse(challenge: Buffer, lmhash: Buffer) {
     const buf = Buffer.alloc(24);
     const pwBuffer = Buffer.alloc(21).fill(0);
@@ -17,6 +26,11 @@ export class Hash {
     return buf;
   }
 
+  /**
+   * Create LM hash
+   * @param password password 
+   * @returns LM hash
+   */
   static createLMHash(password: string) {
     const buf = Buffer.alloc(16);
     const pwBuffer = Buffer.alloc(14);
@@ -36,7 +50,7 @@ export class Hash {
     ]);
   }
 
-  static calculateDES(key: Buffer, message: Buffer) {
+  private static calculateDES(key: Buffer, message: Buffer) {
     const desKey = Buffer.alloc(8);
 
     desKey[0] = key[0] & 0xfe;
@@ -67,6 +81,12 @@ export class Hash {
     return Buffer.from(des.toString(), "base64").slice(0, message.length);
   }
 
+  /**
+   * Create NTLM response
+   * @param challenge Challenge buffer
+   * @param ntlmhash NTLM hash buffer
+   * @returns NTLM Response
+   */
   static createNTLMResponse(challenge: Buffer, ntlmhash: Buffer) {
     const buf = Buffer.alloc(24);
     const ntlmBuffer = Buffer.alloc(21).fill(0);
@@ -80,11 +100,16 @@ export class Hash {
     return buf;
   }
 
+  /**
+   * Create NTLM hash
+   * @param password password
+   * @returns NTLM hash
+   */
   static createNTLMHash(password: string) {
     return md4(Buffer.from(password, "ucs2"));
   }
 
-  static createNTLMv2Hash(
+  private static createNTLMv2Hash(
     ntlmhash: Buffer,
     username: string,
     authTargetName: string
@@ -94,6 +119,15 @@ export class Hash {
     return hmac.digest();
   }
 
+  /**
+   * Create LMv2 response
+   * @param type2message NTLM Type 2 message
+   * @param username username
+   * @param authTargetName target domain
+   * @param ntlmhash NTLM hash buffer
+   * @param nonce nonce
+   * @returns LMv2 response
+   */
   static createLMv2Response(
     type2message: Type2Message,
     username: string,
@@ -120,6 +154,17 @@ export class Hash {
     return buf;
   }
 
+  /**
+   * Create NTLMv2 response
+   * @param type2message NTLM type 2 message
+   * @param username username
+   * @param authTargetName target domain
+   * @param ntlmhash NTLM hash buffer
+   * @param nonce Nonce
+   * @param timestamp Timestamp
+   * @param withMic use MIC
+   * @returns NTLMv2 response
+   */
   static createNTLMv2Response(
     type2message: Type2Message,
     username: string,
@@ -190,6 +235,18 @@ export class Hash {
     return buf;
   }
 
+  /**
+   * Create MIC
+   * @param type1message NTLM type 1 message
+   * @param type2message NTLM type 2 message
+   * @param type3message NTLM type 3 message
+   * @param username username
+   * @param authTargetName target domain
+   * @param ntlmhash NTLM hash buffer
+   * @param nonce Nonce
+   * @param timestamp Timestamp
+   * @returns MIC buffer
+   */
   static createMIC(
     type1message: Buffer,
     type2message: Type2Message,
@@ -222,6 +279,17 @@ export class Hash {
     return hashedBuffer;
   }
 
+  /**
+   * Create random session key
+   * @param type2message NTLM type 2 message
+   * @param username username
+   * @param authTargetName target domain
+   * @param ntlmhash NTLM hash buffer
+   * @param nonce Nonce
+   * @param timestamp Timestamp
+   * @param withMic use MIC
+   * @returns Random session key buffer
+   */
   static createRandomSessionKey(
     type2message: Type2Message,
     username: string,
@@ -252,6 +320,11 @@ export class Hash {
     return encryptedRandomSessionKey;
   }
 
+  /**
+   * Create pseudo random value
+   * @param length length of string to generate
+   * @returns pseudo random string
+   */
   static createPseudoRandomValue(length: number) {
     let str = "";
     while (str.length < length) {
@@ -260,6 +333,10 @@ export class Hash {
     return str;
   }
 
+  /**
+   * Create timestamp
+   * @returns Timestamp
+   */
   static createTimestamp() {
     // TODO: we are loosing precision here since js is not able to handle those large integers
     // maybe think about a different solution here

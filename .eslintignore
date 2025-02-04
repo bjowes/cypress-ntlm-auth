@@ -1,7 +1,0 @@
-node_modules
-dist
-.http-mitm-proxy
-.nyc_output
-.vsconde
-test/e2e/node_modules
-test/e2e/.http-mitm-proxy

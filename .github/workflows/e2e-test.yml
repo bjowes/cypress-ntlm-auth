@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-        node-version: [18, 20]
+        node-version: [18, 20, 22]
 
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
         env:
           CI: true
       - name: Archive test screenshots
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: test/e2e/cypress/screenshots

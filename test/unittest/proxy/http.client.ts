@@ -13,12 +13,12 @@ export class HttpClient {
     url: URL,
     options: http.RequestOptions | https.RequestOptions
   ) {
-    return this.request(url, { ...options, method: "GET" }, null);
+    return this.request(url, { ...options, method: "GET" }, undefined);
   }
 
   static async post(
     url: URL,
-    body: object,
+    body: object | undefined,
     options: http.RequestOptions | https.RequestOptions
   ) {
     return this.request(url, { ...options, method: "POST" }, body);
@@ -27,7 +27,7 @@ export class HttpClient {
   static async request(
     url: URL,
     options: http.RequestOptions | https.RequestOptions,
-    body?: object
+    body: object | undefined
   ) {
     return await new Promise<HttpResponse>((resolve, reject) => {
       const proto = url.protocol === "http:" ? http : https;
@@ -49,6 +49,7 @@ export class HttpClient {
 
         response.once("end", () => {
           const buffer = Buffer.concat(chunks);
+
           return resolve({
             status: response.statusCode,
             statusText: response.statusMessage,

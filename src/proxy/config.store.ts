@@ -14,6 +14,9 @@ interface NtlmWildcardHostConfigHash {
   [ntlmHost: string]: NtlmWildcardHost;
 }
 
+/**
+ * Config store
+ */
 @injectable()
 export class ConfigStore implements IConfigStore {
   private ntlmHosts: NtlmHostConfigHash = {};
@@ -21,6 +24,10 @@ export class ConfigStore implements IConfigStore {
   private ntlmSsoHosts: string[] = [];
   private ntlmSsoHostWildcards: RegExp[] = [];
 
+  /**
+   * Update config from NTLM configuration request
+   * @param config NTLM config
+   */
   updateConfig(config: NtlmConfig) {
     const nonWildcards = config.ntlmHosts.filter((s) => s.indexOf("*") === -1);
     const wildcards = config.ntlmHosts.filter((s) => s.indexOf("*") !== -1);
@@ -53,10 +60,20 @@ export class ConfigStore implements IConfigStore {
     });
   }
 
+  /**
+   * Check if target Url exists in config
+   * @param ntlmHostUrl Target Url
+   * @returns true if target Url exists in config
+   */
   exists(ntlmHostUrl: URL): boolean {
     return this.get(ntlmHostUrl) !== undefined;
   }
 
+  /**
+   * Get config for target Url
+   * @param ntlmHostUrl Target Url
+   * @returns Config if it exists
+   */
   get(ntlmHostUrl: URL): NtlmHost | undefined {
     // Match first with port
     const ntlmHostWithPort =
@@ -74,6 +91,10 @@ export class ConfigStore implements IConfigStore {
     );
   }
 
+  /**
+   * Set NTLM SSO config from NTLM SSO config request. Replaces current config
+   * @param ntlmSsoConfig NTLM SSO config
+   */
   setSsoConfig(ntlmSsoConfig: NtlmSsoConfig) {
     const nonWildcards = ntlmSsoConfig.ntlmHosts.filter(
       (s) => s.indexOf("*") === -1
@@ -87,10 +108,20 @@ export class ConfigStore implements IConfigStore {
     );
   }
 
+  /**
+   * Check if SSO should be used for target Url
+   * @param ntlmHostUrl Target Url
+   * @returns true if SSO should be used
+   */
   useSso(ntlmHostUrl: URL): boolean {
     return this.existsSso(ntlmHostUrl) && this.exists(ntlmHostUrl) === false;
   }
 
+  /**
+   * Check if NTML config exists or SSO should be used for target Url
+   * @param ntlmHostUrl Target Url
+   * @returns true is NTLM config exists or SSO should be used
+   */
   existsOrUseSso(ntlmHostUrl: URL): boolean {
     return this.exists(ntlmHostUrl) || this.existsSso(ntlmHostUrl);
   }
@@ -111,6 +142,9 @@ export class ConfigStore implements IConfigStore {
     );
   }
 
+  /**
+   * Clears all config
+   */
   clear() {
     this.ntlmHosts = {};
     this.ntlmSsoHosts = [];

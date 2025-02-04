@@ -1,3 +1,3 @@
 export interface IDebugLogger {
-  log(formatter: any, ...args: any[]): void;
+  log(formatter: string | object | undefined, ...args: unknown[]): void;
 }

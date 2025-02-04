@@ -13,12 +13,21 @@ import { Type2Message } from "../ntlm/type2.message";
 import { NtlmMessage } from "../ntlm/ntlm.message";
 import { NtlmHost } from "../models/ntlm.host.model";
 
+/**
+ * NTLM protocol manager
+ */
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
   private _ntlm: INtlm;
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param configStore Config store
+   * @param ntlm NTLM protocol utils
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.INtlm) ntlm: INtlm,
@@ -29,6 +38,15 @@ export class NtlmManager implements INtlmManager {
     this._debug = debug;
   }
 
+  /**
+   * Perform NTLM handshake
+   * @param ctx MITM connection context
+   * @param ntlmHostUrl Target Url
+   * @param context Connection context
+   * @param useSso Use SSO authentication
+   * @param callback Callback to continue request handling or report error
+   * @returns void
+   */
   handshake(
     ctx: IContext,
     ntlmHostUrl: URL,
@@ -113,13 +131,13 @@ export class NtlmManager implements INtlmManager {
         );
         this.debugHeader(type1res.headers["www-authenticate"], true);
         this.debugHeader(type2msg, false);
-      } catch (err: any) {
+      } catch (err) {
         this._debug.log(
           "Cannot parse NTLM message type 2 from host",
           ntlmHostUrl.href
         );
         context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
-        return callback(err, type1res);
+        return callback(err as NodeJS.ErrnoException, type1res);
       }
 
       let type3msg: NtlmMessage;
@@ -227,15 +245,20 @@ export class NtlmManager implements INtlmManager {
   }
 
   private dropOriginalResponse(ctx: IContext) {
-    ctx.onResponseData((ctx, chunk, callback) => {
+    ctx.onResponseData((/* ctx, chunk, callback */) => {
       return;
     });
-    ctx.onResponseEnd((ctx, callback) => {
+    ctx.onResponseEnd((/* ctx, callback */) => {
       return;
     });
     ctx.serverToProxyResponse.resume();
   }
 
+  /**
+   * Check if the peer accepts NTLM authentication
+   * @param res Response object
+   * @returns true if NTLM is supported
+   */
   acceptsNtlmAuthentication(res: http.IncomingMessage): boolean {
     // Ensure that we're talking NTLM here
     const wwwAuthenticate = res.headers["www-authenticate"];
@@ -259,7 +282,7 @@ export class NtlmManager implements INtlmManager {
     return false;
   }
 
-  private debugHeader(obj: any, brackets: boolean) {
+  private debugHeader(obj: object | string | undefined, brackets: boolean) {
     if (
       process.env.DEBUG_NTLM_HEADERS &&
       process.env.DEBUG_NTLM_HEADERS === "1"

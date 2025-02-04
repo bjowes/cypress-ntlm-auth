@@ -215,7 +215,7 @@ export class ProxyFacade {
   }
 
   static async sendNtlmReset(configApiUrl: URL): Promise<HttpResponse> {
-    const res = await HttpClient.post(new URL("/reset", configApiUrl), null, {
+    const res = await HttpClient.post(new URL("/reset", configApiUrl), undefined, {
       timeout: 15000,
     });
     if (res.status !== 200) {
@@ -225,11 +225,12 @@ export class ProxyFacade {
   }
 
   static getHttpProxyAgent(proxyUrl: URL, keepAlive: boolean) {
-    return new http.Agent({
+    let agent = new http.Agent({
       keepAlive: keepAlive,
       host: URLExt.unescapeHostname(proxyUrl),
       port: URLExt.portOrDefault(proxyUrl),
     });
+    return agent;
   }
 
   static async sendProxiedHttpRequest(

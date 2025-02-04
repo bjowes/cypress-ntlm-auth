@@ -6,6 +6,9 @@ import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
 
+/**
+ * Config API server
+ */
 @injectable()
 export class ConfigServer implements IConfigServer {
   private initDone: boolean = false;
@@ -14,6 +17,13 @@ export class ConfigServer implements IConfigServer {
   private _portsConfigStore: IPortsConfigStore;
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param expressServer Express server facade
+   * @param configController Config controller
+   * @param portsConfigStore Ports config store
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IExpressServerFacade) expressServer: IExpressServerFacade,
     @inject(TYPES.IConfigController) configController: IConfigController,
@@ -26,7 +36,10 @@ export class ConfigServer implements IConfigServer {
     this._debug = debug;
   }
 
-  init() {
+  /**
+   * Init server
+   */
+  init(): void {
     if (this.initDone) {
       return;
     }
@@ -34,6 +47,11 @@ export class ConfigServer implements IConfigServer {
     this.initDone = true;
   }
 
+  /**
+   * Start Config API listener
+   * @param port Requested port, any free port is used if not set
+   * @returns The Url that Config API listens to
+   */
   async start(port?: number): Promise<string> {
     this.init();
 
@@ -52,6 +70,9 @@ export class ConfigServer implements IConfigServer {
     }
   }
 
+  /**
+   * Stop listener
+   */
   async stop() {
     this._debug.log("Shutting down config API");
     try {

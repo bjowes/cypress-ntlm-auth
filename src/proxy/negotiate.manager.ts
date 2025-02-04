@@ -8,14 +8,29 @@ import { INegotiateManager } from "./interfaces/i.negotiate.manager";
 import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 
+/**
+ * Negotiate protocol manager
+ */
 @injectable()
 export class NegotiateManager implements INegotiateManager {
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param debug Debug logger
+   */
   constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._debug = debug;
   }
 
+  /**
+   * Perform Negotiate handshake
+   * @param ctx MITM connection context
+   * @param ntlmHostUrl Target Url
+   * @param context Connection context
+   * @param callback Callback to continue request handling or report error
+   * @returns void
+   */
   handshake(
     ctx: IContext,
     ntlmHostUrl: URL,
@@ -203,15 +218,20 @@ export class NegotiateManager implements INegotiateManager {
   }
 
   private dropOriginalResponse(ctx: IContext) {
-    ctx.onResponseData((ctx, chunk, callback) => {
+    ctx.onResponseData((/* ctx, chunk, callback */) => {
       return;
     });
-    ctx.onResponseEnd((ctx, callback) => {
+    ctx.onResponseEnd((/* ctx, callback */) => {
       return;
     });
     ctx.serverToProxyResponse.resume();
   }
 
+  /**
+   * Check if the peer accepts Negotiate authentication
+   * @param res Response object
+   * @returns true if NTLM is supported
+   */
   acceptsNegotiateAuthentication(res: http.IncomingMessage): boolean {
     // Ensure that we're talking Negotiate here
     const wwwAuthenticate = res.headers["www-authenticate"];
@@ -232,7 +252,7 @@ export class NegotiateManager implements INegotiateManager {
     return false;
   }
 
-  private debugHeader(obj: any, brackets: boolean) {
+  private debugHeader(obj: object | string | undefined, brackets: boolean) {
     if (
       process.env.DEBUG_NTLM_HEADERS &&
       process.env.DEBUG_NTLM_HEADERS === "1"

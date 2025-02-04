@@ -5,6 +5,14 @@ interface TargetInfoHash {
   [key: string]: string | null;
 }
 
+interface TargetInfo {
+  parsed: TargetInfoHash;
+  buffer: Buffer<ArrayBuffer>;
+}
+
+/**
+ * NTLM Type 2 message
+ */
 export class Type2Message {
   raw: Buffer;
   flags: number;
@@ -12,8 +20,12 @@ export class Type2Message {
   version: number;
   challenge: Buffer;
   targetName: string;
-  targetInfo: any;
+  targetInfo!: TargetInfo;
 
+  /**
+   * Constructor
+   * @param buf Buffer with NTLM Type 2 message
+   */
   constructor(buf: Buffer) {
     this.raw = buf;
 
@@ -61,7 +73,7 @@ export class Type2Message {
     return this.raw.toString(this.encoding, offset, offset + length);
   }
 
-  private parseTargetInfo() {
+  private parseTargetInfo() : TargetInfo {
     const info: TargetInfoHash = {};
 
     const length = this.raw.readUInt16LE(40);
@@ -72,7 +84,10 @@ export class Type2Message {
     this.raw.copy(targetInfoBuffer, 0, offset, offset + length);
 
     if (length === 0) {
-      return info;
+      return {
+        parsed: info,
+        buffer: targetInfoBuffer
+      };
     }
 
     if (offset + length > this.raw.length || offset < 32) {

@@ -3,8 +3,16 @@ import tls from "tls";
 import { ITlsCertValidator } from "./interfaces/i.tls.cert.validator";
 import { URLExt } from "./url.ext";
 
+/**
+ * Validation of TLS certificates
+ */
 @injectable()
 export class TlsCertValidator implements ITlsCertValidator {
+  /**
+   * Resolves if the cert at supplied URL is valid
+   * @param targetHost Url
+   * @returns Resolves if valid
+   */
   validate(targetHost: URL): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const socket = tls.connect(

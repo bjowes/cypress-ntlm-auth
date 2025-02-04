@@ -33,8 +33,18 @@ import os from "os";
 import { Type2Message } from "./type2.message";
 import { NtlmMessage } from "./ntlm.message";
 
+/**
+ * NTLM protocol utils
+ */
 @injectable()
 export class Ntlm implements INtlm {
+  /**
+   * Create NTLM Type 1 message
+   * @param ntlmVersion NTLM version
+   * @param workstation Workstation name (optional)
+   * @param target Target domain (optional)
+   * @returns NtlmMessage
+   */
   createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage {
     let dataPos = 40;
     let pos = 0;
@@ -119,6 +129,11 @@ export class Ntlm implements INtlm {
     return pos;
   }
 
+  /**
+   * Decode NTLM Type 2 message
+   * @param str Header string
+   * @returns Type 2 message
+   */
   decodeType2Message(str: string | undefined): Type2Message {
     if (str === undefined) {
       throw new Error("Invalid argument");
@@ -135,6 +150,18 @@ export class Ntlm implements INtlm {
     return type2message;
   }
 
+  /**
+   * Create NTLM Type 3 message
+   * @param type1message NtlmMessage type 1
+   * @param type2message Type 2 message
+   * @param username Username
+   * @param password Password
+   * @param workstation workstation (optional)
+   * @param target domain (optional)
+   * @param clientNonceOverride override client nonce (optional, only for testability)
+   * @param timestampOverride timestamp override (optional, only for testability)
+   * @returns NtlmMessage type 3
+   */
   createType3Message(
     type1message: NtlmMessage,
     type2message: Type2Message,
@@ -183,7 +210,7 @@ export class Ntlm implements INtlm {
       clientNonce = clientNonceOverride || Hash.createPseudoRandomValue(16);
       if (withServerTimestamp) {
         // Use server timestamp if provided
-        timestamp = type2message.targetInfo.parsed["SERVER_TIMESTAMP"];
+        timestamp = type2message.targetInfo.parsed["SERVER_TIMESTAMP"]!;
       } else {
         timestamp = timestampOverride || Hash.createTimestamp();
       }

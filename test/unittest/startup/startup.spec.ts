@@ -7,7 +7,7 @@ import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
 import { DebugLogger } from "../../../src/util/debug.logger";
 import { Startup } from "../../../src/startup/startup";
 import { IUpstreamProxyConfigurator } from "../../../src/startup/interfaces/i.upstream.proxy.configurator";
-import { ICypressFacade } from "../../../src/startup/interfaces/i.cypress.facade";
+import { CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "../../../src/startup/interfaces/i.cypress.facade";
 import { IMain } from "../../../src/proxy/interfaces/i.main";
 import { fail } from "assert";
 import { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade";
@@ -170,16 +170,16 @@ describe("Startup shallow", () => {
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
       assert.rejects(
-        startup.run({}),
+        startup.run({} as CypressRunOptions),
         /cypress-ntlm-auth requires Cypress to be installed\.$/
       );
     });
 
     it("should start proxy, call cypress run, return result and stop proxy", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
+      const fakeResult = {} as CypressRunResult;
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
-      const options = {};
+      const options = {} as CypressRunOptions;
       let res = await startup.run(options);
       assert.equal(res, fakeResult);
       proxyMainMock.received(1).run(undefined, undefined, undefined);
@@ -192,7 +192,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock
         .run(Arg.any())
         .returns(Promise.reject(new Error("FakeError")));
-      const options = {};
+      const options = {} as CypressRunOptions;
       await assert.rejects(startup.run(options), /FakeError$/);
       proxyMainMock.received(1).run(Arg.all());
       cypressFacadeMock.received(1).run(options);
@@ -201,9 +201,9 @@ describe("Startup shallow", () => {
 
     it("should prepare proxy", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
+      const fakeResult = {} as CypressRunResult;
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
-      const options = {};
+      const options = {} as CypressRunOptions;
       const fakePorts: PortsConfig = {
         ntlmProxyUrl: "ntlm-proxy",
         configApiUrl: "config-api",
@@ -223,7 +223,7 @@ describe("Startup shallow", () => {
 
     it("should use external proxy if available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
+      const fakeResult = {} as CypressRunResult;
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       const ports: PortsConfig = {
         configApiUrl: "dummy",
@@ -232,7 +232,7 @@ describe("Startup shallow", () => {
       externalNtlmProxyFacadeMock
         .alive("dummy")
         .returns(Promise.resolve(ports));
-      const options = {};
+      const options = {} as CypressRunOptions;
       environmentMock.configApiUrl = "dummy";
       await startup.run(options);
       proxyMainMock.didNotReceive().run(Arg.all());
@@ -245,12 +245,12 @@ describe("Startup shallow", () => {
 
     it("should throw if external proxy is not available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
+      const fakeResult = {} as CypressRunResult;
       cypressFacadeMock.run(Arg.any()).returns(Promise.resolve(fakeResult));
       externalNtlmProxyFacadeMock
         .alive("dummy")
         .returns(Promise.reject(new Error("FakeError")));
-      const options = {};
+      const options = {} as CypressRunOptions;
       environmentMock.configApiUrl = "dummy";
       await assert.rejects(startup.run(options), /FakeError$/);
       proxyMainMock.didNotReceive().run(Arg.all());
@@ -265,18 +265,16 @@ describe("Startup shallow", () => {
     it("should throw if cypress is not installed", async function () {
       cypressFacadeMock.cypressLoaded().returns(false);
       assert.rejects(
-        startup.open({}),
+        startup.open({} as CypressOpenOptions),
         /cypress-ntlm-auth requires Cypress to be installed\.$/
       );
     });
 
     it("should start proxy, call cypress open, return result and stop proxy", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
-      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
-      const options = {};
-      let res = await startup.open(options);
-      assert.equal(res, fakeResult);
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve());
+      const options = {} as CypressOpenOptions;
+      await startup.open(options);
       proxyMainMock.received(1).run(Arg.any());
       cypressFacadeMock.received(1).open(options);
       proxyMainMock.received(1).stop();
@@ -287,7 +285,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock
         .open(Arg.any())
         .returns(Promise.reject(new Error("FakeError")));
-      const options = {};
+      const options = {} as CypressOpenOptions;
       await assert.rejects(startup.open(options), /FakeError$/);
       proxyMainMock.received(1).run(Arg.all());
       cypressFacadeMock.received(1).open(options);
@@ -296,9 +294,8 @@ describe("Startup shallow", () => {
 
     it("should prepare proxy", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
-      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
-      const options = {};
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve());
+      const options = {} as CypressOpenOptions;
       const fakePorts: PortsConfig = {
         ntlmProxyUrl: "ntlm-proxy",
         configApiUrl: "config-api",
@@ -318,8 +315,7 @@ describe("Startup shallow", () => {
 
     it("should use external proxy if available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
-      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve());
       const ports: PortsConfig = {
         configApiUrl: "dummy",
         ntlmProxyUrl: "dummy-proxy",
@@ -327,7 +323,7 @@ describe("Startup shallow", () => {
       externalNtlmProxyFacadeMock
         .alive("dummy")
         .returns(Promise.resolve(ports));
-      const options = {};
+      const options = {} as CypressOpenOptions;
       environmentMock.configApiUrl = "dummy";
       await startup.open(options);
       proxyMainMock.didNotReceive().run(Arg.all());
@@ -339,12 +335,11 @@ describe("Startup shallow", () => {
 
     it("should throw if external proxy is not available", async function () {
       cypressFacadeMock.cypressLoaded().returns(true);
-      const fakeResult = {};
-      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve(fakeResult));
+      cypressFacadeMock.open(Arg.any()).returns(Promise.resolve());
       externalNtlmProxyFacadeMock
         .alive("dummy")
         .returns(Promise.reject(new Error("FakeError")));
-      const options = {};
+      const options = {} as CypressOpenOptions;
       environmentMock.configApiUrl = "dummy";
       await assert.rejects(startup.open(options), /FakeError$/);
       proxyMainMock.didNotReceive().run(Arg.all());

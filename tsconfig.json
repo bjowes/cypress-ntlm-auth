@@ -68,6 +68,7 @@
       "strictNullChecks": false,
       "sourceMap": true,
       "esModuleInterop": true
-    }
+    },
+    "files": true
   }
 }

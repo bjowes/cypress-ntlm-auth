@@ -7,6 +7,9 @@ import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
 import { TYPES } from "./dependency.injection.types";
 import { IHttpsValidation } from "./interfaces/i.https.validation";
 
+/**
+ * HTTP Validator
+ */
 @injectable()
 export class HttpsValidation implements IHttpsValidation {
   private _debug: IDebugLogger;
@@ -16,6 +19,13 @@ export class HttpsValidation implements IHttpsValidation {
   private validationLevel: HttpsValidationLevel;
   private validated: string[] = [];
 
+  /**
+   * Constructor
+   * @param environment Environment variable accessor
+   * @param tlsCertValidator TLS Certificate validator
+   * @param debug Debug logger
+   * @param consoleLogger Console logger
+   */
   constructor(
     @inject(TYPES.IEnvironment) environment: IEnvironment,
     @inject(TYPES.ITlsCertValidator) tlsCertValidator: ITlsCertValidator,
@@ -28,11 +38,19 @@ export class HttpsValidation implements IHttpsValidation {
     this._console = consoleLogger;
   }
 
+  /**
+   * Should HTTPS validation be used on all requests
+   * @returns true if HTTPS validation should be used on all requests
+   */
   useRequestHttpsValidation(): boolean {
     return this.validationLevel === HttpsValidationLevel.Strict;
   }
 
-  validateRequest(targetHost: URL) {
+  /**
+   * Performs HTTPS validation on a request
+   * @param targetHost Target Url
+   */
+  validateRequest(targetHost: URL): void {
     if (!this.isSSL(targetHost)) {
       return;
     }
@@ -42,7 +60,11 @@ export class HttpsValidation implements IHttpsValidation {
     this.validatePeerCert(targetHost);
   }
 
-  validateConnect(targetHost: URL) {
+  /**
+   * Performs HTTPS validation on a connect
+   * @param targetHost Target Url
+   */
+  validateConnect(targetHost: URL): void {
     if (!this.isSSL(targetHost)) {
       return;
     }
@@ -99,6 +121,9 @@ export class HttpsValidation implements IHttpsValidation {
     });
   }
 
+  /**
+   * Reset cache of validated hosts
+   */
   reset() {
     this.validated = [];
   }
@@ -107,7 +132,6 @@ export class HttpsValidation implements IHttpsValidation {
     const ipv4ValidatorRegex =
       /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
     const ipv6ValidatorRegex = new RegExp(
-      // eslint-disable-next-line max-len
       /^\[(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\]$/
     );
 

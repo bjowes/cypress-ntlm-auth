@@ -1,3 +1,3 @@
 export interface IConsoleLogger {
-  warn(formatter: any, ...args: any[]): void;
+  warn(formatter: string | object, ...args: unknown[]): void;
 }
