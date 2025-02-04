@@ -14,7 +14,6 @@
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "cypress": "^14.0.0",
-    "cypress-ntlm-auth": "file:../../cypress-ntlm-auth-4.2.0.tgz",
     "cypress-terminal-report": "^7.1.0",
     "cypress-wait-until": "^3.0.1",
     "debug": "^4.3.4",

@@ -4,6 +4,7 @@ import { IStartup } from "./startup/interfaces/i.startup";
 import { NtlmProxy } from "./ntlm-proxy";
 import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
 import { IEnvironment } from "./startup/interfaces/i.environment";
+import { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./startup/interfaces/i.cypress.facade";
 
 const container = new DependencyInjection();
 const startup = container.get<IStartup>(TYPES.IStartup);
@@ -15,7 +16,7 @@ const ntlmProxyFacade = container.get<INtlmProxyFacade>(TYPES.INtlmProxyFacade);
  * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
  * @returns Test results as defined by https://docs.cypress.io/guides/guides/module-api.html#Results
  */
-export async function run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
+export async function run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult> {
   return await startup.run(options);
 }
 
@@ -24,7 +25,7 @@ export async function run(options: Partial<CypressCommandLine.CypressRunOptions>
  * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options-1
  * @returns Test results
  */
-export async function open(options: Partial<CypressCommandLine.CypressOpenOptions>) {
+export async function open(options: Partial<CypressOpenOptions>) {
   return await startup.open(options);
 }
 
@@ -42,7 +43,7 @@ export function argumentsToCypressMode(args: string[]) {
  * @param args command line arguments
  * @returns An options object for the run() or open() methods
  */
-export async function argumentsToOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
+export async function argumentsToOptions(args: string[]): Promise<Partial<CypressRunOptions>> {
   return await startup.prepareOptions(args);
 }
 

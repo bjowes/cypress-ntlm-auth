@@ -8,9 +8,9 @@ export default [
     files: ["**/*.{js,mjs,cjs,ts}"],
     plugins: { jsdoc },
     rules: {
-      "jsdoc/require-description": "off",
+      "jsdoc/require-description": "warn",
       "jsdoc/require-jsdoc": [
-        "off",
+        "warn",
         {
           publicOnly: true,
           require: {
@@ -21,6 +21,10 @@ export default [
           },
         },
       ],
+      "@typescript-eslint/no-require-imports": [
+        "warn",
+        { allow: ['../util/config.validator$', '../util/sso.config.validator$', '^cypress$'] }
+      ] 
     },
   },
   { languageOptions: { globals: globals.browser } },

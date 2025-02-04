@@ -10,6 +10,9 @@ interface TargetInfo {
   buffer: Buffer<ArrayBuffer>;
 }
 
+/**
+ * NTLM Type 2 message
+ */
 export class Type2Message {
   raw: Buffer;
   flags: number;
@@ -19,6 +22,10 @@ export class Type2Message {
   targetName: string;
   targetInfo!: TargetInfo;
 
+  /**
+   * Constructor
+   * @param buf Buffer with NTLM Type 2 message
+   */
   constructor(buf: Buffer) {
     this.raw = buf;
 

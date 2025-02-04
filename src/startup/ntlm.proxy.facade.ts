@@ -9,10 +9,17 @@ import { NtlmConfig } from "../models/ntlm.config.model";
 import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
 import { URLExt } from "../util/url.ext";
 
+/**
+ * Facade for NTML proxy (internal or external)
+ */
 @injectable()
 export class NtlmProxyFacade implements INtlmProxyFacade {
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param debug Debug logger 
+   */
   constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._debug = debug;
   }
@@ -64,22 +71,46 @@ export class NtlmProxyFacade implements INtlmProxyFacade {
     });
   }
 
+  /**
+   * Sends alive request to NTLM proxy
+   * @param configApiUrl Url to NTLM proxy config endpoint
+   * @returns PortsConfig if proxy is alive
+   */
   async alive(configApiUrl: string): Promise<PortsConfig> {
     return (await this.request(configApiUrl, "alive", "GET", undefined)) as PortsConfig;
   }
 
+  /**
+   * Sends config reset request to NTML proxy
+   * @param configApiUrl Url to NTLM proxy config endpoint
+   */
   async reset(configApiUrl: string) {
     await this.request(configApiUrl, "reset", "POST", undefined);
   }
 
+  /**
+   * Sends NTLM configuration request to NTLM proxy
+   * @param configApiUrl Url to NTLM proxy config endpoint
+   * @param ntlmConfig NTLM configuration
+   */
   async ntlm(configApiUrl: string, ntlmConfig: NtlmConfig) {
     await this.request(configApiUrl, "ntlm-config", "POST", ntlmConfig);
   }
 
+  /**
+   * Sends NTLM SSO configuration request to NTLM proxy
+   * @param configApiUrl Url to NTLM proxy config endpoint 
+   * @param ntlmSsoConfig NTLM SSO configuration
+   */
   async ntlmSso(configApiUrl: string, ntlmSsoConfig: NtlmSsoConfig) {
     await this.request(configApiUrl, "ntlm-sso", "POST", ntlmSsoConfig);
   }
 
+  /**
+   * Sends quit request to NTLM proxy
+   * @param configApiUrl Url to NTLM proxy config endpoint 
+   * @returns True if request was successful
+   */
   async quitIfRunning(configApiUrl?: string): Promise<boolean> {
     if (configApiUrl) {
       (await this.request(configApiUrl, "quit", "POST", undefined)) as PortsConfig;

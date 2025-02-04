@@ -1,4 +1,12 @@
+/**
+ * Hostname validation
+ */
 export class HostnameValidator {
+  /**
+   * Check if host is a valid hostname or a valid FQDN
+   * @param host host
+   * @returns is valid
+   */
   public static validHostnameOrFqdn(host: string): boolean {
     if (host.indexOf("\n") !== -1) {
       return false;
@@ -17,6 +25,11 @@ export class HostnameValidator {
     );
   }
 
+  /**
+   * Check if host is a valid hostname or a valid FQDN with port
+   * @param host host
+   * @returns is valid
+   */
   public static validHostnameOrFqdnWithPort(host: string): boolean {
     if (host.indexOf("\n") !== -1) {
       return false;
@@ -30,6 +43,11 @@ export class HostnameValidator {
     return validatorRegex.test(host) || ipv6ValidatorRegex.test(host);
   }
 
+  /**
+   * Escapes common HTML entities
+   * @param unsafe unescaped HTML
+   * @returns espaced HTML
+   */
   public static escapeHtml(unsafe: string) {
     return unsafe
       .replace(/&/g, "&amp;")

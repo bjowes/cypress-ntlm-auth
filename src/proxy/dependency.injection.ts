@@ -77,9 +77,15 @@ import { HttpsValidation } from "./https.validation";
 import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
 import { TlsCertValidator } from "../util/tls.cert.validator";
 
+/**
+ * Dependency injection
+ */
 export class DependencyInjection {
   private _container: Container;
 
+  /**
+   * Constructor
+   */
   constructor() {
     this._container = new Container({ defaultScope: "Request" });
     this._container
@@ -151,6 +157,11 @@ export class DependencyInjection {
       .to(WinSsoFacadeFactory);
   }
 
+  /**
+   * Get a type from the DI container
+   * @param typename Type symbol
+   * @returns Instance of requested type
+   */
   get<T>(typename: symbol): T {
     return this._container.get(typename);
   }

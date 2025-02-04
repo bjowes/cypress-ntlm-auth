@@ -13,12 +13,21 @@ import { Type2Message } from "../ntlm/type2.message";
 import { NtlmMessage } from "../ntlm/ntlm.message";
 import { NtlmHost } from "../models/ntlm.host.model";
 
+/**
+ * NTLM protocol manager
+ */
 @injectable()
 export class NtlmManager implements INtlmManager {
   private _configStore: IConfigStore;
   private _ntlm: INtlm;
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param configStore Config store
+   * @param ntlm NTLM protocol utils
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.INtlm) ntlm: INtlm,
@@ -29,6 +38,15 @@ export class NtlmManager implements INtlmManager {
     this._debug = debug;
   }
 
+  /**
+   * Perform NTLM handshake
+   * @param ctx MITM connection context
+   * @param ntlmHostUrl Target Url
+   * @param context Connection context
+   * @param useSso Use SSO authentication
+   * @param callback Callback to continue request handling or report error
+   * @returns void
+   */
   handshake(
     ctx: IContext,
     ntlmHostUrl: URL,
@@ -236,6 +254,11 @@ export class NtlmManager implements INtlmManager {
     ctx.serverToProxyResponse.resume();
   }
 
+  /**
+   * Check if the peer accepts NTLM authentication
+   * @param res Response object
+   * @returns true if NTLM is supported
+   */
   acceptsNtlmAuthentication(res: http.IncomingMessage): boolean {
     // Ensure that we're talking NTLM here
     const wwwAuthenticate = res.headers["www-authenticate"];

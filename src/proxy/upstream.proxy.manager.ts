@@ -1,6 +1,5 @@
 import { inject, injectable } from "inversify";
 import { URLExt } from "../util/url.ext";
-import https from "https";
 
 import {
   HttpHeaders,
@@ -10,6 +9,9 @@ import { TYPES } from "./dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { ExtendedAgentOptions } from "../models/extended.agent.options";
 
+/**
+ * Upstream proxy manager
+ */
 @injectable()
 export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _httpProxyUrl?: URL;
@@ -17,10 +19,20 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _noProxyUrls?: string[];
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param debug Debug logger
+   */
   constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._debug = debug;
   }
 
+  /**
+   * Initializes the manager
+   * @param httpProxy Upstream HTTP proxy Url
+   * @param httpsProxy Upstream HTTPS proxy Url
+   * @param noProxy List of hosts that should not be proxied
+   */
   init(httpProxy?: string, httpsProxy?: string, noProxy?: string) {
     if (httpProxy && this.validateUpstreamProxy(httpProxy, "HTTP_PROXY")) {
       this._httpProxyUrl = new URL(httpProxy);
@@ -91,6 +103,13 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     return match;
   }
 
+  /**
+   * Set upstream proxy configuration on an agent
+   * @param ntlmHostUrl Target NTLM host
+   * @param isSSL Is the connection using SSL
+   * @param agentOptions Agent options
+   * @returns true if upstream proxying is required
+   */
   setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: ExtendedAgentOptions) {
     let proxyUrl = null;
 
@@ -120,6 +139,11 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     return false;
   }
 
+  /**
+   * Check if an upstream proxy is applied for HTTPS for a specified target host
+   * @param ntlmHostUrl Target NTLM host
+   * @returns true if upstream proxying is required
+   */
   hasHttpsUpstreamProxy(ntlmHostUrl: URL): boolean {
     return (
       (this._httpProxyUrl !== undefined || this._httpsProxyUrl !== undefined) &&
@@ -127,12 +151,19 @@ export class UpstreamProxyManager implements IUpstreamProxyManager {
     );
   }
 
+  /**
+   * Sets headers in requests for proper signalling with upstream proxy
+   * @param headers request headers object
+   */
   setUpstreamProxyHeaders(headers: HttpHeaders): void {
     if (headers["connection"] === "keep-alive") {
       headers["proxy-connection"] = "keep-alive";
     }
   }
 
+  /**
+   * Reset all settings
+   */
   reset() {
     this._httpProxyUrl = undefined;
     this._httpsProxyUrl = undefined;

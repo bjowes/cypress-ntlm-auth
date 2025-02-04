@@ -1,6 +1,14 @@
 import { AddressInfo } from "net";
 
+/**
+ * URL handling utils
+ */
 export class URLExt {
+  /**
+   * Extract the port (or default port) from an URL
+   * @param url Utl
+   * @returns Port (or default port)
+   */
   static portOrDefault(url: URL): number {
     if (url.port) {
       return +url.port;

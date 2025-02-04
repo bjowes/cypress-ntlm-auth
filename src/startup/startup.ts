@@ -4,11 +4,14 @@ import { TYPES } from "../proxy/dependency.injection.types";
 import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import { IMain } from "../proxy/interfaces/i.main";
-import { ICypressFacade } from "./interfaces/i.cypress.facade";
+import { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade";
 import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
 import { IEnvironment } from "./interfaces/i.environment";
 import { PortsConfig } from "../models/ports.config.model";
 
+/**
+ * NTLM proxy startup manager
+ */
 @injectable()
 export class Startup implements IStartup {
   private _upstreamProxyConfigurator: IUpstreamProxyConfigurator;
@@ -19,6 +22,15 @@ export class Startup implements IStartup {
   private _debug: IDebugLogger;
   private _internalNtlmProxy = true;
 
+  /**
+   * Constructor
+   * @param upstreamProxyConfigurator Upstream proxy configurator
+   * @param proxyMain Proxy main
+   * @param cypressFacade Cypress facade
+   * @param environment Environment variable access
+   * @param externalNtlmProxyFacade External proxy facade
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IUpstreamProxyConfigurator)
     upstreamProxyConfigurator: IUpstreamProxyConfigurator,
@@ -60,6 +72,11 @@ export class Startup implements IStartup {
     return args.slice(cypressNtlmIndex + 1);
   }
 
+  /**
+   * Converts command line arguments to cypress mode
+   * @param args command line arguments
+   * @returns "run" or "open"
+   */
   argumentsToCypressMode(args: string[]) {
     const cliArguments = this.getArgsAfterCypressNtlm(args);
     if (cliArguments.length > 0 && (cliArguments[0] === "run" || cliArguments[0] === "open")) {
@@ -68,7 +85,12 @@ export class Startup implements IStartup {
     throw new Error("Unsupported command, use cypress-ntlm open or cypress-ntlm run.");
   }
 
-  async prepareOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
+  /**
+   * Parse command line options for cypress
+   * @param args command line arguments
+   * @returns Parsed command line options
+   */
+  async prepareOptions(args: string[]): Promise<Partial<CypressRunOptions>> {
     this.checkCypressIsInstalled();
     let cliArguments = this.getArgsAfterCypressNtlm(args);
     cliArguments = cliArguments.slice(1);
@@ -96,6 +118,10 @@ export class Startup implements IStartup {
     return await this._externalNtlmProxyFacade.alive(this._environment.configApiUrl);
   }
 
+  /**
+   * Starts the NTML proxy
+   * @returns Port config
+   */
   async startNtlmProxy(): Promise<PortsConfig> {
     this._internalNtlmProxy = true;
     this._upstreamProxyConfigurator.processNoProxyLoopback();
@@ -109,7 +135,12 @@ export class Startup implements IStartup {
     );
   }
 
-  async run(options: CypressCommandLine.CypressRunOptions): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
+  /**
+   * Run tests in Cypress
+   * @param options Cypress options 
+   * @returns Run result
+   */
+  async run(options: CypressRunOptions): Promise<CypressRunResult | CypressFailedRunResult> {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Running tests through Cypress...");
@@ -127,15 +158,17 @@ export class Startup implements IStartup {
     }
   }
 
-  async open(options: CypressCommandLine.CypressOpenOptions) {
+  /**
+   * Open Cypress UI
+   * @param options Cypress options
+   */
+  async open(options: CypressOpenOptions): Promise<void> {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Opening Cypress...");
     try {
-      const result = await this._cypressFacade.open(options);
+      await this._cypressFacade.open(options);
       this._debug.log("Cypress closed");
-      this._debug.log(result);
-      return result;
     } catch (err) {
       this._debug.log("Tests exception");
       throw err;

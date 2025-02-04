@@ -83,7 +83,7 @@ declare namespace CypressCommandLine {
       /**
        * Specify mocha reporter options
        */
-      reporterOptions: any
+      reporterOptions: unknown
       /**
        * Specify the specs to run
        */

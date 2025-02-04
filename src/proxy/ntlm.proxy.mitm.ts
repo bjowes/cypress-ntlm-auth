@@ -22,6 +22,9 @@ import { IHttpsValidation } from "./interfaces/i.https.validation";
 let self: NtlmProxyMitm;
 const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 
+/**
+ * NTLM proxy MITM - Addon to HTTP MITM Proxy for NTLM authentication
+ */
 @injectable()
 export class NtlmProxyMitm implements INtlmProxyMitm {
   private _configStore: IConfigStore;
@@ -34,6 +37,18 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private _httpsValidation: IHttpsValidation;
   private _debug: IDebugLogger;
 
+  /**
+   * Constructor
+   * @param configStore Config store
+   * @param portsConfigStore Ports config store
+   * @param connectionContextManager Connection context manager
+   * @param winSsoFacadeFactory Win SSO Facade factory
+   * @param negotiateManager Negotiate protocol manager
+   * @param ntlmManager NTLM protocol manager
+   * @param upstreamProxyManager Upstream proxy manager
+   * @param httpsValidation HTTPS validator
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IConfigStore) configStore: IConfigStore,
     @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
@@ -93,7 +108,13 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
-  onError(ctx: IContext, error: NodeJS.ErrnoException, errorKind: string) {
+  /**
+   * onError handler
+   * @param ctx Request context
+   * @param error JS Error
+   * @param errorKind Error description
+   */
+  onError(ctx: IContext, error: NodeJS.ErrnoException, errorKind: string): void {
     if (self.filterChromeStartup(ctx, error.code, errorKind)) {
       return;
     }
@@ -119,6 +140,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return targetHost.host === self._portsConfigStore.configApiUrl.host;
   }
 
+  /**
+   * onRequest handler
+   * @param ctx Request context
+   * @param callback Callback to continue request handling or report error
+   * @returns void
+   */
   onRequest(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     const targetHost = self.getTargetHost(ctx);
     if (targetHost) {
@@ -239,6 +266,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return AuthModeEnum.NotSupported;
   }
 
+  /**
+   * onResponse handler
+   * @param ctx Request context
+   * @param callback Callback to continue response handling or report error
+   * @returns void
+   */
   onResponse(ctx: IContext, callback: (error?: NodeJS.ErrnoException) => void) {
     const targetHost = self.getTargetHost(ctx);
     if (!targetHost) {
@@ -370,6 +403,14 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     }
   }
 
+  /**
+   * onConnect handler
+   * @param req Request object
+   * @param socket Request socket
+   * @param head Incoming bytes
+   * @param callback Callback to continue connect handling or report error
+   * @returns void
+   */
   onConnect(
     req: http.IncomingMessage,
     socket: net.Socket,
@@ -450,7 +491,6 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     socket.setNoDelay();
 
     // Since node 0.9.9, ECONNRESET on sockets are no longer hidden
-    // eslint-disable-next-line jsdoc/require-jsdoc
     function filterSocketConnReset(
       err: NodeJS.ErrnoException,
       socketDescription: string,
@@ -475,7 +515,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private filterAndCanonizeHeaders(originalHeaders: http.IncomingHttpHeaders) {
     const headers: http.IncomingHttpHeaders = {};
     for (const key in originalHeaders) {
-      if (originalHeaders.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(originalHeaders, key)) {
         const canonizedKey = key.trim();
         if (/^public-key-pins/i.test(canonizedKey)) {
           // HPKP header => filter
@@ -491,6 +531,14 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
     return headers;
   }
 
+  /**
+   * onWebSocketClose handler
+   * @param ctx Connection context
+   * @param code Close code
+   * @param message Close message
+   * @param callback Callback to continue close handling or report error
+   * @returns void
+   */
   onWebSocketClose(
     ctx: IContext,
     code: number,

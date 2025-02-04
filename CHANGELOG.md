@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.2.1 - released 2025-02-04
+
+- Dependency bump
+- Added more JSdoc to source
+
 ## 4.2.0 - released 2024-09-09
 
 - Fix: Corrected parsing of encoding flags in NTLM header. Thanks @culling

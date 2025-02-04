@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD4 Message
  * Digest Algorithm, as defined in RFC 1320.

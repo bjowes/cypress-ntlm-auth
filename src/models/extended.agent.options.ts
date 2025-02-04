@@ -1,4 +1,3 @@
-import { TunnelAgentOptions } from "../proxy/tunnel.agent";
 import https from "https";
 
 export interface IExtendedAgentOptions

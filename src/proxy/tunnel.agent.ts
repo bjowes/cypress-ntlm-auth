@@ -84,7 +84,7 @@ class SocketStore {
   count() {
     let sum = 0;
     for (const property in this.sockets) {
-      if (this.sockets.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(this.sockets, property)) {
         sum += this.sockets[property].length;
       }
     }
@@ -105,7 +105,7 @@ class SocketStore {
 
   destroy() {
     for (const property in this.sockets) {
-      if (this.sockets.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(this.sockets, property)) {
         const sockets = this.sockets[property];
         sockets.forEach((socket) => {
           socket.destroy();
@@ -115,6 +115,9 @@ class SocketStore {
   }
 }
 
+/**
+ * Custom agent for tunneling traffic through an upstream proxy
+ */
 export class TunnelAgent extends EventEmitter {
   request: typeof http.request | typeof https.request;
   options: CombinedAgentOptions;
@@ -133,6 +136,12 @@ export class TunnelAgent extends EventEmitter {
     debug("[" + this.agentId + "]: " + message);
   }
 
+  /**
+   * Constuctor
+   * @param options Agent options
+   * @param proxyOverHttps Upstream proxy uses HTTPS
+   * @param targetUsesHttps Target uses HTTPS
+   */
   constructor(
     options: CombinedAgentOptions,
     proxyOverHttps: boolean = false,
@@ -203,7 +212,12 @@ export class TunnelAgent extends EventEmitter {
     return this.sockets.count() + this.freeSockets.count();
   }
 
-  addRequest(req: http.ClientRequest, _opts: RequestOptions) {
+  /**
+   * Add a reuqest to queue for transmission
+   * @param req Request object
+   * @param _opts Request options
+   */
+  addRequest(req: http.ClientRequest, _opts: RequestOptions): void {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const request: Request = {
@@ -243,13 +257,11 @@ export class TunnelAgent extends EventEmitter {
     socket.on("agentRemove", onCloseOrRemove);
     request.clientReq.onSocket(socket);
 
-    // eslint-disable-next-line jsdoc/require-jsdoc
     function onFree() {
       self.debugLog("onFree");
       self.emit("free", socket, request);
     }
 
-    // eslint-disable-next-line jsdoc/require-jsdoc
     function onCloseOrRemove(hadError: boolean): void {
       self.debugLog("onClose");
       if (self.destroyPending) return;
@@ -299,7 +311,6 @@ export class TunnelAgent extends EventEmitter {
     connectReq.once("error", onError);
     connectReq.end();
 
-    // eslint-disable-next-line jsdoc/require-jsdoc
     function onConnect(
       res: http.IncomingMessage,
       socket: net.Socket,
@@ -338,7 +349,6 @@ export class TunnelAgent extends EventEmitter {
       return cb(socket);
     }
 
-    // eslint-disable-next-line jsdoc/require-jsdoc
     function onError(cause: Error): void {
       connectReq.removeAllListeners();
       self.debugLog(
@@ -400,6 +410,9 @@ export class TunnelAgent extends EventEmitter {
     });
   }
 
+  /**
+   * Destroys the agent and the tunnel
+   */
   destroy() {
     this.debugLog("destroying agent");
     this.destroyPending = true;
@@ -408,7 +421,6 @@ export class TunnelAgent extends EventEmitter {
   }
 }
 
-// eslint-disable-next-line jsdoc/require-jsdoc
 function omit<T extends object, K extends [...(keyof T)[]]>(
   obj: T,
   ...keys: K

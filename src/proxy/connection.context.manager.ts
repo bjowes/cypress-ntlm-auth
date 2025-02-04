@@ -20,6 +20,9 @@ interface SslTunnelHash {
   [ntlmHostUrl: string]: SslTunnel;
 }
 
+/**
+ * Connection context manager
+ */
 @injectable()
 export class ConnectionContextManager implements IConnectionContextManager {
   private _connectionContexts: ConnectionContextHash = {};
@@ -29,6 +32,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
   private _debug: IDebugLogger;
   private _tunnels: SslTunnelHash = {};
 
+  /**
+   * Constructor
+   * @param upstreamProxyManager Upstream proxy manager
+   * @param connectionContext Connection context factory
+   * @param httpsValidation HTTP validator
+   * @param debug Debug logger
+   */
   constructor(
     @inject(TYPES.IUpstreamProxyManager)
     upstreamProxyManager: IUpstreamProxyManager,
@@ -47,6 +57,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return clientSocket.remoteAddress + ":" + clientSocket.remotePort;
   }
 
+  /**
+   * Create a connection context
+   * @param clientSocket request client socket
+   * @param isSSL is SSL connection
+   * @param targetHost Target Url
+   * @returns Connection context
+   */
   createConnectionContext(
     clientSocket: Socket,
     isSSL: boolean,
@@ -86,6 +103,11 @@ export class ConnectionContextManager implements IConnectionContextManager {
     this.removeAgent("close", clientAddress);
   }
 
+  /**
+   * Get connection context from request client socket
+   * @param clientSocket request client socket
+   * @returns Connection context if one exists
+   */
   getConnectionContextFromClientSocket(
     clientSocket: Socket
   ): IConnectionContext | undefined {
@@ -96,6 +118,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return undefined;
   }
 
+  /**
+   * Create request agent
+   * @param isSSL is SSL connection 
+   * @param targetHost Target Url
+   * @param useUpstreamProxy is upstream proxy required
+   * @returns agent
+   */
   getAgent(isSSL: boolean, targetHost: URL, useUpstreamProxy: boolean) 
   : TunnelAgent | http.Agent | https.Agent {
     const agentOptions: ExtendedAgentOptions = {
@@ -121,20 +150,27 @@ export class ConnectionContextManager implements IConnectionContextManager {
     return agent;
   }
 
-  // Untracked agents are used for requests to the config API.
-  // These should not be destroyed on reset since that breaks the config API response.
+  /**
+   * Create untracked agent.
+   * Untracked agents are used for requests to the config API.
+   * These should not be destroyed on reset since that breaks the config API response.
+   * @param targetHost Target Url
+   * @returns untracked http agent
+   */
   getUntrackedAgent(targetHost: URL) : http.Agent {
-    let agent: http.Agent;
-    // eslint-disable-next-line prefer-const
-    agent = new http.Agent();
+    const agent = new http.Agent();
     this._debug.log("Created untracked agent for target " + targetHost.href);
     return agent;
   }
 
+  /**
+   * Remove all connection contexts
+   * @param event Event name that triggered the removal
+   */
   removeAllConnectionContexts(event: string) {
     const preservedContexts: ConnectionContextHash = {};
     for (const property in this._connectionContexts) {
-      if (this._connectionContexts.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(this._connectionContexts, property)) {
         const context = this._connectionContexts[property];
         if (context.configApiConnection) {
           // Must let config api context stay alive, otherwise there is no response to a reset or quit call
@@ -153,6 +189,11 @@ export class ConnectionContextManager implements IConnectionContextManager {
     this._debug.log("Removed all agents due to " + event);
   }
 
+  /**
+   * Remove an agent for a request client address
+   * @param event Event name that triggered the remove
+   * @param clientAddress request client address
+   */
   removeAgent(event: string, clientAddress: string) {
     if (clientAddress in this._connectionContexts) {
       this._connectionContexts[clientAddress].clientSocket?.removeListener(
@@ -167,6 +208,11 @@ export class ConnectionContextManager implements IConnectionContextManager {
     }
   }
 
+  /**
+   * Add a tunnel to tracking
+   * @param client request client socket
+   * @param target target socket
+   */
   addTunnel(client: Socket, target: Socket) {
     this._tunnels[this.getClientAddress(client)] = {
       client: client,
@@ -174,6 +220,10 @@ export class ConnectionContextManager implements IConnectionContextManager {
     };
   }
 
+  /**
+   * Remove a tunnel from tracking
+   * @param client request client socket
+   */
   removeTunnel(client: Socket) {
     const clientAddress = this.getClientAddress(client);
     if (clientAddress in this._tunnels) {
@@ -181,9 +231,13 @@ export class ConnectionContextManager implements IConnectionContextManager {
     }
   }
 
+  /**
+   * Remove and close all tunnels
+   * @param event event name that triggered the remove
+   */
   removeAndCloseAllTunnels(event: string) {
     for (const property in this._tunnels) {
-      if (this._tunnels.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(this._tunnels, property)) {
         if (this._tunnels[property].target) {
           this._tunnels[property].target.end();
         }
@@ -193,6 +247,9 @@ export class ConnectionContextManager implements IConnectionContextManager {
     this._debug.log("Removed and closed all tunnels due to " + event);
   }
 
+  /**
+   * Reset HTTPS validation cache
+   */
   resetHttpsValidation() {
     this._httpsValidation.reset();
   }

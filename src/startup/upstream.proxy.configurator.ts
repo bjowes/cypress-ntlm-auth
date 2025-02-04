@@ -6,6 +6,9 @@ import { IDebugLogger } from "../util/interfaces/i.debug.logger";
 import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
 import { IEnvironment } from "./interfaces/i.environment";
 
+/**
+ * Adapts environment variables for use with upstream proxy
+ */
 @injectable()
 export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   private readonly _environment: IEnvironment;
@@ -14,11 +17,19 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   private readonly _noProxyLocalhost = "localhost";
   private readonly _noProxyLoopback = "127.0.0.1";
 
+  /**
+   * Constructor
+   * @param environment Interface to environment variables
+   * @param debug Debug logger
+   */
   constructor(@inject(TYPES.IEnvironment) environment: IEnvironment, @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
     this._environment = environment;
     this._debug = debug;
   }
 
+  /**
+   * Removes proxy environment variables that are not used
+   */
   removeUnusedProxyEnv() {
     // Clear potentially existing proxy settings to avoid conflicts in cypress proxy config
     if (os.platform() !== "win32") {
@@ -32,6 +43,9 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
     this._environment.delete("NPM_CONFIG_HTTPS_PROXY");
   }
 
+  /**
+   * Detects loopback disable in NO_PROXY environment variable
+   */
   processNoProxyLoopback() {
     if (this._environment.httpProxy) {
       const envNoProxy = this._environment.noProxy?.trim();

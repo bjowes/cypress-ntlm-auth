@@ -223,3 +223,7 @@ const ntlmReset = () => {
 Cypress.Commands.add('ntlm', {prevSubject: false}, ntlm);
 Cypress.Commands.add('ntlmSso', {prevSubject: false}, ntlmSso);
 Cypress.Commands.add('ntlmReset', {prevSubject: false}, ntlmReset);
+
+/* global Cypress */
+/* global cy */
+/* global require */

@@ -2,7 +2,15 @@ import { NtlmConfig } from "../models/ntlm.config.model";
 import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
 import { HostnameValidator } from "./hostname.validator";
 
+/**
+ * Config validation for NTML config
+ */
 export class ConfigValidator {
+  /**
+   * Config validation for NTML config
+   * @param config NTLM config
+   * @returns Validation result
+   */
   static validate(config: NtlmConfig): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
 
@@ -60,6 +68,11 @@ export class ConfigValidator {
     return result;
   }
 
+  /**
+   * Config validation for NTML host in legacy format
+   * @param ntlmHost NTLM host
+   * @returns Is valid
+   */
   static validateLegacy(ntlmHost: string): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
     const urlTest = new URL(ntlmHost);
@@ -77,6 +90,11 @@ export class ConfigValidator {
     return result;
   }
 
+  /**
+   * Converts a legacy NTLM config to an array based config
+   * @param ntlmHost NTLM host
+   * @returns Converted to array
+   */
   static convertLegacy(ntlmHost: string): string[] {
     const urlTest = new URL(ntlmHost);
     return [urlTest.host || ""];

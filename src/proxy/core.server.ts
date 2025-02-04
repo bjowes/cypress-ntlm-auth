@@ -10,6 +10,9 @@ import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
 import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
 import { TYPES } from "./dependency.injection.types";
 
+/**
+ * Core server
+ */
 @injectable()
 export class CoreServer implements ICoreServer {
   private _configServer: IConfigServer;
@@ -19,6 +22,15 @@ export class CoreServer implements ICoreServer {
   private _connectionContextManager: IConnectionContextManager;
   private _configController: IConfigController;
 
+  /**
+   * Constructor
+   * @param configServer Config server
+   * @param ntlmProxyServer NTLM proxy server
+   * @param upstreamProxyManager Upstream proxy manager
+   * @param configStore Config store
+   * @param connectionContextManager Connection context manager 
+   * @param configController Config controller
+   */
   constructor(
     @inject(TYPES.IConfigServer) configServer: IConfigServer,
     @inject(TYPES.INtlmProxyServer) ntlmProxyServer: INtlmProxyServer,
@@ -40,6 +52,15 @@ export class CoreServer implements ICoreServer {
     this._configController.configApiEvent.addListener("quit", async () => await this.stop());
   }
 
+  /**
+   * Starts both NTLM proxy and Config API
+   * @param httpProxy HTTP_PROXY
+   * @param httpsProxy HTTPS_PROXY
+   * @param noProxy NO_PROXY
+   * @param configApiPort Requested Config API port, any free port is used if not set
+   * @param ntlmProxyPort Requested NTLM proxy port, any free port is used if not set
+   * @returns Ports config
+   */
   async start(
     httpProxy?: string,
     httpsProxy?: string,
@@ -63,6 +84,9 @@ export class CoreServer implements ICoreServer {
     return ports;
   }
 
+  /**
+   * Stop NTLM proxy and Config API
+   */
   async stop() {
     this.ntlmConfigReset("stop");
     await this._configServer.stop();

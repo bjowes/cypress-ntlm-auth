@@ -3,10 +3,18 @@ import { NtlmConfig } from "./models/ntlm.config.model";
 import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
 import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
 
+/**
+ * NTLM Proxy module
+ */
 export class NtlmProxy {
   ports: PortsConfig;
   private ntlmProxyFacade: INtlmProxyFacade;
 
+  /**
+   * Constructor
+   * @param ports Ports config 
+   * @param ntlmProxyFacade NTLM proxy facade
+   */
   constructor(ports: PortsConfig, ntlmProxyFacade: INtlmProxyFacade) {
     this.ports = ports;
     this.ntlmProxyFacade = ntlmProxyFacade;

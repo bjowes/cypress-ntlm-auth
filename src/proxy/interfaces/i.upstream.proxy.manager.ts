@@ -1,4 +1,3 @@
-import https from "https";
 import { ExtendedAgentOptions } from "../../models/extended.agent.options";
 
 export interface HttpHeaders {

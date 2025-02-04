@@ -2,7 +2,15 @@ import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
 import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
 import { HostnameValidator } from "./hostname.validator";
 
+/**
+ * Config validation for SSO config
+ */
 export class SsoConfigValidator {
+  /**
+   * Config validation for SSO config
+   * @param config SSO config
+   * @returns Validation result
+   */
   static validate(config: NtlmSsoConfig): NtlmConfigValidateResult {
     const result = { ok: false } as NtlmConfigValidateResult;
 
