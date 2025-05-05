@@ -51,6 +51,8 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       const envNoProxy = this._environment.noProxy?.trim();
       if (envNoProxy && envNoProxy.indexOf(this._loopbackDisable) !== -1) {
         this._debug.log("NO_PROXY contains '<-loopback>', will not disable localhost proxying");
+        let noProxyParts: string[] = envNoProxy.split(",").map((s) => s.trim());
+        this._environment.noProxy = noProxyParts.filter(p => p !== '<-loopback>').join(',');
       } else {
         this._environment.noProxy = this.addLoopbackToNoProxy(envNoProxy);
       }

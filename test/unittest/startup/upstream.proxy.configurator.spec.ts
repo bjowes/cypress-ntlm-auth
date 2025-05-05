@@ -104,11 +104,11 @@ describe("UpstreamProxyConfigurator", () => {
       assert.equal(environmentMock.noProxy, "127.0.0.1,localhost,google.com");
     });
 
-    it("should not add anything if <-loopback> is present", function () {
+    it("should not add anything if <-loopback> is present, but should remove <-loopback>", function () {
       environmentMock.httpProxy = "test";
       environmentMock.noProxy = "ello.com, <-loopback>";
       upstreamProxyConfigurator.processNoProxyLoopback();
-      assert.equal(environmentMock.noProxy, "ello.com, <-loopback>");
+      assert.equal(environmentMock.noProxy, "ello.com");
     });
   });
 
