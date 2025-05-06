@@ -174,7 +174,7 @@ export class NtlmManager implements INtlmManager {
       };
       if (type3requestOptions.headers) {
         // Always true, silent the compiler
-        type3requestOptions.headers["authorization"] = type3header;
+        (type3requestOptions.headers as http.OutgoingHttpHeaders)["authorization"] = type3header;
       }
       type1res.on("end", () => {
         const type3req = proto.request(type3requestOptions, (type3res) => {

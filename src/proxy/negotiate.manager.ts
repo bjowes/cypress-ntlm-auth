@@ -184,7 +184,7 @@ export class NegotiateManager implements INegotiateManager {
     };
     if (requestOptions.headers) {
       // Always true, silent the compiler
-      requestOptions.headers["authorization"] = responseToken;
+      (requestOptions.headers as http.OutgoingHttpHeaders)["authorization"] = responseToken;
     }
     res.on("end", () => {
       const proto = isSSL ? https : http;
