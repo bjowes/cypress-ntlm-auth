@@ -295,14 +295,13 @@ export class TunnelAgent extends EventEmitter {
       path: host,
       headers: {
         host: host,
-      },
+      } as http.OutgoingHttpHeaders,
     };
     if (request.options.localAddress) {
       connectOptions.localAddress = request.options.localAddress;
     }
     if (self.proxyOptions.proxyAuth) {
-      connectOptions.headers = connectOptions.headers || {};
-      connectOptions.headers["Proxy-Authorization"] =
+      (connectOptions.headers as http.OutgoingHttpHeaders)["Proxy-Authorization"] =
         "Basic " + Buffer.from(self.proxyOptions.proxyAuth).toString("base64");
     }
 

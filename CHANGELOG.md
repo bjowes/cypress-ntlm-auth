@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.3 - released 2025-05-06
+
+- Dependency bump
+
 ## 4.2.2 - released 2025-05-05
 
 - Fix for #264: Handle <-loopback> in NO_PROXY environment variable
