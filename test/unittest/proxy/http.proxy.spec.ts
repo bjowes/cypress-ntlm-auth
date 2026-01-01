@@ -51,13 +51,13 @@ describe("Proxy for HTTP host with NTLM", function () {
     // Reset NTLM config
     this.timeout(2000);
 
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
   });
 
   it("should handle authentication for GET requests", async function () {
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -71,7 +71,7 @@ describe("Proxy for HTTP host with NTLM", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -85,9 +85,9 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -104,7 +104,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -118,9 +118,9 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -137,7 +137,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -152,9 +152,9 @@ describe("Proxy for HTTP host with NTLM", function () {
       ntlmHost: "https://my.test.host/",
     };
     this.timeout(30000);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -171,7 +171,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -185,11 +185,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -203,7 +203,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -217,7 +217,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -238,11 +238,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -256,7 +256,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -270,12 +270,12 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendNtlmReset(configApiUrl);
+    res = await proxyFacade.sendNtlmReset(configApiUrl);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -296,11 +296,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -314,7 +314,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -328,10 +328,10 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -353,11 +353,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -371,7 +371,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -387,7 +387,7 @@ describe("Proxy for HTTP host with NTLM", function () {
 
     expressServer.sendWwwAuthOnce("NTLM");
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -409,11 +409,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -427,7 +427,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -441,11 +441,11 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
     expressServer.sendWwwAuthOnce("NTLM");
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -467,8 +467,8 @@ describe("Proxy for HTTP host with NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
 
     expressServer.sendWwwAuth([
@@ -477,7 +477,7 @@ describe("Proxy for HTTP host with NTLM", function () {
       { header: "NTLM", status: 401 },
     ]);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -489,7 +489,7 @@ describe("Proxy for HTTP host with NTLM", function () {
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
     // Socket is not reused since a 401 result triggers a connection close
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -508,11 +508,11 @@ describe("Proxy for HTTP host with NTLM", function () {
   });
 
   it("should terminate client socket on server socket error for NTLM host", async function () {
-    const res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    const res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
     expressServer.closeConnectionOnNextRequest(true);
     try {
-      await ProxyFacade.sendProxiedHttpRequest(
+      await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl,
         "GET",
@@ -527,10 +527,10 @@ describe("Proxy for HTTP host with NTLM", function () {
   });
 
   it("should pass on custom status phrases in response", async function () {
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
     expressServer.setCustomStatusPhrase("My fantastic status phrase");
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -579,13 +579,13 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(2000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
   });
 
   it("should handle authentication for GET requests", async function () {
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -599,7 +599,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -613,9 +613,9 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -632,11 +632,11 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -650,7 +650,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -664,7 +664,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -685,11 +685,11 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -703,7 +703,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -717,12 +717,12 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendNtlmReset(configApiUrl);
+    res = await proxyFacade.sendNtlmReset(configApiUrl);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -743,11 +743,11 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -761,7 +761,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -775,10 +775,10 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), false);
 
-    res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -800,11 +800,11 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
-    let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
+    const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+    let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -818,7 +818,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     assert.equal(resBody.reply, "OK ÅÄÖéß");
     assert.equal(expressServer.lastRequestContainedAuthHeader(), true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -834,7 +834,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
 
     expressServer.sendWwwAuthOnce("NTLM");
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -890,7 +890,7 @@ describe("Proxy for HTTP host without NTLM", function () {
   });
 
   it("should pass through GET requests for non NTLM host", async function () {
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -907,7 +907,7 @@ describe("Proxy for HTTP host without NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -924,7 +924,7 @@ describe("Proxy for HTTP host without NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -941,7 +941,7 @@ describe("Proxy for HTTP host without NTLM", function () {
     const body = {
       ntlmHost: "https://my.test.host/",
     };
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -957,7 +957,7 @@ describe("Proxy for HTTP host without NTLM", function () {
   it("should terminate client socket on server socket error for non NTLM host", async function () {
     expressServer.closeConnectionOnNextRequest(true);
     try {
-      await ProxyFacade.sendProxiedHttpRequest(
+      await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl,
         "GET",
@@ -973,7 +973,7 @@ describe("Proxy for HTTP host without NTLM", function () {
 
   it("should pass on custom status phrases in response", async function () {
     expressServer.setCustomStatusPhrase("My fantastic status phrase");
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -1044,21 +1044,21 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(2000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
   });
 
   describe("Multiple NtlmConfig calls", function () {
     it("should handle authentication for POST requests to two hosts", async function () {
-      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
+      let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
       assert.equal(res.status, 200);
-      res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
+      res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
       assert.equal(res.status, 200);
 
       const body = {
         ntlmHost: "https://my.test.host/",
       };
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl1,
         "POST",
@@ -1070,7 +1070,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
       assert.equal(resBody.ntlmHost, body.ntlmHost);
       assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl2,
         "POST",
@@ -1084,17 +1084,17 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
     });
 
     it("should handle authentication for POST requests to two hosts from one socket", async function () {
-      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
+      let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig1);
       assert.equal(res.status, 200);
-      res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
+      res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig2);
       assert.equal(res.status, 200);
 
       const body = {
         ntlmHost: "https://my.test.host/",
       };
-      const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+      const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl1,
         "POST",
@@ -1107,7 +1107,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
       assert.equal(resBody.ntlmHost, body.ntlmHost);
       assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl2,
         "POST",
@@ -1126,7 +1126,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
 
   describe("Combined NtlmConfig call", function () {
     it("should handle authentication for POST requests to two hosts", async function () {
-      let res = await ProxyFacade.sendNtlmConfig(
+      let res = await proxyFacade.sendNtlmConfig(
         configApiUrl,
         ntlmHostCombinedConfig
       );
@@ -1136,7 +1136,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
         ntlmHost: "https://my.test.host/",
       };
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl1,
         "POST",
@@ -1148,7 +1148,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
       assert.equal(resBody.ntlmHost, body.ntlmHost);
       assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl2,
         "POST",
@@ -1162,7 +1162,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
     });
 
     it("should handle authentication for POST requests to two hosts from one socket", async function () {
-      let res = await ProxyFacade.sendNtlmConfig(
+      let res = await proxyFacade.sendNtlmConfig(
         configApiUrl,
         ntlmHostCombinedConfig
       );
@@ -1171,9 +1171,9 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
       const body = {
         ntlmHost: "https://my.test.host/",
       };
-      const agent = ProxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
+      const agent = proxyFacade.getHttpProxyAgent(ntlmProxyUrl, true);
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl1,
         "POST",
@@ -1186,7 +1186,7 @@ describe("Proxy for multiple HTTP hosts with NTLM", function () {
       assert.equal(resBody.ntlmHost, body.ntlmHost);
       assert.equal(resBody.reply, "OK ÅÄÖéß");
 
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl2,
         "POST",

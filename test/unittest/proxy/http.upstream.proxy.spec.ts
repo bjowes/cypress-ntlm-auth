@@ -62,14 +62,14 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(2000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
     upstreamProxyReqCount = 0;
   });
 
   it("should handle authentication for GET requests", async function () {
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -85,7 +85,7 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
   });
 
   it("should return 401 for unconfigured host on GET requests", async function () {
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -101,9 +101,9 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -122,7 +122,7 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -138,9 +138,9 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -159,7 +159,7 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -175,9 +175,9 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -196,7 +196,7 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -209,11 +209,11 @@ describe("Proxy for HTTP host with NTLM and upstream proxy", function () {
   });
 
   it("should forward 504 from upstream proxy on server socket error for NTLM host", async function () {
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
     expressServer.closeConnectionOnNextRequest(true);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -270,17 +270,17 @@ describeIfWindows(
     beforeEach(async function () {
       // Reset NTLM config
       this.timeout(2000);
-      await ProxyFacade.sendNtlmReset(configApiUrl);
+      await proxyFacade.sendNtlmReset(configApiUrl);
       upstreamProxyReqCount = 0;
     });
 
     it("should handle authentication for GET requests", async function () {
-      let res = await ProxyFacade.sendNtlmSsoConfig(
+      let res = await proxyFacade.sendNtlmSsoConfig(
         configApiUrl,
         ntlmSsoConfig
       );
       assert.equal(res.status, 200);
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl,
         "GET",
@@ -296,7 +296,7 @@ describeIfWindows(
     });
 
     it("should return 401 for unconfigured host on GET requests", async function () {
-      let res = await ProxyFacade.sendProxiedHttpRequest(
+      let res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl,
         "GET",
@@ -312,12 +312,12 @@ describeIfWindows(
       let body = {
         ntlmHost: "https://my.test.host/",
       };
-      let res = await ProxyFacade.sendNtlmSsoConfig(
+      let res = await proxyFacade.sendNtlmSsoConfig(
         configApiUrl,
         ntlmSsoConfig
       );
       assert.equal(res.status, 200);
-      res = await ProxyFacade.sendProxiedHttpRequest(
+      res = await proxyFacade.sendProxiedHttpRequest(
         ntlmProxyUrl,
         httpUrl,
         "POST",
@@ -375,7 +375,7 @@ describe("Proxy for HTTP host without NTLM and upstream proxy", function () {
   });
 
   it("should pass through GET requests for non NTLM host", async function () {
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -394,7 +394,7 @@ describe("Proxy for HTTP host without NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "POST",
@@ -413,7 +413,7 @@ describe("Proxy for HTTP host without NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "PUT",
@@ -432,7 +432,7 @@ describe("Proxy for HTTP host without NTLM and upstream proxy", function () {
     let body = {
       ntlmHost: "https://my.test.host/",
     };
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "DELETE",
@@ -449,7 +449,7 @@ describe("Proxy for HTTP host without NTLM and upstream proxy", function () {
 
   it("should forward 504 from upstream proxy on server socket error for non NTLM host", async function () {
     expressServer.closeConnectionOnNextRequest(true);
-    const res = await ProxyFacade.sendProxiedHttpRequest(
+    const res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -508,7 +508,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -535,7 +535,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     // Request as localhost to match NO_PROXY
     const httpLocalhostUrl = new URL("http://localhost:" + httpUrl.port);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpLocalhostUrl,
       "GET",
@@ -562,7 +562,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     // Request as localhost to match NO_PROXY
     const httpLocalhostUrl = new URL("http://localhost:" + httpUrl.port);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpLocalhostUrl,
       "GET",
@@ -589,7 +589,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     // Request as localhost to match NO_PROXY
     const httpLocalhostUrl = new URL("http://localhost:" + httpUrl.port);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpLocalhostUrl,
       "GET",
@@ -609,7 +609,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -633,7 +633,7 @@ describe("Proxy for HTTP host without NTLM, upstream proxy + NO_PROXY", function
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
 
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",

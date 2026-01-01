@@ -92,7 +92,7 @@ describe("Core server startup and shutdown", () => {
     const ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = ports.configApiUrl;
 
-    await ProxyFacade.sendQuitCommand(new URL(ports.configApiUrl), true);
+    await proxyFacade.sendQuitCommand(new URL(ports.configApiUrl), true);
     _configApiUrl = undefined;
 
     const reachable = await isProxyReachable(ports);

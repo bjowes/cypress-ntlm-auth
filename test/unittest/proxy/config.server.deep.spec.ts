@@ -19,6 +19,7 @@ describe("Config API (ConfigServer deep tests)", () => {
   let configStore: IConfigStore;
   let portsConfigStore: IPortsConfigStore;
   let hostConfig: NtlmConfig;
+  let proxyFacade = new ProxyFacade();
 
   before(async function () {
     configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
@@ -51,7 +52,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      const res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -71,7 +72,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      const res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -91,7 +92,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      const res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -111,7 +112,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      const res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -131,7 +132,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      const res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.exists(new URL("http://localhost:5000")), true);
@@ -151,14 +152,14 @@ describe("Config API (ConfigServer deep tests)", () => {
       const completeUrl = new URL("http://localhost:5000");
 
       // Act
-      let res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      let res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.exists(completeUrl), true);
       assert.equal(configStore.get(completeUrl)!.username, "nisse");
 
       hostConfig.username = "dummy";
-      res = await ProxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
+      res = await proxyFacade.sendNtlmConfig(configApiUrl, hostConfig);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.exists(completeUrl), true);
@@ -174,7 +175,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      const res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.useSso(new URL("http://localhost:5000")), true);
@@ -187,7 +188,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      const res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -207,12 +208,12 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      let res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.useSso(new URL("http://localhost:5000")), true);
 
-      res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig2);
+      res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig2);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
       assert.equal(configStore.useSso(new URL("http://assa.com:5000")), true);
@@ -228,7 +229,7 @@ describe("Config API (ConfigServer deep tests)", () => {
       };
 
       // Act
-      const res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
+      const res = await proxyFacade.sendNtlmSsoConfig(configApiUrl, ssoConfig);
       assert.equal(res.status, 400);
       assert.equal(
         res.body,
@@ -241,7 +242,7 @@ describe("Config API (ConfigServer deep tests)", () => {
   describe("reset", function () {
     it("should return response", async function () {
       // Act
-      const res = await ProxyFacade.sendNtlmReset(configApiUrl);
+      const res = await proxyFacade.sendNtlmReset(configApiUrl);
       assert.equal(res.status, 200);
       assert.equal(res.body, "OK");
     });
@@ -251,7 +252,7 @@ describe("Config API (ConfigServer deep tests)", () => {
     it("should return response", async function () {
       portsConfigStore.ntlmProxyUrl = new URL("http://localhost:8012");
       // Act
-      const res = await ProxyFacade.sendAliveRequest(configApiUrl);
+      const res = await proxyFacade.sendAliveRequest(configApiUrl);
       assert.equal(res.status, 200);
       assert.equal(res.data.configApiUrl, configApiUrl.origin);
       assert.equal(res.data.ntlmProxyUrl, portsConfigStore.ntlmProxyUrl.origin);

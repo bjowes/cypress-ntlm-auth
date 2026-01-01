@@ -41,9 +41,12 @@ function initApp(app, useNtlm) {
   app.use(cors());
 
   app.use(function (err, req, res, next) {
+    if (res.headersSent) {
+      return next(err)
+    }
     res.status(err.status || 500);
+    
     res.render("error", {
-      message: err.message,
       error: err,
     });
   });
@@ -72,15 +75,15 @@ function initApp(app, useNtlm) {
   });
 
   app.post("/api/post", (req, res) => {
-    req.body.reply = "OK ÅÄÖéß";
+    req.body.reply = "OK ÅÄÖéß"; // Add reply to request body
     res.setHeader("Content-Type", "application/json");
     res.status(200).send(JSON.stringify(req.body));
   });
 
   app.put("/api/put", (req, res) => {
-    req.body.reply = "OK ÅÄÖéß";
+    req.body.reply = "OK ÅÄÖéß"; // Add reply to request body
     res.setHeader("Content-Type", "application/json");
-    res.status(200).send(req.body);
+    res.status(200).send(JSON.stringify(req.body));
   });
 
   app.delete("/api/delete", (req, res) => {

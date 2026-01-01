@@ -51,15 +51,15 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(5000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHosts = [httpUrl.host];
   });
 
   it("should handle authentication for GET requests when config includes port", async function () {
     ntlmHostConfig.ntlmHosts = [httpUrl.hostname + ":80"];
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -73,9 +73,9 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
 
   it("should handle authentication for GET requests when config excludes port", async function () {
     ntlmHostConfig.ntlmHosts = [httpUrl.hostname];
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       httpUrl,
       "GET",
@@ -123,15 +123,15 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(5000);
-    ProxyFacade.sendNtlmReset(configApiUrl);
+    proxyFacade.sendNtlmReset(configApiUrl);
     ntlmHostConfig.ntlmHosts = [httpsUrl.host];
   });
 
   it("should handle authentication for GET requests when config includes port", async function () {
     ntlmHostConfig.ntlmHosts = [httpsUrl.hostname + ":443"];
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpsRequest(
+    res = await proxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",
@@ -146,9 +146,9 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
 
   it("should handle authentication for GET requests when config excludes port", async function () {
     ntlmHostConfig.ntlmHosts = [httpsUrl.hostname];
-    let res = await ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
+    let res = await proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig);
     assert.equal(res.status, 200);
-    res = await ProxyFacade.sendProxiedHttpsRequest(
+    res = await proxyFacade.sendProxiedHttpsRequest(
       ntlmProxyUrl,
       httpsUrl,
       "GET",

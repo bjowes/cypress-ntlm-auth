@@ -17,6 +17,7 @@ export const TYPES = {
   INtlm: Symbol.for("INtlm"),
   INtlmManager: Symbol.for("INtlmManager"),
   INtlmProxyFacade: Symbol.for("INtlmProxyFacade"),
+  INtlmProxyHttpClient: Symbol.for("INtlmProxyHttpClient"),
   INtlmProxyMitm: Symbol.for("INtlmProxyMitm"),
   INtlmProxyServer: Symbol.for("INtlmProxyServer"),
   IStartup: Symbol.for("IStartup"),
@@ -24,5 +25,4 @@ export const TYPES = {
   IUpstreamProxyConfigurator: Symbol.for("IUpstreamProxyConfigurator"),
   IUpstreamProxyManager: Symbol.for("IUpstreamProxyManager"),
   IWinSsoFacadeFactory: Symbol.for("IWinSsoFacadeFactory"),
-  NewableIConnectionContext: Symbol.for("Newable<IConnectionContext>"),
 };
