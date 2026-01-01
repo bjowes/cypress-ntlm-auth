@@ -7,7 +7,7 @@ function typeToUrl(baseUrl, type) {
 
 function typeToBody(type) {
   if (type.toUpperCase() === "POST" || type.toUpperCase() === "PUT") {
-    return { test: "message is here" };
+    return JSON.stringify({ test: "message is here" });
   }
   return null;
 }
@@ -16,6 +16,7 @@ function request(baseUrl, type, cb) {
   $.ajax({
     url: typeToUrl(baseUrl, type),
     type: type.toUpperCase(),
+    contentType: "application/json",
     data: typeToBody(type),
     success: function (data, status) {
       console.log(type, "completed");

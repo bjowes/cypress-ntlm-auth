@@ -316,8 +316,8 @@ export class ExpressServer {
       this.httpServer = http.createServer(this.appNoAuth);
     }
     // Increase TCP keep-alive timeout to 61 secs to detect issues with hanging connections
-    this.httpsServer.keepAliveTimeout = 61 * 1000;
-    this.httpsServer.headersTimeout = 65 * 1000;
+    this.httpServer.keepAliveTimeout = 61 * 1000;
+    this.httpServer.headersTimeout = 65 * 1000;
 
     this.httpServer.on("connection", (socket) => {
       this.httpServerSockets.add(socket);

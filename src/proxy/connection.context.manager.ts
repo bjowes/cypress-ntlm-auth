@@ -1,5 +1,5 @@
 import { Socket } from "net";
-import { injectable, interfaces, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
@@ -11,6 +11,7 @@ import { SslTunnel } from "../models/ssl.tunnel.model";
 import { httpsTunnel, TunnelAgent, TunnelAgentOptions } from "./tunnel.agent";
 import { IHttpsValidation } from "./interfaces/i.https.validation";
 import { ExtendedAgentOptions } from "../models/extended.agent.options";
+import { ConnectionContext } from "./connection.context";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -27,7 +28,6 @@ interface SslTunnelHash {
 export class ConnectionContextManager implements IConnectionContextManager {
   private _connectionContexts: ConnectionContextHash = {};
   private _upstreamProxyManager: IUpstreamProxyManager;
-  private ConnectionContext: interfaces.Newable<IConnectionContext>;
   private _httpsValidation: IHttpsValidation;
   private _debug: IDebugLogger;
   private _tunnels: SslTunnelHash = {};
@@ -35,20 +35,16 @@ export class ConnectionContextManager implements IConnectionContextManager {
   /**
    * Constructor
    * @param upstreamProxyManager Upstream proxy manager
-   * @param connectionContext Connection context factory
    * @param httpsValidation HTTP validator
    * @param debug Debug logger
    */
   constructor(
     @inject(TYPES.IUpstreamProxyManager)
     upstreamProxyManager: IUpstreamProxyManager,
-    @inject(TYPES.NewableIConnectionContext)
-    connectionContext: interfaces.Newable<IConnectionContext>,
     @inject(TYPES.IHttpsValidation) httpsValidation: IHttpsValidation,
     @inject(TYPES.IDebugLogger) debug: IDebugLogger
   ) {
     this._upstreamProxyManager = upstreamProxyManager;
-    this.ConnectionContext = connectionContext;
     this._httpsValidation = httpsValidation;
     this._debug = debug;
   }
@@ -77,7 +73,7 @@ export class ConnectionContextManager implements IConnectionContextManager {
     const useUpstreamProxy =
       this._upstreamProxyManager.hasHttpsUpstreamProxy(targetHost);
     const agent = this.getAgent(isSSL, targetHost, useUpstreamProxy);
-    const context = new this.ConnectionContext();
+    const context = new ConnectionContext();
     context.clientAddress = clientAddress;
     context.agent = agent;
     context.clientSocket = clientSocket;

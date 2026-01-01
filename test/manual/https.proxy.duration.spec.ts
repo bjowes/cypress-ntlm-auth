@@ -58,14 +58,14 @@ describe("Duration test: Proxy for HTTPS host with NTLM", function () {
   beforeEach(async function () {
     // Reset NTLM config
     this.timeout(5000);
-    await ProxyFacade.sendNtlmReset(configApiUrl);
+    await proxyFacade.sendNtlmReset(configApiUrl);
   });
 
   it("should not leak memory handling multiple GET requests for the same NTLM host", function (done) {
     this.timeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
-    ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
+    proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
       assert.equal(res.status, 200);
 
       sendBurst(burstCount);
@@ -112,7 +112,7 @@ describe("Duration test: Proxy for HTTPS host with NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendProxiedHttpsRequest(
+        proxyFacade.sendProxiedHttpsRequest(
           ntlmProxyUrl,
           httpsUrl,
           "GET",
@@ -137,7 +137,7 @@ describe("Duration test: Proxy for HTTPS host with NTLM", function () {
     this.timeout(testTimeout);
     let runDuration = true;
     let burstCount = 5;
-    ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
+    proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
       assert.equal(res.status, 200);
       sendBurst(burstCount);
 
@@ -181,11 +181,11 @@ describe("Duration test: Proxy for HTTPS host with NTLM", function () {
       function sendBurst(burstCount: number) {
         let responseCount = 0;
         //console.log("Send burst");
-        ProxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
+        proxyFacade.sendNtlmConfig(configApiUrl, ntlmHostConfig).then((res) => {
           assert.equal(res.status, 200);
 
           for (let j = 0; j < burstCount; j++) {
-            ProxyFacade.sendProxiedHttpsRequest(
+            proxyFacade.sendProxiedHttpsRequest(
               ntlmProxyUrl,
               httpsUrl,
               "GET",
@@ -255,7 +255,7 @@ describe("Duration test: Proxy for HTTPS host with NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendProxiedHttpsRequest(
+        proxyFacade.sendProxiedHttpsRequest(
           ntlmProxyUrl,
           httpsUrl,
           "GET",
@@ -356,7 +356,7 @@ describe("Duration test: Proxy for HTTPS host without NTLM", function () {
       let responseCount = 0;
       //console.log("Send burst");
       for (let j = 0; j < burstCount; j++) {
-        ProxyFacade.sendProxiedHttpsRequest(
+        proxyFacade.sendProxiedHttpsRequest(
           ntlmProxyUrl,
           httpsUrl,
           "POST",

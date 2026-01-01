@@ -75,7 +75,7 @@ describe("NTLM Proxy authentication", function () {
   afterEach(async function () {
     if (_configApiUrl) {
       // Shutdown the proxy listeners to allow a clean exit
-      await ProxyFacade.sendQuitCommand(_configApiUrl, true);
+      await proxyFacade.sendQuitCommand(_configApiUrl, true);
       _configApiUrl = undefined;
     }
   });
@@ -90,7 +90,7 @@ describe("NTLM Proxy authentication", function () {
     // Act
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = new URL(ports.configApiUrl);
-    let res = await ProxyFacade.sendProxiedHttpRequest(
+    let res = await proxyFacade.sendProxiedHttpRequest(
       new URL(ports.ntlmProxyUrl),
       remoteHostWithPort,
       "GET",
@@ -121,10 +121,10 @@ describe("NTLM Proxy authentication", function () {
     // Act
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = new URL(ports.configApiUrl);
-    let res = await ProxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
+    let res = await proxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       new URL(ports.ntlmProxyUrl),
       remoteHostWithPort,
       "GET",
@@ -155,10 +155,10 @@ describe("NTLM Proxy authentication", function () {
     // Act
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = new URL(ports.configApiUrl);
-    let res = await ProxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
+    let res = await proxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       new URL(ports.ntlmProxyUrl),
       remoteHostWithPort,
       "GET",
@@ -189,10 +189,10 @@ describe("NTLM Proxy authentication", function () {
     // Act
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = new URL(ports.configApiUrl);
-    let res = await ProxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
+    let res = await proxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
     assert.equal(res.status, 200);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       new URL(ports.ntlmProxyUrl),
       remoteHostWithPort,
       "GET",
@@ -222,12 +222,12 @@ describe("NTLM Proxy authentication", function () {
     // Act
     let ports = await coreServer.start(undefined, undefined, undefined);
     _configApiUrl = new URL(ports.configApiUrl);
-    let res = await ProxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
+    let res = await proxyFacade.sendNtlmConfig(_configApiUrl, hostConfig);
     assert.equal(res.status, 200);
 
-    await ProxyFacade.sendNtlmReset(_configApiUrl);
+    await proxyFacade.sendNtlmReset(_configApiUrl);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       new URL(ports.ntlmProxyUrl),
       remoteHostWithPort,
       "GET",
@@ -256,10 +256,10 @@ describe("NTLM Proxy authentication", function () {
     _configApiUrl = new URL(ports.configApiUrl);
     const ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
 
-    let res = await ProxyFacade.sendNtlmConfig(ntlmProxyUrl, hostConfig, 250);
+    let res = await proxyFacade.sendNtlmConfig(ntlmProxyUrl, hostConfig, 250);
     assert.equal(res.status, 504);
 
-    res = await ProxyFacade.sendProxiedHttpRequest(
+    res = await proxyFacade.sendProxiedHttpRequest(
       ntlmProxyUrl,
       remoteHostWithPort,
       "GET",

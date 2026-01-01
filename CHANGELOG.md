@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.4 - released 2026-01-02
+
+- Dependency bump
+
 ## 4.2.3 - released 2025-05-06
 
 - Dependency bump

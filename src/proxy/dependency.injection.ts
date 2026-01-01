@@ -1,13 +1,10 @@
-import { Container, interfaces } from "inversify";
+import { Container } from "inversify";
 import "reflect-metadata";
 
 import { TYPES } from "./dependency.injection.types";
 
 import { IConfigController } from "./interfaces/i.config.controller";
 import { ConfigController } from "./config.controller";
-
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { ConnectionContext } from "./connection.context";
 
 import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
 import { ConnectionContextManager } from "./connection.context.manager";
@@ -76,6 +73,8 @@ import { IHttpsValidation } from "./interfaces/i.https.validation";
 import { HttpsValidation } from "./https.validation";
 import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
 import { TlsCertValidator } from "../util/tls.cert.validator";
+import { INtlmProxyHttpClient } from "../startup/interfaces/i.ntlm.proxy.http.client";
+import { NtlmProxyHttpClient } from "../startup/ntlm.proxy.http.client";
 
 /**
  * Dependency injection
@@ -120,6 +119,9 @@ export class DependencyInjection {
       .bind<IHttpMitmProxyFacade>(TYPES.IHttpMitmProxyFacade)
       .to(HttpMitmProxyFacade);
     this._container
+      .bind<INtlmProxyHttpClient>(TYPES.INtlmProxyHttpClient)
+      .to(NtlmProxyHttpClient);
+    this._container
       .bind<IHttpsValidation>(TYPES.IHttpsValidation)
       .to(HttpsValidation);
     this._container.bind<IMain>(TYPES.IMain).to(Main);
@@ -147,11 +149,6 @@ export class DependencyInjection {
       .bind<IUpstreamProxyManager>(TYPES.IUpstreamProxyManager)
       .to(UpstreamProxyManager);
 
-    this._container
-      .bind<interfaces.Newable<IConnectionContext>>(
-        TYPES.NewableIConnectionContext
-      )
-      .toConstructor<IConnectionContext>(ConnectionContext);
     this._container
       .bind<IWinSsoFacadeFactory>(TYPES.IWinSsoFacadeFactory)
       .to(WinSsoFacadeFactory);

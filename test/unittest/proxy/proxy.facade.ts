@@ -13,7 +13,7 @@ import { Socket } from "net";
 
 import debugInit from "debug";
 import { URLExt } from "../../../src/util/url.ext";
-import { HttpClient, HttpResponse } from "./http.client";
+import { HttpClient, HttpResponse, IHttpClient } from "./http.client";
 const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
 
 export class ProxyFacade {
@@ -22,6 +22,7 @@ export class ProxyFacade {
   // tests are executed to avoid timeouts
   private _mitmProxyInit = false;
   private _mitmProxy?: httpMitmProxy.IProxy = undefined;
+  private _httpClient: IHttpClient = new HttpClient();
   private _httpAgent?: http.Agent;
   private _httpsAgent?: https.Agent;
   private _trackedSockets: {
@@ -156,11 +157,11 @@ export class ProxyFacade {
     return fs.readFileSync(caCertPath);
   }
 
-  static async sendQuitCommand(
+  async sendQuitCommand(
     configApiUrl: URL,
     keepPortsFile: boolean
   ): Promise<HttpResponse> {
-    const res = await HttpClient.post(
+    const res = await this._httpClient.post(
       new URL("/quit", configApiUrl),
       { keepPortsFile: keepPortsFile },
       {
@@ -174,8 +175,8 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendAliveRequest(configApiUrl: URL): Promise<HttpResponse> {
-    const res = await HttpClient.get(new URL("/alive", configApiUrl), {
+  async sendAliveRequest(configApiUrl: URL): Promise<HttpResponse> {
+    const res = await this._httpClient.get(new URL("/alive", configApiUrl), {
       timeout: 15000,
     });
     if (res.status !== 200) {
@@ -184,12 +185,12 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendNtlmConfig(
+  async sendNtlmConfig(
     configApiUrl: URL,
     hostConfig: NtlmConfig,
     timeout?: number
   ): Promise<HttpResponse> {
-    const res = await HttpClient.post(
+    const res = await this._httpClient.post(
       new URL("/ntlm-config", configApiUrl),
       hostConfig,
       {
@@ -199,12 +200,12 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendNtlmSsoConfig(
+   async sendNtlmSsoConfig(
     configApiUrl: URL,
     ssoConfig: NtlmSsoConfig,
     timeout?: number
   ): Promise<HttpResponse> {
-    const res = await HttpClient.post(
+    const res = await this._httpClient.post(
       new URL("/ntlm-sso", configApiUrl),
       ssoConfig,
       {
@@ -214,8 +215,8 @@ export class ProxyFacade {
     return res;
   }
 
-  static async sendNtlmReset(configApiUrl: URL): Promise<HttpResponse> {
-    const res = await HttpClient.post(new URL("/reset", configApiUrl), undefined, {
+  async sendNtlmReset(configApiUrl: URL): Promise<HttpResponse> {
+    const res = await this._httpClient.post(new URL("/reset", configApiUrl), undefined, {
       timeout: 15000,
     });
     if (res.status !== 200) {
@@ -224,7 +225,7 @@ export class ProxyFacade {
     return res;
   }
 
-  static getHttpProxyAgent(proxyUrl: URL, keepAlive: boolean) {
+  getHttpProxyAgent(proxyUrl: URL, keepAlive: boolean) {
     let agent = new http.Agent({
       keepAlive: keepAlive,
       host: URLExt.unescapeHostname(proxyUrl),
@@ -233,7 +234,7 @@ export class ProxyFacade {
     return agent;
   }
 
-  static async sendProxiedHttpRequest(
+  async sendProxiedHttpRequest(
     proxyUrl: URL,
     remoteHostUrl: URL,
     method: string,
@@ -241,7 +242,7 @@ export class ProxyFacade {
     body: any,
     agent?: http.Agent
   ) {
-    const res = await HttpClient.request(
+    const res = await this._httpClient.request(
       new URL(path, remoteHostUrl),
       {
         method: method,
@@ -253,7 +254,7 @@ export class ProxyFacade {
     return res;
   }
 
-  static getHttpsProxyAgent(
+  getHttpsProxyAgent(
     proxyUrl: URL,
     keepAlive: boolean,
     caCert?: Buffer[]
@@ -272,7 +273,7 @@ export class ProxyFacade {
     });
   }
 
-  static async sendProxiedHttpsRequest(
+  async sendProxiedHttpsRequest(
     proxyUrl: URL,
     remoteHostUrl: URL,
     method: string,
@@ -284,7 +285,7 @@ export class ProxyFacade {
     const tunnelAgent =
       agent || this.getHttpsProxyAgent(proxyUrl, false, caCert);
 
-    const res = await HttpClient.request(
+    const res = await this._httpClient.request(
       new URL(path, remoteHostUrl),
       {
         method: method,
