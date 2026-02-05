@@ -6,7 +6,7 @@ context("Commands", function () {
 
     before("Backup and clear env", function () {
       cy_env_backup = cy.env;
-      cy.env = () => Promise.resolve(undefined);
+      cy.env = () => Promise.resolve({});
     });
 
     it("NTLM should fail without plugin env", function () {
