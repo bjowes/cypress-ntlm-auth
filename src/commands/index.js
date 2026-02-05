@@ -6,6 +6,17 @@ const ConfigValidator = require('../util/config.validator').ConfigValidator;
 const SsoConfigValidator = require('../util/sso.config.validator')
     .SsoConfigValidator;
 
+const getPartialEnv = () => {
+  if ('env' in cy) {
+    return cy.env(['NTLM_AUTH_PROXY', 'NTLM_AUTH_API'], { log: false });
+  } else {
+    return cy.wrap({
+      NTLM_AUTH_PROXY: Cypress.env('NTLM_AUTH_PROXY'),
+      NTLM_AUTH_API: Cypress.env('NTLM_AUTH_API')
+    }, { log: false });
+  }
+};
+
 /**
  * Adds NTLM authentication support to Cypress for a specific host.
  * You can call this multiple times to register several hosts or
@@ -35,13 +46,14 @@ const ntlm = (
     workstation,
     ntlmVersion,
 ) => {
+  getPartialEnv().then((env) => {
   const log = {
     name: 'ntlm',
     message: {ntlmHosts, username},
   };
 
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = env['NTLM_AUTH_PROXY'];
+  const ntlmConfigApi = env['NTLM_AUTH_API'];
   if (!ntlmProxy || !ntlmConfigApi) {
     throw new Error(
         'The cypress-ntlm-auth plugin must be loaded before using this method',
@@ -102,6 +114,7 @@ const ntlm = (
   };
 
   Cypress.log(log);
+  });
 };
 
 /**
@@ -118,12 +131,13 @@ const ntlm = (
  ```
  */
 const ntlmSso = (ntlmHosts) => {
+  getPartialEnv().then((env) => {
   const log = {
     name: 'ntlmSso',
     message: {ntlmHosts},
   };
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = env['NTLM_AUTH_PROXY'];
+  const ntlmConfigApi = env['NTLM_AUTH_API'];
   if (!ntlmProxy || !ntlmConfigApi) {
     throw new Error(
         'The cypress-ntlm-auth plugin must be loaded before using this method',
@@ -168,6 +182,7 @@ const ntlmSso = (ntlmHosts) => {
     };
   };
   Cypress.log(log);
+  });
 };
 
 /**
@@ -178,13 +193,14 @@ const ntlmSso = (ntlmHosts) => {
  ```
  */
 const ntlmReset = () => {
+  getPartialEnv().then((env) => {
   const log = {
     name: 'ntlmReset',
     message: {},
   };
 
-  const ntlmProxy = Cypress.env('NTLM_AUTH_PROXY');
-  const ntlmConfigApi = Cypress.env('NTLM_AUTH_API');
+  const ntlmProxy = env['NTLM_AUTH_PROXY'];
+  const ntlmConfigApi = env['NTLM_AUTH_API'];
   if (!ntlmProxy || !ntlmConfigApi) {
     throw new Error(
         'The cypress-ntlm-auth plugin must be loaded before using this method',
@@ -218,6 +234,7 @@ const ntlmReset = () => {
   };
 
   Cypress.log(log);
+  });
 };
 
 Cypress.Commands.add('ntlm', {prevSubject: false}, ntlm);
