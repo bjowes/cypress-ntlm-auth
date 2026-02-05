@@ -207,7 +207,7 @@ function configureCert(certServer, publicKey) {
 }
 
 function generateSelfSignedCert(certs) {
-  let keysServer = nodeForge.pki.rsa.generateKeyPair(1024);
+  let keysServer = nodeForge.pki.rsa.generateKeyPair(2048);
   let certServer = nodeForge.pki.createCertificate();
   configureCert(certServer, keysServer.publicKey);
   certServer.sign(keysServer.privateKey);

@@ -297,7 +297,7 @@ export class ExpressServer {
   }
 
   private generateSelfSignedCert() {
-    let keysServer = forge.pki.rsa.generateKeyPair(1024);
+    let keysServer = forge.pki.rsa.generateKeyPair(2048);
     let certServer = forge.pki.createCertificate();
     this.configureCert(certServer, keysServer.publicKey);
     certServer.sign(keysServer.privateKey);

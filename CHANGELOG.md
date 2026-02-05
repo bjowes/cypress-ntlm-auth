@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.2.4 - released 2026-02-05
+
+- Updated cypress to 15.10 for E2E suite
+- Fix #272 (Cypress 15.10.0 with allowCypressEnv: false - now gives error) - Thanks @alexsch01 for contributing!
+
 ## 4.2.3 - released 2025-05-06
 
 - Dependency bump

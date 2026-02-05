@@ -2,14 +2,11 @@
 
 context("Commands", function () {
   context("Plugin required", function () {
-    let ntlm_auth_proxy;
-    let ntlm_auth_api;
+    let cy_env_backup;
 
     before("Backup and clear env", function () {
-      ntlm_auth_proxy = Cypress.env("NTLM_AUTH_PROXY");
-      ntlm_auth_api = Cypress.env("NTLM_AUTH_API");
-      Cypress.env("NTLM_AUTH_PROXY", undefined);
-      Cypress.env("NTLM_AUTH_API", undefined);
+      cy_env_backup = cy.env;
+      cy.env = () => Promise.resolve({});
     });
 
     it("NTLM should fail without plugin env", function () {
@@ -28,8 +25,7 @@ context("Commands", function () {
     });
 
     after("Restore env", function () {
-      Cypress.env("NTLM_AUTH_PROXY", ntlm_auth_proxy);
-      Cypress.env("NTLM_AUTH_API", ntlm_auth_api);
+      cy.env = cy_env_backup;
     });
   });
 
