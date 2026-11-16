@@ -32,9 +32,9 @@
     "windows authentication"
   ],
   "bin": {
-    "cypress-ntlm": "./dist/launchers/cypress.ntlm.js",
-    "ntlm-proxy": "./dist/launchers/ntlm.proxy.main.js",
-    "ntlm-proxy-exit": "./dist/launchers/ntlm.proxy.exit.main.js"
+    "cypress-ntlm": "dist/launchers/cypress.ntlm.js",
+    "ntlm-proxy": "dist/launchers/ntlm.proxy.main.js",
+    "ntlm-proxy-exit": "dist/launchers/ntlm.proxy.exit.main.js"
   },
   "files": [
     "dist/"
