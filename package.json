@@ -1,6 +1,6 @@
 {
   "name": "cypress-ntlm-auth",
-  "version": "4.2.4",
+  "version": "4.3.0",
   "description": "NTLM authentication plugin for Cypress",
   "main": "dist/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "lint": "eslint src"
   },
   "engines": {
-    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+    "node": ">=22.22.2 || >=24.15.0 || >=26.0.0"
   },
   "types": "dist/commands/index.d.ts",
   "repository": {
@@ -32,9 +32,9 @@
     "windows authentication"
   ],
   "bin": {
-    "cypress-ntlm": "./dist/launchers/cypress.ntlm.js",
-    "ntlm-proxy": "./dist/launchers/ntlm.proxy.main.js",
-    "ntlm-proxy-exit": "./dist/launchers/ntlm.proxy.exit.main.js"
+    "cypress-ntlm": "dist/launchers/cypress.ntlm.js",
+    "ntlm-proxy": "dist/launchers/ntlm.proxy.main.js",
+    "ntlm-proxy-exit": "dist/launchers/ntlm.proxy.exit.main.js"
   },
   "files": [
     "dist/"
@@ -53,7 +53,7 @@
     "express": "^4.21.2",
     "inversify": "^6.2.2",
     "reflect-metadata": "^0.2.1",
-    "win-sso": "^1.3.3"
+    "win-sso": "^2.0.0-beta.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
