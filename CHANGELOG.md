@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.5 - released 2026-11-16
+
+- Updated win-sso for improved npm 12 compatibility, fewer dependencies and reduced risk of Supply Chain attacks
+
 ## 4.2.4 - released 2026-02-05
 
 - Updated cypress to 15.10 for E2E suite
