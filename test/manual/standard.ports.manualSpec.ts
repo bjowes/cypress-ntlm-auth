@@ -5,12 +5,12 @@
 // be run manually. On OS X, you can use (from the project root)
 // sudo node_modules/.bin/mocha test/manual/standard.ports.manual.test.ts
 
-import { ProxyFacade } from "../unittest/proxy/proxy.facade";
-import { DependencyInjection } from "../../src/proxy/dependency.injection";
-import { TYPES } from "../../src/proxy/dependency.injection.types";
-import { ExpressServer } from "../unittest/proxy/express.server";
-import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
-import { NtlmConfig } from "../../src/models/ntlm.config.model";
+import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
+import { DependencyInjection } from "../../src/proxy/dependency.injection.ts";
+import { TYPES } from "../../src/proxy/dependency.injection.types.ts";
+import { ExpressServer } from "../unittest/proxy/express.server.ts";
+import type { ICoreServer } from "../../src/proxy/interfaces/i.core.server.ts";
+import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 import assert from "assert";
 
 let configApiUrl: URL;

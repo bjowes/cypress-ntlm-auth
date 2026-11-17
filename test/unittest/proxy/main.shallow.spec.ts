@@ -1,13 +1,14 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { Main } from "../../../src/proxy/main";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { PortsConfig } from "../../../src/models/ports.config.model";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { Main } from "../../../src/proxy/main.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 
 describe("Main shallow", () => {
   let main: Main;

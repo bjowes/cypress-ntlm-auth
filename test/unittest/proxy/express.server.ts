@@ -7,11 +7,11 @@ import ntlm from "express-ntlm";
 import * as net from "net";
 import bodyParser from "body-parser";
 import forge from "node-forge";
-import { AddressInfo } from "net";
+import type { AddressInfo } from "net";
 import * as stream from "stream";
 
 import debugInit from "debug";
-import { URLExt } from "../../../src/util/url.ext";
+import { URLExt } from "../../../src/util/url.ext.ts";
 const debug = debugInit("cypress:plugin:ntlm-auth:express-ntlm");
 
 interface ExpressError extends Error {

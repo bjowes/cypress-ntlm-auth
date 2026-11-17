@@ -1,20 +1,21 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
 import * as http from "http";
-import { IContext } from "@bjowes/http-mitm-proxy";
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { ConnectionContext } from "../../../src/proxy/connection.context";
-import { NtlmStateEnum } from "../../../src/models/ntlm.state.enum";
-import { ExpressServer } from "./express.server";
-import { NegotiateManager } from "../../../src/proxy/negotiate.manager";
-import { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade";
-import { ResetServer } from "./reset.server";
-import { RequestOptions } from "https";
-import { URLExt } from "../../../src/util/url.ext";
+import type { IContext } from "@bjowes/http-mitm-proxy";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { ConnectionContext } from "../../../src/proxy/connection.context.ts";
+import { NtlmState } from "../../../src/models/ntlm.state.ts";
+import { ExpressServer } from "./express.server.ts";
+import { NegotiateManager } from "../../../src/proxy/negotiate.manager.ts";
+import type { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade.ts";
+import { ResetServer } from "./reset.server.ts";
+import type { RequestOptions } from "https";
+import { URLExt } from "../../../src/util/url.ext.ts";
 
 describe("NegotiateManager", () => {
   let negotiateManager: NegotiateManager;
@@ -29,7 +30,7 @@ describe("NegotiateManager", () => {
   before(async function () {
     httpUrl = await expressServer.startHttpServer(false, undefined);
     await resetServer.start();
-    resetUrl = resetServer.url();
+    resetUrl = resetServer.url()!;
   });
 
   beforeEach(async function () {
@@ -49,7 +50,7 @@ describe("NegotiateManager", () => {
     it("Successful auth with 1 roundtrip", (done) => {
       const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
@@ -84,7 +85,7 @@ describe("NegotiateManager", () => {
           assert.equal(err, undefined);
           assert.equal(
             connectionContext.getState(ntlmHostUrl),
-            NtlmStateEnum.Authenticated
+            NtlmState.Authenticated
           );
           // Ensure cookie is passed on
           assert.equal(true, expressServer.lastRequestContainedHeader("cookie", "strange cookie"));
@@ -100,7 +101,7 @@ describe("NegotiateManager", () => {
     it("Successful auth with 2.5 roundtrip", (done) => {
       const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("Negotiate TEST");
@@ -132,7 +133,7 @@ describe("NegotiateManager", () => {
           assert.equal(err, undefined);
           assert.equal(
             connectionContext.getState(ntlmHostUrl),
-            NtlmStateEnum.Authenticated
+            NtlmState.Authenticated
           );
           assert.notEqual(res!.statusCode, 401);
           res!.resume();
@@ -144,7 +145,7 @@ describe("NegotiateManager", () => {
     it("Successful auth with 2 roundtrips", (done) => {
       const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
       winSsoFacadeMock
@@ -178,7 +179,7 @@ describe("NegotiateManager", () => {
           assert.equal(err, undefined);
           assert.equal(
             connectionContext.getState(ntlmHostUrl),
-            NtlmStateEnum.Authenticated
+            NtlmState.Authenticated
           );
           assert.notEqual(res!.statusCode, 401);
           res!.resume();
@@ -190,7 +191,7 @@ describe("NegotiateManager", () => {
     it("Successful auth with 3 roundtrips", (done) => {
       const ntlmHostUrl = new URL(httpUrl);
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
       winSsoFacadeMock
@@ -225,7 +226,7 @@ describe("NegotiateManager", () => {
           assert.equal(err, undefined);
           assert.equal(
             connectionContext.getState(ntlmHostUrl),
-            NtlmStateEnum.Authenticated
+            NtlmState.Authenticated
           );
           assert.notEqual(res!.statusCode, 401);
           res!.resume();
@@ -242,7 +243,7 @@ describe("NegotiateManager", () => {
       message.headers.returns!({ "www-authenticate": "Negotiate TestToken " });
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
+      connectionContext.setState(ntlmHostUrl, NtlmState.Type3Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
@@ -264,7 +265,7 @@ describe("NegotiateManager", () => {
         );
       assert.equal(
         connectionContext.getState(ntlmHostUrl),
-        NtlmStateEnum.NotAuthenticated
+        NtlmState.NotAuthenticated
       );
     });
 
@@ -274,7 +275,7 @@ describe("NegotiateManager", () => {
       message.headers.returns!({ "www-authenticate": "Negotiate TestToken " });
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
+      connectionContext.setState(ntlmHostUrl, NtlmState.Type3Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
@@ -296,7 +297,7 @@ describe("NegotiateManager", () => {
         );
       assert.equal(
         connectionContext.getState(ntlmHostUrl),
-        NtlmStateEnum.Authenticated
+        NtlmState.Authenticated
       );
     });
 
@@ -306,7 +307,7 @@ describe("NegotiateManager", () => {
       message.headers.returns!({ "www-authenticate": "Negotiate" });
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.setState(ntlmHostUrl, NtlmState.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
@@ -328,7 +329,7 @@ describe("NegotiateManager", () => {
         );
       assert.equal(
         connectionContext.getState(ntlmHostUrl),
-        NtlmStateEnum.NotAuthenticated
+        NtlmState.NotAuthenticated
       );
     });
 
@@ -338,7 +339,7 @@ describe("NegotiateManager", () => {
       message.headers.returns!({ "www-authenticate": "Basic" });
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.setState(ntlmHostUrl, NtlmState.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
@@ -364,7 +365,7 @@ describe("NegotiateManager", () => {
         );
       assert.equal(
         connectionContext.getState(ntlmHostUrl),
-        NtlmStateEnum.NotAuthenticated
+        NtlmState.NotAuthenticated
       );
     });
 
@@ -374,7 +375,7 @@ describe("NegotiateManager", () => {
       message.headers.returns!({});
       const ntlmHostUrl = new URL("http://www.google.com:8081");
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.setState(ntlmHostUrl, NtlmState.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).returns("");
 
@@ -400,13 +401,13 @@ describe("NegotiateManager", () => {
         );
       assert.equal(
         connectionContext.getState(ntlmHostUrl),
-        NtlmStateEnum.NotAuthenticated
+        NtlmState.NotAuthenticated
       );
     });
 
     it("Cannot create Negotiate request token", function (done) {
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(httpUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(httpUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().mimicks(() => {
         throw new Error("Negotiate test");
@@ -424,7 +425,7 @@ describe("NegotiateManager", () => {
           assert.equal(err!.message, "Negotiate test");
           assert.equal(
             connectionContext.getState(httpUrl),
-            NtlmStateEnum.NotAuthenticated
+            NtlmState.NotAuthenticated
           );
           assert.equal(res!.statusCode, 999);
           return done();
@@ -434,11 +435,11 @@ describe("NegotiateManager", () => {
 
     it("Error sending Negotiate request message", function (done) {
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(resetUrl, NtlmStateEnum.NotAuthenticated);
+      connectionContext.setState(resetUrl, NtlmState.NotAuthenticated);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthRequestHeader().returns("Negotiate TEST");
       const ctx = Substitute.for<IContext>();
-      const resetServerUrl = resetServer.url();
+      const resetServerUrl = resetServer.url()!;
       ctx.proxyToServerRequestOptions.returns!({
         protocol: resetServerUrl.protocol,
         host: URLExt.unescapeHostname(resetServerUrl),
@@ -467,7 +468,7 @@ describe("NegotiateManager", () => {
           assert.equal(errorMatch, true);
           assert.equal(
             connectionContext.getState(resetUrl),
-            NtlmStateEnum.NotAuthenticated
+            NtlmState.NotAuthenticated
           );
           assert.equal(res, undefined);
           return done();
@@ -482,7 +483,7 @@ describe("NegotiateManager", () => {
         "www-authenticate": "Negotiate TestServerResponse",
       });
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(resetUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.setState(resetUrl, NtlmState.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock.createAuthResponseHeader(Arg.any()).mimicks(() => {
         throw new Error("Negotiate test");
@@ -498,7 +499,7 @@ describe("NegotiateManager", () => {
           assert.equal(err!.message, "Negotiate test");
           assert.equal(
             connectionContext.getState(resetUrl),
-            NtlmStateEnum.NotAuthenticated
+            NtlmState.NotAuthenticated
           );
           assert.equal(res!.statusCode, 999);
           return done();
@@ -520,13 +521,13 @@ describe("NegotiateManager", () => {
         return message;
       });
       const connectionContext = new ConnectionContext();
-      connectionContext.setState(resetUrl, NtlmStateEnum.Type1Sent);
+      connectionContext.setState(resetUrl, NtlmState.Type1Sent);
       connectionContext.winSso = winSsoFacadeMock;
       winSsoFacadeMock
         .createAuthResponseHeader(Arg.any())
         .returns("Negotiate TestResponse");
       const ctx = Substitute.for<IContext>();
-      const resetServerUrl = resetServer.url();
+      const resetServerUrl = resetServer.url()!;
       ctx.proxyToServerRequestOptions.returns!({
         protocol: resetServerUrl.protocol,
         host: URLExt.unescapeHostname(resetServerUrl),
@@ -557,7 +558,7 @@ describe("NegotiateManager", () => {
           assert.equal(errorMatch, true);
           assert.equal(
             connectionContext.getState(resetUrl),
-            NtlmStateEnum.NotAuthenticated
+            NtlmState.NotAuthenticated
           );
           assert.equal(res, undefined);
           return done();

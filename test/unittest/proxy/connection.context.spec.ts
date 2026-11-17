@@ -1,6 +1,6 @@
 import assert from 'assert';
-import { NtlmStateEnum } from '../../../src/models/ntlm.state.enum';
-import { ConnectionContext } from '../../../src/proxy/connection.context';
+import { NtlmState } from '../../../src/models/ntlm.state.ts';
+import { ConnectionContext } from '../../../src/proxy/connection.context.ts';
 
 describe('ConnectionContext', () => {
     describe('matchHostOrNew', () => {
@@ -14,7 +14,7 @@ describe('ConnectionContext', () => {
         it('should return false for used NTLM ', () => {
             let context = new ConnectionContext();
             let oldNtlmHost = new URL('http://localhost:8878');
-            context.setState(oldNtlmHost, NtlmStateEnum.Authenticated);
+            context.setState(oldNtlmHost, NtlmState.Authenticated);
             let ntlmHost = new URL('http://localhost:8787');
             let result = context.matchHostOrNew(ntlmHost, false);
             assert.equal(result, false);
@@ -23,7 +23,7 @@ describe('ConnectionContext', () => {
         it('should return true for used NTLM on match', () => {
             let context = new ConnectionContext();
             let ntlmHost = new URL('http://localhost:8787');
-            context.setState(ntlmHost, NtlmStateEnum.NotAuthenticated);
+            context.setState(ntlmHost, NtlmState.NotAuthenticated);
             let result = context.matchHostOrNew(ntlmHost, false);
             assert.equal(result, true);
         });
@@ -31,7 +31,7 @@ describe('ConnectionContext', () => {
         it('should return false on protocol change http to https for NTLM', () => {
             let context = new ConnectionContext();
             let ntlmHost = new URL('localhost:8787');
-            context.setState(ntlmHost, NtlmStateEnum.NotAuthenticated);
+            context.setState(ntlmHost, NtlmState.NotAuthenticated);
             let result = context.matchHostOrNew(ntlmHost, true);
             assert.equal(result, false);
         });
@@ -39,7 +39,7 @@ describe('ConnectionContext', () => {
         it('should return false on protocol change https to http for NTLM', () => {
             let context = new ConnectionContext();
             let ntlmHost = new URL('localhost:8787');
-            context.setState(ntlmHost, NtlmStateEnum.NotAuthenticated);
+            context.setState(ntlmHost, NtlmState.NotAuthenticated);
             context.isSSL = true;
             let result = context.matchHostOrNew(ntlmHost, false);
             assert.equal(result, false);

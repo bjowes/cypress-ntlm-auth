@@ -1,14 +1,14 @@
 import { injectable, inject } from "inversify";
 
-import { PortsConfig } from "../models/ports.config.model";
-import { IConfigController } from "./interfaces/i.config.controller";
-import { IConfigServer } from "./interfaces/i.config.server";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { ICoreServer } from "./interfaces/i.core.server";
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
+import type { PortsConfig } from "../models/ports.config.model.ts";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import type { IConfigServer } from "./interfaces/i.config.server.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { ICoreServer } from "./interfaces/i.core.server.ts";
+import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import { TYPES } from "./dependency.injection.types.ts";
 
 /**
  * Core server

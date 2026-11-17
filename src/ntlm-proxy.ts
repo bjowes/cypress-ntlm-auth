@@ -1,7 +1,7 @@
-import { PortsConfig } from "./models/ports.config.model";
-import { NtlmConfig } from "./models/ntlm.config.model";
-import { NtlmSsoConfig } from "./models/ntlm.sso.config.model";
-import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
+import type { PortsConfig } from "./models/ports.config.model.ts";
+import type { NtlmConfig } from "./models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "./models/ntlm.sso.config.model.ts";
+import type { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.ts";
 
 /**
  * NTLM Proxy module

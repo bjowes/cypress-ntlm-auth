@@ -1,14 +1,15 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 
 import * as os from "os";
 import assert from "assert";
 
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { UpstreamProxyConfigurator } from "../../../src/startup/upstream.proxy.configurator";
-import { EnvironmentMock } from "./environment.mock";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { UpstreamProxyConfigurator } from "../../../src/startup/upstream.proxy.configurator.ts";
+import { EnvironmentMock } from "./environment.mock.ts";
 
 describe("UpstreamProxyConfigurator", () => {
   let upstreamProxyConfigurator: UpstreamProxyConfigurator;

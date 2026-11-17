@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import tls from "tls";
-import { ITlsCertValidator } from "./interfaces/i.tls.cert.validator";
-import { URLExt } from "./url.ext";
+import type { ITlsCertValidator } from "./interfaces/i.tls.cert.validator.ts";
+import { URLExt } from "./url.ext.ts";
 
 /**
  * Validation of TLS certificates

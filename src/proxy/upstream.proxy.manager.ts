@@ -1,13 +1,13 @@
 import { inject, injectable } from "inversify";
-import { URLExt } from "../util/url.ext";
+import { URLExt } from "../util/url.ext.ts";
 
-import {
+import type {
   HttpHeaders,
   IUpstreamProxyManager,
-} from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { ExtendedAgentOptions } from "../models/extended.agent.options";
+} from "./interfaces/i.upstream.proxy.manager.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { ExtendedAgentOptions } from "../models/extended.agent.options.ts";
 
 /**
  * Upstream proxy manager

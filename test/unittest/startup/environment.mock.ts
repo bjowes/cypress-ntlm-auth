@@ -1,7 +1,8 @@
-import { HttpsValidationLevel } from "../../../src/models/https.validation.level.enum";
-import { PortsConfig } from "../../../src/models/ports.config.model";
-import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
-import { URLExt } from "../../../src/util/url.ext";
+import { HttpsValidationLevel } from "../../../src/models/https.validation.level.ts";
+import type { HttpsValidationLevelType } from "../../../src/models/https.validation.level.ts";
+import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
+import type { IEnvironment } from "../../../src/startup/interfaces/i.environment.ts";
+import { URLExt } from "../../../src/util/url.ext.ts";
 
 export class EnvironmentMock implements IEnvironment {
   private readonly _loopbackDisable = "<-loopback>";
@@ -17,7 +18,7 @@ export class EnvironmentMock implements IEnvironment {
   get ntlmProxyPort(): number | undefined {
     return this.portFromUrl(this.ntlmProxyUrl);
   }
-  get httpsValidation(): HttpsValidationLevel {
+  get httpsValidation(): HttpsValidationLevelType {
     return HttpsValidationLevel.Warn;
   }
 

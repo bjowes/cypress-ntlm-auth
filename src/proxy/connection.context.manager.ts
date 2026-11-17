@@ -1,16 +1,18 @@
 import { Socket } from "net";
-import { injectable, interfaces, inject } from "inversify";
+import { injectable, inject } from "inversify";
+import type { interfaces } from "inversify";
 import http from "http";
 import https from "https";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { SslTunnel } from "../models/ssl.tunnel.model";
-import { httpsTunnel, TunnelAgent, TunnelAgentOptions } from "./tunnel.agent";
-import { IHttpsValidation } from "./interfaces/i.https.validation";
-import { ExtendedAgentOptions } from "../models/extended.agent.options";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { SslTunnel } from "../models/ssl.tunnel.model.ts";
+import { httpsTunnel, TunnelAgent } from "./tunnel.agent.ts";
+import type { TunnelAgentOptions } from "./tunnel.agent.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
+import type { ExtendedAgentOptions } from "../models/extended.agent.options.ts";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;

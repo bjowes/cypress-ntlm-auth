@@ -1,14 +1,15 @@
 import "reflect-metadata";
 import "mocha";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { HttpsValidation } from "../../../src/proxy/https.validation";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { HttpsValidation } from "../../../src/proxy/https.validation.ts";
 import assert from "assert";
-import { IEnvironment } from "../../../src/startup/interfaces/i.environment";
-import { ITlsCertValidator } from "../../../src/util/interfaces/i.tls.cert.validator";
-import { IConsoleLogger } from "../../../src/util/interfaces/i.console.logger";
-import { HttpsValidationLevel } from "../../../src/models/https.validation.level.enum";
+import type { IEnvironment } from "../../../src/startup/interfaces/i.environment.ts";
+import type { ITlsCertValidator } from "../../../src/util/interfaces/i.tls.cert.validator.ts";
+import type { IConsoleLogger } from "../../../src/util/interfaces/i.console.logger.ts";
+import { HttpsValidationLevel } from "../../../src/models/https.validation.level.ts";
 
 describe("HTTPS Validation", function () {
   let environmentMock: SubstituteOf<IEnvironment>;
@@ -45,19 +46,19 @@ describe("HTTPS Validation", function () {
 
   describe("useRequestHttpsValidation", () => {
     it("should return true in strict mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       let res = getHttpsValidator().useRequestHttpsValidation();
       assert.ok(res);
     });
 
     it("should return false in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       let res = getHttpsValidator().useRequestHttpsValidation();
       assert.ok(!res);
     });
 
     it("should return false in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Unsafe);
       let res = getHttpsValidator().useRequestHttpsValidation();
       assert.ok(!res);
     });
@@ -65,31 +66,31 @@ describe("HTTPS Validation", function () {
 
   describe("validateRequest", function () {
     it("should not validate localhost request in strict mode (validation done by the request itself)", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       getHttpsValidator().validateRequest(localhostUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should not validate external request in strict mode (validation done by the request itself)", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       getHttpsValidator().validateRequest(externalUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should not validate localhost request in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(localhostUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should validate external request in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
     });
 
     it("should write warn if external request validation fails", (done) => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       tlsCertValidatorMock = Substitute.for<ITlsCertValidator>();
       const error: NodeJS.ErrnoException = {
         message: "testmessage",
@@ -114,13 +115,13 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate non-SSL external request in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(externalNonSslUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should validate external request only once in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       let validator = getHttpsValidator();
       validator.validateRequest(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
@@ -129,7 +130,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should validate external request again after reset in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       let validator = getHttpsValidator();
       validator.validateRequest(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
@@ -139,7 +140,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate request to raw IPv4 in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(rawIpv4Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
@@ -155,7 +156,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate request to raw IPv6 in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateRequest(rawIpv6Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
@@ -171,13 +172,13 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate localhost request in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Unsafe);
       getHttpsValidator().validateRequest(localhostUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should not validate external request in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Unsafe);
       getHttpsValidator().validateRequest(externalUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
@@ -185,19 +186,19 @@ describe("HTTPS Validation", function () {
 
   describe("validateConnect", () => {
     it("should validate localhost connect in strict mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       getHttpsValidator().validateConnect(localhostUrl);
       tlsCertValidatorMock.received(1).validate(localhostUrl);
     });
 
     it("should validate external connect in strict mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       getHttpsValidator().validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
     });
 
     it("should validate external connect every time in strict mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Strict);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Strict);
       let validator = getHttpsValidator();
       validator.validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
@@ -206,19 +207,19 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate localhost connect in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(localhostUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should validate external connect in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
     });
 
     it("should write warn if external connect validation fails", (done) => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       tlsCertValidatorMock = Substitute.for<ITlsCertValidator>();
       const error: NodeJS.ErrnoException = {
         message: "testmessage",
@@ -243,13 +244,13 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate non-SSL external request in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(externalNonSslUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should validate external connect only once in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       let validator = getHttpsValidator();
       validator.validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
@@ -258,7 +259,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should validate connect request again after reset in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       let validator = getHttpsValidator();
       validator.validateConnect(externalUrl);
       tlsCertValidatorMock.received(1).validate(externalUrl);
@@ -268,7 +269,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate connect to raw IPv4 in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(rawIpv4Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
@@ -284,7 +285,7 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate connect to raw IPv6 in warn mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Warn);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Warn);
       getHttpsValidator().validateConnect(rawIpv6Url);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
       debugMock
@@ -300,13 +301,13 @@ describe("HTTPS Validation", function () {
     });
 
     it("should not validate localhost connect in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Unsafe);
       getHttpsValidator().validateConnect(localhostUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });
 
     it("should not validate external connect in unsafe mode", () => {
-      environmentMock.httpsValidation.returns(HttpsValidationLevel.Unsafe);
+      environmentMock.httpsValidation.returns!(HttpsValidationLevel.Unsafe);
       getHttpsValidator().validateConnect(externalUrl);
       tlsCertValidatorMock.didNotReceive().validate(Arg.any());
     });

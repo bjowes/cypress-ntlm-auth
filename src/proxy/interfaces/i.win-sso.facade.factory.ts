@@ -1,5 +1,5 @@
-import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./i.win-sso.facade";
+import type { PeerCertificate } from "tls";
+import type { IWinSsoFacade } from "./i.win-sso.facade.ts";
 
 export interface IWinSsoFacadeFactory {
   create(

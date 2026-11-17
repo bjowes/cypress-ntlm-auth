@@ -1,13 +1,13 @@
 import assert from "assert";
 import net from "net";
 
-import { ProxyFacade } from "./proxy.facade";
+import { ProxyFacade } from "./proxy.facade.ts";
 
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { PortsConfig } from "../../../src/models/ports.config.model";
-import { URLExt } from "../../../src/util/url.ext";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
+import { URLExt } from "../../../src/util/url.ext.ts";
 
 async function isPortReachable(host: string, port: number) {
   return new Promise<boolean>((resolve, reject) => {

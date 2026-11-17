@@ -1,10 +1,10 @@
 import os from "os";
 import { inject, injectable } from "inversify";
 
-import { TYPES } from "../proxy/dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
-import { IEnvironment } from "./interfaces/i.environment";
+import { TYPES } from "../proxy/dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.ts";
+import type { IEnvironment } from "./interfaces/i.environment.ts";
 
 /**
  * Adapts environment variables for use with upstream proxy
@@ -51,7 +51,7 @@ export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
       const envNoProxy = this._environment.noProxy?.trim();
       if (envNoProxy && envNoProxy.indexOf(this._loopbackDisable) !== -1) {
         this._debug.log("NO_PROXY contains '<-loopback>', will not disable localhost proxying");
-        let noProxyParts: string[] = envNoProxy.split(",").map((s) => s.trim());
+        const noProxyParts: string[] = envNoProxy.split(",").map((s) => s.trim());
         this._environment.noProxy = noProxyParts.filter(p => p !== '<-loopback>').join(',');
       } else {
         this._environment.noProxy = this.addLoopbackToNoProxy(envNoProxy);

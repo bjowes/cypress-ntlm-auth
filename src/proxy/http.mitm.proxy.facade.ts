@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import httpMitmProxy from "@bjowes/http-mitm-proxy";
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
-import { URLExt } from "../util/url.ext";
+import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
+import { URLExt } from "../util/url.ext.ts";
 
 /**
  * HTTP MITM proxy facade

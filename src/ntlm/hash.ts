@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { md4 } from "./md4";
+import { md4 } from "./md4.ts";
 import CryptoJS from "crypto-js";
-import { Type2Message } from "./type2.message";
+import { Type2Message } from "./type2.message.ts";
 
 /**
  * Hash utilities for NTLM

@@ -2,10 +2,10 @@
 import "reflect-metadata";
 import assert from "assert";
 
-import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { ConfigStore } from "../../../src/proxy/config.store";
+import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
+import { ConfigStore } from "../../../src/proxy/config.store.ts";
 
 describe("ConfigStore", () => {
   let configStore: IConfigStore;

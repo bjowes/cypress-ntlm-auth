@@ -1,17 +1,17 @@
-import { IContext } from "@bjowes/http-mitm-proxy";
+import type { IContext } from "@bjowes/http-mitm-proxy";
 import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
-import { NtlmStateEnum } from "../models/ntlm.state.enum";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { INtlmManager } from "./interfaces/i.ntlm.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { INtlm } from "../ntlm/interfaces/i.ntlm";
-import { Type2Message } from "../ntlm/type2.message";
-import { NtlmMessage } from "../ntlm/ntlm.message";
-import { NtlmHost } from "../models/ntlm.host.model";
+import { NtlmState } from "../models/ntlm.state.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { INtlm } from "../ntlm/interfaces/i.ntlm.ts";
+import { Type2Message } from "../ntlm/type2.message.ts";
+import { NtlmMessage } from "../ntlm/ntlm.message.ts";
+import type { NtlmHost } from "../models/ntlm.host.model.ts";
 
 /**
  * NTLM protocol manager
@@ -57,7 +57,7 @@ export class NtlmManager implements INtlmManager {
       res?: http.IncomingMessage
     ) => void
   ) {
-    context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+    context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
     let config: NtlmHost;
     let type1msg: NtlmMessage;
     let type1header: string;
@@ -110,7 +110,7 @@ export class NtlmManager implements INtlmManager {
       type1res.pause();
 
       if (this.canHandleNtlmAuthentication(type1res) === false) {
-        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
         return callback(
           new Error(
             "NTLM authentication failed (www-authenticate with NTLM not found in server response) with host " +
@@ -120,7 +120,7 @@ export class NtlmManager implements INtlmManager {
         );
       }
 
-      context.setState(ntlmHostUrl, NtlmStateEnum.Type2Received);
+      context.setState(ntlmHostUrl, NtlmState.Type2Received);
       let type2msg: Type2Message;
       try {
         type2msg = this._ntlm.decodeType2Message(
@@ -136,7 +136,7 @@ export class NtlmManager implements INtlmManager {
           "Cannot parse NTLM message type 2 from host",
           ntlmHostUrl.href
         );
-        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
         return callback(err as NodeJS.ErrnoException, type1res);
       }
 
@@ -185,14 +185,14 @@ export class NtlmManager implements INtlmManager {
         });
         type3req.on("error", (err) => {
           this._debug.log("Error while sending NTLM message type 3");
-          context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+          context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
           return callback(err);
         });
         this._debug.log(
           "Sending NTLM message type 3 with initial client request"
         );
         this.debugHeader(type3header, true);
-        context.setState(ntlmHostUrl, NtlmStateEnum.Type3Sent);
+        context.setState(ntlmHostUrl, NtlmState.Type3Sent);
         type3req.write(context.getRequestBody());
         type3req.end();
       });
@@ -200,12 +200,12 @@ export class NtlmManager implements INtlmManager {
     });
     type1req.on("error", (err) => {
       this._debug.log("Error while sending NTLM message type 1");
-      context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+      context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
       return callback(err);
     });
     this._debug.log("Sending  NTLM message type 1");
     this.debugHeader(type1header, true);
-    context.setState(ntlmHostUrl, NtlmStateEnum.Type1Sent);
+    context.setState(ntlmHostUrl, NtlmState.Type1Sent);
     type1req.end();
   }
 
@@ -216,13 +216,13 @@ export class NtlmManager implements INtlmManager {
     callback: () => void
   ) {
     const authState = context.getState(ntlmHostUrl);
-    if (authState === NtlmStateEnum.Type3Sent) {
+    if (authState === NtlmState.Type3Sent) {
       if (res.statusCode === 401) {
         this._debug.log(
           "NTLM authentication failed (invalid credentials) with host",
           ntlmHostUrl.href
         );
-        context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+        context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
         return callback();
       }
       // According to NTLM spec, all other responses than 401 shall be treated as authentication successful
@@ -230,7 +230,7 @@ export class NtlmManager implements INtlmManager {
         "NTLM authentication successful with host",
         ntlmHostUrl.href
       );
-      context.setState(ntlmHostUrl, NtlmStateEnum.Authenticated);
+      context.setState(ntlmHostUrl, NtlmState.Authenticated);
       return callback();
     }
 
@@ -240,7 +240,7 @@ export class NtlmManager implements INtlmManager {
         ", resetting NTLM auth. Host",
       ntlmHostUrl.href
     );
-    context.setState(ntlmHostUrl, NtlmStateEnum.NotAuthenticated);
+    context.setState(ntlmHostUrl, NtlmState.NotAuthenticated);
     return callback();
   }
 

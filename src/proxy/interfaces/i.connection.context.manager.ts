@@ -1,5 +1,5 @@
 import { Socket } from "net";
-import { IConnectionContext } from "./i.connection.context";
+import type { IConnectionContext } from "./i.connection.context.ts";
 import http from "http";
 
 export interface IConnectionContextManager {

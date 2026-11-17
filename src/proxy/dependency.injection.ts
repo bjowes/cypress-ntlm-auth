@@ -1,81 +1,82 @@
-import { Container, interfaces } from "inversify";
+import { Container } from "inversify";
+import type { interfaces } from "inversify";
 import "reflect-metadata";
 
-import { TYPES } from "./dependency.injection.types";
+import { TYPES } from "./dependency.injection.types.ts";
 
-import { IConfigController } from "./interfaces/i.config.controller";
-import { ConfigController } from "./config.controller";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import { ConfigController } from "./config.controller.ts";
 
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { ConnectionContext } from "./connection.context";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import { ConnectionContext } from "./connection.context.ts";
 
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { ConnectionContextManager } from "./connection.context.manager";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import { ConnectionContextManager } from "./connection.context.manager.ts";
 
-import { IConfigStore } from "./interfaces/i.config.store";
-import { ConfigStore } from "./config.store";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import { ConfigStore } from "./config.store.ts";
 
-import { IConfigServer } from "./interfaces/i.config.server";
-import { ConfigServer } from "./config.server";
+import type { IConfigServer } from "./interfaces/i.config.server.ts";
+import { ConfigServer } from "./config.server.ts";
 
-import { ICoreServer } from "./interfaces/i.core.server";
-import { CoreServer } from "./core.server";
+import type { ICoreServer } from "./interfaces/i.core.server.ts";
+import { CoreServer } from "./core.server.ts";
 
-import { IStartup } from "../startup/interfaces/i.startup";
-import { Startup } from "../startup/startup";
+import type { IStartup } from "../startup/interfaces/i.startup.ts";
+import { Startup } from "../startup/startup.ts";
 
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { UpstreamProxyManager } from "./upstream.proxy.manager";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import { UpstreamProxyManager } from "./upstream.proxy.manager.ts";
 
-import { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator";
-import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator";
+import type { IUpstreamProxyConfigurator } from "../startup/interfaces/i.upstream.proxy.configurator.ts";
+import { UpstreamProxyConfigurator } from "../startup/upstream.proxy.configurator.ts";
 
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
-import { WinSsoFacadeFactory } from "./win-sso.facade.factory";
+import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
+import { WinSsoFacadeFactory } from "./win-sso.facade.factory.ts";
 
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { NegotiateManager } from "./negotiate.manager";
+import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
+import { NegotiateManager } from "./negotiate.manager.ts";
 
-import { INtlm } from "../ntlm/interfaces/i.ntlm";
-import { Ntlm } from "../ntlm/ntlm";
+import type { INtlm } from "../ntlm/interfaces/i.ntlm.ts";
+import { Ntlm } from "../ntlm/ntlm.ts";
 
-import { INtlmManager } from "./interfaces/i.ntlm.manager";
-import { NtlmManager } from "./ntlm.manager";
+import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
+import { NtlmManager } from "./ntlm.manager.ts";
 
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { NtlmProxyMitm } from "./ntlm.proxy.mitm";
+import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
+import { NtlmProxyMitm } from "./ntlm.proxy.mitm.ts";
 
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { NtlmProxyServer } from "./ntlm.proxy.server";
+import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
+import { NtlmProxyServer } from "./ntlm.proxy.server.ts";
 
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
-import { ExpressServerFacade } from "./express.server.facade";
+import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
+import { ExpressServerFacade } from "./express.server.facade.ts";
 
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
-import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade";
+import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
+import { HttpMitmProxyFacade } from "./http.mitm.proxy.facade.ts";
 
-import { IConsoleLogger } from "../util/interfaces/i.console.logger";
-import { ConsoleLogger } from "../util/console.logger";
+import type { IConsoleLogger } from "../util/interfaces/i.console.logger.ts";
+import { ConsoleLogger } from "../util/console.logger.ts";
 
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { DebugLogger } from "../util/debug.logger";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../util/debug.logger.ts";
 
-import { INtlmProxyFacade } from "../startup/interfaces/i.ntlm.proxy.facade";
-import { NtlmProxyFacade } from "../startup/ntlm.proxy.facade";
+import type { INtlmProxyFacade } from "../startup/interfaces/i.ntlm.proxy.facade.ts";
+import { NtlmProxyFacade } from "../startup/ntlm.proxy.facade.ts";
 
-import { IMain } from "./interfaces/i.main";
-import { Main } from "./main";
+import type { IMain } from "./interfaces/i.main.ts";
+import { Main } from "./main.ts";
 
-import { ICypressFacade } from "../startup/interfaces/i.cypress.facade";
-import { CypressFacade } from "../startup/cypress.facade";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
-import { PortsConfigStore } from "./ports.config.store";
-import { IEnvironment } from "../startup/interfaces/i.environment";
-import { Environment } from "../startup/environment";
-import { IHttpsValidation } from "./interfaces/i.https.validation";
-import { HttpsValidation } from "./https.validation";
-import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
-import { TlsCertValidator } from "../util/tls.cert.validator";
+import type { ICypressFacade } from "../startup/interfaces/i.cypress.facade.ts";
+import { CypressFacade } from "../startup/cypress.facade.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import { PortsConfigStore } from "./ports.config.store.ts";
+import type { IEnvironment } from "../startup/interfaces/i.environment.ts";
+import { Environment } from "../startup/environment.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
+import { HttpsValidation } from "./https.validation.ts";
+import type { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator.ts";
+import { TlsCertValidator } from "../util/tls.cert.validator.ts";
 
 /**
  * Dependency injection

@@ -1,13 +1,13 @@
 import * as http from "http";
 import { inject, injectable } from "inversify";
 
-import { TYPES } from "../proxy/dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
-import { PortsConfig } from "../models/ports.config.model";
-import { NtlmConfig } from "../models/ntlm.config.model";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { URLExt } from "../util/url.ext";
+import { TYPES } from "../proxy/dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
+import type { PortsConfig } from "../models/ports.config.model.ts";
+import type { NtlmConfig } from "../models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
+import { URLExt } from "../util/url.ext.ts";
 
 /**
  * Facade for NTML proxy (internal or external)

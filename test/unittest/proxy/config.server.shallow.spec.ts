@@ -1,14 +1,15 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import { ConfigServer } from "../../../src/proxy/config.server";
-import { IConfigController } from "../../../src/proxy/interfaces/i.config.controller";
-import { IExpressServerFacade } from "../../../src/proxy/interfaces/i.express.server.facade";
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { PortsConfigStoreMock } from "./ports.config.store.mock";
+import { ConfigServer } from "../../../src/proxy/config.server.ts";
+import type { IConfigController } from "../../../src/proxy/interfaces/i.config.controller.ts";
+import type { IExpressServerFacade } from "../../../src/proxy/interfaces/i.express.server.facade.ts";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { PortsConfigStoreMock } from "./ports.config.store.mock.ts";
 
 describe("ConfigServer", () => {
   let configServer: ConfigServer;

@@ -1,6 +1,6 @@
-import { NtlmConfig } from "../models/ntlm.config.model";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
-import { HostnameValidator } from "./hostname.validator";
+import type { NtlmConfig } from "../models/ntlm.config.model.ts";
+import type { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.ts";
+import { HostnameValidator } from "./hostname.validator.ts";
 
 /**
  * Config validation for NTML config

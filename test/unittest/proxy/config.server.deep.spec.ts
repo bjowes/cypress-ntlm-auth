@@ -2,15 +2,15 @@
 
 import assert from "assert";
 
-import { ProxyFacade } from "./proxy.facade";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { IConfigServer } from "../../../src/proxy/interfaces/i.config.server";
-import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store";
-import { describeIfNotWindows, describeIfWindows } from "../conditions";
+import { ProxyFacade } from "./proxy.facade.ts";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type { IConfigServer } from "../../../src/proxy/interfaces/i.config.server.ts";
+import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
+import type { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store.ts";
+import { describeIfNotWindows, describeIfWindows } from "../conditions.ts";
 
 describe("Config API (ConfigServer deep tests)", () => {
   let configApiUrl: URL;

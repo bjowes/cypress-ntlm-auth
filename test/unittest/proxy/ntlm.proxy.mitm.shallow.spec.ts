@@ -1,26 +1,27 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import * as net from "net";
 import * as http from "http";
 import * as ws from "ws";
 import assert from "assert";
 
-import { IConfigStore } from "../../../src/proxy/interfaces/i.config.store";
-import { IConnectionContextManager } from "../../../src/proxy/interfaces/i.connection.context.manager";
-import { INtlmManager } from "../../../src/proxy/interfaces/i.ntlm.manager";
-import { IUpstreamProxyManager } from "../../../src/proxy/interfaces/i.upstream.proxy.manager";
-import { NtlmProxyMitm } from "../../../src/proxy/ntlm.proxy.mitm";
-import { IContext } from "@bjowes/http-mitm-proxy";
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { ExpressServer } from "./express.server";
-import { INegotiateManager } from "../../../src/proxy/interfaces/i.negotiate.manager";
-import { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade";
-import { PortsConfigStoreMock } from "./ports.config.store.mock";
-import { IHttpsValidation } from "../../../src/proxy/interfaces/i.https.validation";
-import { IWinSsoFacadeFactory } from "../../../src/proxy/interfaces/i.win-sso.facade.factory";
-import { IConnectionContext } from "../../../src/proxy/interfaces/i.connection.context";
+import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
+import type { IConnectionContextManager } from "../../../src/proxy/interfaces/i.connection.context.manager.ts";
+import type { INtlmManager } from "../../../src/proxy/interfaces/i.ntlm.manager.ts";
+import type { IUpstreamProxyManager } from "../../../src/proxy/interfaces/i.upstream.proxy.manager.ts";
+import { NtlmProxyMitm } from "../../../src/proxy/ntlm.proxy.mitm.ts";
+import type { IContext } from "@bjowes/http-mitm-proxy";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { ExpressServer } from "./express.server.ts";
+import type { INegotiateManager } from "../../../src/proxy/interfaces/i.negotiate.manager.ts";
+import type { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade.ts";
+import { PortsConfigStoreMock } from "./ports.config.store.mock.ts";
+import type { IHttpsValidation } from "../../../src/proxy/interfaces/i.https.validation.ts";
+import type { IWinSsoFacadeFactory } from "../../../src/proxy/interfaces/i.win-sso.facade.factory.ts";
+import type { IConnectionContext } from "../../../src/proxy/interfaces/i.connection.context.ts";
 
 describe("NtlmProxyMitm error logging", () => {
   let ntlmProxyMitm: NtlmProxyMitm;
@@ -531,7 +532,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   });
 
   it("1005 close code from client websocket should terminate server websocket", async function () {
-    const serverWsMock = Substitute.for<ws>();
+    const serverWsMock = Substitute.for<ws.WebSocket>();
     const ctx = Substitute.for<IContext>();
     ctx.closedByServer!.returns!(false);
     ctx.proxyToServerWebSocket.returns(serverWsMock);
@@ -545,7 +546,7 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   });
 
   it("1006 close code from client websocket should terminate server websocket", async function () {
-    const serverWsMock = Substitute.for<ws>();
+    const serverWsMock = Substitute.for<ws.WebSocket>();
     const ctx = Substitute.for<IContext>();
     ctx.closedByServer!.returns!(false);
     ctx.proxyToServerWebSocket.returns(serverWsMock);
@@ -560,8 +561,8 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   });
 
   it("1005 close code from server websocket should terminate client websocket", async function () {
-    const clientWsMock = Substitute.for<ws>();
-    const serverWsMock = Substitute.for<ws>();
+    const clientWsMock = Substitute.for<ws.WebSocket>();
+    const serverWsMock = Substitute.for<ws.WebSocket>();
     const ctx = Substitute.for<IContext>();
     ctx.closedByServer!.returns!(true);
     ctx.clientToProxyWebSocket.returns(clientWsMock);
@@ -577,8 +578,8 @@ describe("NtlmProxyMitm WebSocketClose", () => {
   });
 
   it("1006 close code from server websocket should terminate client websocket", async function () {
-    const clientWsMock = Substitute.for<ws>();
-    const serverWsMock = Substitute.for<ws>();
+    const clientWsMock = Substitute.for<ws.WebSocket>();
+    const serverWsMock = Substitute.for<ws.WebSocket>();
     const ctx = Substitute.for<IContext>();
     ctx.closedByServer!.returns!(true);
     ctx.clientToProxyWebSocket.returns(clientWsMock);

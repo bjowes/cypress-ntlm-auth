@@ -1,18 +1,19 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { Startup } from "../../../src/startup/startup";
-import { IUpstreamProxyConfigurator } from "../../../src/startup/interfaces/i.upstream.proxy.configurator";
-import { CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "../../../src/startup/interfaces/i.cypress.facade";
-import { IMain } from "../../../src/proxy/interfaces/i.main";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { Startup } from "../../../src/startup/startup.ts";
+import type { IUpstreamProxyConfigurator } from "../../../src/startup/interfaces/i.upstream.proxy.configurator.ts";
+import type { CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "../../../src/startup/interfaces/i.cypress.facade.ts";
+import type { IMain } from "../../../src/proxy/interfaces/i.main.ts";
 import { fail } from "assert";
-import { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade";
-import { PortsConfig } from "../../../src/models/ports.config.model";
-import { EnvironmentMock } from "./environment.mock";
+import type { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade.ts";
+import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
+import { EnvironmentMock } from "./environment.mock.ts";
 
 describe("Startup shallow", () => {
   let startup: Startup;

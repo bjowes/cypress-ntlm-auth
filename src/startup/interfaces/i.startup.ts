@@ -1,5 +1,5 @@
-import { PortsConfig } from "../../models/ports.config.model";
-import { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./i.cypress.facade";
+import type { PortsConfig } from "../../models/ports.config.model.ts";
+import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./i.cypress.facade.ts";
 
 export interface IStartup {
   argumentsToCypressMode(args: string[]): string | undefined;

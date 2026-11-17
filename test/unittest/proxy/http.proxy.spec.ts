@@ -1,16 +1,16 @@
 // cSpell:ignore nisse, mptst
 
-import { ExpressServer } from "./express.server";
-import { ProxyFacade } from "./proxy.facade";
+import { ExpressServer } from "./express.server.ts";
+import { ProxyFacade } from "./proxy.facade.ts";
 import assert from "assert";
 
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
 import { fail } from "assert";
-import { describeIfWindows } from "../conditions";
+import { describeIfWindows } from "../conditions.ts";
 
 let configApiUrl: URL;
 let ntlmProxyUrl: URL;

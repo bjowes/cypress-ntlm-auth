@@ -1,5 +1,5 @@
-import { Type2Message } from "../type2.message";
-import { NtlmMessage } from "../ntlm.message";
+import { Type2Message } from "../type2.message.ts";
+import { NtlmMessage } from "../ntlm.message.ts";
 
 export interface INtlm {
   createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage;

@@ -1,5 +1,5 @@
 import assert from "assert";
-import { md4 } from "../../../src/ntlm/md4";
+import { md4 } from "../../../src/ntlm/md4.ts";
 
 // Test cases from RFC 1320
 

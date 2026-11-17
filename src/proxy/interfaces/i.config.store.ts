@@ -1,7 +1,7 @@
-import { NtlmConfig } from "../../models/ntlm.config.model";
-import { NtlmSsoConfig } from "../../models/ntlm.sso.config.model";
-import { NtlmWildcardHost } from "../../models/ntlm.wildcard.host.model";
-import { NtlmHost } from "../../models/ntlm.host.model";
+import type { NtlmConfig } from "../../models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "../../models/ntlm.sso.config.model.ts";
+import type { NtlmWildcardHost } from "../../models/ntlm.wildcard.host.model.ts";
+import type { NtlmHost } from "../../models/ntlm.host.model.ts";
 
 export interface IConfigStore {
   updateConfig(config: NtlmConfig): void;

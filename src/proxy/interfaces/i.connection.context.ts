@@ -1,10 +1,10 @@
-import { NtlmStateEnum } from "../../models/ntlm.state.enum";
-import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./i.win-sso.facade";
+import type { NtlmStateType } from "../../models/ntlm.state.ts";
+import type { PeerCertificate } from "tls";
+import type { IWinSsoFacade } from "./i.win-sso.facade.ts";
 import { Socket } from "net";
 import http from "http";
 import https from "https";
-import { TunnelAgent } from "../tunnel.agent";
+import { TunnelAgent } from "../tunnel.agent.ts";
 
 export interface IConnectionContext {
   agent: TunnelAgent | http.Agent | https.Agent;
@@ -19,8 +19,8 @@ export interface IConnectionContext {
 
   canStartAuthHandshake(ntlmHostUrl: URL): boolean;
   matchHostOrNew(ntlmHostUrl: URL, isSSL: boolean): boolean;
-  getState(ntlmHostUrl: URL): NtlmStateEnum;
-  setState(ntlmHostUrl: URL, authState: NtlmStateEnum): void;
+  getState(ntlmHostUrl: URL): NtlmStateType;
+  setState(ntlmHostUrl: URL, authState: NtlmStateType): void;
 
   clearRequestBody(): void;
   addToRequestBody(chunk: Buffer): void;

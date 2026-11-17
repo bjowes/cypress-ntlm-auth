@@ -1,5 +1,5 @@
-import { NtlmFlags } from "./ntlm.flags";
-import { NtlmConstants } from "./ntlm.constants";
+import { NtlmFlags } from "./ntlm.flags.ts";
+import { NtlmConstants } from "./ntlm.constants.ts";
 
 interface TargetInfoHash {
   [key: string]: string | null;

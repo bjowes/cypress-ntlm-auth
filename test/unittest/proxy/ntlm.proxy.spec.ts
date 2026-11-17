@@ -5,14 +5,14 @@ import express from "express";
 import bodyParser from "body-parser";
 import assert from "assert";
 
-import { ProxyFacade } from "./proxy.facade";
+import { ProxyFacade } from "./proxy.facade.ts";
 
-import { AddressInfo } from "net";
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { URLExt } from "../../../src/util/url.ext";
+import type { AddressInfo } from "net";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import { URLExt } from "../../../src/util/url.ext.ts";
 
 let _configApiUrl: URL | undefined;
 

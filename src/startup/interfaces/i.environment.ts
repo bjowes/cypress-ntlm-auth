@@ -1,5 +1,5 @@
-import { HttpsValidationLevel } from "../../models/https.validation.level.enum";
-import { PortsConfig } from "../../models/ports.config.model";
+import type { HttpsValidationLevelType } from "../../models/https.validation.level.ts";
+import type { PortsConfig } from "../../models/ports.config.model.ts";
 
 export interface IEnvironment {
   configApiUrl: string | undefined;
@@ -9,7 +9,7 @@ export interface IEnvironment {
   httpProxy: string | undefined;
   httpsProxy: string | undefined;
   noProxy: string | undefined;
-  httpsValidation: HttpsValidationLevel;
+  httpsValidation: HttpsValidationLevelType;
   configureForCypress(ports: PortsConfig): void;
   delete(key: string): void;
   validateEnvironmentUrls(): void;

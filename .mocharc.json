@@ -1,4 +1,6 @@
 {
   "extension": ["ts"],
-  "require": ["ts-node/register", "source-map-support/register"]
+  "spec": ["test/unittest/**/*.spec.ts"],
+  "recursive": true,
+  "timeout": 5000
 }

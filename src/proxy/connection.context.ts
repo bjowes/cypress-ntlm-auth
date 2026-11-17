@@ -1,10 +1,11 @@
-import { NtlmStateEnum } from "../models/ntlm.state.enum";
+import { NtlmState } from "../models/ntlm.state.ts";
+import type { NtlmStateType } from "../models/ntlm.state.ts";
 import { injectable } from "inversify";
-import { IConnectionContext } from "./interfaces/i.connection.context";
-import { PeerCertificate } from "tls";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { PeerCertificate } from "tls";
+import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
 import { Socket } from "net";
-import { TunnelAgent } from "./tunnel.agent";
+import { TunnelAgent } from "./tunnel.agent.ts";
 import http from "http";
 import https from "https";
 
@@ -15,7 +16,7 @@ import https from "https";
 export class ConnectionContext implements IConnectionContext {
   private _agent!: TunnelAgent | http.Agent | https.Agent;
   private _ntlmHost?: URL;
-  private _ntlmState: NtlmStateEnum = NtlmStateEnum.NotAuthenticated;
+  private _ntlmState: NtlmStateType = NtlmState.NotAuthenticated;
   private _requestBody = Buffer.alloc(0);
   private _winSso?: IWinSsoFacade;
   private _peerCert?: PeerCertificate;
@@ -165,7 +166,7 @@ export class ConnectionContext implements IConnectionContext {
     const auth =
       this._ntlmHost === undefined ||
       (this._ntlmHost.href === ntlmHostUrl.href &&
-        (this._ntlmState === NtlmStateEnum.Authenticated || this._ntlmState === NtlmStateEnum.NotAuthenticated));
+        (this._ntlmState === NtlmState.Authenticated || this._ntlmState === NtlmState.NotAuthenticated));
     return auth;
   }
 
@@ -184,11 +185,11 @@ export class ConnectionContext implements IConnectionContext {
    * @param ntlmHostUrl Target host
    * @returns Authentication state
    */
-  getState(ntlmHostUrl: URL): NtlmStateEnum {
+  getState(ntlmHostUrl: URL): NtlmStateType {
     if (this._ntlmHost && ntlmHostUrl.href === this._ntlmHost.href) {
       return this._ntlmState;
     }
-    return NtlmStateEnum.NotAuthenticated;
+    return NtlmState.NotAuthenticated;
   }
 
   /**
@@ -196,7 +197,7 @@ export class ConnectionContext implements IConnectionContext {
    * @param ntlmHostUrl Target host
    * @param authState Authentication state
    */
-  setState(ntlmHostUrl: URL, authState: NtlmStateEnum) {
+  setState(ntlmHostUrl: URL, authState: NtlmStateType) {
     this._ntlmHost = ntlmHostUrl;
     this._ntlmState = authState;
   }

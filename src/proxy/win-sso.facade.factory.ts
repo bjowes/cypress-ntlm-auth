@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
-import { PeerCertificate } from "tls";
+import type { PeerCertificate } from "tls";
 import { WinSso } from "win-sso";
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
-import { IWinSsoFacade } from "./interfaces/i.win-sso.facade";
+import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
+import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
 
 /**
  * Factory for Win SSO facade

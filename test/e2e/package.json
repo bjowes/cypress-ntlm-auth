@@ -2,6 +2,7 @@
   "name": "e2e",
   "version": "1.0.0",
   "description": "e2e test for cypress-ntlm-auth",
+  "type": "module",
   "scripts": {
     "webserver": "node webserver/server.js",
     "webserver:stop": "node webserver/stop-server.js",

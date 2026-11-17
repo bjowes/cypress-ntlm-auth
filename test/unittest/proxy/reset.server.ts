@@ -1,5 +1,5 @@
 import * as net from "net";
-import { URLExt } from "../../../src/util/url.ext";
+import { URLExt } from "../../../src/util/url.ext.ts";
 
 export class ResetServer {
   private server?: net.Server;

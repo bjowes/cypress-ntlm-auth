@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade";
+import type { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade.ts";
 
 /**
  * Facade for Cypress

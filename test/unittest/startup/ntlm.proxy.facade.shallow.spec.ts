@@ -1,14 +1,15 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 
 import nock from "nock";
 import assert from "assert";
 
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { NtlmProxyFacade } from "../../../src/startup/ntlm.proxy.facade";
-import { PortsConfig } from "../../../src/models/ports.config.model";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { NtlmProxyFacade } from "../../../src/startup/ntlm.proxy.facade.ts";
+import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 
 describe("NtlmProxyFacade shallow", () => {
   let ntlmProxyFacade: NtlmProxyFacade;

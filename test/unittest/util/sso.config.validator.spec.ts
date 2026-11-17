@@ -2,8 +2,8 @@
 
 import assert from "assert";
 
-import { SsoConfigValidator } from "../../../src/util/sso.config.validator";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
+import { SsoConfigValidator } from "../../../src/util/sso.config.validator.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
 
 describe("SsoConfigValidator", function () {
   describe("ntlmHosts", function () {

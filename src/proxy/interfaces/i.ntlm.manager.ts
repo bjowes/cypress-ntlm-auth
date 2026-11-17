@@ -1,5 +1,5 @@
-import { IContext } from "@bjowes/http-mitm-proxy";
-import { IConnectionContext } from "./i.connection.context";
+import type { IContext } from "@bjowes/http-mitm-proxy";
+import type { IConnectionContext } from "./i.connection.context.ts";
 import * as http from "http";
 
 export interface INtlmManager {

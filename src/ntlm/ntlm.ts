@@ -25,13 +25,13 @@
 // ----------------------------------------------------------------------------
 
 import { injectable } from "inversify";
-import { INtlm } from "./interfaces/i.ntlm";
-import { NtlmFlags } from "./ntlm.flags";
-import { NtlmConstants } from "./ntlm.constants";
-import { Hash } from "./hash";
+import type { INtlm } from "./interfaces/i.ntlm.ts";
+import { NtlmFlags } from "./ntlm.flags.ts";
+import { NtlmConstants } from "./ntlm.constants.ts";
+import { Hash } from "./hash.ts";
 import os from "os";
-import { Type2Message } from "./type2.message";
-import { NtlmMessage } from "./ntlm.message";
+import { Type2Message } from "./type2.message.ts";
+import { NtlmMessage } from "./ntlm.message.ts";
 
 /**
  * NTLM protocol utils

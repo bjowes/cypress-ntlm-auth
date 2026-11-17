@@ -1,10 +1,10 @@
-import { IConfigController } from "./interfaces/i.config.controller";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
 import { injectable, inject } from "inversify";
-import { IConfigServer } from "./interfaces/i.config.server";
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import type { IConfigServer } from "./interfaces/i.config.server.ts";
+import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * Config API server

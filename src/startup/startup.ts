@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
-import { IStartup } from "./interfaces/i.startup";
-import { TYPES } from "../proxy/dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator";
-import { IMain } from "../proxy/interfaces/i.main";
-import { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade";
-import { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade";
-import { IEnvironment } from "./interfaces/i.environment";
-import { PortsConfig } from "../models/ports.config.model";
+import type { IStartup } from "./interfaces/i.startup.ts";
+import { TYPES } from "../proxy/dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.ts";
+import type { IMain } from "../proxy/interfaces/i.main.ts";
+import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade.ts";
+import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
+import type { IEnvironment } from "./interfaces/i.environment.ts";
+import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy startup manager

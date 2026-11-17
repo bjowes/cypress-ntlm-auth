@@ -1,6 +1,6 @@
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result";
-import { HostnameValidator } from "./hostname.validator";
+import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
+import type { NtlmConfigValidateResult } from "../models/ntlm.config.validate.result.ts";
+import { HostnameValidator } from "./hostname.validator.ts";
 
 /**
  * Config validation for SSO config

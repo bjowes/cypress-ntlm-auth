@@ -1,5 +1,5 @@
-import { TlsCertValidator } from "../../../src/util/tls.cert.validator";
-import { ExpressServer } from "../proxy/express.server";
+import { TlsCertValidator } from "../../../src/util/tls.cert.validator.ts";
+import { ExpressServer } from "../proxy/express.server.ts";
 import assert from "assert";
 import { osSupported } from "win-sso";
 
@@ -51,7 +51,7 @@ describe("TlsCertValidator", function () {
       assert.fail();
     } catch (err: any) {
       assert.equal(0, expressServer.getConnectCount());
-      if (osSupported) {
+      if (osSupported()) {
         assert.ok(["EADDRNOTAVAIL", "ECONNREFUSED"].indexOf(err.code) !== -1);
       }
     }

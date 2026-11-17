@@ -1,16 +1,16 @@
 // cSpell:ignore nisse, mptst
 
-import { ExpressServer } from "./express.server";
-import { ProxyFacade } from "./proxy.facade";
+import { ExpressServer } from "./express.server.ts";
+import { ProxyFacade } from "./proxy.facade.ts";
 import assert from "assert";
 
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { ICoreServer } from "../../../src/proxy/interfaces/i.core.server";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection";
-import { TYPES } from "../../../src/proxy/dependency.injection.types";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { describeIfWindows } from "../conditions";
-import { TunnelAgent } from "../../../src/proxy/tunnel.agent";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
+import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
+import { describeIfWindows } from "../conditions.ts";
+import { TunnelAgent } from "../../../src/proxy/tunnel.agent.ts";
 
 let configApiUrl: URL;
 let ntlmProxyUrl: URL;
@@ -566,7 +566,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
       "POST",
       "/post",
       body,
-      null,
+      undefined,
       agent1
     );
     assert.equal(res.status, 200);
@@ -580,7 +580,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
       "POST",
       "/post",
       body,
-      null,
+      undefined,
       agent2
     );
     assert.equal(res.status, 200);

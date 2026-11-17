@@ -1,10 +1,10 @@
-import { NtlmConfig } from "../models/ntlm.config.model";
+import type { NtlmConfig } from "../models/ntlm.config.model.ts";
 import { injectable } from "inversify";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { NtlmHost } from "../models/ntlm.host.model";
-import { NtlmWildcardHost } from "../models/ntlm.wildcard.host.model";
-import { URLExt } from "../util/url.ext";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
+import type { NtlmHost } from "../models/ntlm.host.model.ts";
+import type { NtlmWildcardHost } from "../models/ntlm.wildcard.host.model.ts";
+import { URLExt } from "../util/url.ext.ts";
 
 interface NtlmHostConfigHash {
   [ntlmHost: string]: NtlmHost;

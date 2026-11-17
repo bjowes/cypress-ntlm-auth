@@ -1,10 +1,10 @@
-import { DependencyInjection } from "./proxy/dependency.injection";
-import { TYPES } from "./proxy/dependency.injection.types";
-import { IStartup } from "./startup/interfaces/i.startup";
-import { NtlmProxy } from "./ntlm-proxy";
-import { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade";
-import { IEnvironment } from "./startup/interfaces/i.environment";
-import { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./startup/interfaces/i.cypress.facade";
+import { DependencyInjection } from "./proxy/dependency.injection.ts";
+import { TYPES } from "./proxy/dependency.injection.types.ts";
+import type { IStartup } from "./startup/interfaces/i.startup.ts";
+import { NtlmProxy } from "./ntlm-proxy.ts";
+import type { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.ts";
+import type { IEnvironment } from "./startup/interfaces/i.environment.ts";
+import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./startup/interfaces/i.cypress.facade.ts";
 
 const container = new DependencyInjection();
 const startup = container.get<IStartup>(TYPES.IStartup);

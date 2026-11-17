@@ -1,4 +1,4 @@
-import { AddressInfo } from "net";
+import type { AddressInfo } from "net";
 
 /**
  * URL handling utils

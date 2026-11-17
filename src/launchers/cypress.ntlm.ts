@@ -5,8 +5,8 @@ import {
   open,
   argumentsToCypressMode,
   argumentsToOptions,
-} from "../index";
-import { CypressFailedRunResult, CypressRunResult } from "../startup/interfaces/i.cypress.facade";
+} from "../index.ts";
+import type { CypressFailedRunResult, CypressRunResult } from "../startup/interfaces/i.cypress.facade.ts";
 
 /**
  *

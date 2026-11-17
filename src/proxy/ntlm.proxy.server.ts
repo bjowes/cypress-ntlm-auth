@@ -1,11 +1,11 @@
 import { injectable, inject } from "inversify";
 
-import { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { TYPES } from "./dependency.injection.types";
-import { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
+import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * NTLM Proxy server

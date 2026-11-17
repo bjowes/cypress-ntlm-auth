@@ -1,4 +1,4 @@
-import { ExtendedAgentOptions } from "../../models/extended.agent.options";
+import type { ExtendedAgentOptions } from "../../models/extended.agent.options.ts";
 
 export interface HttpHeaders {
   [key: string]: string;

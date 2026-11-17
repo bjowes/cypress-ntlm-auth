@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * Store for ports config

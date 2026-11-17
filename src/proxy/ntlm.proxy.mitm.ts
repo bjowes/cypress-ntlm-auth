@@ -1,23 +1,24 @@
-import { IContext } from "@bjowes/http-mitm-proxy";
+import type { IContext } from "@bjowes/http-mitm-proxy";
 import { TLSSocket } from "tls";
 import { injectable, inject } from "inversify";
 
 import net from "net";
 import http from "http";
 
-import { IConfigStore } from "./interfaces/i.config.store";
-import { IConnectionContextManager } from "./interfaces/i.connection.context.manager";
-import { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm";
-import { INtlmManager } from "./interfaces/i.ntlm.manager";
-import { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { AuthModeEnum } from "../models/auth.mode.enum";
-import { INegotiateManager } from "./interfaces/i.negotiate.manager";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
-import { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory";
-import { URLExt } from "../util/url.ext";
-import { IHttpsValidation } from "./interfaces/i.https.validation";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
+import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import { AuthMode } from "../models/auth.mode.ts";
+import type { AuthModeType } from "../models/auth.mode.ts";
+import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
+import { URLExt } from "../util/url.ext.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 
 let self: NtlmProxyMitm;
 const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
@@ -244,12 +245,12 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
   private getAuthMode(
     serverToProxyResponse: http.IncomingMessage,
     useSso: boolean
-  ): AuthModeEnum {
+  ): AuthModeType {
     if (
       serverToProxyResponse.statusCode !== 401 ||
       !serverToProxyResponse.headers["www-authenticate"]
     ) {
-      return AuthModeEnum.NotApplicable;
+      return AuthMode.NotApplicable;
     }
     if (
       useSso &&
@@ -257,13 +258,13 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         serverToProxyResponse
       )
     ) {
-      return AuthModeEnum.Negotiate;
+      return AuthMode.Negotiate;
     }
     if (self._ntlmManager.acceptsNtlmAuthentication(serverToProxyResponse)) {
-      return AuthModeEnum.NTLM;
+      return AuthMode.NTLM;
     }
     // TODO Basic auth
-    return AuthModeEnum.NotSupported;
+    return AuthMode.NotSupported;
   }
 
   /**
@@ -290,10 +291,10 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
 
     if (context && context.canStartAuthHandshake(targetHost)) {
       const authMode = self.getAuthMode(ctx.serverToProxyResponse, useSso);
-      if (authMode === AuthModeEnum.NotApplicable) {
+      if (authMode === AuthMode.NotApplicable) {
         return callback();
       }
-      if (authMode === AuthModeEnum.NotSupported) {
+      if (authMode === AuthMode.NotSupported) {
         self._debug.log(
           "Received 401 with unsupported protocol in www-authenticate header.",
           ctx.serverToProxyResponse.headers["www-authenticate"],
@@ -317,7 +318,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
         }
       }
 
-      if (authMode === AuthModeEnum.Negotiate) {
+      if (authMode === AuthMode.Negotiate) {
         self._debug.log(
           "Received 401 with Negotiate in www-authenticate header. Starting handshake."
         );
@@ -337,7 +338,7 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
             self.handshakeCallback(ctx, err, res)
         );
       }
-      if (authMode === AuthModeEnum.NTLM) {
+      if (authMode === AuthMode.NTLM) {
         self._debug.log(
           "Received 401 with NTLM in www-authenticate header. Starting handshake."
         );

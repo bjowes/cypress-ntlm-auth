@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IConsoleLogger } from "./interfaces/i.console.logger";
+import type { IConsoleLogger } from "./interfaces/i.console.logger.ts";
 
 /**
  * Console logger

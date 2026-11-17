@@ -4,12 +4,12 @@
 // Run test like this:
 // node --expose-gc node_modules/.bin/mocha test/manual/http.proxy.duration.spec.ts
 
-import { ProxyFacade } from "../unittest/proxy/proxy.facade";
-import { DependencyInjection } from "../../src/proxy/dependency.injection";
-import { TYPES } from "../../src/proxy/dependency.injection.types";
-import { ExpressServer } from "../unittest/proxy/express.server";
-import { ICoreServer } from "../../src/proxy/interfaces/i.core.server";
-import { NtlmConfig } from "../../src/models/ntlm.config.model";
+import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
+import { DependencyInjection } from "../../src/proxy/dependency.injection.ts";
+import { TYPES } from "../../src/proxy/dependency.injection.types.ts";
+import { ExpressServer } from "../unittest/proxy/express.server.ts";
+import type { ICoreServer } from "../../src/proxy/interfaces/i.core.server.ts";
+import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 import assert from "assert";
 
 let configApiUrl: URL;
@@ -35,7 +35,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
 
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
-    httpUrl = await expressServer.startHttpServer(true, null);
+    httpUrl = await expressServer.startHttpServer(true, undefined);
     ntlmHostConfig = {
       ntlmHosts: [httpUrl.host],
       username: "nisse",
@@ -75,7 +75,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
         setTimeout(() => {
           // Await result
           const preGcUsed1 = process.memoryUsage().heapUsed / 1024 / 1024;
-          global.gc();
+          global.gc!();
           const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
           console.log(
             `Phase 1: The script uses approximately ${used1.toFixed(
@@ -91,7 +91,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
             setTimeout(() => {
               // Await result
               const preGcUsed2 = process.memoryUsage().heapUsed / 1024 / 1024;
-              global.gc();
+              global.gc!();
               const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
               console.log(
                 `Phase 2: The script uses approximately ${used2.toFixed(
@@ -145,7 +145,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
         setTimeout(() => {
           // Await result
           const preGcUsed1 = process.memoryUsage().heapUsed / 1024 / 1024;
-          global.gc();
+          global.gc!();
           const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
           console.log(
             `Phase 1: The script uses approximately ${used1.toFixed(
@@ -161,7 +161,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
             setTimeout(() => {
               // Await result
               const preGcUsed2 = process.memoryUsage().heapUsed / 1024 / 1024;
-              global.gc();
+              global.gc!();
               const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
               console.log(
                 `Phase 2: The script uses approximately ${used2.toFixed(
@@ -217,7 +217,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       setTimeout(() => {
         // Await result
         const preGcUsed1 = process.memoryUsage().heapUsed / 1024 / 1024;
-        global.gc();
+        global.gc!();
         const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log(
           `Phase 1: The script uses approximately ${used1.toFixed(
@@ -233,7 +233,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
           setTimeout(() => {
             // Await result
             const preGcUsed2 = process.memoryUsage().heapUsed / 1024 / 1024;
-            global.gc();
+            global.gc!();
             const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log(
               `Phase 2: The script uses approximately ${used2.toFixed(
@@ -285,7 +285,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
 
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
-    httpUrl = await expressServer.startHttpServer(false, null);
+    httpUrl = await expressServer.startHttpServer(false, undefined);
     coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
@@ -314,7 +314,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
       setTimeout(() => {
         // Await result
         const preGcUsed1 = process.memoryUsage().heapUsed / 1024 / 1024;
-        global.gc();
+        global.gc!();
         const used1 = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log(
           `Phase 1: The script uses approximately ${used1.toFixed(
@@ -330,7 +330,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
           setTimeout(() => {
             // Await result
             const preGcUsed2 = process.memoryUsage().heapUsed / 1024 / 1024;
-            global.gc();
+            global.gc!();
             const used2 = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log(
               `Phase 2: The script uses approximately ${used2.toFixed(

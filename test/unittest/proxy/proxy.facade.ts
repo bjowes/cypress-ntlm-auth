@@ -6,14 +6,15 @@ import httpMitmProxy from "@bjowes/http-mitm-proxy";
 import * as fs from "fs";
 import * as path from "path";
 
-import { NtlmConfig } from "../../../src/models/ntlm.config.model";
-import { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model";
-import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent";
+import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
+import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
+import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent.ts";
 import { Socket } from "net";
 
 import debugInit from "debug";
-import { URLExt } from "../../../src/util/url.ext";
-import { HttpClient, HttpResponse } from "./http.client";
+import { URLExt } from "../../../src/util/url.ext.ts";
+import { HttpClient } from "./http.client.ts";
+import type { HttpResponse } from "./http.client.ts";
 const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");
 
 export class ProxyFacade {

@@ -2,10 +2,10 @@ import express from "express";
 import http from "http";
 import bodyParser from "body-parser";
 import { injectable } from "inversify";
-import { IExpressServerFacade } from "./interfaces/i.express.server.facade";
-import { PathParams } from "express-serve-static-core";
-import { AddressInfo } from "net";
-import { URLExt } from "../util/url.ext";
+import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
+import type { PathParams } from "express-serve-static-core";
+import type { AddressInfo } from "net";
+import { URLExt } from "../util/url.ext.ts";
 
 /**
  * Express HTTP server facade, used for Config API

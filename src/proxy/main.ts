@@ -1,9 +1,9 @@
-import { ICoreServer } from "./interfaces/i.core.server";
+import type { ICoreServer } from "./interfaces/i.core.server.ts";
 import { inject, injectable } from "inversify";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { IMain } from "./interfaces/i.main";
-import { PortsConfig } from "../models/ports.config.model";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IMain } from "./interfaces/i.main.ts";
+import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy main class

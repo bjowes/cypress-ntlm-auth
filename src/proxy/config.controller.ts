@@ -1,16 +1,17 @@
-import { Router, Request, Response } from "express";
-import { ConfigValidator } from "../util/config.validator";
-import { NtlmConfig } from "../models/ntlm.config.model";
+import { Router } from "express";
+import type { Request, Response } from "express";
+import { ConfigValidator } from "../util/config.validator.ts";
+import type { NtlmConfig } from "../models/ntlm.config.model.ts";
 import { injectable, inject } from "inversify";
 import { EventEmitter } from "events";
-import { IConfigController } from "./interfaces/i.config.controller";
-import { IConfigStore } from "./interfaces/i.config.store";
-import { TYPES } from "./dependency.injection.types";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { SsoConfigValidator } from "../util/sso.config.validator";
-import { NtlmSsoConfig } from "../models/ntlm.sso.config.model";
-import { IPortsConfigStore } from "./interfaces/i.ports.config.store";
-import { PortsConfig } from "../models/ports.config.model";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import { SsoConfigValidator } from "../util/sso.config.validator.ts";
+import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type { PortsConfig } from "../models/ports.config.model.ts";
 import { osSupported } from "win-sso";
 
 /**
@@ -25,7 +26,7 @@ export class ConfigController implements IConfigController {
   private _debug: IDebugLogger;
 
   /**
-   * Constructor
+   * Constructor    
    * @param configStore Config store
    * @param portsConfigStore Ports config store
    * @param debug Debug logger

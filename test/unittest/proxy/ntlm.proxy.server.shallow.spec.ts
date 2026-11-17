@@ -1,14 +1,15 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import "reflect-metadata";
-import { Substitute, SubstituteOf, Arg } from "@fluffy-spoon/substitute";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import { NtlmProxyServer } from "../../../src/proxy/ntlm.proxy.server";
-import { INtlmProxyMitm } from "../../../src/proxy/interfaces/i.ntlm.proxy.mitm";
-import { IHttpMitmProxyFacade } from "../../../src/proxy/interfaces/i.http.mitm.proxy.facade";
-import { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger";
-import { DebugLogger } from "../../../src/util/debug.logger";
-import { PortsConfigStoreMock } from "./ports.config.store.mock";
+import { NtlmProxyServer } from "../../../src/proxy/ntlm.proxy.server.ts";
+import type { INtlmProxyMitm } from "../../../src/proxy/interfaces/i.ntlm.proxy.mitm.ts";
+import type { IHttpMitmProxyFacade } from "../../../src/proxy/interfaces/i.http.mitm.proxy.facade.ts";
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { PortsConfigStoreMock } from "./ports.config.store.mock.ts";
 
 describe("NtlmProxyServer shallow", () => {
   let ntlmProxyServer: NtlmProxyServer;

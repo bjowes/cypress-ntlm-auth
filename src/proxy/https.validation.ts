@@ -1,11 +1,12 @@
 import { inject, injectable } from "inversify";
-import { HttpsValidationLevel } from "../models/https.validation.level.enum";
-import { IEnvironment } from "../startup/interfaces/i.environment";
-import { IConsoleLogger } from "../util/interfaces/i.console.logger";
-import { IDebugLogger } from "../util/interfaces/i.debug.logger";
-import { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator";
-import { TYPES } from "./dependency.injection.types";
-import { IHttpsValidation } from "./interfaces/i.https.validation";
+import { HttpsValidationLevel } from "../models/https.validation.level.ts";
+import type { HttpsValidationLevelType } from "../models/https.validation.level.ts";
+import type { IEnvironment } from "../startup/interfaces/i.environment.ts";
+import type { IConsoleLogger } from "../util/interfaces/i.console.logger.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator.ts";
+import { TYPES } from "./dependency.injection.types.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 
 /**
  * HTTP Validator
@@ -16,7 +17,7 @@ export class HttpsValidation implements IHttpsValidation {
   private _tlsCertValidator: ITlsCertValidator;
   private _console: IConsoleLogger;
 
-  private validationLevel: HttpsValidationLevel;
+  private validationLevel: HttpsValidationLevelType;
   private validated: string[] = [];
 
   /**

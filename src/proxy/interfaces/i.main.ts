@@ -1,4 +1,4 @@
-import { PortsConfig } from "../../models/ports.config.model";
+import type { PortsConfig } from "../../models/ports.config.model.ts";
 
 export interface IMain {
   run(
