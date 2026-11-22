@@ -1,14 +1,13 @@
 import type { IContext } from "@bjowes/http-mitm-proxy";
-import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
+
 import { NtlmState } from "../models/ntlm.state.ts";
-import type { IConfigStore } from "./interfaces/i.config.store.ts";
-import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
-import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { INtlm } from "../ntlm/interfaces/i.ntlm.ts";
+import type IConfigStore from "./interfaces/i.config.store.ts";
+import type IConnectionContext from "./interfaces/i.connection.context.ts";
+import type INtlmManager from "./interfaces/i.ntlm.manager.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type INtlm from "../ntlm/interfaces/i.ntlm.ts";
 import { Type2Message } from "../ntlm/type2.message.ts";
 import { NtlmMessage } from "../ntlm/ntlm.message.ts";
 import type { NtlmHost } from "../models/ntlm.host.model.ts";
@@ -16,11 +15,10 @@ import type { NtlmHost } from "../models/ntlm.host.model.ts";
 /**
  * NTLM protocol manager
  */
-@injectable()
-export class NtlmManager implements INtlmManager {
-  private _configStore: IConfigStore;
-  private _ntlm: INtlm;
-  private _debug: IDebugLogger;
+export default class NtlmManager implements INtlmManager {
+  private readonly _configStore: IConfigStore;
+  private readonly _ntlm: INtlm;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
@@ -29,9 +27,9 @@ export class NtlmManager implements INtlmManager {
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.INtlm) ntlm: INtlm,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    configStore: IConfigStore,
+    ntlm: INtlm,
+    debug: IDebugLogger
   ) {
     this._configStore = configStore;
     this._ntlm = ntlm;

@@ -1,14 +1,14 @@
-import "reflect-metadata";
 import "mocha";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { HttpsValidation } from "../../../src/proxy/https.validation.ts";
 import assert from "assert";
-import type { IEnvironment } from "../../../src/startup/interfaces/i.environment.ts";
-import type { ITlsCertValidator } from "../../../src/util/interfaces/i.tls.cert.validator.ts";
-import type { IConsoleLogger } from "../../../src/util/interfaces/i.console.logger.ts";
+
+import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import HttpsValidation from "../../../src/proxy/https.validation.ts";
+import type IEnvironment from "../../../src/startup/interfaces/i.environment.ts";
+import type ITlsCertValidator from "../../../src/util/interfaces/i.tls.cert.validator.ts";
+import type IConsoleLogger from "../../../src/util/interfaces/i.console.logger.ts";
 import { HttpsValidationLevel } from "../../../src/models/https.validation.level.ts";
 
 describe("HTTPS Validation", function () {

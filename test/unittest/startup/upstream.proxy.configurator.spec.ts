@@ -1,25 +1,23 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "reflect-metadata";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 
 import * as os from "os";
 import assert from "assert";
 
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { UpstreamProxyConfigurator } from "../../../src/startup/upstream.proxy.configurator.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import UpstreamProxyConfigurator from "../../../src/startup/upstream.proxy.configurator.ts";
 import { EnvironmentMock } from "./environment.mock.ts";
 
 describe("UpstreamProxyConfigurator", () => {
   let upstreamProxyConfigurator: UpstreamProxyConfigurator;
   let environmentMock: EnvironmentMock;
-  let debugMock: SubstituteOf<IDebugLogger>;
+  let debugMock: SubstituteOf<DebugLogger>;
   let debugLogger = new DebugLogger();
 
   beforeEach(function () {
     environmentMock = new EnvironmentMock();
-    debugMock = Substitute.for<IDebugLogger>();
+    debugMock = Substitute.for<DebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     upstreamProxyConfigurator = new UpstreamProxyConfigurator(environmentMock, debugMock);
   });

@@ -1,25 +1,23 @@
 import type{ IContext } from "@bjowes/http-mitm-proxy";
-import { injectable, inject } from "inversify";
 import http from "http";
 import https from "https";
+
 import { NtlmState } from "../models/ntlm.state.ts";
-import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
-import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type IConnectionContext from "./interfaces/i.connection.context.ts";
+import type INegotiateManager from "./interfaces/i.negotiate.manager.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
 
 /**
  * Negotiate protocol manager
  */
-@injectable()
-export class NegotiateManager implements INegotiateManager {
-  private _debug: IDebugLogger;
+export default class NegotiateManager implements INegotiateManager {
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
    * @param debug Debug logger
    */
-  constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+  constructor(debug: IDebugLogger) {
     this._debug = debug;
   }
 

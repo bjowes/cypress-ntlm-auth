@@ -1,20 +1,19 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "reflect-metadata";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
-
 import * as http from "http";
+import type { RequestOptions } from "https";
 import type { IContext } from "@bjowes/http-mitm-proxy";
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { ConnectionContext } from "../../../src/proxy/connection.context.ts";
+
+import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import ConnectionContext from "../../../src/proxy/connection.context.ts";
 import { NtlmState } from "../../../src/models/ntlm.state.ts";
 import { ExpressServer } from "./express.server.ts";
-import { NegotiateManager } from "../../../src/proxy/negotiate.manager.ts";
-import type { IWinSsoFacade } from "../../../src/proxy/interfaces/i.win-sso.facade.ts";
+import NegotiateManager from "../../../src/proxy/negotiate.manager.ts";
+import type IWinSsoFacade from "../../../src/proxy/interfaces/i.win-sso.facade.ts";
 import { ResetServer } from "./reset.server.ts";
-import type { RequestOptions } from "https";
 import { URLExt } from "../../../src/util/url.ext.ts";
 
 describe("NegotiateManager", () => {

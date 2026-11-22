@@ -1,13 +1,12 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "reflect-metadata";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { Main } from "../../../src/proxy/main.ts";
-import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
+import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import Main from "../../../src/proxy/main.ts";
+import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 
 describe("Main shallow", () => {
@@ -33,7 +32,7 @@ describe("Main shallow", () => {
     });
     await main.run(undefined, undefined, undefined);
 
-    coreServerMock.received(1).start(Arg.any());
+    coreServerMock.received(1).start(undefined, undefined, undefined, undefined, undefined);
     debugMock.received(1).log("Startup done!");
     debugMock.received(1).log(testPorts);
   });

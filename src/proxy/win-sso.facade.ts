@@ -1,13 +1,13 @@
-import { injectable } from "inversify";
 import type { PeerCertificate } from "tls";
-import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
 import { WinSso } from "win-sso";
+//const { WinSso } = await import("win-sso");
+
+import type IWinSsoFacade from "./interfaces/i.win-sso.facade.ts";
 
 /**
  * Facade for Win SSO library
  */
-@injectable()
-export class WinSsoFacade implements IWinSsoFacade {
+export default class WinSsoFacade implements IWinSsoFacade {
   private _winSso: WinSso;
 
   /**

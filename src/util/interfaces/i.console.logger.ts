@@ -1,3 +1,3 @@
-export interface IConsoleLogger {
-  warn(formatter: string | object, ...args: unknown[]): void;
+export default abstract class IConsoleLogger {
+  abstract warn(formatter: string | object, ...args: unknown[]): void;
 }

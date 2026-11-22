@@ -1,17 +1,16 @@
 import express from "express";
 import http from "http";
 import bodyParser from "body-parser";
-import { injectable } from "inversify";
-import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
-import type { PathParams } from "express-serve-static-core";
 import type { AddressInfo } from "net";
+import type { PathParams } from "express-serve-static-core";
+
+import type IExpressServerFacade from "./interfaces/i.express.server.facade.ts";
 import { URLExt } from "../util/url.ext.ts";
 
 /**
  * Express HTTP server facade, used for Config API
  */
-@injectable()
-export class ExpressServerFacade implements IExpressServerFacade {
+export default class ExpressServerFacade implements IExpressServerFacade {
   private readonly _app: express.Application = express();
   private _listener?: http.Server;
 

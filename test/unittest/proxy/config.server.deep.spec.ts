@@ -2,26 +2,26 @@
 
 import assert from "assert";
 
+import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
+
 import { ProxyFacade } from "./proxy.facade.ts";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
-import type { IConfigServer } from "../../../src/proxy/interfaces/i.config.server.ts";
-import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
+import type IConfigServer from "../../../src/proxy/interfaces/i.config.server.ts";
+import type IConfigStore from "../../../src/proxy/interfaces/i.config.store.ts";
+import type IPortsConfigStore from "../../../src/proxy/interfaces/i.ports.config.store.ts";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
-import type { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store.ts";
 import { describeIfNotWindows, describeIfWindows } from "../conditions.ts";
 
 describe("Config API (ConfigServer deep tests)", () => {
   let configApiUrl: URL;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let configServer: IConfigServer;
   let configStore: IConfigStore;
   let portsConfigStore: IPortsConfigStore;
   let hostConfig: NtlmConfig;
 
   before(async function () {
-    configServer = dependencyInjection.get<IConfigServer>(TYPES.IConfigServer);
+    configServer = container.resolve<IConfigServer>(DiTypes.configServer);
     // Cannot resolve these from DI since that would yield new instances
     configStore = (configServer as any)["_configController"]["_configStore"];
     portsConfigStore = (configServer as any)["_configController"][

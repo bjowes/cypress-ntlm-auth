@@ -7,11 +7,11 @@ import assert from "assert";
 
 import { ProxyFacade } from "./proxy.facade.ts";
 
+import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
+
 import type { AddressInfo } from "net";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
-import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 
 let _configApiUrl: URL | undefined;
@@ -56,7 +56,7 @@ async function initRemoteHost() {
 describe("NTLM Proxy authentication", function () {
   let proxyFacade = new ProxyFacade();
   let coreServer: ICoreServer;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
 
   before(async function () {
     this.timeout(30000);
@@ -66,7 +66,7 @@ describe("NTLM Proxy authentication", function () {
 
   beforeEach(function () {
     this.timeout(2000);
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     _configApiUrl = undefined;
     remoteHostRequestHeaders = [];
     remoteHostResponseWwwAuthHeaders = ["NTLM"];

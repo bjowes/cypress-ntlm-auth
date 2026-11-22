@@ -1,10 +1,10 @@
 import { Type2Message } from "../type2.message.ts";
 import { NtlmMessage } from "../ntlm.message.ts";
 
-export interface INtlm {
-  createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage;
-  decodeType2Message(str: string | undefined): Type2Message;
-  createType3Message(
+export default abstract class INtlm {
+  abstract createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage;
+  abstract decodeType2Message(str: string | undefined): Type2Message;
+  abstract createType3Message(
     type1message: NtlmMessage,
     type2Message: Type2Message,
     username: string,

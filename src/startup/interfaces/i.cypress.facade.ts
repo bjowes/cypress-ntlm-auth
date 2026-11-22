@@ -1,8 +1,8 @@
-export interface ICypressFacade {
-  cypressLoaded(): boolean;
-  run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult>;
-  open(options: Partial<CypressOpenOptions>): Promise<void>;
-  parseRunArguments(runArguments: string[]): Promise<Partial<CypressRunOptions>>;
+export default abstract class ICypressFacade {
+  abstract cypressLoaded(): boolean;
+  abstract run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult>;
+  abstract open(options: Partial<CypressOpenOptions>): Promise<void>;
+  abstract parseRunArguments(runArguments: string[]): Promise<Partial<CypressRunOptions>>;
 }
 
 
@@ -24,6 +24,35 @@ export interface CypressNpmApi {
   cli: {
     parseRunArguments(runArguments: string[]): Promise<Partial<CypressRunOptions>>;
   };
+}
+
+       /**
+  * Options available for `cypress.open` and `cypress.run`
+  */
+ interface CypressCommonOptions {
+  /**
+   * Specify configuration
+   */
+  config: object // Cypress.ConfigOptions
+  /**
+   * Path to the config file to be used.
+   * @default "cypress.config.{js,ts,mjs,cjs}"
+   */
+  configFile: string
+  /**
+   * Specify environment variables.
+   * TODO: isn't this duplicate of config.env?!
+   */
+  env: object
+  /**
+   * Path to a specific project
+   */
+  project: string
+  /**
+   * Specify the type of tests to execute.
+   * @default "e2e"
+   */
+  testingType: object // Cypress.TestingType
 }
 
     /**
@@ -100,7 +129,9 @@ export interface CypressNpmApi {
          */
         runnerUi: boolean
       }
-  
+
+
+
 
   /**
    * All options that one can pass to "cypress.open"
@@ -125,34 +156,6 @@ export interface CypressNpmApi {
     port: number
   }
 
- /**
-  * Options available for `cypress.open` and `cypress.run`
-  */
- interface CypressCommonOptions {
-  /**
-   * Specify configuration
-   */
-  config: object // Cypress.ConfigOptions
-  /**
-   * Path to the config file to be used.
-   * @default "cypress.config.{js,ts,mjs,cjs}"
-   */
-  configFile: string
-  /**
-   * Specify environment variables.
-   * TODO: isn't this duplicate of config.env?!
-   */
-  env: object
-  /**
-   * Path to a specific project
-   */
-  project: string
-  /**
-   * Specify the type of tests to execute.
-   * @default "e2e"
-   */
-  testingType: object // Cypress.TestingType
-}
 
   /**
    * If Cypress fails to run at all (for example, if there are no spec files to run),

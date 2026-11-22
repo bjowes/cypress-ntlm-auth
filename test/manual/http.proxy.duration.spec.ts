@@ -4,13 +4,14 @@
 // Run test like this:
 // node --expose-gc node_modules/.bin/mocha test/manual/http.proxy.duration.spec.ts
 
-import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
-import { DependencyInjection } from "../../src/proxy/dependency.injection.ts";
-import { TYPES } from "../../src/proxy/dependency.injection.types.ts";
-import { ExpressServer } from "../unittest/proxy/express.server.ts";
-import type { ICoreServer } from "../../src/proxy/interfaces/i.core.server.ts";
-import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 import assert from "assert";
+
+import {CreateScopedContainer, DiTypes} from '../../src/startup/dependency.injection.ts'
+
+import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
+import { ExpressServer } from "../unittest/proxy/express.server.ts";
+import type ICoreServer from "../../src/proxy/interfaces/i.core.server.ts";
+import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 
 let configApiUrl: URL;
 let ntlmProxyUrl: URL;
@@ -22,7 +23,7 @@ const testTimeout = (phaseDuration + phaseFinalizeDuration) * 2 + 5000;
 
 describe("Duration test: Proxy for HTTP host with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
@@ -43,7 +44,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
       domain: "mptst",
       ntlmVersion: 2,
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -272,7 +273,7 @@ describe("Duration test: Proxy for HTTP host with NTLM", function () {
 });
 
 describe("Duration test: Proxy for HTTP host without NTLM", function () {
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
@@ -286,7 +287,7 @@ describe("Duration test: Proxy for HTTP host without NTLM", function () {
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpUrl = await expressServer.startHttpServer(false, undefined);
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);

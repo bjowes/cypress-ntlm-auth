@@ -1,9 +1,7 @@
 import * as http from "http";
-import { inject, injectable } from "inversify";
 
-import { TYPES } from "../proxy/dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type INtlmProxyFacade from "./interfaces/i.ntlm.proxy.facade.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 import type { NtlmConfig } from "../models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
@@ -12,15 +10,14 @@ import { URLExt } from "../util/url.ext.ts";
 /**
  * Facade for NTML proxy (internal or external)
  */
-@injectable()
-export class NtlmProxyFacade implements INtlmProxyFacade {
-  private _debug: IDebugLogger;
+export default class NtlmProxyFacade implements INtlmProxyFacade {
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
    * @param debug Debug logger 
    */
-  constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+  constructor(debug: IDebugLogger) {
     this._debug = debug;
   }
 

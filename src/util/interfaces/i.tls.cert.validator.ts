@@ -1,3 +1,3 @@
-export interface ITlsCertValidator {
-  validate(targetHost: URL): Promise<void>;
+export default abstract class ITlsCertValidator {
+  abstract validate(targetHost: URL): Promise<void>;
 }

@@ -2,9 +2,11 @@
 
 /// <reference types="cypress" />
 
-const ConfigValidator = require('../util/config.validator').ConfigValidator;
-const SsoConfigValidator = require('../util/sso.config.validator')
-    .SsoConfigValidator;
+import { ConfigValidator } from '../util/config.validator.ts';
+//const ConfigValidator = require('../util/config.validator').ConfigValidator;
+import { SsoConfigValidator } from '../util/sso.config.validator.ts';
+//const SsoConfigValidator = require('../util/sso.config.validator')
+//    .SsoConfigValidator;
 
 const getPartialEnv = () => {
   if ('env' in cy) {
@@ -243,4 +245,4 @@ Cypress.Commands.add('ntlmReset', {prevSubject: false}, ntlmReset);
 
 /* global Cypress */
 /* global cy */
-/* global require */
+

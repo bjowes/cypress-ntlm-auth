@@ -1,5 +1,5 @@
-export interface INtlmProxyServer {
-  init(): void;
-  start(port?: number): Promise<string>;
-  stop(): void;
+export default abstract class INtlmProxyServer {
+  abstract init(): void;
+  abstract start(port?: number): Promise<string>;
+  abstract stop(): void;
 }

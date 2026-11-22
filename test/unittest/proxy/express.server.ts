@@ -11,7 +11,7 @@ import type { AddressInfo } from "net";
 import * as stream from "stream";
 
 import debugInit from "debug";
-import { URLExt } from "../../../src/util/url.ext.ts";
+import { URLExt } from"../../../src/util/url.ext.ts";
 const debug = debugInit("cypress:plugin:ntlm-auth:express-ntlm");
 
 interface ExpressError extends Error {

@@ -1,29 +1,27 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { ConfigValidator } from "../util/config.validator.ts";
-import type { NtlmConfig } from "../models/ntlm.config.model.ts";
-import { injectable, inject } from "inversify";
 import { EventEmitter } from "events";
-import type { IConfigController } from "./interfaces/i.config.controller.ts";
-import type { IConfigStore } from "./interfaces/i.config.store.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+
+import ConfigValidator from "../util/config.validator.ts";
+import type { NtlmConfig } from "../models/ntlm.config.model.ts";
+import type IConfigController from "./interfaces/i.config.controller.ts";
+import type IConfigStore from "./interfaces/i.config.store.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
 import { SsoConfigValidator } from "../util/sso.config.validator.ts";
 import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
-import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 import { osSupported } from "win-sso";
 
 /**
  * Config controller
  */
-@injectable()
-export class ConfigController implements IConfigController {
+export default class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
-  private _configStore: IConfigStore;
-  private _portsConfigStore: IPortsConfigStore;
-  private _debug: IDebugLogger;
+  private readonly _configStore: IConfigStore;
+  private readonly _portsConfigStore: IPortsConfigStore;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor    
@@ -32,9 +30,9 @@ export class ConfigController implements IConfigController {
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    configStore: IConfigStore,
+    portsConfigStore: IPortsConfigStore,
+    debug: IDebugLogger
   ) {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;

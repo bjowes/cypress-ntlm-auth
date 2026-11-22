@@ -1,11 +1,11 @@
 import assert from "assert";
 import net from "net";
 
+import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
+
 import { ProxyFacade } from "./proxy.facade.ts";
 
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
-import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 
@@ -54,7 +54,7 @@ async function isProxyReachable(ports: PortsConfig): Promise<boolean> {
 
 describe("Core server startup and shutdown", () => {
   let proxyFacade = new ProxyFacade();
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let coreServer: ICoreServer;
   let _configApiUrl: string | undefined;
 
@@ -65,7 +65,7 @@ describe("Core server startup and shutdown", () => {
 
   beforeEach(function () {
     this.timeout(2000);
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     _configApiUrl = undefined;
   });
 

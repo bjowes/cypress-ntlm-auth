@@ -4,10 +4,10 @@ import { ExpressServer } from "./express.server.ts";
 import { ProxyFacade } from "./proxy.facade.ts";
 import assert from "assert";
 
+import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
+
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
-import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
 import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
 import { describeIfWindows } from "../conditions.ts";
 import { TunnelAgent } from "../../../src/proxy/tunnel.agent.ts";
@@ -21,7 +21,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer | undefined;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
 
   before(async function () {
     // Start HTTPS server and proxy
@@ -35,7 +35,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
       domain: "mptst",
       ntlmVersion: 2,
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -51,7 +51,7 @@ describe("Proxy for HTTPS host with NTLM", function () {
     // Reset NTLM config
     if (!coreServer) {
       this.timeout(30000);
-      coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+      coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
       let ports = await coreServer.start(undefined, undefined, undefined);
       configApiUrl = new URL(ports.configApiUrl);
       ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -361,7 +361,7 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
 
   before(async function () {
     // Start HTTPS server and proxy
@@ -372,7 +372,7 @@ describeIfWindows("Proxy for HTTPS host with NTLM using SSO", function () {
     ntlmSsoConfig = {
       ntlmHosts: [httpsUrl.hostname],
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -446,14 +446,14 @@ describe("Proxy for HTTPS host without NTLM", function () {
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer | undefined = undefined;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
 
   before(async function () {
     // Start HTTPS server and proxy
     this.timeout(30000);
     await proxyFacade.initMitmProxy();
     httpsUrl = await expressServer.startHttpsServer(false, undefined);
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -463,7 +463,7 @@ describe("Proxy for HTTPS host without NTLM", function () {
     // Restore timeout
     if (!coreServer) {
       this.timeout(30000);
-      coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+      coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
       let ports = await coreServer.start(undefined, undefined, undefined);
       configApiUrl = new URL(ports.configApiUrl);
       ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -742,7 +742,7 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
   let expressServer1 = new ExpressServer();
   let expressServer2 = new ExpressServer();
   let coreServer: ICoreServer;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let httpsUrl1: URL;
   let httpsUrl2: URL;
 
@@ -766,7 +766,7 @@ describe("Proxy for multiple HTTPS hosts with NTLM", function () {
       domain: "mptst",
       ntlmVersion: 2,
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);

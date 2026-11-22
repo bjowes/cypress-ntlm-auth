@@ -1,14 +1,12 @@
 import debugInit from "debug";
-import { injectable } from "inversify";
-import type { IDebugLogger } from "./interfaces/i.debug.logger.ts";
+import type IDebugLogger from "./interfaces/i.debug.logger.ts";
 
 const debug = debugInit("cypress:plugin:ntlm-auth");
 
 /**
  * Debug logger
  */
-@injectable()
-export class DebugLogger implements IDebugLogger {
+export default class DebugLogger implements IDebugLogger {
   /**
    * Log formatted message to debug
    * @param formatter formatting string

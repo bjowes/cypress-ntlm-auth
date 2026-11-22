@@ -1,11 +1,9 @@
-import { injectable } from "inversify";
-import type { IConsoleLogger } from "./interfaces/i.console.logger.ts";
+import type IConsoleLogger from "./interfaces/i.console.logger.ts";
 
 /**
  * Console logger
  */
-@injectable()
-export class ConsoleLogger implements IConsoleLogger {
+export default class ConsoleLogger implements IConsoleLogger {
   /**
    * Log formatted message to console
    * @param formatter formatting string

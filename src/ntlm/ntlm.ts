@@ -24,20 +24,19 @@
 // THE SOFTWARE.
 // ----------------------------------------------------------------------------
 
-import { injectable } from "inversify";
-import type { INtlm } from "./interfaces/i.ntlm.ts";
-import { NtlmFlags } from "./ntlm.flags.ts";
-import { NtlmConstants } from "./ntlm.constants.ts";
-import { Hash } from "./hash.ts";
 import os from "os";
+
+import type INtlm from "./interfaces/i.ntlm.ts";
+import { NtlmFlags } from "./ntlm.flags.ts";
+import NtlmConstants from "./ntlm.constants.ts";
+import Hash from "./hash.ts";
 import { Type2Message } from "./type2.message.ts";
 import { NtlmMessage } from "./ntlm.message.ts";
 
 /**
  * NTLM protocol utils
  */
-@injectable()
-export class Ntlm implements INtlm {
+export default class Ntlm implements INtlm {
   /**
    * Create NTLM Type 1 message
    * @param ntlmVersion NTLM version

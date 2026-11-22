@@ -1,19 +1,19 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "reflect-metadata";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
 
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { Startup } from "../../../src/startup/startup.ts";
-import type { IUpstreamProxyConfigurator } from "../../../src/startup/interfaces/i.upstream.proxy.configurator.ts";
-import type { CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "../../../src/startup/interfaces/i.cypress.facade.ts";
-import type { IMain } from "../../../src/proxy/interfaces/i.main.ts";
+import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import Startup from "../../../src/startup/startup.ts";
+import type IUpstreamProxyConfigurator from "../../../src/startup/interfaces/i.upstream.proxy.configurator.ts";
+import type { CypressOpenOptions, CypressRunOptions, CypressRunResult } from "../../../src/startup/interfaces/i.cypress.facade.ts";
+import type ICypressFacade from "../../../src/startup/interfaces/i.cypress.facade.ts";
+import type IMain from "../../../src/proxy/interfaces/i.main.ts";
 import { fail } from "assert";
-import type { INtlmProxyFacade } from "../../../src/startup/interfaces/i.ntlm.proxy.facade.ts";
+import type INtlmProxyFacade from "../../../src/startup/interfaces/i.ntlm.proxy.facade.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
-import { EnvironmentMock } from "./environment.mock.ts";
+import { EnvironmentMock } from "./environment.mock.ts";
 
 describe("Startup shallow", () => {
   let startup: Startup;
@@ -183,7 +183,7 @@ describe("Startup shallow", () => {
       const options = {} as CypressRunOptions;
       let res = await startup.run(options);
       assert.equal(res, fakeResult);
-      proxyMainMock.received(1).run(undefined, undefined, undefined);
+      proxyMainMock.received(1).run(undefined, undefined, undefined, undefined, undefined);
       cypressFacadeMock.received(1).run(options);
       proxyMainMock.received(1).stop();
     });
@@ -216,7 +216,7 @@ describe("Startup shallow", () => {
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
       await startup.run(options);
-      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
+      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy", undefined, undefined);
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();
@@ -276,7 +276,7 @@ describe("Startup shallow", () => {
       cypressFacadeMock.open(Arg.any()).returns(Promise.resolve());
       const options = {} as CypressOpenOptions;
       await startup.open(options);
-      proxyMainMock.received(1).run(Arg.any());
+      proxyMainMock.received(1).run(undefined, undefined, undefined, undefined, undefined);
       cypressFacadeMock.received(1).open(options);
       proxyMainMock.received(1).stop();
     });
@@ -308,7 +308,7 @@ describe("Startup shallow", () => {
       environmentMock.httpsProxy = "https-proxy";
       environmentMock.noProxy = "no-proxy";
       await startup.open(options);
-      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy");
+      proxyMainMock.received(1).run("http-proxy", "https-proxy", "no-proxy", undefined, undefined);
       upstreamProxyConfiguratorMock.received(1).processNoProxyLoopback();
       upstreamProxyConfiguratorMock.received(1).removeUnusedProxyEnv();
       proxyMainMock.received(1).stop();

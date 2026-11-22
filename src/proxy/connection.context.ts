@@ -1,19 +1,18 @@
-import { NtlmState } from "../models/ntlm.state.ts";
-import type { NtlmStateType } from "../models/ntlm.state.ts";
-import { injectable } from "inversify";
-import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
-import type { PeerCertificate } from "tls";
-import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
-import { Socket } from "net";
-import { TunnelAgent } from "./tunnel.agent.ts";
 import http from "http";
 import https from "https";
+import { Socket } from "net";
+import type { PeerCertificate } from "tls";
+
+import { NtlmState } from "../models/ntlm.state.ts";
+import type { NtlmStateType } from "../models/ntlm.state.ts";
+import type IConnectionContext from "./interfaces/i.connection.context.ts";
+import type IWinSsoFacade from "./interfaces/i.win-sso.facade.ts";
+import { TunnelAgent } from "./tunnel.agent.ts";
 
 /**
  * Connection context
  */
-@injectable()
-export class ConnectionContext implements IConnectionContext {
+export default class ConnectionContext implements IConnectionContext {
   private _agent!: TunnelAgent | http.Agent | https.Agent;
   private _ntlmHost?: URL;
   private _ntlmState: NtlmStateType = NtlmState.NotAuthenticated;

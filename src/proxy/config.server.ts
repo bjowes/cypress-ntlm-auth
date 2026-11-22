@@ -1,36 +1,33 @@
-import type { IConfigController } from "./interfaces/i.config.controller.ts";
-import { injectable, inject } from "inversify";
-import type { IConfigServer } from "./interfaces/i.config.server.ts";
-import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type IConfigController from "./interfaces/i.config.controller.ts";
+import type IConfigServer from "./interfaces/i.config.server.ts";
+import type IExpressServerFacade from "./interfaces/i.express.server.facade.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
 
 /**
  * Config API server
  */
-@injectable()
-export class ConfigServer implements IConfigServer {
+export default class ConfigServer implements IConfigServer {
   private initDone: boolean = false;
-  private _expressServer: IExpressServerFacade;
-  private _configController: IConfigController;
-  private _portsConfigStore: IPortsConfigStore;
-  private _debug: IDebugLogger;
+  private readonly _expressServer: IExpressServerFacade;
+  private readonly _configController: IConfigController;
+  private readonly _portsConfigStore: IPortsConfigStore;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
-   * @param expressServer Express server facade
+   * @param expressServerFacade Express server facade
    * @param configController Config controller
    * @param portsConfigStore Ports config store
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.IExpressServerFacade) expressServer: IExpressServerFacade,
-    @inject(TYPES.IConfigController) configController: IConfigController,
-    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    expressServerFacade: IExpressServerFacade,
+    configController: IConfigController,
+    portsConfigStore: IPortsConfigStore,
+    debug: IDebugLogger
   ) {
-    this._expressServer = expressServer;
+    this._expressServer = expressServerFacade;
     this._configController = configController;
     this._portsConfigStore = portsConfigStore;
     this._debug = debug;

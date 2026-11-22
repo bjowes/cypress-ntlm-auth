@@ -1,26 +1,23 @@
-import { injectable, inject } from "inversify";
 
 import type { PortsConfig } from "../models/ports.config.model.ts";
-import type { IConfigController } from "./interfaces/i.config.controller.ts";
-import type { IConfigServer } from "./interfaces/i.config.server.ts";
-import type { IConfigStore } from "./interfaces/i.config.store.ts";
-import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
-import type { ICoreServer } from "./interfaces/i.core.server.ts";
-import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
-import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
-import { TYPES } from "./dependency.injection.types.ts";
+import type IConfigController from "./interfaces/i.config.controller.ts";
+import type IConfigServer from "./interfaces/i.config.server.ts";
+import type IConfigStore from "./interfaces/i.config.store.ts";
+import type IConnectionContextManager from "./interfaces/i.connection.context.manager.ts";
+import type ICoreServer from "./interfaces/i.core.server.ts";
+import type INtlmProxyServer from "./interfaces/i.ntlm.proxy.server.ts";
+import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
 
 /**
  * Core server
  */
-@injectable()
-export class CoreServer implements ICoreServer {
-  private _configServer: IConfigServer;
-  private _ntlmProxyServer: INtlmProxyServer;
-  private _upstreamProxyManager: IUpstreamProxyManager;
-  private _configStore: IConfigStore;
-  private _connectionContextManager: IConnectionContextManager;
-  private _configController: IConfigController;
+export default class CoreServer implements ICoreServer {
+  private readonly _configServer: IConfigServer;
+  private readonly _ntlmProxyServer: INtlmProxyServer;
+  private readonly _upstreamProxyManager: IUpstreamProxyManager;
+  private readonly _configStore: IConfigStore;
+  private readonly _connectionContextManager: IConnectionContextManager;
+  private readonly _configController: IConfigController;
 
   /**
    * Constructor
@@ -32,14 +29,12 @@ export class CoreServer implements ICoreServer {
    * @param configController Config controller
    */
   constructor(
-    @inject(TYPES.IConfigServer) configServer: IConfigServer,
-    @inject(TYPES.INtlmProxyServer) ntlmProxyServer: INtlmProxyServer,
-    @inject(TYPES.IUpstreamProxyManager)
+    configServer: IConfigServer,
+    ntlmProxyServer: INtlmProxyServer,
     upstreamProxyManager: IUpstreamProxyManager,
-    @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IConnectionContextManager)
+    configStore: IConfigStore,
     connectionContextManager: IConnectionContextManager,
-    @inject(TYPES.IConfigController) configController: IConfigController
+    configController: IConfigController
   ) {
     this._configServer = configServer;
     this._ntlmProxyServer = ntlmProxyServer;

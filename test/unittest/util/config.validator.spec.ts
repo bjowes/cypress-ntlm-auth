@@ -2,7 +2,7 @@
 
 import assert from "assert";
 
-import { ConfigValidator } from "../../../src/util/config.validator.ts";
+import ConfigValidator from "../../../src/util/config.validator.ts";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
 
 describe("ConfigValidator", function () {

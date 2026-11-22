@@ -6,13 +6,11 @@
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "noEmit": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "types": ["node", "mocha"]
   },
-  "include": ["./src", "./test"],
+  "include": ["src/", "test/"],
   "exclude": ["src/commands/index.d.ts", "test/e2e"],
 }

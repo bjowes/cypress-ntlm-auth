@@ -1,24 +1,21 @@
 import type { IContext } from "@bjowes/http-mitm-proxy";
 import { TLSSocket } from "tls";
-import { injectable, inject } from "inversify";
-
 import net from "net";
 import http from "http";
 
-import type { IConfigStore } from "./interfaces/i.config.store.ts";
-import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
-import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
-import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
-import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
 import { AuthMode } from "../models/auth.mode.ts";
 import type { AuthModeType } from "../models/auth.mode.ts";
-import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
-import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
-import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
+import type IConfigStore from "./interfaces/i.config.store.ts";
+import type IConnectionContextManager from "./interfaces/i.connection.context.manager.ts";
+import type INtlmProxyMitm from "./interfaces/i.ntlm.proxy.mitm.ts";
+import type INtlmManager from "./interfaces/i.ntlm.manager.ts";
+import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type INegotiateManager from "./interfaces/i.negotiate.manager.ts";
+import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
+import type IWinSsoFacadeFactory from "./interfaces/i.win-sso.facade.factory.ts";
+import type IHttpsValidation from "./interfaces/i.https.validation.ts";
 import { URLExt } from "../util/url.ext.ts";
-import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 
 let self: NtlmProxyMitm;
 const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
@@ -26,17 +23,16 @@ const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 /**
  * NTLM proxy MITM - Addon to HTTP MITM Proxy for NTLM authentication
  */
-@injectable()
-export class NtlmProxyMitm implements INtlmProxyMitm {
-  private _configStore: IConfigStore;
-  private _portsConfigStore: IPortsConfigStore;
-  private _connectionContextManager: IConnectionContextManager;
-  private _winSsoFacadeFactory: IWinSsoFacadeFactory;
-  private _negotiateManager: INegotiateManager;
-  private _ntlmManager: INtlmManager;
-  private _upstreamProxyManager: IUpstreamProxyManager;
-  private _httpsValidation: IHttpsValidation;
-  private _debug: IDebugLogger;
+export default class NtlmProxyMitm implements INtlmProxyMitm {
+  private readonly _configStore: IConfigStore;
+  private readonly _portsConfigStore: IPortsConfigStore;
+  private readonly _connectionContextManager: IConnectionContextManager;
+  private readonly _winSsoFacadeFactory: IWinSsoFacadeFactory;
+  private readonly _negotiateManager: INegotiateManager;
+  private readonly _ntlmManager: INtlmManager;
+  private readonly _upstreamProxyManager: IUpstreamProxyManager;
+  private readonly _httpsValidation: IHttpsValidation;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
@@ -51,18 +47,15 @@ export class NtlmProxyMitm implements INtlmProxyMitm {
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.IConfigStore) configStore: IConfigStore,
-    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
-    @inject(TYPES.IConnectionContextManager)
+    configStore: IConfigStore,
+    portsConfigStore: IPortsConfigStore,
     connectionContextManager: IConnectionContextManager,
-    @inject(TYPES.IWinSsoFacadeFactory)
     winSsoFacadeFactory: IWinSsoFacadeFactory,
-    @inject(TYPES.INegotiateManager) negotiateManager: INegotiateManager,
-    @inject(TYPES.INtlmManager) ntlmManager: INtlmManager,
-    @inject(TYPES.IUpstreamProxyManager)
+    negotiateManager: INegotiateManager,
+    ntlmManager: INtlmManager,
     upstreamProxyManager: IUpstreamProxyManager,
-    @inject(TYPES.IHttpsValidation) httpsValidation: IHttpsValidation,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    httpsValidation: IHttpsValidation,
+    debug: IDebugLogger
   ) {
     this._configStore = configStore;
     this._portsConfigStore = portsConfigStore;

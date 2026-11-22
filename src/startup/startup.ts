@@ -1,25 +1,23 @@
-import { injectable, inject } from "inversify";
-import type { IStartup } from "./interfaces/i.startup.ts";
-import { TYPES } from "../proxy/dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.ts";
-import type { IMain } from "../proxy/interfaces/i.main.ts";
-import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade.ts";
-import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
-import type { IEnvironment } from "./interfaces/i.environment.ts";
+import type IStartup from "./interfaces/i.startup.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type IUpstreamProxyConfigurator from "./interfaces/i.upstream.proxy.configurator.ts";
+import type IMain from "../proxy/interfaces/i.main.ts";
+import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./interfaces/i.cypress.facade.ts";
+import type ICypressFacade from "./interfaces/i.cypress.facade.ts";
+import type INtlmProxyFacade from "./interfaces/i.ntlm.proxy.facade.ts";
+import type IEnvironment from "./interfaces/i.environment.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy startup manager
  */
-@injectable()
-export class Startup implements IStartup {
-  private _upstreamProxyConfigurator: IUpstreamProxyConfigurator;
-  private _proxyMain: IMain;
-  private _cypressFacade: ICypressFacade;
-  private _environment: IEnvironment;
-  private _externalNtlmProxyFacade: INtlmProxyFacade;
-  private _debug: IDebugLogger;
+export default class Startup implements IStartup {
+  private readonly _upstreamProxyConfigurator: IUpstreamProxyConfigurator;
+  private readonly _proxyMain: IMain;
+  private readonly _cypressFacade: ICypressFacade;
+  private readonly _environment: IEnvironment;
+  private readonly _externalNtlmProxyFacade: INtlmProxyFacade;
+  private readonly _debug: IDebugLogger;
   private _internalNtlmProxy = true;
 
   /**
@@ -32,14 +30,12 @@ export class Startup implements IStartup {
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.IUpstreamProxyConfigurator)
-    upstreamProxyConfigurator: IUpstreamProxyConfigurator,
-    @inject(TYPES.IMain) proxyMain: IMain,
-    @inject(TYPES.ICypressFacade) cypressFacade: ICypressFacade,
-    @inject(TYPES.IEnvironment) environment: IEnvironment,
-    @inject(TYPES.INtlmProxyFacade)
-    externalNtlmProxyFacade: INtlmProxyFacade,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+        upstreamProxyConfigurator: IUpstreamProxyConfigurator,
+    proxyMain: IMain,
+    cypressFacade: ICypressFacade,
+    environment: IEnvironment,
+        externalNtlmProxyFacade: INtlmProxyFacade,
+    debug: IDebugLogger
   ) {
     this._upstreamProxyConfigurator = upstreamProxyConfigurator;
     this._proxyMain = proxyMain;

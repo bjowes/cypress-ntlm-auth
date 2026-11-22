@@ -5,20 +5,21 @@
 // be run manually. On OS X, you can use (from the project root)
 // sudo node_modules/.bin/mocha test/manual/standard.ports.manual.test.ts
 
-import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
-import { DependencyInjection } from "../../src/proxy/dependency.injection.ts";
-import { TYPES } from "../../src/proxy/dependency.injection.types.ts";
-import { ExpressServer } from "../unittest/proxy/express.server.ts";
-import type { ICoreServer } from "../../src/proxy/interfaces/i.core.server.ts";
-import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 import assert from "assert";
+
+import { CreateScopedContainer, DiTypes } from '../../src/startup/dependency.injection.ts'
+
+import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
+import { ExpressServer } from "../unittest/proxy/express.server.ts";
+import type ICoreServer from "../../src/proxy/interfaces/i.core.server.ts";
+import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 
 let configApiUrl: URL;
 let ntlmProxyUrl: URL;
 
 describe("Proxy for HTTP host on port 80 with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
@@ -36,7 +37,7 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
       domain: "mptst",
       ntlmVersion: 2,
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);
@@ -90,7 +91,7 @@ describe("Proxy for HTTP host on port 80 with NTLM", function () {
 
 describe("Proxy for HTTPS host on port 443 with NTLM", function () {
   let ntlmHostConfig: NtlmConfig;
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
   let proxyFacade = new ProxyFacade();
   let expressServer = new ExpressServer();
   let coreServer: ICoreServer;
@@ -108,7 +109,7 @@ describe("Proxy for HTTPS host on port 443 with NTLM", function () {
       domain: "mptst",
       ntlmVersion: 2,
     };
-    coreServer = dependencyInjection.get<ICoreServer>(TYPES.ICoreServer);
+    coreServer = container.resolve<ICoreServer>(DiTypes.coreServer);
     let ports = await coreServer.start(undefined, undefined, undefined);
     configApiUrl = new URL(ports.configApiUrl);
     ntlmProxyUrl = new URL(ports.ntlmProxyUrl);

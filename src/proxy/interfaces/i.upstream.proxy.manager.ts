@@ -4,10 +4,10 @@ export interface HttpHeaders {
   [key: string]: string;
 }
 
-export interface IUpstreamProxyManager {
-  init(httpProxy?: string, httpsProxy?: string, noProxy?: string): void;
-  setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: ExtendedAgentOptions): boolean;
-  hasHttpsUpstreamProxy(ntlmHostUrl: URL): boolean;
-  reset(): void;
-  setUpstreamProxyHeaders(headers: HttpHeaders): void;
+export default abstract class IUpstreamProxyManager {
+  abstract init(httpProxy?: string, httpsProxy?: string, noProxy?: string): void;
+  abstract setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: ExtendedAgentOptions): boolean;
+  abstract hasHttpsUpstreamProxy(ntlmHostUrl: URL): boolean;
+  abstract reset(): void;
+  abstract setUpstreamProxyHeaders(headers: HttpHeaders): void;
 }

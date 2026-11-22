@@ -1,23 +1,20 @@
-import { inject, injectable } from "inversify";
 import { HttpsValidationLevel } from "../models/https.validation.level.ts";
 import type { HttpsValidationLevelType } from "../models/https.validation.level.ts";
-import type { IEnvironment } from "../startup/interfaces/i.environment.ts";
-import type { IConsoleLogger } from "../util/interfaces/i.console.logger.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
+import type IEnvironment from "../startup/interfaces/i.environment.ts";
+import type IConsoleLogger from "../util/interfaces/i.console.logger.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type ITlsCertValidator from "../util/interfaces/i.tls.cert.validator.ts";
+import type IHttpsValidation from "./interfaces/i.https.validation.ts";
 
 /**
  * HTTP Validator
  */
-@injectable()
-export class HttpsValidation implements IHttpsValidation {
-  private _debug: IDebugLogger;
-  private _tlsCertValidator: ITlsCertValidator;
-  private _console: IConsoleLogger;
+export default class HttpsValidation implements IHttpsValidation {
+  private readonly _debug: IDebugLogger;
+  private readonly _tlsCertValidator: ITlsCertValidator;
+  private readonly _console: IConsoleLogger;
 
-  private validationLevel: HttpsValidationLevelType;
+  private readonly validationLevel: HttpsValidationLevelType;
   private validated: string[] = [];
 
   /**
@@ -28,10 +25,10 @@ export class HttpsValidation implements IHttpsValidation {
    * @param consoleLogger Console logger
    */
   constructor(
-    @inject(TYPES.IEnvironment) environment: IEnvironment,
-    @inject(TYPES.ITlsCertValidator) tlsCertValidator: ITlsCertValidator,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger,
-    @inject(TYPES.IConsoleLogger) consoleLogger: IConsoleLogger
+    environment: IEnvironment,
+    tlsCertValidator: ITlsCertValidator,
+    debug: IDebugLogger,
+    consoleLogger: IConsoleLogger
   ) {
     this.validationLevel = environment.httpsValidation;
     this._tlsCertValidator = tlsCertValidator;

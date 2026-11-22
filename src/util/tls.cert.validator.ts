@@ -1,13 +1,11 @@
-import { injectable } from "inversify";
 import tls from "tls";
-import type { ITlsCertValidator } from "./interfaces/i.tls.cert.validator.ts";
+import type ITlsCertValidator from "./interfaces/i.tls.cert.validator.ts";
 import { URLExt } from "./url.ext.ts";
 
 /**
  * Validation of TLS certificates
  */
-@injectable()
-export class TlsCertValidator implements ITlsCertValidator {
+export default class TlsCertValidator implements ITlsCertValidator {
   /**
    * Resolves if the cert at supplied URL is valid
    * @param targetHost Url

@@ -1,13 +1,12 @@
-import { injectable } from "inversify";
 import httpMitmProxy from "@bjowes/http-mitm-proxy";
-import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
+
+import type IHttpMitmProxyFacade from "./interfaces/i.http.mitm.proxy.facade.ts";
 import { URLExt } from "../util/url.ext.ts";
 
 /**
  * HTTP MITM proxy facade
  */
-@injectable()
-export class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
+export default class HttpMitmProxyFacade implements IHttpMitmProxyFacade {
   private readonly _ntlmProxy: httpMitmProxy.IProxy;
   private _ntlmProxyListening = false;
 

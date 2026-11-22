@@ -12,7 +12,7 @@ import { httpsTunnel, TunnelAgent } from "../../../src/proxy/tunnel.agent.ts";
 import { Socket } from "net";
 
 import debugInit from "debug";
-import { URLExt } from "../../../src/util/url.ext.ts";
+import { URLExt } from"../../../src/util/url.ext.ts";
 import { HttpClient } from "./http.client.ts";
 import type { HttpResponse } from "./http.client.ts";
 const debug = debugInit("cypress:plugin:ntlm-auth:upstream-proxy");

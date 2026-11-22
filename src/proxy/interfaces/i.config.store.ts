@@ -3,12 +3,12 @@ import type { NtlmSsoConfig } from "../../models/ntlm.sso.config.model.ts";
 import type { NtlmWildcardHost } from "../../models/ntlm.wildcard.host.model.ts";
 import type { NtlmHost } from "../../models/ntlm.host.model.ts";
 
-export interface IConfigStore {
-  updateConfig(config: NtlmConfig): void;
-  exists(ntlmHostUrl: URL): boolean;
-  get(ntlmHostUrl: URL): NtlmHost | NtlmWildcardHost | undefined;
-  setSsoConfig(ntlmSsoConfig: NtlmSsoConfig): void;
-  useSso(ntlmHostUrl: URL): boolean;
-  existsOrUseSso(ntlmHostUrl: URL): boolean;
-  clear(): void;
+export default abstract class IConfigStore {
+  abstract updateConfig(config: NtlmConfig): void;
+  abstract exists(ntlmHostUrl: URL): boolean;
+  abstract get(ntlmHostUrl: URL): NtlmHost | NtlmWildcardHost | undefined;
+  abstract setSsoConfig(ntlmSsoConfig: NtlmSsoConfig): void;
+  abstract useSso(ntlmHostUrl: URL): boolean;
+  abstract existsOrUseSso(ntlmHostUrl: URL): boolean;
+  abstract clear(): void;
 }

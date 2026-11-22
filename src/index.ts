@@ -1,15 +1,15 @@
-import { DependencyInjection } from "./proxy/dependency.injection.ts";
-import { TYPES } from "./proxy/dependency.injection.types.ts";
-import type { IStartup } from "./startup/interfaces/i.startup.ts";
-import { NtlmProxy } from "./ntlm-proxy.ts";
-import type { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.ts";
-import type { IEnvironment } from "./startup/interfaces/i.environment.ts";
+import NtlmProxy from "./ntlm-proxy.ts";
 import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./startup/interfaces/i.cypress.facade.ts";
 
-const container = new DependencyInjection();
-const startup = container.get<IStartup>(TYPES.IStartup);
-const environment = container.get<IEnvironment>(TYPES.IEnvironment);
-const ntlmProxyFacade = container.get<INtlmProxyFacade>(TYPES.INtlmProxyFacade);
+import { CreateScopedContainer, DiTypes } from './startup/dependency.injection.ts'
+import type IStartup from "./startup/interfaces/i.startup.ts";
+import type IEnvironment from "./startup/interfaces/i.environment.ts";
+import type INtlmProxyFacade from "./startup/interfaces/i.ntlm.proxy.facade.ts";
+
+const container = CreateScopedContainer();
+const startup = container.resolve<IStartup>(DiTypes.startup);
+const environment = container.resolve<IEnvironment>(DiTypes.environment);
+const ntlmProxyFacade = container.resolve<INtlmProxyFacade>(DiTypes.ntlmProxyFacade);
 
 /**
  * Starts Cypress in headless mode with NTLM plugin
@@ -53,7 +53,7 @@ export async function argumentsToOptions(args: string[]): Promise<Partial<Cypres
  */
 export async function startNtlmProxy(): Promise<NtlmProxy> {
   // Create a new root instance for each ntlm-proxy
-  const startup = container.get<IStartup>(TYPES.IStartup);
+  const startup = container.resolve<IStartup>(DiTypes.startup);
   const ports = await startup.startNtlmProxy();
   return new NtlmProxy(ports, ntlmProxyFacade);
 }

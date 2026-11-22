@@ -1,29 +1,24 @@
-import { inject, injectable } from "inversify";
 import { URLExt } from "../util/url.ext.ts";
 
-import type {
-  HttpHeaders,
-  IUpstreamProxyManager,
-} from "./interfaces/i.upstream.proxy.manager.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { HttpHeaders } from "./interfaces/i.upstream.proxy.manager.ts";
+import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
 import type { ExtendedAgentOptions } from "../models/extended.agent.options.ts";
 
 /**
  * Upstream proxy manager
  */
-@injectable()
-export class UpstreamProxyManager implements IUpstreamProxyManager {
+export default class UpstreamProxyManager implements IUpstreamProxyManager {
   private _httpProxyUrl?: URL;
   private _httpsProxyUrl?: URL;
   private _noProxyUrls?: string[];
-  private _debug: IDebugLogger;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
    * @param debug Debug logger
    */
-  constructor(@inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+  constructor(debug: IDebugLogger) {
     this._debug = debug;
   }
 

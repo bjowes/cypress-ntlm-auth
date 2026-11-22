@@ -1,24 +1,31 @@
-import { injectable } from "inversify";
-import type { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult, ICypressFacade } from "./interfaces/i.cypress.facade.ts";
+import type { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./interfaces/i.cypress.facade.ts";
+import type ICypressFacade from "./interfaces/i.cypress.facade.ts";
+
+let cypressNpmApi: CypressNpmApi;
+try {
+  cypressNpmApi = await import("cypress");
+} catch {
+  // TODO bjowes
+}
 
 /**
  * Facade for Cypress
  */
-@injectable()
-export class CypressFacade implements ICypressFacade {
+export default class CypressFacade implements ICypressFacade {
   private _cypress?: CypressNpmApi;
 
   /**
    * Constructor
    */
   constructor() {
-    this._cypress = this.initCypress();
+    this._cypress = cypressNpmApi;
   }
 
   /**
    * Try to resolve Cypress
    * @returns Cypress object
    */
+  /*
   initCypress() {
     if (this._cypress === undefined) {
       try {
@@ -32,6 +39,7 @@ export class CypressFacade implements ICypressFacade {
     }
     return this._cypress;
   }
+    */
 
   /**
    * Check if Cypress could be loaded

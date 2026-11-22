@@ -1,12 +1,13 @@
 import crypto from "crypto";
-import { md4 } from "./md4.ts";
 import CryptoJS from "crypto-js";
+
+import { md4 } from "./md4.ts";
 import { Type2Message } from "./type2.message.ts";
 
 /**
  * Hash utilities for NTLM
  */
-export class Hash {
+export default class Hash {
   /**
    * Create LM response
    * @param challenge Challenge buffer

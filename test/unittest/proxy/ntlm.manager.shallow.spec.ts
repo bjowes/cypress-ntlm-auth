@@ -1,21 +1,20 @@
 // cSpell:ignore nisse, mnpwr, mptest
-import "reflect-metadata";
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import assert from "assert";
-
 import * as http from "http";
-import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
 import type { IContext } from "@bjowes/http-mitm-proxy";
-import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
-import { DebugLogger } from "../../../src/util/debug.logger.ts";
-import { NtlmManager } from "../../../src/proxy/ntlm.manager.ts";
-import { ConnectionContext } from "../../../src/proxy/connection.context.ts";
+
+import type IConfigStore from "../../../src/proxy/interfaces/i.config.store.ts";
+import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
+import DebugLogger from "../../../src/util/debug.logger.ts";
+import NtlmManager from "../../../src/proxy/ntlm.manager.ts";
+import ConnectionContext from "../../../src/proxy/connection.context.ts";
 import { NtlmState } from "../../../src/models/ntlm.state.ts";
 import { ExpressServer } from "./express.server.ts";
-import type { INtlm } from "../../../src/ntlm/interfaces/i.ntlm.ts";
+import type INtlm from "../../../src/ntlm/interfaces/i.ntlm.ts";
 import { NtlmMessage } from "../../../src/ntlm/ntlm.message.ts";
-import { Ntlm } from "../../../src/ntlm/ntlm.ts";
+import Ntlm from "../../../src/ntlm/ntlm.ts";
 import type { NtlmHost } from "../../../src/models/ntlm.host.model.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 

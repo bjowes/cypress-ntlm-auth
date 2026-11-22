@@ -1,9 +1,10 @@
 import assert from 'assert';
-import { UpstreamProxyManager } from '../../../src/proxy/upstream.proxy.manager.ts';
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
-import type { IDebugLogger } from '../../../src/util/interfaces/i.debug.logger.ts';
-import { DebugLogger } from '../../../src/util/debug.logger.ts';
+
+import UpstreamProxyManager from '../../../src/proxy/upstream.proxy.manager.ts';
+import type IDebugLogger from '../../../src/util/interfaces/i.debug.logger.ts';
+import DebugLogger from '../../../src/util/debug.logger.ts';
 
 describe('Upstream proxy manager', function () {
     let debugMock: SubstituteOf<IDebugLogger>;

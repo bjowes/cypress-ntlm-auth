@@ -1,10 +1,10 @@
 import type { PortsConfig } from "../../models/ports.config.model.ts";
 import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./i.cypress.facade.ts";
 
-export interface IStartup {
-  argumentsToCypressMode(args: string[]): string | undefined;
-  prepareOptions(args: string[]): Promise<Partial<CypressRunOptions>>;
-  run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult>;
-  open(options: Partial<CypressOpenOptions>): Promise<void>;
-  startNtlmProxy(): Promise<PortsConfig>;
+export default abstract class IStartup {
+  abstract argumentsToCypressMode(args: string[]): string | undefined;
+  abstract prepareOptions(args: string[]): Promise<Partial<CypressRunOptions>>;
+  abstract run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult>;
+  abstract open(options: Partial<CypressOpenOptions>): Promise<void>;
+  abstract startNtlmProxy(): Promise<PortsConfig>;
 }

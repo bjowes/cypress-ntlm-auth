@@ -1,24 +1,21 @@
-import type { ICoreServer } from "./interfaces/i.core.server.ts";
-import { inject, injectable } from "inversify";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { IMain } from "./interfaces/i.main.ts";
+import type ICoreServer from "./interfaces/i.core.server.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type IMain from "./interfaces/i.main.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy main class
  */
-@injectable()
-export class Main implements IMain {
-  private _coreServer: ICoreServer;
-  private _debug: IDebugLogger;
+export default class Main implements IMain {
+  private readonly _coreServer: ICoreServer;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
    * @param coreServer Core server
    * @param debug Debug logger
    */
-  constructor(@inject(TYPES.ICoreServer) coreServer: ICoreServer, @inject(TYPES.IDebugLogger) debug: IDebugLogger) {
+  constructor(coreServer: ICoreServer, debug: IDebugLogger) {
     this._coreServer = coreServer;
     this._debug = debug;
   }

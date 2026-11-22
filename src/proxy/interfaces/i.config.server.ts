@@ -1,5 +1,5 @@
-export interface IConfigServer {
-  init(): void;
-  start(port?: number): Promise<string>;
-  stop(): Promise<void>;
+export default abstract class IConfigServer {
+  abstract init(): void;
+  abstract start(port?: number): Promise<string>;
+  abstract stop(): Promise<void>;
 }

@@ -1,12 +1,12 @@
 import type { PortsConfig } from "./models/ports.config.model.ts";
 import type { NtlmConfig } from "./models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "./models/ntlm.sso.config.model.ts";
-import type { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.ts";
+import type INtlmProxyFacade from "./startup/interfaces/i.ntlm.proxy.facade.ts";
 
 /**
  * NTLM Proxy module
  */
-export class NtlmProxy {
+export default class NtlmProxy {
   ports: PortsConfig;
   private ntlmProxyFacade: INtlmProxyFacade;
 

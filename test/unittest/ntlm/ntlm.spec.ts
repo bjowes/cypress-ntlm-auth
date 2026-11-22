@@ -1,12 +1,12 @@
 import assert from "assert";
 
-import { DependencyInjection } from "../../../src/proxy/dependency.injection.ts";
-import { TYPES } from "../../../src/proxy/dependency.injection.types.ts";
+import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
 
-import type { INtlm } from "../../../src/ntlm/interfaces/i.ntlm.ts";
+import type INtlm from "../../../src/ntlm/interfaces/i.ntlm.ts";
 
 describe("NTLM hashes", function () {
-  let dependencyInjection = new DependencyInjection();
+  const container = CreateScopedContainer();
+
   let ntlm: INtlm;
 
   const hostName = "LightCity";
@@ -54,7 +54,7 @@ describe("NTLM hashes", function () {
     "NTLM TlRMTVNTUAADAAAAGAAYAIoAAADOAM4AogAAABQAFABYAAAADAAMAGwAAAASABIAeAAAAAAAAABwAQAABQCJAgoAukcAAAAPZMtzZqis7BLo0lsLULi+9FUAUgBTAEEALQBNAEkATgBPAFIAWgBhAHAAaABvAGQATABJAEcASABUAEMASQBUAFkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA14WR4AtH4DySM6L9ekJ0jAEBAAAAAAAApS8jGTAw1QFDbGlOb25jZQAAAAABABAATQBPAFMASQBTAEwARQBZAAIAFABVAFIAUwBBAC0ATQBJAE4ATwBSAAMAJgBNAG8AcwBJAHMAbABlAHkALgB1AHIAcwBhAC4AbQBpAG4AbwByAAQAFAB1AHIAcwBhAC4AbQBpAG4AbwByAAUAFAB1AHIAcwBhAC4AbQBpAG4AbwByAAcACAClLyMZMDDVAQYABAACAAAAAAAAAAAAAAA=";
 
   beforeEach(function () {
-    ntlm = dependencyInjection.get<INtlm>(TYPES.INtlm);
+    ntlm = container.resolve<INtlm>(DiTypes.ntlm);
   });
 
   it("should create expected Type 1 message. NTLMv1 ASCII", function () {

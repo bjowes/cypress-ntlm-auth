@@ -1,22 +1,19 @@
-import { injectable, inject } from "inversify";
 
-import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
-import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
-import { TYPES } from "./dependency.injection.types.ts";
-import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
-import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
-import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type INtlmProxyServer from "./interfaces/i.ntlm.proxy.server.ts";
+import type INtlmProxyMitm from "./interfaces/i.ntlm.proxy.mitm.ts";
+import type IHttpMitmProxyFacade from "./interfaces/i.http.mitm.proxy.facade.ts";
+import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
 
 /**
  * NTLM Proxy server
  */
-@injectable()
-export class NtlmProxyServer implements INtlmProxyServer {
+export default class NtlmProxyServer implements INtlmProxyServer {
   private initDone: boolean = false;
-  private _ntlmProxyMitm: INtlmProxyMitm;
-  private _httpMitmProxy: IHttpMitmProxyFacade;
-  private _portsConfigStore: IPortsConfigStore;
-  private _debug: IDebugLogger;
+  private readonly _ntlmProxyMitm: INtlmProxyMitm;
+  private readonly _httpMitmProxy: IHttpMitmProxyFacade;
+  private readonly _portsConfigStore: IPortsConfigStore;
+  private readonly _debug: IDebugLogger;
 
   /**
    * Constructor
@@ -26,11 +23,10 @@ export class NtlmProxyServer implements INtlmProxyServer {
    * @param debug Debug logger
    */
   constructor(
-    @inject(TYPES.INtlmProxyMitm) ntlmProxyMitm: INtlmProxyMitm,
-    @inject(TYPES.IHttpMitmProxyFacade)
+    ntlmProxyMitm: INtlmProxyMitm,
     httpMitmProxyFacade: IHttpMitmProxyFacade,
-    @inject(TYPES.IPortsConfigStore) portsConfigStore: IPortsConfigStore,
-    @inject(TYPES.IDebugLogger) debug: IDebugLogger
+    portsConfigStore: IPortsConfigStore,
+    debug: IDebugLogger
   ) {
     this._ntlmProxyMitm = ntlmProxyMitm;
     this._httpMitmProxy = httpMitmProxyFacade;
