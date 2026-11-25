@@ -30,4 +30,4 @@ jobs:
       - run: npm run unittest
         env:
           CI: true
-          DEBUG: "express*,cypress:plugin:ntlm-auth*,win-sso"
+          DEBUG: "cypress:plugin:ntlm-auth*,win-sso"
