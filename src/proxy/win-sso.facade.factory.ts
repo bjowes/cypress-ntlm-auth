@@ -1,8 +1,8 @@
 import type { PeerCertificate } from "tls";
-import { WinSso } from "win-sso";
 
 import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
 import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
+import { WinSsoFacade } from "./win-sso.facade.ts";
 
 /**
  * Factory for Win SSO facade
@@ -22,6 +22,6 @@ export class WinSsoFacadeFactory implements IWinSsoFacadeFactory {
     peerCert: PeerCertificate | undefined,
     flags: number | undefined
   ): IWinSsoFacade {
-    return new WinSso(securityPackage, targetHost, peerCert, flags);
+    return new WinSsoFacade(securityPackage, targetHost, peerCert, flags);
   }
 }

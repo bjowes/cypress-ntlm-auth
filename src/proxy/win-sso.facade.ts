@@ -1,6 +1,5 @@
 import type { PeerCertificate } from "tls";
 import { WinSso } from "win-sso";
-//const { WinSso } = await import("win-sso");
 
 import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
 
