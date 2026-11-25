@@ -1,4 +1,3 @@
-/// <reference types="Cypress" />
 
 context("Commands", function () {
   context("Plugin required", function () {

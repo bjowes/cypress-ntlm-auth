@@ -1,22 +1,21 @@
-/// <reference types="Cypress" />
 
 context("Commands", function () {
   context("Plugin required", function () {
-    let cy_env_backup;
+    let cy_env_backup: any;
 
     before("Backup and clear env", function () {
       cy_env_backup = cy.env;
-      cy.env = () => Promise.resolve({});
+      cy.env = () => Promise.resolve({}) as any;
     });
 
     it("NTLM should fail without plugin env", function () {
       expectFail("The cypress-ntlm-auth plugin must be loaded before using this method");
-      cy.ntlm();
+      cy.ntlm('', '', '');
     });
 
     it("NTLM SSO should fail without plugin env", function () {
       expectFail("The cypress-ntlm-auth plugin must be loaded before using this method");
-      cy.ntlmSso();
+      cy.ntlmSso([]);
     });
 
     it("NTLM Reset should fail without plugin env", function () {
@@ -34,12 +33,12 @@ context("Commands", function () {
 
     it("cy.ntlm with invalid ntlmHosts shall not succeed", function () {
       expectFail("Invalid ntlmHosts, must be an array.");
-      cy.ntlm({}, "nis\\se", "manpower", "mpatst");
+      cy.ntlm({} as any, "nis\\se", "manpower", "mpatst");
     });
 
     it("cy.ntlm with invalid ntlmHosts shall not succeed", function () {
       expectFail("Invalid ntlmHosts, must be an array.");
-      cy.ntlm({}, "nis\\se", "manpower", "mpatst");
+      cy.ntlm({} as any, "nis\\se", "manpower", "mpatst");
     });
 
     it("cy.ntlm with invalid username shall not succeed", function () {
@@ -54,7 +53,7 @@ context("Commands", function () {
 
     it("cy.ntlm with missing password shall not succeed", function () {
       expectFail("Incomplete configuration. ntlmHosts, username, password and ntlmVersion are required fields.");
-      cy.ntlm(httpHost, "nisse", null, "mpatst");
+      cy.ntlm(httpHost, "nisse", null as any, "mpatst");
     });
 
     it("cy.ntlm with bad ntlmVersion shall not succeed", function () {
@@ -100,12 +99,12 @@ context("Commands", function () {
 
     it("cy.ntlmSso with non array for ntlmHosts shall not succeed", function () {
       expectFail("Invalid ntlmHosts, must be an array.");
-      cy.ntlmSso({ nosse: "lapp" });
+      cy.ntlmSso({ nosse: "lapp" } as any);
     });
 
     it("cy.ntlmSso with undefined for ntlmHosts shall not succeed", function () {
       expectFail("Incomplete configuration. ntlmHosts is an required field.");
-      cy.ntlmSso(undefined);
+      cy.ntlmSso(undefined as any);
     });
 
     it("cy.ntlmSso on non windows shall not succeed", function () {
@@ -130,7 +129,7 @@ context("Commands", function () {
     });
   });
 
-  function expectFail(errorMessage) {
+  function expectFail(errorMessage: string) {
     cy.once("fail", (err) => {
       expect(err.message).to.contain(errorMessage);
     });

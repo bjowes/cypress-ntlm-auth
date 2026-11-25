@@ -13,7 +13,6 @@
   "license": "MIT",
   "dependencies": {
     "cypress": "^16.3.0",
-    "cypress-ntlm-auth": "file:../../../cypress-ntlm-auth-4.3.0.tgz",
     "cypress-terminal-report": "^7.5.0",
     "cypress-wait-until": "^3.0.2",
     "npm-run-all": "^4.1.5"

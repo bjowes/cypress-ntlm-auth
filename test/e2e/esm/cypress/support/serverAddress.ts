@@ -1,8 +1,8 @@
-export const {
-  httpHost = new URL("http:" + serverAddress() + ":5002"),
-  httpsHost = new URL("https:" + serverAddress() + ":5003"),
-  httpNtlmHost = new URL("http:" + serverAddress() + ":5000"),
-  httpsNtlmHost = new URL("https:" + serverAddress() + ":5001"),
+export const server = {
+  httpHost: new URL("http:" + serverAddress() + ":5002"),
+  httpsHost: new URL("https:" + serverAddress() + ":5003"),
+  httpNtlmHost: new URL("http:" + serverAddress() + ":5000"),
+  httpsNtlmHost: new URL("https:" + serverAddress() + ":5001"),
 };
 
 function serverAddress() {

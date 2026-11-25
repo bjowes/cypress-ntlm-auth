@@ -1,4 +1,3 @@
-/// <reference types="Cypress" />
 
 const server = require("../support/serverAddress");
 

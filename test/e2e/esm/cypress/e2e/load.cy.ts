@@ -1,6 +1,5 @@
-/// <reference types="Cypress" />
 
-const server = require("../support/serverAddress");
+import { server } from "../support/serverAddress.js";
 
 context("Load test with mixed HTTP/HTTPS hosts", function () {
   beforeEach("Reset NTLM config", function () {
