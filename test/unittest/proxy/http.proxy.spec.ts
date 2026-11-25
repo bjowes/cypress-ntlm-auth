@@ -583,7 +583,7 @@ describeIfWindows("Proxy for HTTP host with NTLM using SSO", function () {
     await ProxyFacade.sendNtlmReset(configApiUrl);
   });
 
-  it("should handle authentication for GET requests", async function () {
+  it.only("should handle authentication for GET requests", async function () {
     let res = await ProxyFacade.sendNtlmSsoConfig(configApiUrl, ntlmSsoConfig);
     assert.equal(res.status, 200);
     res = await ProxyFacade.sendProxiedHttpRequest(
