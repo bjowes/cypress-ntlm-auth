@@ -1,13 +1,13 @@
 import os from "os";
 
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type IUpstreamProxyConfigurator from "./interfaces/i.upstream.proxy.configurator.ts";
-import type IEnvironment from "./interfaces/i.environment.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.ts";
+import type { IEnvironment } from "./interfaces/i.environment.ts";
 
 /**
  * Adapts environment variables for use with upstream proxy
  */
-export default class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
+export class UpstreamProxyConfigurator implements IUpstreamProxyConfigurator {
   private readonly _environment: IEnvironment;
   private readonly _debug: IDebugLogger;
   private readonly _loopbackDisable = "<-loopback>";

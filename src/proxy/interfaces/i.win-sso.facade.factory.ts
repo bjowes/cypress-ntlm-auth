@@ -1,7 +1,7 @@
 import type { PeerCertificate } from "tls";
-import type IWinSsoFacade from "./i.win-sso.facade.ts";
+import type { IWinSsoFacade } from "./i.win-sso.facade.ts";
 
-export default abstract class IWinSsoFacadeFactory {
+export abstract class IWinSsoFacadeFactory {
   abstract create(
     securityPackage: string,
     targetHost: string | undefined,

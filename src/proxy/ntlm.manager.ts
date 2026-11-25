@@ -3,11 +3,11 @@ import http from "http";
 import https from "https";
 
 import { NtlmState } from "../models/ntlm.state.ts";
-import type IConfigStore from "./interfaces/i.config.store.ts";
-import type IConnectionContext from "./interfaces/i.connection.context.ts";
-import type INtlmManager from "./interfaces/i.ntlm.manager.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type INtlm from "../ntlm/interfaces/i.ntlm.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { INtlm } from "../ntlm/interfaces/i.ntlm.ts";
 import { Type2Message } from "../ntlm/type2.message.ts";
 import { NtlmMessage } from "../ntlm/ntlm.message.ts";
 import type { NtlmHost } from "../models/ntlm.host.model.ts";
@@ -15,7 +15,7 @@ import type { NtlmHost } from "../models/ntlm.host.model.ts";
 /**
  * NTLM protocol manager
  */
-export default class NtlmManager implements INtlmManager {
+export class NtlmManager implements INtlmManager {
   private readonly _configStore: IConfigStore;
   private readonly _ntlm: INtlm;
   private readonly _debug: IDebugLogger;

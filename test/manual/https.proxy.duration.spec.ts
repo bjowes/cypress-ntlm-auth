@@ -10,7 +10,7 @@ import { CreateScopedContainer , DiTypes } from '../../src/startup/dependency.in
 
 import { ProxyFacade } from "../unittest/proxy/proxy.facade.ts";
 import { ExpressServer } from "../unittest/proxy/express.server.ts";
-import type ICoreServer from "../../src/proxy/interfaces/i.core.server.ts";
+import type { ICoreServer } from "../../src/proxy/interfaces/i.core.server.ts";
 import type { NtlmConfig } from "../../src/models/ntlm.config.model.ts";
 
 let configApiUrl: URL;

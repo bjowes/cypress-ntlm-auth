@@ -2,7 +2,7 @@ import assert from "assert";
 
 import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
 
-import type INtlm from "../../../src/ntlm/interfaces/i.ntlm.ts";
+import type { INtlm } from "../../../src/ntlm/interfaces/i.ntlm.ts";
 
 describe("NTLM hashes", function () {
   const container = CreateScopedContainer();

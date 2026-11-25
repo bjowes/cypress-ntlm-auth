@@ -1,6 +1,6 @@
 import type { PortsConfig } from "../../models/ports.config.model.ts";
 
-export default abstract class IMain {
+export abstract class IMain {
   abstract run(
     httpProxy?: string,
     httpsProxy?: string,

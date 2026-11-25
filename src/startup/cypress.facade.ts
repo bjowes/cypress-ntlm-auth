@@ -1,24 +1,33 @@
-import type { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./interfaces/i.cypress.facade.ts";
-import type ICypressFacade from "./interfaces/i.cypress.facade.ts";
+//import type { CypressFailedRunResult, CypressNpmApi, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./interfaces/i.cypress.facade.ts";
+//import type { CypressNpmApi } from "cypress";
+//import type { ICypressFacade } from "./interfaces/i.cypress.facade.ts";
+/*
+/// <reference types="cypress" />
+/// <reference path="./node_modules/cypress/types/cypress-npm-api.d.ts" />
+*/
+import * as CypressNpmApi from 'cypress';
+import type { ICypressFacade } from './interfaces/i.cypress.facade.ts';
+//import CypressNpmApi from "cypress";
 
-let cypressNpmApi: CypressNpmApi;
+//let cypressNpmApi: CypressNpmApi;
+/*
 try {
-  cypressNpmApi = await import("cypress");
+  let cypressNpmApi = await import("cypress");
 } catch {
   // TODO bjowes
 }
-
+*/
 /**
  * Facade for Cypress
  */
-export default class CypressFacade implements ICypressFacade {
-  private _cypress?: CypressNpmApi;
+export class CypressFacade implements ICypressFacade {
+  //private _cypress?: CypressNpmApi;
 
   /**
    * Constructor
    */
   constructor() {
-    this._cypress = cypressNpmApi;
+    //this._cypress = cypressNpmApi;
   }
 
   /**
@@ -45,8 +54,8 @@ export default class CypressFacade implements ICypressFacade {
    * Check if Cypress could be loaded
    * @returns True if Cypress is loaded
    */
-  cypressLoaded() {
-    return this._cypress !== null && this._cypress !== undefined;
+  cypressLoaded() { return true;
+    //return this._cypress !== null && this._cypress !== undefined;
   }
 
   /**
@@ -54,8 +63,8 @@ export default class CypressFacade implements ICypressFacade {
    * @param options Cypress run options
    * @returns Run results
    */
-  async run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult> {
-    return await this._cypress!.run(options);
+  async run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
+    return await CypressNpmApi.run(options);
   }
 
   /**
@@ -63,8 +72,8 @@ export default class CypressFacade implements ICypressFacade {
    * @param options Cypress open options
    * @returns Awaitable
    */
-  async open(options: Partial<CypressOpenOptions>): Promise<void> {
-    return await this._cypress!.open(options);
+  async open(options: Partial<CypressCommandLine.CypressOpenOptions>): Promise<void> {
+    return await CypressNpmApi.open(options);
   }
 
   /**
@@ -72,7 +81,7 @@ export default class CypressFacade implements ICypressFacade {
    * @param runArguments command line arguments
    * @returns Parsed Cypress options
    */
-  async parseRunArguments(runArguments: string[]): Promise<Partial<CypressRunOptions>> {
-    return await this._cypress!.cli.parseRunArguments(runArguments);
+  async parseRunArguments(runArguments: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
+    return await CypressNpmApi.cli.parseRunArguments(runArguments);
   }
 }

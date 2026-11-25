@@ -1,12 +1,12 @@
 import debugInit from "debug";
-import type IDebugLogger from "./interfaces/i.debug.logger.ts";
+import type { IDebugLogger } from "./interfaces/i.debug.logger.ts";
 
 const debug = debugInit("cypress:plugin:ntlm-auth");
 
 /**
  * Debug logger
  */
-export default class DebugLogger implements IDebugLogger {
+export class DebugLogger implements IDebugLogger {
   /**
    * Log formatted message to debug
    * @param formatter formatting string

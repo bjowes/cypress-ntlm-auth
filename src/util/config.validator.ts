@@ -5,7 +5,7 @@ import { HostnameValidator } from "./hostname.validator.ts";
 /**
  * Config validation for NTML config
  */
-export default class ConfigValidator {
+export class ConfigValidator {
   /**
    * Config validation for NTML config
    * @param config NTLM config

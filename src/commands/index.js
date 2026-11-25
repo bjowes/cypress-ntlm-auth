@@ -2,9 +2,9 @@
 
 /// <reference types="cypress" />
 
-import { ConfigValidator } from '../util/config.validator.ts';
+import { ConfigValidator } from '../util/config.validator.js';
 //const ConfigValidator = require('../util/config.validator').ConfigValidator;
-import { SsoConfigValidator } from '../util/sso.config.validator.ts';
+import { SsoConfigValidator } from '../util/sso.config.validator.js';
 //const SsoConfigValidator = require('../util/sso.config.validator')
 //    .SsoConfigValidator;
 
@@ -13,8 +13,8 @@ const getPartialEnv = () => {
     return cy.env(['NTLM_AUTH_PROXY', 'NTLM_AUTH_API'], { log: false });
   } else {
     return cy.wrap({
-      NTLM_AUTH_PROXY: Cypress.env('NTLM_AUTH_PROXY'),
-      NTLM_AUTH_API: Cypress.env('NTLM_AUTH_API')
+      NTLM_AUTH_PROXY: Cypress.expose('NTLM_AUTH_PROXY'),
+      NTLM_AUTH_API: Cypress.exposec('NTLM_AUTH_API')
     }, { log: false });
   }
 };

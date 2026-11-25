@@ -7,7 +7,7 @@ import assert from "assert";
 import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
 
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
-import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
 import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
 import { describeIfWindows } from "../conditions.ts";
 import { TunnelAgent } from "../../../src/proxy/tunnel.agent.ts";

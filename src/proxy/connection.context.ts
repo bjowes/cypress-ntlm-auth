@@ -5,14 +5,14 @@ import type { PeerCertificate } from "tls";
 
 import { NtlmState } from "../models/ntlm.state.ts";
 import type { NtlmStateType } from "../models/ntlm.state.ts";
-import type IConnectionContext from "./interfaces/i.connection.context.ts";
-import type IWinSsoFacade from "./interfaces/i.win-sso.facade.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { IWinSsoFacade } from "./interfaces/i.win-sso.facade.ts";
 import { TunnelAgent } from "./tunnel.agent.ts";
 
 /**
  * Connection context
  */
-export default class ConnectionContext implements IConnectionContext {
+export class ConnectionContext implements IConnectionContext {
   private _agent!: TunnelAgent | http.Agent | https.Agent;
   private _ntlmHost?: URL;
   private _ntlmState: NtlmStateType = NtlmState.NotAuthenticated;

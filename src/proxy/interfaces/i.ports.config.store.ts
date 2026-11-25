@@ -1,4 +1,4 @@
-export default abstract class IPortsConfigStore {
+export abstract class IPortsConfigStore {
   configApiUrl?: URL;
   ntlmProxyUrl?: URL;
 }

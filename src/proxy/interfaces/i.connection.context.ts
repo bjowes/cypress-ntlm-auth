@@ -1,12 +1,12 @@
 import type { NtlmStateType } from "../../models/ntlm.state.ts";
 import type { PeerCertificate } from "tls";
-import type IWinSsoFacade from "./i.win-sso.facade.ts";
+import type { IWinSsoFacade } from "./i.win-sso.facade.ts";
 import { Socket } from "net";
 import http from "http";
 import https from "https";
 import { TunnelAgent } from "../tunnel.agent.ts";
 
-export default abstract class IConnectionContext {
+export abstract class IConnectionContext {
   abstract agent: TunnelAgent | http.Agent | https.Agent;
   abstract winSso: IWinSsoFacade;
   abstract peerCert: PeerCertificate | undefined;

@@ -4,7 +4,7 @@ export interface HttpHeaders {
   [key: string]: string;
 }
 
-export default abstract class IUpstreamProxyManager {
+export abstract class IUpstreamProxyManager {
   abstract init(httpProxy?: string, httpsProxy?: string, noProxy?: string): void;
   abstract setUpstreamProxyConfig(ntlmHostUrl: URL, isSSL: boolean, agentOptions: ExtendedAgentOptions): boolean;
   abstract hasHttpsUpstreamProxy(ntlmHostUrl: URL): boolean;

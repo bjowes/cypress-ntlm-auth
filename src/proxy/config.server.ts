@@ -1,13 +1,13 @@
-import type IConfigController from "./interfaces/i.config.controller.ts";
-import type IConfigServer from "./interfaces/i.config.server.ts";
-import type IExpressServerFacade from "./interfaces/i.express.server.facade.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import type { IConfigServer } from "./interfaces/i.config.server.ts";
+import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * Config API server
  */
-export default class ConfigServer implements IConfigServer {
+export class ConfigServer implements IConfigServer {
   private initDone: boolean = false;
   private readonly _expressServer: IExpressServerFacade;
   private readonly _configController: IConfigController;

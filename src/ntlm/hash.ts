@@ -7,7 +7,7 @@ import { Type2Message } from "./type2.message.ts";
 /**
  * Hash utilities for NTLM
  */
-export default class Hash {
+export class Hash {
   /**
    * Create LM response
    * @param challenge Challenge buffer

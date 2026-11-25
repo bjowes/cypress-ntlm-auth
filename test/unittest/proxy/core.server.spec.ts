@@ -5,7 +5,7 @@ import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency
 
 import { ProxyFacade } from "./proxy.facade.ts";
 
-import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 

@@ -11,7 +11,7 @@ import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency
 
 import type { AddressInfo } from "net";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
-import type ICoreServer from "../../../src/proxy/interfaces/i.core.server.ts";
+import type { ICoreServer } from "../../../src/proxy/interfaces/i.core.server.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 
 let _configApiUrl: URL | undefined;

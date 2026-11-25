@@ -3,14 +3,14 @@ import http from "http";
 import https from "https";
 
 import { NtlmState } from "../models/ntlm.state.ts";
-import type IConnectionContext from "./interfaces/i.connection.context.ts";
-import type INegotiateManager from "./interfaces/i.negotiate.manager.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
 
 /**
  * Negotiate protocol manager
  */
-export default class NegotiateManager implements INegotiateManager {
+export class NegotiateManager implements INegotiateManager {
   private readonly _debug: IDebugLogger;
 
   /**

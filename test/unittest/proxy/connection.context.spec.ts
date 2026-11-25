@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { NtlmState } from '../../../src/models/ntlm.state.ts';
-import ConnectionContext from '../../../src/proxy/connection.context.ts';
+import { ConnectionContext } from '../../../src/proxy/connection.context.ts';
 
 describe('ConnectionContext', () => {
     describe('matchHostOrNew', () => {

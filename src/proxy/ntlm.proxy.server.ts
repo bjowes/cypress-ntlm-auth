@@ -1,14 +1,14 @@
 
-import type INtlmProxyServer from "./interfaces/i.ntlm.proxy.server.ts";
-import type INtlmProxyMitm from "./interfaces/i.ntlm.proxy.mitm.ts";
-import type IHttpMitmProxyFacade from "./interfaces/i.http.mitm.proxy.facade.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
+import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
+import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
+import type { IHttpMitmProxyFacade } from "./interfaces/i.http.mitm.proxy.facade.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * NTLM Proxy server
  */
-export default class NtlmProxyServer implements INtlmProxyServer {
+export class NtlmProxyServer implements INtlmProxyServer {
   private initDone: boolean = false;
   private readonly _ntlmProxyMitm: INtlmProxyMitm;
   private readonly _httpMitmProxy: IHttpMitmProxyFacade;

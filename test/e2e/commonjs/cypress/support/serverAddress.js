@@ -6,5 +6,5 @@ module.exports = {
 };
 
 function serverAddress() {
-  return Cypress.env("E2E_SERVER_ADDRESS") ?? "127.0.0.1";
+  return Cypress.expose("E2E_SERVER_ADDRESS") ?? "127.0.0.1";
 }

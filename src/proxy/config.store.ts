@@ -1,5 +1,5 @@
 import type { NtlmConfig } from "../models/ntlm.config.model.ts";
-import type IConfigStore from "./interfaces/i.config.store.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
 import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
 import type { NtlmHost } from "../models/ntlm.host.model.ts";
 import type { NtlmWildcardHost } from "../models/ntlm.wildcard.host.model.ts";
@@ -16,7 +16,7 @@ interface NtlmWildcardHostConfigHash {
 /**
  * Config store
  */
-export default class ConfigStore implements IConfigStore {
+export class ConfigStore implements IConfigStore {
   private ntlmHosts: NtlmHostConfigHash = {};
   private ntlmHostWildcards: NtlmWildcardHostConfigHash = {};
   private ntlmSsoHosts: string[] = [];

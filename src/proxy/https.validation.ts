@@ -1,15 +1,15 @@
 import { HttpsValidationLevel } from "../models/https.validation.level.ts";
 import type { HttpsValidationLevelType } from "../models/https.validation.level.ts";
-import type IEnvironment from "../startup/interfaces/i.environment.ts";
-import type IConsoleLogger from "../util/interfaces/i.console.logger.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type ITlsCertValidator from "../util/interfaces/i.tls.cert.validator.ts";
-import type IHttpsValidation from "./interfaces/i.https.validation.ts";
+import type { IEnvironment } from "../startup/interfaces/i.environment.ts";
+import type { IConsoleLogger } from "../util/interfaces/i.console.logger.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { ITlsCertValidator } from "../util/interfaces/i.tls.cert.validator.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 
 /**
  * HTTP Validator
  */
-export default class HttpsValidation implements IHttpsValidation {
+export class HttpsValidation implements IHttpsValidation {
   private readonly _debug: IDebugLogger;
   private readonly _tlsCertValidator: ITlsCertValidator;
   private readonly _console: IConsoleLogger;

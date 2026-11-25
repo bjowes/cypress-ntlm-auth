@@ -1,6 +1,6 @@
 import type { PortsConfig } from "../../models/ports.config.model.ts";
 
-export default abstract class ICoreServer {
+export abstract class ICoreServer {
   abstract start(
     httpProxy?: string,
     httpsProxy?: string,

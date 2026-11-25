@@ -1,17 +1,16 @@
-import type IStartup from "./interfaces/i.startup.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type IUpstreamProxyConfigurator from "./interfaces/i.upstream.proxy.configurator.ts";
-import type IMain from "../proxy/interfaces/i.main.ts";
-import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./interfaces/i.cypress.facade.ts";
-import type ICypressFacade from "./interfaces/i.cypress.facade.ts";
-import type INtlmProxyFacade from "./interfaces/i.ntlm.proxy.facade.ts";
-import type IEnvironment from "./interfaces/i.environment.ts";
+import type { IStartup } from "./interfaces/i.startup.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IUpstreamProxyConfigurator } from "./interfaces/i.upstream.proxy.configurator.ts";
+import type { IMain } from "../proxy/interfaces/i.main.ts";
+import type { ICypressFacade } from "./interfaces/i.cypress.facade.ts";
+import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
+import type { IEnvironment } from "./interfaces/i.environment.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy startup manager
  */
-export default class Startup implements IStartup {
+export class Startup implements IStartup {
   private readonly _upstreamProxyConfigurator: IUpstreamProxyConfigurator;
   private readonly _proxyMain: IMain;
   private readonly _cypressFacade: ICypressFacade;
@@ -26,22 +25,22 @@ export default class Startup implements IStartup {
    * @param proxyMain Proxy main
    * @param cypressFacade Cypress facade
    * @param environment Environment variable access
-   * @param externalNtlmProxyFacade External proxy facade
+   * @param ntlmProxyFacade External proxy facade
    * @param debug Debug logger
    */
   constructor(
-        upstreamProxyConfigurator: IUpstreamProxyConfigurator,
+    upstreamProxyConfigurator: IUpstreamProxyConfigurator,
     proxyMain: IMain,
     cypressFacade: ICypressFacade,
     environment: IEnvironment,
-        externalNtlmProxyFacade: INtlmProxyFacade,
+    ntlmProxyFacade: INtlmProxyFacade,
     debug: IDebugLogger
   ) {
     this._upstreamProxyConfigurator = upstreamProxyConfigurator;
     this._proxyMain = proxyMain;
     this._cypressFacade = cypressFacade;
     this._environment = environment;
-    this._externalNtlmProxyFacade = externalNtlmProxyFacade;
+    this._externalNtlmProxyFacade = ntlmProxyFacade;
     this._debug = debug;
   }
 
@@ -86,7 +85,7 @@ export default class Startup implements IStartup {
    * @param args command line arguments
    * @returns Parsed command line options
    */
-  async prepareOptions(args: string[]): Promise<Partial<CypressRunOptions>> {
+  async prepareOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
     this.checkCypressIsInstalled();
     let cliArguments = this.getArgsAfterCypressNtlm(args);
     cliArguments = cliArguments.slice(1);
@@ -136,7 +135,7 @@ export default class Startup implements IStartup {
    * @param options Cypress options 
    * @returns Run result
    */
-  async run(options: CypressRunOptions): Promise<CypressRunResult | CypressFailedRunResult> {
+  async run(options: CypressCommandLine.CypressRunOptions): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Running tests through Cypress...");
@@ -158,7 +157,7 @@ export default class Startup implements IStartup {
    * Open Cypress UI
    * @param options Cypress options
    */
-  async open(options: CypressOpenOptions): Promise<void> {
+  async open(options: CypressCommandLine.CypressOpenOptions): Promise<void> {
     this.checkCypressIsInstalled();
     await this.prepareProxy();
     this._debug.log("Opening Cypress...");

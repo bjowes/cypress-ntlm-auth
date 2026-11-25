@@ -1,9 +1,9 @@
-import type IConsoleLogger from "./interfaces/i.console.logger.ts";
+import type { IConsoleLogger } from "./interfaces/i.console.logger.ts";
 
 /**
  * Console logger
  */
-export default class ConsoleLogger implements IConsoleLogger {
+export class ConsoleLogger implements IConsoleLogger {
   /**
    * Log formatted message to console
    * @param formatter formatting string

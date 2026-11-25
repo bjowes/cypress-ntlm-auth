@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 import n from "eslint-plugin-n"
 import jsdoc from 'eslint-plugin-jsdoc';
 
-export default defineConfig({
+export defineConfig({
   plugins: {n, jsdoc},
   files: ['**/*.{js,ts}'],
   extends: [js.configs.recommended, tseslint.configs.recommended, 'n/recommended-module'],

@@ -1,7 +1,7 @@
 import type { HttpsValidationLevelType } from "../../models/https.validation.level.ts";
 import type { PortsConfig } from "../../models/ports.config.model.ts";
 
-export default abstract class IEnvironment {
+export abstract class IEnvironment {
   configApiUrl: string | undefined;
   configApiPort: number | undefined;
   ntlmProxyUrl: string | undefined;

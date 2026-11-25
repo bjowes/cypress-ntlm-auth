@@ -95,7 +95,7 @@ function initApp(app, useNtlm) {
     }
   });
 
-  app.use(express.static("webserver/www")); // path.join(import.meta.url, "www")));
+  app.use(express.static("www"));
 }
 
 function configureCert(certServer, publicKey) {

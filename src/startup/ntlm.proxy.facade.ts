@@ -1,7 +1,7 @@
 import * as http from "http";
 
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type INtlmProxyFacade from "./interfaces/i.ntlm.proxy.facade.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { INtlmProxyFacade } from "./interfaces/i.ntlm.proxy.facade.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 import type { NtlmConfig } from "../models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
@@ -10,7 +10,7 @@ import { URLExt } from "../util/url.ext.ts";
 /**
  * Facade for NTML proxy (internal or external)
  */
-export default class NtlmProxyFacade implements INtlmProxyFacade {
+export class NtlmProxyFacade implements INtlmProxyFacade {
   private readonly _debug: IDebugLogger;
 
   /**

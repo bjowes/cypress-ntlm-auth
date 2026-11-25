@@ -2,7 +2,7 @@ import type { IContext } from "@bjowes/http-mitm-proxy";
 import net from "net";
 import http from "http";
 
-export default abstract class INtlmProxyMitm {
+export abstract class INtlmProxyMitm {
   abstract onError(ctx: IContext, error: NodeJS.ErrnoException, errorKind: string): void;
   abstract onRequest(
     ctx: IContext,

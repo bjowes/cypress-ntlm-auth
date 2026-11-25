@@ -1,12 +1,12 @@
-import type ICoreServer from "./interfaces/i.core.server.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type IMain from "./interfaces/i.main.ts";
+import type { ICoreServer } from "./interfaces/i.core.server.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { IMain } from "./interfaces/i.main.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 
 /**
  * NTLM proxy main class
  */
-export default class Main implements IMain {
+export class Main implements IMain {
   private readonly _coreServer: ICoreServer;
   private readonly _debug: IDebugLogger;
 

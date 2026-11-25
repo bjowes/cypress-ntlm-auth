@@ -1,6 +1,6 @@
 const server = require("../support/serverAddress");
 
-context("Proxy for HTTP NTLM host TS", function () {
+context("Proxy for HTTP NTLM host", function () {
   beforeEach("Reset NTLM config", function () {
     cy.ntlmReset();
   });

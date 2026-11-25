@@ -2,21 +2,21 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { EventEmitter } from "events";
 
-import ConfigValidator from "../util/config.validator.ts";
+import { ConfigValidator } from "../util/config.validator.ts";
 import type { NtlmConfig } from "../models/ntlm.config.model.ts";
-import type IConfigController from "./interfaces/i.config.controller.ts";
-import type IConfigStore from "./interfaces/i.config.store.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
 import { SsoConfigValidator } from "../util/sso.config.validator.ts";
 import type { NtlmSsoConfig } from "../models/ntlm.sso.config.model.ts";
-import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 import { osSupported } from "win-sso";
 
 /**
  * Config controller
  */
-export default class ConfigController implements IConfigController {
+export class ConfigController implements IConfigController {
   readonly router: Router = Router();
   public configApiEvent = new EventEmitter();
   private readonly _configStore: IConfigStore;

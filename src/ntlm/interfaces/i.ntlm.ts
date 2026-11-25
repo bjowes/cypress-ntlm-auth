@@ -1,7 +1,7 @@
 import { Type2Message } from "../type2.message.ts";
 import { NtlmMessage } from "../ntlm.message.ts";
 
-export default abstract class INtlm {
+export abstract class INtlm {
   abstract createType1Message(ntlmVersion: number, workstation: string | undefined, target: string | undefined): NtlmMessage;
   abstract decodeType2Message(str: string | undefined): Type2Message;
   abstract createType3Message(

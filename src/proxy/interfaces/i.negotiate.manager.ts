@@ -1,8 +1,8 @@
 import type { IContext } from "@bjowes/http-mitm-proxy";
-import type IConnectionContext from "./i.connection.context.ts";
+import type { IConnectionContext } from "./i.connection.context.ts";
 import * as http from "http";
 
-export default abstract class INegotiateManager {
+export abstract class INegotiateManager {
   abstract handshake(
     ctx: IContext,
     ntlmHostUrl: URL,

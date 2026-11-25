@@ -1,10 +1,10 @@
 // cSpell:ignore nisse, mnpwr, mptest
 import assert from "assert";
 
-import type IConfigStore from "../../../src/proxy/interfaces/i.config.store.ts";
+import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
-import ConfigStore from "../../../src/proxy/config.store.ts";
+import { ConfigStore } from "../../../src/proxy/config.store.ts";
 
 describe("ConfigStore", () => {
   let configStore: IConfigStore;

@@ -9,8 +9,8 @@
     "noEmit": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "types": ["node", "mocha"]
+    "types": ["node"]
   },
   "include": ["src/", "test/"],
-  "exclude": ["src/commands/index.d.ts", "test/e2e"],
+  "exclude": ["src/commands/index.d.ts", "test/e2e", "node_modules"],
 }

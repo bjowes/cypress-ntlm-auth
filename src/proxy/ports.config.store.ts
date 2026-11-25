@@ -1,9 +1,9 @@
-import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
 
 /**
  * Store for ports config
  */
-export default class PortsConfigStore implements IPortsConfigStore {
+export class PortsConfigStore implements IPortsConfigStore {
   private _configApiUrl?: URL = undefined;
   private _ntlmProxyUrl?: URL = undefined;
 

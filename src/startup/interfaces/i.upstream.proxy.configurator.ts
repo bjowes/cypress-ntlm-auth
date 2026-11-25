@@ -1,4 +1,4 @@
-export default abstract class IUpstreamProxyConfigurator {
+export abstract class IUpstreamProxyConfigurator {
   abstract removeUnusedProxyEnv(): void;
   abstract processNoProxyLoopback(): void;
 }

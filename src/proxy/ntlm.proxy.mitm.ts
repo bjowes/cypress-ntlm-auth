@@ -5,16 +5,16 @@ import http from "http";
 
 import { AuthMode } from "../models/auth.mode.ts";
 import type { AuthModeType } from "../models/auth.mode.ts";
-import type IConfigStore from "./interfaces/i.config.store.ts";
-import type IConnectionContextManager from "./interfaces/i.connection.context.manager.ts";
-import type INtlmProxyMitm from "./interfaces/i.ntlm.proxy.mitm.ts";
-import type INtlmManager from "./interfaces/i.ntlm.manager.ts";
-import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
-import type INegotiateManager from "./interfaces/i.negotiate.manager.ts";
-import type IPortsConfigStore from "./interfaces/i.ports.config.store.ts";
-import type IWinSsoFacadeFactory from "./interfaces/i.win-sso.facade.factory.ts";
-import type IHttpsValidation from "./interfaces/i.https.validation.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { INtlmProxyMitm } from "./interfaces/i.ntlm.proxy.mitm.ts";
+import type { INtlmManager } from "./interfaces/i.ntlm.manager.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
+import type { INegotiateManager } from "./interfaces/i.negotiate.manager.ts";
+import type { IPortsConfigStore } from "./interfaces/i.ports.config.store.ts";
+import type { IWinSsoFacadeFactory } from "./interfaces/i.win-sso.facade.factory.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 import { URLExt } from "../util/url.ext.ts";
 
 let self: NtlmProxyMitm;
@@ -23,7 +23,7 @@ const httpTokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
 /**
  * NTLM proxy MITM - Addon to HTTP MITM Proxy for NTLM authentication
  */
-export default class NtlmProxyMitm implements INtlmProxyMitm {
+export class NtlmProxyMitm implements INtlmProxyMitm {
   private readonly _configStore: IConfigStore;
   private readonly _portsConfigStore: IPortsConfigStore;
   private readonly _connectionContextManager: IConnectionContextManager;

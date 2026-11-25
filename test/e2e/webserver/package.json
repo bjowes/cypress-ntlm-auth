@@ -1,0 +1,22 @@
+{
+  "name": "e2e-webserver",
+  "version": "1.0.0",
+  "description": "basic webserver for e2e test of cypress-ntlm-auth",
+  "type": "commonjs",
+  "scripts": {
+    "webserver": "node server.js",
+    "webserver:stop": "node stop-server.js"
+  },
+  "author": "Björn Weström",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.9",
+    "cors": "^2.8.6",
+    "debug": "^4.4.3",
+    "express": "^4.22.3",
+    "express-ntlm": "^2.7.0",
+    "express-ws": "^5.0.2",
+    "morgan": "^1.12.1",
+    "morgan-debug": "^2.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 import { defineConfig } from 'cypress'
 
-export default defineConfig({
+module.exports = defineConfig({
   video: false,
   e2e: {
     // We've imported your old cypress plugins here.

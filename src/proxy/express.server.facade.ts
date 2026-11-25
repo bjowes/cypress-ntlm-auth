@@ -4,13 +4,13 @@ import bodyParser from "body-parser";
 import type { AddressInfo } from "net";
 import type { PathParams } from "express-serve-static-core";
 
-import type IExpressServerFacade from "./interfaces/i.express.server.facade.ts";
+import type { IExpressServerFacade } from "./interfaces/i.express.server.facade.ts";
 import { URLExt } from "../util/url.ext.ts";
 
 /**
  * Express HTTP server facade, used for Config API
  */
-export default class ExpressServerFacade implements IExpressServerFacade {
+export class ExpressServerFacade implements IExpressServerFacade {
   private readonly _app: express.Application = express();
   private _listener?: http.Server;
 

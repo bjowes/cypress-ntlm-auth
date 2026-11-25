@@ -5,32 +5,32 @@ import * as awilix from 'awilix';
 //import type { ContainerBuilder } from 'node-dependency-injection';
 //import {ContainerBuilder, Autowire} from 'node-dependency-injection'
 //import {Definition} from 'node-dependency-injection'
-import Ntlm from '../ntlm/ntlm.ts';
-import CypressFacade from './cypress.facade.ts';
-import UpstreamProxyConfigurator from './upstream.proxy.configurator.ts';
-import Startup from './startup.ts';
-import NtlmProxyFacade from './ntlm.proxy.facade.ts';
-import Environment from './environment.ts';
-import TlsCertValidator from '../util/tls.cert.validator.ts';
-import DebugLogger from '../util/debug.logger.ts';
-import ConsoleLogger from '../util/console.logger.ts';
-import ConfigController from '../proxy/config.controller.ts';
-import ConfigServer from '../proxy/config.server.ts';
-import ConfigStore from '../proxy/config.store.ts';
-import ConnectionContextManager from '../proxy/connection.context.manager.ts';
-import CoreServer from '../proxy/core.server.ts';
-import ExpressServerFacade from '../proxy/express.server.facade.ts';
-import HttpMitmProxyFacade from '../proxy/http.mitm.proxy.facade.ts';
-import HttpsValidation from '../proxy/https.validation.ts';
-import Main from '../proxy/main.ts';
-import NegotiateManager from '../proxy/negotiate.manager.ts';
-import NtlmManager from '../proxy/ntlm.manager.ts';
-import NtlmProxyMitm from '../proxy/ntlm.proxy.mitm.ts';
-import NtlmProxyServer from '../proxy/ntlm.proxy.server.ts';
-import PortsConfigStore from '../proxy/ports.config.store.ts';
-import UpstreamProxyManager from '../proxy/upstream.proxy.manager.ts';
-import WinSsoFacadeFactory from '../proxy/win-sso.facade.factory.ts';
-import WinSsoFacade from '../proxy/win-sso.facade.ts';
+import { Ntlm } from '../ntlm/ntlm.ts';
+import { CypressFacade } from './cypress.facade.ts';
+import { UpstreamProxyConfigurator } from './upstream.proxy.configurator.ts';
+import { Startup } from './startup.ts';
+import { NtlmProxyFacade } from './ntlm.proxy.facade.ts';
+import { Environment } from './environment.ts';
+import { TlsCertValidator } from '../util/tls.cert.validator.ts';
+import { DebugLogger } from '../util/debug.logger.ts';
+import { ConsoleLogger } from '../util/console.logger.ts';
+import { ConfigController } from '../proxy/config.controller.ts';
+import { ConfigServer } from '../proxy/config.server.ts';
+import { ConfigStore } from '../proxy/config.store.ts';
+import { ConnectionContextManager } from '../proxy/connection.context.manager.ts';
+import { CoreServer } from '../proxy/core.server.ts';
+import { ExpressServerFacade } from '../proxy/express.server.facade.ts';
+import { HttpMitmProxyFacade } from '../proxy/http.mitm.proxy.facade.ts';
+import { HttpsValidation } from '../proxy/https.validation.ts';
+import { Main } from '../proxy/main.ts';
+import { NegotiateManager } from '../proxy/negotiate.manager.ts';
+import { NtlmManager } from '../proxy/ntlm.manager.ts';
+import { NtlmProxyMitm } from '../proxy/ntlm.proxy.mitm.ts';
+import { NtlmProxyServer } from '../proxy/ntlm.proxy.server.ts';
+import { PortsConfigStore } from '../proxy/ports.config.store.ts';
+import { UpstreamProxyManager } from '../proxy/upstream.proxy.manager.ts';
+import { WinSsoFacadeFactory } from '../proxy/win-sso.facade.factory.ts';
+import { WinSsoFacade } from '../proxy/win-sso.facade.ts';
 
 export const DiTypes = {
     // NTLM
@@ -52,7 +52,7 @@ export const DiTypes = {
     expressServerFacade: 'expressServerFacade',
     httpMitmProxyFacade: 'httpMitmProxyFacade',
     httpsValidation: 'httpsValidation',
-    main: 'main',
+    proxyMain: 'proxyMain',
     negotiateManager: 'negotiateManager',
     ntlmManager: 'ntlmManager',
     ntlmProxyMitm: 'ntlmProxyMitm',
@@ -84,7 +84,7 @@ container.register({
     [DiTypes.expressServerFacade]: awilix.asClass(ExpressServerFacade).scoped(),
     [DiTypes.httpMitmProxyFacade]: awilix.asClass(HttpMitmProxyFacade).scoped(),
     [DiTypes.httpsValidation]: awilix.asClass(HttpsValidation).scoped(),
-    [DiTypes.main]: awilix.asClass(Main).scoped(),
+    [DiTypes.proxyMain]: awilix.asClass(Main).scoped(),
     [DiTypes.negotiateManager]: awilix.asClass(NegotiateManager).scoped(),
     [DiTypes.ntlmManager]: awilix.asClass(NtlmManager).scoped(),
     [DiTypes.ntlmProxyMitm]: awilix.asClass(NtlmProxyMitm).scoped(),

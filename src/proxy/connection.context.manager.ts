@@ -2,16 +2,16 @@ import { Socket } from "net";
 import http from "http";
 import https from "https";
 
-import type IConnectionContextManager from "./interfaces/i.connection.context.manager.ts";
-import type IConnectionContext from "./interfaces/i.connection.context.ts";
-import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { IConnectionContext } from "./interfaces/i.connection.context.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
 import type { SslTunnel } from "../models/ssl.tunnel.model.ts";
 import { httpsTunnel, TunnelAgent } from "./tunnel.agent.ts";
 import type { TunnelAgentOptions } from "./tunnel.agent.ts";
-import type IHttpsValidation from "./interfaces/i.https.validation.ts";
+import type { IHttpsValidation } from "./interfaces/i.https.validation.ts";
 import type { ExtendedAgentOptions } from "../models/extended.agent.options.ts";
-import ConnectionContext from "./connection.context.ts";
+import { ConnectionContext } from "./connection.context.ts";
 
 interface ConnectionContextHash {
   [ntlmHostUrl: string]: IConnectionContext;
@@ -24,7 +24,7 @@ interface SslTunnelHash {
 /**
  * Connection context manager
  */
-export default class ConnectionContextManager implements IConnectionContextManager {
+export class ConnectionContextManager implements IConnectionContextManager {
   private _connectionContexts: ConnectionContextHash = {};
   private readonly _upstreamProxyManager: IUpstreamProxyManager;
   //private ConnectionContext: interfaces.Newable<IConnectionContext>;

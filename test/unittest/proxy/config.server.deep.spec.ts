@@ -5,9 +5,9 @@ import assert from "assert";
 import { CreateScopedContainer, DiTypes } from '../../../src/startup/dependency.injection.ts'
 
 import { ProxyFacade } from "./proxy.facade.ts";
-import type IConfigServer from "../../../src/proxy/interfaces/i.config.server.ts";
-import type IConfigStore from "../../../src/proxy/interfaces/i.config.store.ts";
-import type IPortsConfigStore from "../../../src/proxy/interfaces/i.ports.config.store.ts";
+import type { IConfigServer } from "../../../src/proxy/interfaces/i.config.server.ts";
+import type { IConfigStore } from "../../../src/proxy/interfaces/i.config.store.ts";
+import type { IPortsConfigStore } from "../../../src/proxy/interfaces/i.ports.config.store.ts";
 import type { NtlmConfig } from "../../../src/models/ntlm.config.model.ts";
 import type { NtlmSsoConfig } from "../../../src/models/ntlm.sso.config.model.ts";
 import { describeIfNotWindows, describeIfWindows } from "../conditions.ts";

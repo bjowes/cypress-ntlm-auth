@@ -1,17 +1,17 @@
 
 import type { PortsConfig } from "../models/ports.config.model.ts";
-import type IConfigController from "./interfaces/i.config.controller.ts";
-import type IConfigServer from "./interfaces/i.config.server.ts";
-import type IConfigStore from "./interfaces/i.config.store.ts";
-import type IConnectionContextManager from "./interfaces/i.connection.context.manager.ts";
-import type ICoreServer from "./interfaces/i.core.server.ts";
-import type INtlmProxyServer from "./interfaces/i.ntlm.proxy.server.ts";
-import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
+import type { IConfigController } from "./interfaces/i.config.controller.ts";
+import type { IConfigServer } from "./interfaces/i.config.server.ts";
+import type { IConfigStore } from "./interfaces/i.config.store.ts";
+import type { IConnectionContextManager } from "./interfaces/i.connection.context.manager.ts";
+import type { ICoreServer } from "./interfaces/i.core.server.ts";
+import type { INtlmProxyServer } from "./interfaces/i.ntlm.proxy.server.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
 
 /**
  * Core server
  */
-export default class CoreServer implements ICoreServer {
+export class CoreServer implements ICoreServer {
   private readonly _configServer: IConfigServer;
   private readonly _ntlmProxyServer: INtlmProxyServer;
   private readonly _upstreamProxyManager: IUpstreamProxyManager;

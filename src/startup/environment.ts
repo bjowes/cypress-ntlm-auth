@@ -2,12 +2,12 @@ import { HttpsValidationLevel } from "../models/https.validation.level.ts";
 import type { HttpsValidationLevelType } from "../models/https.validation.level.ts";
 import type { PortsConfig } from "../models/ports.config.model.ts";
 import { URLExt } from "../util/url.ext.ts";
-import type IEnvironment from "./interfaces/i.environment.ts";
+import type { IEnvironment } from "./interfaces/i.environment.ts";
 
 /**
  * Environment variable accessor
  */
-export default class Environment implements IEnvironment {
+export class Environment implements IEnvironment {
   private readonly _loopbackDisable = "<-loopback>";
 
   /**

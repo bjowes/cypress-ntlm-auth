@@ -1,10 +1,8 @@
-import NtlmProxy from "./ntlm-proxy.ts";
-import type { CypressFailedRunResult, CypressOpenOptions, CypressRunOptions, CypressRunResult } from "./startup/interfaces/i.cypress.facade.ts";
-
+import { NtlmProxy } from "./ntlm-proxy.ts";
 import { CreateScopedContainer, DiTypes } from './startup/dependency.injection.ts'
-import type IStartup from "./startup/interfaces/i.startup.ts";
-import type IEnvironment from "./startup/interfaces/i.environment.ts";
-import type INtlmProxyFacade from "./startup/interfaces/i.ntlm.proxy.facade.ts";
+import type { IStartup } from "./startup/interfaces/i.startup.ts";
+import type { IEnvironment } from "./startup/interfaces/i.environment.ts";
+import type { INtlmProxyFacade } from "./startup/interfaces/i.ntlm.proxy.facade.ts";
 
 const container = CreateScopedContainer();
 const startup = container.resolve<IStartup>(DiTypes.startup);
@@ -16,7 +14,7 @@ const ntlmProxyFacade = container.resolve<INtlmProxyFacade>(DiTypes.ntlmProxyFac
  * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options
  * @returns Test results as defined by https://docs.cypress.io/guides/guides/module-api.html#Results
  */
-export async function run(options: Partial<CypressRunOptions>): Promise<CypressRunResult | CypressFailedRunResult> {
+export async function run(options: Partial<CypressCommandLine.CypressRunOptions>): Promise<CypressCommandLine.CypressRunResult | CypressCommandLine.CypressFailedRunResult> {
   return await startup.run(options);
 }
 
@@ -25,7 +23,7 @@ export async function run(options: Partial<CypressRunOptions>): Promise<CypressR
  * @param options An options object as defined by https://docs.cypress.io/guides/guides/module-api.html#Options-1
  * @returns Test results
  */
-export async function open(options: Partial<CypressOpenOptions>) {
+export async function open(options: Partial<CypressCommandLine.CypressOpenOptions>) {
   return await startup.open(options);
 }
 
@@ -43,7 +41,7 @@ export function argumentsToCypressMode(args: string[]) {
  * @param args command line arguments
  * @returns An options object for the run() or open() methods
  */
-export async function argumentsToOptions(args: string[]): Promise<Partial<CypressRunOptions>> {
+export async function argumentsToOptions(args: string[]): Promise<Partial<CypressCommandLine.CypressRunOptions>> {
   return await startup.prepareOptions(args);
 }
 

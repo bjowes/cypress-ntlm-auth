@@ -1,14 +1,14 @@
 import { URLExt } from "../util/url.ext.ts";
 
 import type { HttpHeaders } from "./interfaces/i.upstream.proxy.manager.ts";
-import type IUpstreamProxyManager from "./interfaces/i.upstream.proxy.manager.ts";
-import type IDebugLogger from "../util/interfaces/i.debug.logger.ts";
+import type { IUpstreamProxyManager } from "./interfaces/i.upstream.proxy.manager.ts";
+import type { IDebugLogger } from "../util/interfaces/i.debug.logger.ts";
 import type { ExtendedAgentOptions } from "../models/extended.agent.options.ts";
 
 /**
  * Upstream proxy manager
  */
-export default class UpstreamProxyManager implements IUpstreamProxyManager {
+export class UpstreamProxyManager implements IUpstreamProxyManager {
   private _httpProxyUrl?: URL;
   private _httpsProxyUrl?: URL;
   private _noProxyUrls?: string[];

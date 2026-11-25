@@ -6,7 +6,6 @@ import {
   argumentsToCypressMode,
   argumentsToOptions,
 } from "../index.ts";
-import type { CypressFailedRunResult, CypressRunResult } from "../startup/interfaces/i.cypress.facade.ts";
 
 /**
  *
@@ -19,14 +18,14 @@ async function execute() {
       await open(options);
     } else {
       const result = await run(options);
-      const failedResult = result as CypressFailedRunResult;
+      const failedResult = result as CypressCommandLine.CypressFailedRunResult;
       if (failedResult && failedResult.failures) {
         console.error("Cypress could not execute tests");
         console.error(failedResult.message);
         process.exit(failedResult.failures);
       }
       // Required on windows since Cypress hangs after the run call
-      const runResult = result as CypressRunResult;
+      const runResult = result as CypressCommandLine.CypressRunResult;
       process.exit(runResult.totalFailed);
     }
   } catch (err) {

@@ -1,8 +1,8 @@
 import { Socket } from "net";
-import type IConnectionContext from "./i.connection.context.ts";
+import type { IConnectionContext } from "./i.connection.context.ts";
 import http from "http";
 
-export default abstract class IConnectionContextManager {
+export abstract class IConnectionContextManager {
   abstract createConnectionContext(clientSocket: Socket, isSSL: boolean, targetHost: URL): IConnectionContext;
   abstract getConnectionContextFromClientSocket(clientSocket: Socket): IConnectionContext | undefined;
   abstract getUntrackedAgent(targetHost: URL): http.Agent;

@@ -5,8 +5,8 @@ import type { SubstituteOf } from "@fluffy-spoon/substitute";
 import * as os from "os";
 import assert from "assert";
 
-import DebugLogger from "../../../src/util/debug.logger.ts";
-import UpstreamProxyConfigurator from "../../../src/startup/upstream.proxy.configurator.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { UpstreamProxyConfigurator } from "../../../src/startup/upstream.proxy.configurator.ts";
 import { EnvironmentMock } from "./environment.mock.ts";
 
 describe("UpstreamProxyConfigurator", () => {

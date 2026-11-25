@@ -1,7 +1,7 @@
 import { HttpsValidationLevel } from "../../../src/models/https.validation.level.ts";
 import type { HttpsValidationLevelType } from "../../../src/models/https.validation.level.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
-import type IEnvironment from "../../../src/startup/interfaces/i.environment.ts";
+import type { IEnvironment } from "../../../src/startup/interfaces/i.environment.ts";
 import { URLExt } from "../../../src/util/url.ext.ts";
 
 export class EnvironmentMock implements IEnvironment {

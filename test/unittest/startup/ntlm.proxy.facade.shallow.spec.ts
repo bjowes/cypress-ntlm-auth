@@ -2,16 +2,18 @@
 import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import type { SubstituteOf } from "@fluffy-spoon/substitute";
 
-import { getLocal } from "mockttp";
 import assert from "assert";
 
-import type IDebugLogger from "../../../src/util/interfaces/i.debug.logger.ts";
-import DebugLogger from "../../../src/util/debug.logger.ts";
-import NtlmProxyFacade from "../../../src/startup/ntlm.proxy.facade.ts";
+import { HttpRequestInterceptor } from '@mswjs/interceptors/http'
+
+
+import type { IDebugLogger } from "../../../src/util/interfaces/i.debug.logger.ts";
+import { DebugLogger } from "../../../src/util/debug.logger.ts";
+import { NtlmProxyFacade } from "../../../src/startup/ntlm.proxy.facade.ts";
 import type { PortsConfig } from "../../../src/models/ports.config.model.ts";
 
 describe("NtlmProxyFacade shallow", () => {
-  const mockServer = getLocal();
+const interceptor = new HttpRequestInterceptor()
   let ntlmProxyFacade: NtlmProxyFacade;
   let debugMock: SubstituteOf<IDebugLogger>;
   let debugLogger = new DebugLogger();
@@ -20,35 +22,49 @@ describe("NtlmProxyFacade shallow", () => {
     ntlmProxyUrl: "http://localhost:333",
   };
 
-  before(async () => {
-    await mockServer.start();
+  before(() => {
+    interceptor.apply();
   });
 
-  beforeEach(async function () {
+  beforeEach(function () {
     debugMock = Substitute.for<IDebugLogger>();
     debugMock.log(Arg.all()).mimicks(debugLogger.log);
     ntlmProxyFacade = new NtlmProxyFacade(debugMock);
-    await mockServer.reset();
+    interceptor.removeAllListeners();
   });
 
-  after(async () => {
-    await mockServer.stop();
+  after(() => {
+    interceptor.dispose();
   });
 
   describe("alive", function () {
     it("should send alive to existing proxy", async function () {
-      let endpoint = '/alive';
-      let scope = await mockServer
-        .forGet(endpoint)
-        .thenReply(200, JSON.stringify(fakePortsConfig),
-          {"content-type": "application/json"});
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/alive';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'GET') { assert.fail(); }
+        received = true;
+        controller.respondWith(
+          new Response(
+            JSON.stringify(fakePortsConfig),
+            {
+              status: 200,
+              statusText: 'OK',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+        )
+      });
 
       let res = await ntlmProxyFacade.alive(fakeConfigApiUrl);
       assert.equal(res.configApiUrl, fakePortsConfig.configApiUrl);
       assert.equal(res.ntlmProxyUrl, fakePortsConfig.ntlmProxyUrl);
       
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock
         .received(1)
         .log("Sending alive request to NTLM proxy " + fakeConfigApiUrl);
@@ -56,32 +72,48 @@ describe("NtlmProxyFacade shallow", () => {
     });
 
     it("should throw if alive errors", async function () {
-      let endpoint = '/alive';
-      let scope = await mockServer
-        .forGet(endpoint)
-        .thenResetConnection();
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/alive';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'GET') { assert.fail(); }
+        received = true;
+        controller.respondWith(Response.error());
+      });
 
       await assert.rejects(
         ntlmProxyFacade.alive(fakeConfigApiUrl),
-        /An error occurred while communicating with NTLM proxy: read ECONNRESET$/
+        /An error occurred while communicating with NTLM proxy: Network error$/
       );
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock.received(1).log("alive request failed");
     });
 
     it("should throw if alive returns != 200", async function () {
-      let endpoint = '/alive';
-      let scope = await mockServer
-        .forGet(endpoint)
-        .thenReply(404);
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/alive';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'GET') { assert.fail(); }
+        received = true;
+        controller.respondWith(
+          new Response(
+            null,
+            {
+              status: 404,
+              statusText: 'Not Found',
+            }
+          )
+        )
+      });
 
       await assert.rejects(
         ntlmProxyFacade.alive(fakeConfigApiUrl),
         /Unexpected response from NTLM proxy: 404$/
       );
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock.received(1).log("Unexpected response from NTLM proxy: 404");
       debugMock.received(1).log("alive request failed");
     });
@@ -89,15 +121,26 @@ describe("NtlmProxyFacade shallow", () => {
 
   describe("quitIfRunning", function () {
     it("should send quit to existing proxy", async function () {
-      let endpoint = '/quit';
-      let scope = await mockServer
-        .forPost(endpoint)
-        .thenReply(200);
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/quit';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'POST') { assert.fail(); }
+        received = true;
+        controller.respondWith(
+          new Response(null,
+            {
+              status: 200,
+              statusText: 'OK'              
+            }
+          )
+        )
+      });
       
       await ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl);
 
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock
         .received(1)
         .log("Sending quit request to NTLM proxy " + fakeConfigApiUrl);
@@ -112,34 +155,50 @@ describe("NtlmProxyFacade shallow", () => {
     });
 
     it("should throw if quit errors", async function () {
-      let endpoint = '/quit';
-      let scope = await mockServer
-        .forPost(endpoint)
-        .thenResetConnection();
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/alive';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'POST') { assert.fail(); }
+        received = true;
+        controller.respondWith(Response.error());
+      });
 
       await assert.rejects(
         ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl),
-        /An error occurred while communicating with NTLM proxy: read ECONNRESET$/
+        /An error occurred while communicating with NTLM proxy: Network error$/
       );
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock.received(1).log("quit request failed");
     });
 
     it("should throw if quit returns != 200", async function () {
-      let endpoint = '/quit';
-      let scope = await mockServer
-        .forPost(endpoint)
-        .thenReply(404);
-      let fakeConfigApiUrl = mockServer.urlFor(endpoint);
+      const fakeConfigApiUrl = 'http://127.0.0.1:54321'
+      let endpoint = fakeConfigApiUrl + '/alive';
+      let received = false;
+
+      interceptor.on('request', ({ request, controller }) => {
+        if (request.url !== endpoint && request.method !== 'POST') { assert.fail(); }
+        received = true;
+        controller.respondWith(
+          new Response(
+            null,
+            {
+              status: 404,
+              statusText: 'Not Found',
+            }
+          )
+        )
+      });
         
       await assert.rejects(
         ntlmProxyFacade.quitIfRunning(fakeConfigApiUrl),
         /Unexpected response from NTLM proxy: 404$/
       );
-      assert.equal(await scope.isPending(), false);
+      assert.equal(received, true);
       debugMock.received(1).log("Unexpected response from NTLM proxy: 404");
       debugMock.received(1).log("quit request failed");
-    });    
+    });
   });
 });
